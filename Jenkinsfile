@@ -12,6 +12,10 @@ pipeline {
     }
 
     stages {
+	    stage('Cloning Git') {
+      steps {
+        git 'https://github.com/WAYA-MULTI-LINK/WAYA-PAY-CHAT-2.0-AUTH-SERVICE.git'
+      }
         stage('compile') {
             steps {
                sh "mvn clean install"
