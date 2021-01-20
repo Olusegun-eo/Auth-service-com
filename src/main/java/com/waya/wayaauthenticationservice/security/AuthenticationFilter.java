@@ -51,29 +51,22 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res)
             throws AuthenticationException {
         try {
-            System.out.println("::::::Authenticating:::::::");
-            System.out.println(req.getInputStream().toString());
+
             LoginDetailsPojo creds = new ObjectMapper().readValue(req.getInputStream(), LoginDetailsPojo.class);
-            System.out.println(creds.getEmail());
-            System.out.println(creds.getPassword());
+
             UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
-            if (userLoginRepo.findByEmail(creds.getEmail()).isPresent()) {
-                System.out.println(":::user available:::");
-            }else {
-                System.out.println(":::::::user not available:::::::");
-            }
+
             Users user = userLoginRepo.findByEmail(creds.getEmail()).orElseThrow(() -> new BadCredentialsException("User Does not exist"));
 
             System.out.println(user.getFirstName());
-            //List<GrantedAuthority> auth = new ArrayList<>();
             List<Roles> roles = user.getRolesList();
             List<GrantedAuthority> grantedAuthorities = roles.stream().map(r -> {
-                LOGGER.info("Role::: {}, {} and {}", r.getName(),2,3);
+
                 return new SimpleGrantedAuthority(r.getName());
             }).collect(Collectors.toList());
             return getAuthenticationManager().authenticate(
                     new UsernamePasswordAuthenticationToken(creds.getEmail(), creds.getPassword(), grantedAuthorities));
-            // usersService.getAuthorities(usersService.getUserRoles(creds.getEmail()))
+
 
         } catch (IOException e) {
             throw new RuntimeException(e);

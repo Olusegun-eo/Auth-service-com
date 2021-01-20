@@ -28,14 +28,14 @@ public class Users implements Serializable {
 //    @ApiModelProperty(value = "numerical alone and must start the country code without any symbols e.g. 2348124633722")
     @NotNull(message = "phone number cannot be null")
     private Long phoneNumber;
-    private String bvn;
+    private String referenceCode;
     @NotBlank(message = "first Name cannot be null")
 //    @Pattern(regexp = PATTERN_STRING)
     private String firstName;
 
     @NotBlank(message = "last Name cannot be null")
 //    @Pattern(regexp = PATTERN_STRING)
-    private String lastName;
+    private String surname;
     @NotBlank(message = "password cannot be null")
 //    @ApiModelProperty(value = "password must be greater than 8 and less 100, must contain at leat 1 special character, 1 upper case, 1 numeric value and sequence will be evaluated to determine the password strength")
     @Length(min = 8, max = 100, message = "password must be greater than 8 characters")
