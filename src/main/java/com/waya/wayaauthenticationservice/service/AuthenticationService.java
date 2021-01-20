@@ -58,15 +58,25 @@ public class AuthenticationService {
 //    public ResponseEntity<?> assignRoleToUser(Long userId, List<Integer> rolesId) {
 //        try {
 //            return userRepo.findById(userId).map(users -> {
-//                rolesId.stream().map(integer -> {
-//                    rolesRepo.findById(integer).ifPresent(roles -> {
-//                        users.getRolesList().stream().filter(roles1 -> {}).anyMatch()
-//                    });
-//                });
-//                rolesRepo.findById(rolesId).ifPresent(roles -> {
-//                    users.getRolesList().add(roles);
-//                    userRepo.save(users);
-//                });
+//                rolesRepo.findAll().stream().filter(r -> rolesId.contains(r.getId()))
+//                        .filter(rl -> !users.getRolesList().contains(rl.getId()))
+//                        .forEach(
+//                               System.out::println
+//                        );
+////                rolesRepo.findById(rolesId).ifPresent(roles -> {
+////                    users.getRolesList().add(roles);
+////                    userRepo.save(users);
+////                });
+////                rolesId.stream().map(integer -> {
+////                    if (rolesRepo.findById(integer).isPresent()){
+////                        users.getRolesList().forEach(rl -> {
+////                            if (!rl.getId().equals(integer)) {
+////                                users.getRolesList().add(rl);
+////                            }
+////                        });
+////                    }
+////                    return null;
+////                });
 //                return new ResponseEntity<>(HttpStatus.OK);
 //            }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
 //        } catch (Exception e) {
