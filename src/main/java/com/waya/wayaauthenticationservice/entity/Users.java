@@ -41,6 +41,7 @@ public class Users implements Serializable {
     @Length(min = 8, max = 100, message = "password must be greater than 8 characters")
 //    @ValidPassword
     private String password;
+    private int pin;
     @Transient
     private Roles role;
 
