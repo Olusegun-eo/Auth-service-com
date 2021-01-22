@@ -24,6 +24,7 @@ public class Users implements Serializable {
     @NotNull
     private Long id;
     @Email(message = "email should be valid")
+    @Column(unique = true)
     private String email;
 //    @ApiModelProperty(value = "numerical alone and must start the country code without any symbols e.g. 2348124633722")
     @NotNull(message = "phone number cannot be null")

@@ -4,7 +4,9 @@ import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.ChangePasswordPojo;
 import com.waya.wayaauthenticationservice.pojo.PinPojo;
+import com.waya.wayaauthenticationservice.pojo.ResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.UserPojo;
+import com.waya.wayaauthenticationservice.proxy.ProfileProxy;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.security.AuthenticationFilter;
@@ -33,10 +35,13 @@ public class AuthenticationService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
+    @Autowired
+    private ProfileProxy proxy;
+
     private static final Logger LOGGER= LoggerFactory.getLogger(AuthenticationFilter.class);
 
 
-    public ResponseEntity create(UserPojo mUser) {
+    public ResponseEntity<?> create(UserPojo mUser) {
         try {
             Roles roles = new Roles();
             roles.setId(1);
@@ -49,11 +54,12 @@ public class AuthenticationService {
             user.setDateCreated(LocalDateTime.now());
             user.setPassword(passwordEncoder.encode(mUser.getPassword()));
             user.setRolesList(roleList);
-            userRepo.save(user);
-            return new ResponseEntity(HttpStatus.CREATED);
+            Users user2 = userRepo.save(user);
+            //proxy.create(user2);
+            return new ResponseEntity<>(ResponsePojo.response(false, "Created Successfully"),HttpStatus.CREATED);
         } catch (Exception e) {
             LOGGER.info("Error::: {}, {} and {}", e.getMessage(),2,3);
-            return new ResponseEntity(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(ResponsePojo.response(true, "Error Occurred"),HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -61,13 +67,13 @@ public class AuthenticationService {
     public ResponseEntity<?> createPin(PinPojo pinPojo) {
         try {
             if (pinPojo.getPin() != 4) {
-                return new ResponseEntity<>(new RuntimeException("Pin should not be greater than or less than 4 digits"), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(ResponsePojo.response(true, "Pin should not be greater than or less than four digits"), HttpStatus.BAD_REQUEST);
             } else {
                 return userRepo.findById(pinPojo.getUserId()).map(users -> {
                     users.setPin(pinPojo.getPin());
                     userRepo.save(users);
                     return new ResponseEntity<>(HttpStatus.OK);
-                }).orElse(new ResponseEntity<>(new RuntimeException("Id provided is not found"),HttpStatus.NOT_FOUND));
+                }).orElse(new ResponseEntity<>(ResponsePojo.response(true, "Id provided is not found"),HttpStatus.NOT_FOUND));
             }
         }catch (Exception e) {
             LOGGER.info("Error::: {}, {} and {}", e.getMessage(),2,3);
@@ -81,13 +87,13 @@ public class AuthenticationService {
                 if(passwordEncoder.matches(String.valueOf(changePasswordPojo.getOldPassword()), users.getPassword())) {
                     users.setPassword(passwordEncoder.encode(changePasswordPojo.getNewPassword()));
                     userRepo.save(users);
-                    return new ResponseEntity<>(HttpStatus.OK);
+                    return new ResponseEntity<>(ResponsePojo.response(false, "Password Changed Successfully"),HttpStatus.OK);
                 }
-                return new ResponseEntity<>(new RuntimeException("Old Password does not match"), HttpStatus.BAD_REQUEST);
-            }).orElse(new ResponseEntity<>(new RuntimeException("Id provided is not found"),HttpStatus.BAD_REQUEST));
+                return new ResponseEntity<>(ResponsePojo.response(true, "Old Password does not match"), HttpStatus.BAD_REQUEST);
+            }).orElse(new ResponseEntity<>(ResponsePojo.response(true, "Id provided is not found"),HttpStatus.BAD_REQUEST));
         } catch (Exception e) {
             LOGGER.info("Error::: {}, {} and {}", e.getMessage(),2,3);
-            return new ResponseEntity(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(ResponsePojo.response(true, "Error Occurred"),HttpStatus.BAD_REQUEST);
         }
     }
 
