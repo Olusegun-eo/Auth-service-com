@@ -5,8 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UserProfileResponsePojo {
-    private Long id;
-    private String email;
-    private Long phoneNumber;
+public class PinPojo {
+    private Long userId;
+    private int pin;
 }

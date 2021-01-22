@@ -1,6 +1,8 @@
 package com.waya.wayaauthenticationservice.controller;
 
+import com.waya.wayaauthenticationservice.pojo.ChangePasswordPojo;
 import com.waya.wayaauthenticationservice.pojo.LoginDetailsPojo;
+import com.waya.wayaauthenticationservice.pojo.PinPojo;
 import com.waya.wayaauthenticationservice.pojo.UserPojo;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
 import io.swagger.annotations.ApiOperation;
@@ -32,6 +34,16 @@ public class AuthenticationController {
     public void Login(@RequestBody LoginDetailsPojo loginRequestModel) {
 
         throw new IllegalStateException("This Method should not be called!");
+    }
+
+    @PostMapping("/create/pin")
+    public ResponseEntity<?> createPin(@RequestBody PinPojo pinPojo) {
+        return authenticationService.createPin(pinPojo);
+    }
+
+    @PostMapping("/change/password")
+    public ResponseEntity<?> resetPassword(@RequestBody ChangePasswordPojo changePasswordPojo) {
+        return authenticationService.resetPassword(changePasswordPojo);
     }
 
 //    public ResponseEntity<?> assignRoleToUser(@PathVariable("userId") Long userId, @PathVariable("roleList") List<Integer> roleIds) {
