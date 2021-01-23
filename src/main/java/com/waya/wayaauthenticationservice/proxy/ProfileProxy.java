@@ -1,8 +1,8 @@
 package com.waya.wayaauthenticationservice.proxy;
 
 import com.waya.wayaauthenticationservice.entity.Users;
+
 import feign.Headers;
-import feign.RequestLine;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 

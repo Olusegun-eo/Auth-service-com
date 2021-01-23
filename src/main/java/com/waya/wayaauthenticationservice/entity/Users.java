@@ -19,30 +19,33 @@ import java.util.List;
 @Entity
 public class Users implements Serializable {
     private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @NotNull
     private Long id;
+
     @Email(message = "email should be valid")
     @Column(unique = true)
     private String email;
-//    @ApiModelProperty(value = "numerical alone and must start the country code without any symbols e.g. 2348124633722")
+
     @NotNull(message = "phone number cannot be null")
     private Long phoneNumber;
+
     private String referenceCode;
     @NotBlank(message = "first Name cannot be null")
-//    @Pattern(regexp = PATTERN_STRING)
+
     private String firstName;
 
     @NotBlank(message = "last Name cannot be null")
-//    @Pattern(regexp = PATTERN_STRING)
     private String surname;
+
     @NotBlank(message = "password cannot be null")
-//    @ApiModelProperty(value = "password must be greater than 8 and less 100, must contain at leat 1 special character, 1 upper case, 1 numeric value and sequence will be evaluated to determine the password strength")
     @Length(min = 8, max = 100, message = "password must be greater than 8 characters")
-//    @ValidPassword
     private String password;
+
     private int pin;
+
     @Transient
     private Roles role;
 
@@ -56,9 +59,11 @@ public class Users implements Serializable {
             inverseJoinColumns = @JoinColumn(
                     name = "role_id", referencedColumnName = "id"))
     private List<Roles> rolesList;
+
     @CreationTimestamp
     @ApiModelProperty(hidden = true)
     private LocalDateTime dateCreated;
+
     public Users() {}
 
 }
