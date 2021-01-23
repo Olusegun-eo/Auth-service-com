@@ -1,4 +1,4 @@
-package com.waya.wayaauthenticationservice.pojo;
+package com.waya.wayaauthenticationservice.response;
 
 import lombok.Getter;
 import lombok.Setter;
