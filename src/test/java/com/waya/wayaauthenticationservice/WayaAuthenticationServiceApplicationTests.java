@@ -1,7 +1,8 @@
 package com.waya.wayaauthenticationservice;
 
 
-class WayaAuthenticationServiceApplicationTests {
+import org.junit.Test;
 
+class WayaAuthenticationServiceApplicationTests {
 
 }

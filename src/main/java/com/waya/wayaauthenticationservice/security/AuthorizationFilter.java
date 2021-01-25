@@ -20,6 +20,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -46,29 +47,23 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
     }
 
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
-        String authorizationHeader = request.getHeader(SecurityConstants.HEADER_STRING);
-        if (authorizationHeader == null) {
+        String token = request.getHeader(SecurityConstants.HEADER_STRING);
+
+        if (token != null) {
+
+            token = token.replace(SecurityConstants.TOKEN_PREFIX, "");
+
+            String user = Jwts.parser().setSigningKey(SecurityConstants.getSecret()).parseClaimsJws(token).getBody()
+                    .getSubject();
+
+            if (user != null) {
+                return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
+            }
+
             return null;
         }
 
-        String token = authorizationHeader.replace(SecurityConstants.TOKEN_PREFIX, "");
-
-        String userId = Jwts.parser().setSigningKey(SecurityConstants.getSecret()).parseClaimsJws(token).getBody()
-                .getSubject();
-
-        //LOGGER.info("Role Auth::: {}, {} and {}", userId,2,3);
-        if (userId == null) {
-            return null;
-        }
-        UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("usersRepository");
-        Users user = userLoginRepo.findByEmail(userId).get();
-        List<Roles> roles = user.getRolesList();
-        List<GrantedAuthority> grantedAuthorities = roles.stream().map(r -> {
-            //LOGGER.info("Role::: {}, {} and {}", r.getName(),2,3);
-            return new SimpleGrantedAuthority(r.getName());
-        }).collect(Collectors.toList());
-        return new UsernamePasswordAuthenticationToken(userId, null,grantedAuthorities);
-
+        return null;
 
     }
 }

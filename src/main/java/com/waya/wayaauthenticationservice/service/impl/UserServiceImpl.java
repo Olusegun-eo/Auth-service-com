@@ -4,8 +4,13 @@ import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.response.ErrorResponse;
+import com.waya.wayaauthenticationservice.response.SuccessResponse;
+import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -28,6 +33,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+
+    @Autowired
+    private AuthenticatedUserFacade authenticatedUserFacade;
 
 
     @Autowired
@@ -53,6 +61,32 @@ public class UserServiceImpl implements UserService {
                     user.get().getPassword(), true, true, true, true, new ArrayList<>());
 
         }
+    }
+
+    @Override
+    public ResponseEntity getUser(long userId) {
+        Users user = usersRepo.findById(userId).orElse(null);
+        if(user == null){
+            return new ResponseEntity<>(new ErrorResponse("Transaction pin should be exactly 4 Digits"), HttpStatus.BAD_REQUEST);
+        } else {
+            return new ResponseEntity<>(new SuccessResponse("User info fetched", user), HttpStatus.OK);
+        }
+    }
+
+    @Override
+    public ResponseEntity getUserByEmail(String email) {
+        Users user = usersRepo.findByEmail(email).orElse(null);
+        if(user == null){
+            return new ResponseEntity<>(new ErrorResponse("Transaction pin should be exactly 4 Digits"), HttpStatus.BAD_REQUEST);
+        } else {
+            return new ResponseEntity<>(new SuccessResponse("User info fetched", user), HttpStatus.OK);
+        }
+    }
+
+    @Override
+    public ResponseEntity getMyInfo() {
+        Users user = authenticatedUserFacade.getUser();
+        return new ResponseEntity<>(new SuccessResponse("User info fetched", user), HttpStatus.OK);
     }
 
 }

@@ -23,14 +23,14 @@ public class Users implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @NotNull
-    private Long id;
+    private long id;
 
     @Email(message = "email should be valid")
     @Column(unique = true)
     private String email;
 
     @NotNull(message = "phone number cannot be null")
-    private Long phoneNumber;
+    private long phoneNumber;
 
     private String referenceCode;
     @NotBlank(message = "first Name cannot be null")
@@ -40,10 +40,12 @@ public class Users implements Serializable {
     @NotBlank(message = "last Name cannot be null")
     private String surname;
 
+    @JsonIgnore
     @NotBlank(message = "password cannot be null")
     @Length(min = 8, max = 100, message = "password must be greater than 8 characters")
     private String password;
 
+    @JsonIgnore
     private int pin;
 
     @Transient

@@ -1,12 +1,11 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.PinPojo;
-import com.waya.wayaauthenticationservice.pojo.ProfilePojo;
-import com.waya.wayaauthenticationservice.pojo.WalletPojo;
+import com.waya.wayaauthenticationservice.pojo.*;
+import com.waya.wayaauthenticationservice.repository.RedisUserDao;
 import com.waya.wayaauthenticationservice.response.*;
-import com.waya.wayaauthenticationservice.pojo.UserPojo;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
@@ -42,6 +41,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private RestTemplate restTemplate;
 
     @Autowired
+    private RedisUserDao redisUserDao;
+
+    @Autowired
     private AuthenticatedUserFacade authenticatedUserFacade;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationFilter.class);
@@ -50,20 +52,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public ResponseEntity createUser(UserPojo mUser) {
         // Check if email exists
         Users existingEmail = userRepo.findByEmail(mUser.getEmail()).orElse(null);
-        if (existingEmail == null) {
+        if (existingEmail != null) {
             return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
         }
 
         // Check if Phone exists
         Users existingTelephone = userRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
-        if (existingEmail == null) {
+        if (existingTelephone != null) {
             return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"), HttpStatus.BAD_REQUEST);
         }
 
-        // Check if telephone starts with 234
-        if (!startsWith234(mUser.getPhoneNumber(), 3)) {
-            return new ResponseEntity<>(new ErrorResponse("Phone numbers must start with 234"), HttpStatus.BAD_REQUEST);
-         }
+//        if (!startsWith234(mUser.getPhoneNumber(), 3)) {
+//            return new ResponseEntity<>(new ErrorResponse("Phone numbers must start with 234"), HttpStatus.BAD_REQUEST);
+//         }
 
         try {
             Roles roles = new Roles();
@@ -86,10 +87,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             }
 
             // Create Wallet
-            WalletPojo walletPojo = new WalletPojo("Default",user.getId().toString());
+            WalletPojo walletPojo = new WalletPojo("Default",String.valueOf(user.getId()));
             if (!createWallet(walletPojo)) {
                 return new ResponseEntity<>(new ErrorResponse("There was an error completing registration"), HttpStatus.BAD_REQUEST);
             }
+
+            // Save User to Redis
+            saveUserToRedis(user);
 
             return new ResponseEntity<>(new SuccessResponse("User created successfully. An OTP has been sent to you", null), HttpStatus.CREATED);
 
@@ -118,17 +122,21 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ResponseEntity verifyOTP(UserPojo userPojo) {
-        return null;
+    public ResponseEntity verifyOTP(OTPPojo otpPojo) {
+        String url = "http://46.101.41.187:8080/profile-service/otp-verify/"+otpPojo.getPhone()+"/"+otpPojo.getOtp();
+        OTPResponse otpResponse = restTemplate.getForObject(url, OTPResponse.class);
+        if(otpResponse.getError() != null) {
+            return new ResponseEntity<>(new SuccessResponse("OTP verified successfully. Please login.", null), HttpStatus.CREATED);
+        } else {
+            return new ResponseEntity<>(new ErrorResponse("Invalid OTP."), HttpStatus.BAD_REQUEST);
+        }
     }
 
 
     public boolean startsWith234(Long phoneNumber, int count) {
         String s = phoneNumber.toString();
         String first3 = s.substring(0, count);
-        if(first3 == "234") {
-            return true;
-        } else  {return  false ;}
+        return first3 == "234";
     }
 
     public boolean pinIs4Digit(int pin) {
@@ -144,7 +152,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user.getFirstName(),
                 "+"+user.getPhoneNumber(),
                 user.getSurname(),
-                user.getId().toString()
+                String.valueOf(user.getId())
         );
         ProfileResponse profileResponse = restTemplate.postForObject("http://46.101.41.187:8080/profile-service/personal-profile", profilePojo , ProfileResponse.class);
         if(profileResponse.getError() != null) {
@@ -158,6 +166,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         WalletResponse walletResponse = restTemplate.postForObject("http://46.101.41.187:7090/account-creation-service/api/account/createVirtualAccount", walletPojo , WalletResponse.class);
         return walletResponse.isStatus();
     }
+
+    private void saveUserToRedis(Users user){
+        RedisUser redisUser = new RedisUser();
+        redisUser.setId(user.getId());
+        redisUser.setEmail(user.getEmail());
+        redisUser.setPhoneNumber(user.getPhoneNumber());
+        redisUser.setSurname(user.getSurname());
+        redisUser.setRoles(user.getRolesList());
+
+        redisUserDao.save(redisUser);
+    }
+
+
 
 
 }

@@ -40,7 +40,8 @@ public class SwaggerConfig {
     @Bean
     public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)
-                .protocols(new HashSet<>(Arrays.asList("HTTP", "HTTPs")))
+//                .protocols(new HashSet<>(Arrays.asList("HTTP", "HTTPs")))
+                .protocols(new HashSet<>(Arrays.asList("HTTP")))
                 .apiInfo(apiInfo)
                 .select()
                 .apis(RequestHandlerSelectors.any())
