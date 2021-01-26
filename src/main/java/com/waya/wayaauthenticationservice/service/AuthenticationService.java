@@ -1,9 +1,6 @@
 package com.waya.wayaauthenticationservice.service;
 
-import com.waya.wayaauthenticationservice.pojo.EmailPojo;
-import com.waya.wayaauthenticationservice.pojo.OTPPojo;
-import com.waya.wayaauthenticationservice.pojo.PinPojo;
-import com.waya.wayaauthenticationservice.pojo.UserPojo;
+import com.waya.wayaauthenticationservice.pojo.*;
 import org.springframework.http.ResponseEntity;
 
 import javax.validation.constraints.Email;
@@ -14,6 +11,7 @@ public interface AuthenticationService {
     ResponseEntity createPin(PinPojo pinPojo);
     ResponseEntity verifyOTP(OTPPojo otpPojo);
     ResponseEntity verifyEmail(EmailPojo emailPojo);
+    ResponseEntity changePassword(PasswordPojo passwordPojo);
 
 
 

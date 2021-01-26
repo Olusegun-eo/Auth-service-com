@@ -164,6 +164,27 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
+    @Override
+    public ResponseEntity changePassword(PasswordPojo passwordPojo) {
+        Users user = userRepo.findByEmail(passwordPojo.getEmail()).orElse(null);
+        if(user == null){
+            return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
+        }
+        boolean isPasswordMatched = passwordEncoder.matches(passwordPojo.getOldPassword(), user.getPassword());
+        if(!isPasswordMatched) {
+            return new ResponseEntity<>(new ErrorResponse("Incorrect Old Password"), HttpStatus.BAD_REQUEST);
+        }
+        String newPassword = passwordEncoder.encode(passwordPojo.getNewPassword());
+        user.setPassword(newPassword);
+        try {
+            userRepo.save(user);
+            return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
 
     public boolean startsWith234(Long phoneNumber, int count) {
         String s = phoneNumber.toString();

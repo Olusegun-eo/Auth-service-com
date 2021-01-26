@@ -10,7 +10,7 @@ import java.util.Collection;
 
 public interface UserService extends UserDetailsService {
     Collection<? extends GrantedAuthority> getAuthorities(Collection<Roles> roles);
-    ResponseEntity getUser(long userId);
+    ResponseEntity getUser(Long userId);
     ResponseEntity getUserByEmail(String userId);
     ResponseEntity getMyInfo();
 }

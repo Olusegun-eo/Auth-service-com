@@ -59,12 +59,11 @@ public class UserServiceImpl implements UserService {
         }else {
             return new org.springframework.security.core.userdetails.User(user.get().getEmail(),
                     user.get().getPassword(), true, true, true, true, new ArrayList<>());
-
         }
     }
 
     @Override
-    public ResponseEntity getUser(long userId) {
+    public ResponseEntity getUser(Long userId) {
         Users user = usersRepo.findById(userId).orElse(null);
         if(user == null){
             return new ResponseEntity<>(new ErrorResponse("Invalid Id"), HttpStatus.BAD_REQUEST);
