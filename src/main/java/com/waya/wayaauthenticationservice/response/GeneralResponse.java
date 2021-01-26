@@ -11,10 +11,10 @@ import java.util.Optional;
 @AllArgsConstructor
 @Getter
 @Setter
-public class ProfileResponse {
+public class GeneralResponse {
 
     private String timestamp;
-    private String  message;
+    private String message;
     private Optional<Object>  data;
     private boolean status;
     private Optional<String> error;

@@ -11,11 +11,8 @@ import java.util.Optional;
 @AllArgsConstructor
 @Getter
 @Setter
-public class OTPResponse {
+public class InvalidResponse {
 
-    private Optional<String> timestamp;
-    private Optional<String> message;
-    private Optional<Object>  data;
-    private Optional<Integer> status;
-    private Optional<String> error;
+    private boolean invalid;
+    private String message;
 }

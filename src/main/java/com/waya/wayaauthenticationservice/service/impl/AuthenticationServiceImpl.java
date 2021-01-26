@@ -11,7 +11,6 @@ import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.security.AuthenticationFilter;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
-import org.apache.catalina.User;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -126,8 +125,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public ResponseEntity verifyOTP(OTPPojo otpPojo) {
         String url = "http://46.101.41.187:8080/profile-service/otp-verify/"+otpPojo.getPhone()+"/"+otpPojo.getOtp();
-        OTPResponse otpResponse = restTemplate.getForObject(url, OTPResponse.class);
-        if(otpResponse.getError() != null) {
+        GeneralResponse otpResponse = restTemplate.getForObject(url, GeneralResponse.class);
+        if(otpResponse.isStatus()) {
             Users user = userRepo.findByPhoneNumber(Long.valueOf(otpPojo.getPhone())).orElse(null);
             user.setPhoneVerified(true);
             try {
@@ -139,14 +138,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
             }
         } else {
-            return new ResponseEntity<>(new ErrorResponse("Invalid OTP."), HttpStatus.BAD_REQUEST);
+            InvalidResponse invalidResponse = (InvalidResponse) otpResponse.getData().orElse(null);
+            return new ResponseEntity<>(new ErrorResponse(invalidResponse.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
     @Override
     public ResponseEntity verifyEmail(EmailPojo emailPojo) {
         String url = "http://46.101.41.187:8080/profile-service/email-verify/";
-        OTPResponse otpResponse = restTemplate.postForObject(url, emailPojo, OTPResponse.class);
+        GeneralResponse otpResponse = restTemplate.postForObject(url, emailPojo, GeneralResponse.class);
         if(otpResponse.getError() != null) {
             Users user = userRepo.findByEmail(emailPojo.getEmail()).orElse(null);
             user.setEmailVerified(true);
@@ -208,8 +208,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 String.valueOf(user.getId())
         );
         ProfileResponse profileResponse = restTemplate.postForObject("http://46.101.41.187:8080/profile-service/personal-profile", profilePojo , ProfileResponse.class);
-        System.out.println(profileResponse.getError());
-        return profileResponse.getError() == null;
+        return profileResponse.isStatus();
     }
 
     private boolean createWallet(WalletPojo walletPojo){

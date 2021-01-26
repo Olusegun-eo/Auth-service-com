@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin
 @RestController
 @RequestMapping("/api/auth")
 public class AuthenticationController {
@@ -30,7 +29,7 @@ public class AuthenticationController {
         return authenticationServiceImpl.verifyOTP(otpPojo);
     }
 
-    @ApiOperation(value = "Password Change (Service concumption only. Do not User)", notes = "This is meant for service consumption")
+    @ApiOperation(value = "Password Change (Service consumption only. Do not Usr)", notes = "This is meant for service consumption")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping("/password-change")
     public ResponseEntity<?> changePass(@RequestBody PasswordPojo passwordPojo) {
