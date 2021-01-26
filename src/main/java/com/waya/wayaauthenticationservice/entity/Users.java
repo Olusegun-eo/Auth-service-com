@@ -22,7 +22,7 @@ public class Users implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @NotNull
+    @Column(name = "id", unique = true, nullable = false)
     private long id;
 
     @Email(message = "email should be valid")
@@ -47,6 +47,14 @@ public class Users implements Serializable {
 
     @JsonIgnore
     private int pin;
+
+    @JsonIgnore
+    private boolean phoneVerified = false;
+
+    @JsonIgnore
+    private boolean emailVerified = false;
+
+    private boolean pinCreated = false;
 
     @Transient
     private Roles role;

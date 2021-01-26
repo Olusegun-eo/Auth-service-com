@@ -11,6 +11,7 @@ import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.security.AuthenticationFilter;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
+import org.apache.catalina.User;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,11 +96,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             // Save User to Redis
             saveUserToRedis(user);
 
+
             return new ResponseEntity<>(new SuccessResponse("User created successfully. An OTP has been sent to you", null), HttpStatus.CREATED);
 
         } catch (Exception e) {
             LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
-            return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -126,7 +128,37 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String url = "http://46.101.41.187:8080/profile-service/otp-verify/"+otpPojo.getPhone()+"/"+otpPojo.getOtp();
         OTPResponse otpResponse = restTemplate.getForObject(url, OTPResponse.class);
         if(otpResponse.getError() != null) {
-            return new ResponseEntity<>(new SuccessResponse("OTP verified successfully. Please login.", null), HttpStatus.CREATED);
+            Users user = userRepo.findByPhoneNumber(Long.valueOf(otpPojo.getPhone())).orElse(null);
+            user.setPhoneVerified(true);
+            try {
+                userRepo.save(user);
+                return new ResponseEntity<>(new SuccessResponse("OTP verified successfully. Please login.", null), HttpStatus.CREATED);
+
+            } catch (Exception e) {
+                LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+                return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
+            }
+        } else {
+            return new ResponseEntity<>(new ErrorResponse("Invalid OTP."), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Override
+    public ResponseEntity verifyEmail(EmailPojo emailPojo) {
+        String url = "http://46.101.41.187:8080/profile-service/email-verify/";
+        OTPResponse otpResponse = restTemplate.postForObject(url, emailPojo, OTPResponse.class);
+        if(otpResponse.getError() != null) {
+            Users user = userRepo.findByEmail(emailPojo.getEmail()).orElse(null);
+            user.setEmailVerified(true);
+            try {
+                userRepo.save(user);
+                return new ResponseEntity<>(new SuccessResponse("Email verified successfully. Please login.", null), HttpStatus.CREATED);
+
+            } catch (Exception e) {
+                LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+                return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
+            }
+
         } else {
             return new ResponseEntity<>(new ErrorResponse("Invalid OTP."), HttpStatus.BAD_REQUEST);
         }
@@ -155,11 +187,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 String.valueOf(user.getId())
         );
         ProfileResponse profileResponse = restTemplate.postForObject("http://46.101.41.187:8080/profile-service/personal-profile", profilePojo , ProfileResponse.class);
-        if(profileResponse.getError() != null) {
-            return false;
-        } else {
-            return true;
-        }
+        System.out.println(profileResponse.getError());
+        return profileResponse.getError() == null;
     }
 
     private boolean createWallet(WalletPojo walletPojo){

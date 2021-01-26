@@ -67,7 +67,7 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity getUser(long userId) {
         Users user = usersRepo.findById(userId).orElse(null);
         if(user == null){
-            return new ResponseEntity<>(new ErrorResponse("Transaction pin should be exactly 4 Digits"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse("Invalid Id"), HttpStatus.BAD_REQUEST);
         } else {
             return new ResponseEntity<>(new SuccessResponse("User info fetched", user), HttpStatus.OK);
         }
@@ -77,7 +77,7 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity getUserByEmail(String email) {
         Users user = usersRepo.findByEmail(email).orElse(null);
         if(user == null){
-            return new ResponseEntity<>(new ErrorResponse("Transaction pin should be exactly 4 Digits"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse("Invalid email"), HttpStatus.BAD_REQUEST);
         } else {
             return new ResponseEntity<>(new SuccessResponse("User info fetched", user), HttpStatus.OK);
         }

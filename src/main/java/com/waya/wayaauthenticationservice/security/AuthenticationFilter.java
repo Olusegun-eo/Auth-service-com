@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.LoginResponsePojo;
 import org.springframework.security.core.userdetails.User;
 import com.waya.wayaauthenticationservice.pojo.LoginDetailsPojo;
 import com.waya.wayaauthenticationservice.pojo.UserProfileResponsePojo;
@@ -58,7 +59,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
             Users user = userLoginRepo.findByEmail(creds.getEmail()).orElseThrow(() -> new BadCredentialsException("User Does not exist"));
 
-            System.out.println(user.getFirstName());
             List<Roles> roles = user.getRolesList();
             List<GrantedAuthority> grantedAuthorities = roles.stream().map(r -> {
 
@@ -89,23 +89,39 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
         res.addHeader(SecurityConstants.HEADER_STRING, SecurityConstants.TOKEN_PREFIX + token);
 
+        LoginResponsePojo loginResponsePojo = new LoginResponsePojo();
         Map m = new HashMap();
-        m.put("code", 0);
-        m.put("message", "Login successful");
-        m.put("token", SecurityConstants.TOKEN_PREFIX + token);
-        List<String> roles = new ArrayList<>();
 
-        List<Roles> rs = user.getRolesList();
-        for (int i = 0; i < rs.size(); i++) {
-            roles.add(rs.get(i).getName());
+        if(!user.isPhoneVerified()){
+            loginResponsePojo.setCode(-2);
+            loginResponsePojo.setStatus(false);
+            loginResponsePojo.setMessage("Your Phone number has not been verified");
+        } else {
 
+            loginResponsePojo.setCode(0);
+            loginResponsePojo.setStatus(true);
+            loginResponsePojo.setMessage("Login Successful");
+
+            m.put("token", SecurityConstants.TOKEN_PREFIX + token);
+            List<String> roles = new ArrayList<>();
+
+            List<Roles> rs = user.getRolesList();
+            for (int i = 0; i < rs.size(); i++) {
+                roles.add(rs.get(i).getName());
+
+            }
+            m.put("roles", roles);
+            m.put("pinCreated", user.isPinCreated());
+            UserProfileResponsePojo userp = new ModelMapper().map(user, UserProfileResponsePojo.class);
+            userp.setPhoneNumber(user.getPhoneNumber());
+            //List<CompanyProfile> companyProfile = companyProfileRepos.findByUserId(user.getId());
+            m.put("user", userp);
+            loginResponsePojo.setData(m);
         }
-        m.put("roles", roles);
-        UserProfileResponsePojo userp = new ModelMapper().map(user, UserProfileResponsePojo.class);
-        userp.setPhoneNumber(user.getPhoneNumber());
-        //List<CompanyProfile> companyProfile = companyProfileRepos.findByUserId(user.getId());
-        m.put("user", userp);
-        String str = gson.toJson(m);
+
+
+
+        String str = gson.toJson(loginResponsePojo);
         PrintWriter pr = res.getWriter();
         res.setContentType("application/json");
         res.setCharacterEncoding("UTF-8");
@@ -121,7 +137,8 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         response.setContentType(MediaType.ALL_VALUE);
         Map m = new HashMap();
         m.put("code", -1);
-        m.put("message", "unsuccessful, invalid username or password");
+        m.put("status", false);
+        m.put("message", "Invalid Login");
         String str = gson.toJson(m);
         PrintWriter pr = response.getWriter();
         response.setContentType("application/json");
