@@ -4,6 +4,7 @@ import com.waya.wayaauthenticationservice.pojo.*;
 import com.waya.wayaauthenticationservice.service.impl.AuthenticationServiceImpl;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,24 +17,39 @@ public class AuthenticationController {
 
     @ApiOperation("User Registration")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
-    @PostMapping("/create")
+    @PostMapping(path = "/create", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<?> create(@RequestBody UserPojo user) {
         return authenticationServiceImpl.createUser(user);
     }
 
 
-    @ApiOperation("Verify OTP")
+    @ApiOperation("Verify phone number with OTP")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOTP(@RequestBody OTPPojo otpPojo) {
         return authenticationServiceImpl.verifyOTP(otpPojo);
     }
 
-    @ApiOperation(value = "Password Change (Service consumption only. Do not Usr)", notes = "This is meant for service consumption")
+    @ApiOperation("Verify email")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @PostMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestBody EmailPojo emailPojo) {
+        return authenticationServiceImpl.verifyEmail(emailPojo);
+    }
+
+
+    @ApiOperation(value = "Password Change (Service consumption only. Do not Use)", notes = "This is meant for service consumption")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping("/password-change")
     public ResponseEntity<?> changePass(@RequestBody PasswordPojo passwordPojo) {
         return authenticationServiceImpl.changePassword(passwordPojo);
+    }
+
+    @ApiOperation(value = "Pin Change (Service consumption only. Do not Use)", notes = "This is meant for service consumption")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @PostMapping("/pin-change")
+    public ResponseEntity<?> changePin(@RequestBody PinPojo pinPojo) {
+        return authenticationServiceImpl.changePin(pinPojo);
     }
 
 
@@ -49,6 +65,20 @@ public class AuthenticationController {
     @PostMapping("/create-pin")
     public ResponseEntity<?> createPin(@RequestBody PinPojo pinPojo) {
         return authenticationServiceImpl.createPin(pinPojo);
+    }
+
+    @ApiOperation("Resend OTP to Phone")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @GetMapping("/resend-otp/{phoneNumber}/{email}")
+    public ResponseEntity<?> resendOTP(@PathVariable String phoneNumber, String email) {
+        return authenticationServiceImpl.resendOTP(phoneNumber, email);
+    }
+
+    @ApiOperation("Resend Verification Email")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @GetMapping("/resend-otp/{email}/{userName}")
+    public ResponseEntity<?> resendOTPEmail(@PathVariable String email, String userName) {
+        return authenticationServiceImpl.resendVerificationMail(email, userName);
     }
 
 

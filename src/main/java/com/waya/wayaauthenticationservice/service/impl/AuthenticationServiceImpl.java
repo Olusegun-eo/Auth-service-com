@@ -145,9 +145,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public ResponseEntity verifyEmail(EmailPojo emailPojo) {
-        String url = "http://46.101.41.187:8080/profile-service/email-verify/";
-        GeneralResponse otpResponse = restTemplate.postForObject(url, emailPojo, GeneralResponse.class);
-        if(otpResponse.getError() != null) {
+        String url = "http://46.101.41.187:8080/profile-service/email-verify/"+emailPojo.getEmail()+"/"+emailPojo.getToken();
+        GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
+        if(generalResponse.isStatus()) {
             Users user = userRepo.findByEmail(emailPojo.getEmail()).orElse(null);
             user.setEmailVerified(true);
             try {
@@ -160,7 +160,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             }
 
         } else {
-            return new ResponseEntity<>(new ErrorResponse("Invalid OTP."), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse(generalResponse.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -184,6 +184,43 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
+
+    @Override
+    public ResponseEntity changePin(PinPojo pinPojo) {
+        Users user = userRepo.findByEmail(pinPojo.getEmail().orElse(null)).orElse(null);
+        if(user == null){
+            return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
+        }
+        user.setPin(pinPojo.getPin());
+        try {
+            userRepo.save(user);
+            return new ResponseEntity<>(new SuccessResponse("Pin Changed.", null), HttpStatus.OK);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Override
+    public ResponseEntity resendOTP(String phoneNumber, String email) {
+        String url = "http://46.101.41.187:8080/profile-service/otp/"+phoneNumber+"/"+email;
+        GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
+        if(generalResponse.isStatus()) {
+            return new ResponseEntity<>(new SuccessResponse("OTP sent successfully.", null), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(new ErrorResponse(generalResponse.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Override
+    public ResponseEntity resendVerificationMail(String email, String userName) {
+        String url = "http://46.101.41.187:8080/profile-service/email-token/"+email+"/"+userName;
+        GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
+        if(generalResponse.isStatus()) {
+            return new ResponseEntity<>(new SuccessResponse("Verification email sent successfully.", null), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(new ErrorResponse(generalResponse.getMessage()), HttpStatus.BAD_REQUEST);
+        }    }
 
 
     public boolean startsWith234(Long phoneNumber, int count) {

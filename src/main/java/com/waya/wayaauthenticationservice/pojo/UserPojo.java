@@ -12,4 +12,5 @@ public class UserPojo {
     private String firstName;
     private String surname;
     private String password;
+    private boolean isCorporate = false;
 }
