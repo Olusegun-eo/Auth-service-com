@@ -76,7 +76,7 @@ public class AuthenticationController {
 
     @ApiOperation("Resend Verification Email")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
-    @GetMapping("/resend-otp/{email}/{userName}")
+    @GetMapping("/resend-otp-mail/{email}/{userName}")
     public ResponseEntity<?> resendOTPEmail(@PathVariable String email, String userName) {
         return authenticationServiceImpl.resendVerificationMail(email, userName);
     }

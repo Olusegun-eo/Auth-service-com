@@ -13,6 +13,6 @@ import java.util.Optional;
 @Setter
 public class InvalidResponse {
 
-    private boolean invalid;
+    private boolean valid;
     private String message;
 }
