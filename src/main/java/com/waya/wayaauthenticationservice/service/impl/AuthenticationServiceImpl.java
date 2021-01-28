@@ -25,6 +25,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.waya.wayaauthenticationservice.util.Constant.ACCOUNT_CREATION;
+import static com.waya.wayaauthenticationservice.util.Constant.PROFILE_SERVICE;
+
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
 
@@ -130,7 +133,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } else {
             number = "+" +  otpPojo.getPhone();
         }
-        String url = "http://46.101.41.187:8080/profile-service/otp-verify/"+number+"/"+otpPojo.getOtp();
+        String url = PROFILE_SERVICE+"profile-service/otp-verify/"+number+"/"+otpPojo.getOtp();
         GeneralResponse otpResponse = restTemplate.getForObject(url, GeneralResponse.class);
         if(otpResponse.isStatus()) {
             Users user = userRepo.findByPhoneNumber(Long.valueOf(otpPojo.getPhone())).orElse(null);
@@ -150,7 +153,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public ResponseEntity verifyEmail(EmailPojo emailPojo) {
-        String url = "http://46.101.41.187:8080/profile-service/email-verify/"+emailPojo.getEmail()+"/"+emailPojo.getToken();
+        String url = PROFILE_SERVICE+"profile-service/email-verify/"+emailPojo.getEmail()+"/"+emailPojo.getToken();
         GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
         if(generalResponse.isStatus()) {
             Users user = userRepo.findByEmail(emailPojo.getEmail()).orElse(null);
@@ -191,7 +194,43 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ResponseEntity changePin(PinPojo pinPojo) {
+    public ResponseEntity forgotPassword(PasswordPojo2 passwordPojo) {
+        Users user = userRepo.findByEmail(passwordPojo.getEmail()).orElse(null);
+        if(user == null){
+            return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
+        }
+        user.setPassword(passwordEncoder.encode(passwordPojo.getNewPassword()));
+        try {
+            userRepo.save(user);
+            return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Override
+    public ResponseEntity changePin(PinPojo2 pinPojo) {
+        Users user = userRepo.findByEmail(pinPojo.getEmail()).orElse(null);
+        if(user == null){
+            return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
+        }
+        boolean isPinMatched = user.getPin() == pinPojo.getOldPin();
+        if(!isPinMatched) {
+            return new ResponseEntity<>(new ErrorResponse("Incorrect Old Pin"), HttpStatus.BAD_REQUEST);
+        }
+        user.setPin(pinPojo.getNewPin());
+        try {
+            userRepo.save(user);
+            return new ResponseEntity<>(new SuccessResponse("Pin Changed.", null), HttpStatus.OK);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Override
+    public ResponseEntity forgotPin(PinPojo pinPojo) {
         Users user = userRepo.findByEmail(pinPojo.getEmail()).orElse(null);
         if(user == null){
             return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
@@ -208,7 +247,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public ResponseEntity resendOTP(String phoneNumber, String email) {
-        String url = "http://46.101.41.187:8080/profile-service/otp/"+phoneNumber+"/"+email;
+        String url = PROFILE_SERVICE+"profile-service/otp/"+phoneNumber+"/"+email;
         GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
         if(generalResponse.isStatus()) {
             return new ResponseEntity<>(new SuccessResponse("OTP sent successfully.", null), HttpStatus.OK);
@@ -219,7 +258,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public ResponseEntity resendVerificationMail(String email, String userName) {
-        String url = "http://46.101.41.187:8080/profile-service/email-token/"+email+"/"+userName;
+        String url = PROFILE_SERVICE+"profile-service/email-token/"+email+"/"+userName;
         GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
         if(generalResponse.isStatus()) {
             return new ResponseEntity<>(new SuccessResponse("Verification email sent successfully.", null), HttpStatus.OK);
@@ -247,12 +286,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user.getSurname(),
                 String.valueOf(user.getId())
         );
-        ProfileResponse profileResponse = restTemplate.postForObject("http://46.101.41.187:8080/profile-service/personal-profile", profilePojo , ProfileResponse.class);
+        ProfileResponse profileResponse = restTemplate.postForObject(PROFILE_SERVICE+"profile-service/personal-profile", profilePojo , ProfileResponse.class);
         return profileResponse.isStatus();
     }
 
     private boolean createWallet(WalletPojo walletPojo){
-        WalletResponse walletResponse = restTemplate.postForObject("http://46.101.41.187:7090/account-creation-service/api/account/createVirtualAccount", walletPojo , WalletResponse.class);
+        WalletResponse walletResponse = restTemplate.postForObject(ACCOUNT_CREATION+"account-creation-service/api/account/createVirtualAccount", walletPojo , WalletResponse.class);
         return walletResponse.isStatus();
     }
 

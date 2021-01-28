@@ -45,13 +45,26 @@ public class AuthenticationController {
         return authenticationServiceImpl.changePassword(passwordPojo);
     }
 
+    @ApiOperation(value = "Forgot Password (Service consumption only. Do not Use)", notes = "This is meant for service consumption")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPass(@RequestBody PasswordPojo2 passwordPojo) {
+        return authenticationServiceImpl.forgotPassword(passwordPojo);
+    }
+
     @ApiOperation(value = "Pin Change (Service consumption only. Do not Use)", notes = "This is meant for service consumption")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping("/pin-change")
-    public ResponseEntity<?> changePin(@RequestBody PinPojo pinPojo) {
+    public ResponseEntity<?> changePin(@RequestBody PinPojo2 pinPojo) {
         return authenticationServiceImpl.changePin(pinPojo);
     }
 
+    @ApiOperation(value = "Forgot Pin (Service consumption only. Do not Use)", notes = "This is meant for service consumption")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @PostMapping("/forgot-pin")
+    public ResponseEntity<?> forgotPin(@RequestBody PinPojo pinPojo) {
+        return authenticationServiceImpl.forgotPin(pinPojo);
+    }
 
     @ApiOperation("User login")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
@@ -76,9 +89,9 @@ public class AuthenticationController {
 
     @ApiOperation("Resend Verification Email")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
-    @GetMapping("/resend-otp-mail/{email}/{userName}")
-    public ResponseEntity<?> resendOTPEmail(@PathVariable String email, String userName) {
-        return authenticationServiceImpl.resendVerificationMail(email, userName);
+    @GetMapping("/resend-otp-mail/{email}/{userId}")
+    public ResponseEntity<?> resendOTPEmail(@PathVariable String email, String userId) {
+        return authenticationServiceImpl.resendVerificationMail(email, userId);
     }
 
 

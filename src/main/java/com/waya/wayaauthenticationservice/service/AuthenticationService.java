@@ -12,7 +12,9 @@ public interface AuthenticationService {
     ResponseEntity verifyOTP(OTPPojo otpPojo);
     ResponseEntity verifyEmail(EmailPojo emailPojo);
     ResponseEntity changePassword(PasswordPojo passwordPojo);
-    ResponseEntity changePin(PinPojo pinPojo);
+    ResponseEntity forgotPassword(PasswordPojo2 passwordPojo);
+    ResponseEntity changePin(PinPojo2 pinPojo);
+    ResponseEntity forgotPin(PinPojo pinPojo);
     ResponseEntity resendOTP(String phoneNumber, String email);
     ResponseEntity resendVerificationMail(String email, String userName);
 
