@@ -93,7 +93,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             }
 
             // Save User to Redis
-            saveUserToRedis(user);
+//            saveUserToRedis(user);
 
 
             return new ResponseEntity<>(new SuccessResponse("User created successfully. An OTP has been sent to you", null), HttpStatus.CREATED);
@@ -192,7 +192,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public ResponseEntity changePin(PinPojo pinPojo) {
-        Users user = userRepo.findByEmail(pinPojo.getEmail().orElse(null)).orElse(null);
+        Users user = userRepo.findByEmail(pinPojo.getEmail()).orElse(null);
         if(user == null){
             return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
         }

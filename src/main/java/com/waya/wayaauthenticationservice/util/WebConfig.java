@@ -5,7 +5,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@Configuration
+//@Configuration
 public class WebConfig implements WebMvcConfigurer {
 
     @Override
@@ -14,9 +14,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry
                 .addMapping("/**")
                 .allowedMethods("*")
-                .allowedHeaders("*")
-                .allowCredentials(true)
-                .allowedOriginPatterns("*");
+                .allowedOrigins("*");
 
     }
 

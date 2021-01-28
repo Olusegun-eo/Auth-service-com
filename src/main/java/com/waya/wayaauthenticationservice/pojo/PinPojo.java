@@ -10,5 +10,5 @@ import java.util.Optional;
 public class PinPojo {
     private Long userId;
     private int pin;
-    private Optional<String> email;
+    private String email;
 }

@@ -16,7 +16,7 @@ import java.util.List;
 @RedisHash("User")
 public class RedisUser implements Serializable {
     @Id
-    private long id;
+    private Long id;
     private String firstName;
     private String surname;
     private String email;
