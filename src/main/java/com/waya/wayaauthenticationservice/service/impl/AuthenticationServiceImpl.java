@@ -62,9 +62,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"), HttpStatus.BAD_REQUEST);
         }
 
-//        if (!startsWith234(mUser.getPhoneNumber(), 3)) {
-//            return new ResponseEntity<>(new ErrorResponse("Phone numbers must start with 234"), HttpStatus.BAD_REQUEST);
-//         }
+        if (startsWith234(String.valueOf(mUser.getPhoneNumber()), 3) != "234") {
+            return new ResponseEntity<>(new ErrorResponse("Phone numbers must start with 234"), HttpStatus.BAD_REQUEST);
+         }
 
         try {
             Roles roles = new Roles();
@@ -228,10 +228,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }    }
 
 
-    public boolean startsWith234(Long phoneNumber, int count) {
-        String s = phoneNumber.toString();
-        String first3 = s.substring(0, count);
-        return first3 == "234";
+    public String startsWith234(String phoneNumber, int count) {
+        return  phoneNumber.substring(0, count);
     }
 
     public boolean pinIs4Digit(int pin) {
