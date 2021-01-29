@@ -65,7 +65,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"), HttpStatus.BAD_REQUEST);
         }
 
-        if (startsWith234(String.valueOf(mUser.getPhoneNumber()), 3) != "234") {
+        if (!startsWith234(mUser.getPhoneNumber(), 3).equals("234")) {
             return new ResponseEntity<>(new ErrorResponse("Phone numbers must start with 234"), HttpStatus.BAD_REQUEST);
          }
 
@@ -268,6 +268,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 
     public String startsWith234(String phoneNumber, int count) {
+
         return  phoneNumber.substring(0, count);
     }
 
