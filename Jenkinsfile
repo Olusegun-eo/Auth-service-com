@@ -1,6 +1,6 @@
 pipeline {
     environment {
-    registry = " registry.digitalocean.com/wayapaychat-container-registry/waya-auth-service"
+    registry = "wayapaychat-container-registry/waya-auth-service"
     registryCredential = 'DigitalOcean-registry-for-development'
     dockerImage = ''
   }
@@ -12,10 +12,6 @@ pipeline {
     }
 
     stages {
-	    stage('Cloning Git') {
-      steps {
-        git 'https://github.com/WAYA-MULTI-LINK/WAYA-PAY-CHAT-2.0-AUTH-SERVICE.git'
-      }
         stage('compile') {
             steps {
                sh "mvn clean install"
@@ -44,5 +40,6 @@ pipeline {
         sh "docker rmi $registry:$BUILD_NUMBER"
       }
     }
-  }
+ }
+
 }
