@@ -30,7 +30,7 @@ public class Users implements Serializable {
     private String email;
 
     @NotNull(message = "phone number cannot be null")
-    private long phoneNumber;
+    private String phoneNumber;
 
     private String referenceCode;
     @NotBlank(message = "first Name cannot be null")

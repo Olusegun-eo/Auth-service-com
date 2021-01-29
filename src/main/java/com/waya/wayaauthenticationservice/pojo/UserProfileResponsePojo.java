@@ -8,5 +8,5 @@ import lombok.Setter;
 public class UserProfileResponsePojo {
     private Long id;
     private String email;
-    private Long phoneNumber;
+    private String phoneNumber;
 }

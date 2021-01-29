@@ -7,7 +7,7 @@ import lombok.Setter;
 @Setter
 public class UserPojo {
     private String email;
-    private Long phoneNumber;
+    private String phoneNumber;
     private String referenceCode;
     private String firstName;
     private String surname;

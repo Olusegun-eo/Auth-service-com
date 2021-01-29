@@ -20,6 +20,6 @@ public class RedisUser implements Serializable {
     private String firstName;
     private String surname;
     private String email;
-    private long phoneNumber;
+    private String phoneNumber;
     private List<Roles> roles;
 }

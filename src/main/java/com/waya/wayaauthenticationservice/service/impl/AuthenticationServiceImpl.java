@@ -136,7 +136,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String url = PROFILE_SERVICE+"profile-service/otp-verify/"+number+"/"+otpPojo.getOtp();
         GeneralResponse otpResponse = restTemplate.getForObject(url, GeneralResponse.class);
         if(otpResponse.isStatus()) {
-            Users user = userRepo.findByPhoneNumber(Long.valueOf(otpPojo.getPhone())).orElse(null);
+            Users user = userRepo.findByPhoneNumber(otpPojo.getPhone()).orElse(null);
             user.setPhoneVerified(true);
             try {
                 userRepo.save(user);
