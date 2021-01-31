@@ -127,15 +127,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public ResponseEntity verifyOTP(OTPPojo otpPojo) {
-        String number = "";
-        if(otpPojo.getPhone().charAt(0) == '+'){
-            number = otpPojo.getPhone();
-        } else {
-            number = "+" +  otpPojo.getPhone();
-        }
-        String url = PROFILE_SERVICE+"profile-service/otp-verify/"+number+"/"+otpPojo.getOtp();
-        GeneralResponse otpResponse = restTemplate.getForObject(url, GeneralResponse.class);
-        if(otpResponse.isStatus()) {
+        String url = PROFILE_SERVICE+"profile-service/otp-verify/"+otpPojo.getPhone()+"/"+otpPojo.getOtp();
+        ProfileResponse profileResponse = restTemplate.getForObject(url, ProfileResponse.class);
+        if(profileResponse.isStatus()) {
             Users user = userRepo.findByPhoneNumber(otpPojo.getPhone()).orElse(null);
             user.setPhoneVerified(true);
             try {
@@ -147,7 +141,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
             }
         } else {
-            return new ResponseEntity<>(new ErrorResponse(otpResponse.getMessage()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 

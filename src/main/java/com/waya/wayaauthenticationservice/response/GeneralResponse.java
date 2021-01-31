@@ -17,5 +17,4 @@ public class GeneralResponse {
     private String message;
     private Optional<Object>  data;
     private boolean status;
-    private Optional<String> error;
 }

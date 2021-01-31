@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final Gson gson = new Gson();
+    private boolean isAdmin = false;
     private static final Logger LOGGER= LoggerFactory.getLogger(AuthenticationFilter.class);
 
 
@@ -52,8 +53,8 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res)
             throws AuthenticationException {
         try {
-
             LoginDetailsPojo creds = new ObjectMapper().readValue(req.getInputStream(), LoginDetailsPojo.class);
+            isAdmin = creds.isAdmin();
 
             UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
 
