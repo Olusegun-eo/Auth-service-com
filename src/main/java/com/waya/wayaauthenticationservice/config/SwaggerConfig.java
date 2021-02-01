@@ -28,7 +28,7 @@ public class SwaggerConfig {
     List<VendorExtension> vendorExtensions = new ArrayList<>();
 
     ApiInfo apiInfo = new ApiInfo(
-            "Waya-Paychat",
+            "Auth-Service",
             "This pages documents Waya-Paychat System RESTful Web Service endpoints",
             "1.0",
             "",

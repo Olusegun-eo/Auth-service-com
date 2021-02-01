@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 public class AuthenticationController {
 
     @Autowired
@@ -78,6 +78,14 @@ public class AuthenticationController {
     @PostMapping("/create-pin")
     public ResponseEntity<?> createPin(@RequestBody PinPojo pinPojo) {
         return authenticationServiceImpl.createPin(pinPojo);
+    }
+
+
+    @ApiOperation(value = "User Validation (Service consumption only. Do not Use)", notes = "This endpoint help validate user and is meant for service consumption only")
+    @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
+    @PostMapping("/validate-user")
+    public ResponseEntity<?> validateUser() {
+        return authenticationServiceImpl.validateUser();
     }
 
     @ApiOperation("Resend OTP to Phone")

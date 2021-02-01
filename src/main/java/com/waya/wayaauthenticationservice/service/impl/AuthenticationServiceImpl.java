@@ -114,6 +114,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return new ResponseEntity<>(new ErrorResponse("Transaction pin should be exactly 4 Digits"), HttpStatus.BAD_REQUEST);
         }
         user.setPin(pinPojo.getPin());
+        user.setPinCreated(true);
         try {
             userRepo.save(user);
             return new ResponseEntity<>(new SuccessResponse("Transaction pin created successfully.", null), HttpStatus.CREATED);
@@ -259,6 +260,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } else {
             return new ResponseEntity<>(new ErrorResponse(generalResponse.getMessage()), HttpStatus.BAD_REQUEST);
         }    }
+
+    @Override
+    public ResponseEntity validateUser() {
+        Users user = authenticatedUserFacade.getUser();
+        //Implement Redis Fetch user
+        // ---
+        return new ResponseEntity<>(new SuccessResponse("User valid.", user), HttpStatus.OK);
+    }
 
 
     public String startsWith234(String phoneNumber, int count) {

@@ -61,6 +61,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 cors().and().csrf().disable()
                 // dont authenticate this particular request
                 .authorizeRequests()
+                .antMatchers("/auth/**").permitAll()
                 .antMatchers("/api/auth/**").permitAll()
                 .antMatchers("/api/user/**").permitAll()
                 .antMatchers("/api/admin/**").permitAll()
@@ -80,7 +81,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected AuthenticationFilter getAuthenticationFilter() throws Exception {
         //JwtRequestFilter filter = new JwtRequestFilter(authenticationManager());
         final AuthenticationFilter filter = new AuthenticationFilter(authenticationManager());
-        filter.setFilterProcessesUrl("/api/auth/login");
+        filter.setFilterProcessesUrl("/auth/login");
         return filter;
     }
 

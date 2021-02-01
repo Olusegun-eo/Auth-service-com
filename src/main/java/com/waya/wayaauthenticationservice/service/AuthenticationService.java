@@ -17,6 +17,7 @@ public interface AuthenticationService {
     ResponseEntity forgotPin(PinPojo pinPojo);
     ResponseEntity resendOTP(String phoneNumber, String email);
     ResponseEntity resendVerificationMail(String email, String userName);
+    ResponseEntity validateUser();
 
 
 

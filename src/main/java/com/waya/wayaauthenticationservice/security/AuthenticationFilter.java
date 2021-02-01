@@ -47,7 +47,8 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         super.setAuthenticationManager(manager);
     }
 
-
+    public AuthenticationFilter() {
+    }
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res)
@@ -97,26 +98,34 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
             loginResponsePojo.setCode(-2);
             loginResponsePojo.setStatus(false);
             loginResponsePojo.setMessage("Your Phone number has not been verified");
-        } else {
+        }
 
-            loginResponsePojo.setCode(0);
-            loginResponsePojo.setStatus(true);
-            loginResponsePojo.setMessage("Login Successful");
+        else {
 
-            m.put("token", SecurityConstants.TOKEN_PREFIX + token);
             List<String> roles = new ArrayList<>();
-
             List<Roles> rs = user.getRolesList();
             for (int i = 0; i < rs.size(); i++) {
                 roles.add(rs.get(i).getName());
-
             }
-            m.put("roles", roles);
-            m.put("pinCreated", user.isPinCreated());
-            UserProfileResponsePojo userp = new ModelMapper().map(user, UserProfileResponsePojo.class);
-            userp.setPhoneNumber(user.getPhoneNumber());
-            m.put("user", userp);
-            loginResponsePojo.setData(m);
+
+            if (isAdmin == roleCheck(rs, "Admin")){
+                loginResponsePojo.setCode(0);
+                loginResponsePojo.setStatus(true);
+                loginResponsePojo.setMessage("Login Successful");
+
+                m.put("token", SecurityConstants.TOKEN_PREFIX + token);
+
+                m.put("roles", roles);
+                m.put("pinCreated", user.isPinCreated());
+                UserProfileResponsePojo userp = new ModelMapper().map(user, UserProfileResponsePojo.class);
+                userp.setPhoneNumber(user.getPhoneNumber());
+                m.put("user", userp);
+                loginResponsePojo.setData(m);
+            } else {
+                loginResponsePojo.setCode(-3);
+                loginResponsePojo.setStatus(false);
+                loginResponsePojo.setMessage("Invalid Login");
+            }
         }
 
 
@@ -144,5 +153,16 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         pr.write(str);
+    }
+
+    public boolean roleCheck(List<Roles> rolesList, String role){
+        boolean result = false;
+        for (Roles r: rolesList) {
+            if (r.getName().equals(role)) {
+                result = true;
+                break;
+            }
+        }
+        return result;
     }
 }

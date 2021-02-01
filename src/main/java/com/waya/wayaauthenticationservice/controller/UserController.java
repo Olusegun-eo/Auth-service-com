@@ -16,7 +16,7 @@ import java.util.List;
 
 @CrossOrigin
 @RestController
-@RequestMapping("api/user")
+@RequestMapping("/user")
 @EnableCaching
 public class UserController {
 
