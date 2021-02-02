@@ -3,7 +3,10 @@ pipeline {
     registry = "wayapaychat-container-registry/waya-auth-service"
     registryCredential = 'DigitalOcean-registry-for-development'
     dockerImage = ''
-  }
+    }
+	parameters {
+	    strings(name: 'TARGET_ENV' defaultValue: 'dev', description: 'Environment')
+	}
     agent any
 
     tools {
@@ -35,11 +38,18 @@ pipeline {
         }
       }
     }
-    
-    /*stage('Remove Unused docker image') {
+    stage ('Starting the deployment job') {
+        build job: 'waya-2.0-auth-service-deploy-dev', 
+		parameters: [[$class: 'StringParameterValue', name: 'FROM_BUILD', value: "${BUILD_NUMBER}"]
+	        ]
+    }	    
+  /* stage('Remove Unused docker image') {
       steps{
         sh "docker rmi $registry:$BUILD_NUMBER"
-      } */
+      }
+    } */
+     stage('Trig') {
+       build job: 'waya-2.0-auth-service-deploy-dev', propagate: true, wait: true
     }
  }
 
