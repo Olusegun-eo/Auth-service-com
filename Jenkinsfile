@@ -4,9 +4,9 @@ pipeline {
     registryCredential = 'DigitalOcean-registry-for-development'
     dockerImage = ''
     }
-	parameters {
+      /*	parameters {
 	    strings(name: 'FROM_BUILD' defaultValue: '', description: 'Build Source')
-	}
+	} */
     agent any
 
     tools {
