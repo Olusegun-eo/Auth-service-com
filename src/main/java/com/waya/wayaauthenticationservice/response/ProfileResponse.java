@@ -13,8 +13,8 @@ import java.util.Optional;
 @Setter
 public class ProfileResponse {
 
-    private String timestamp;
+    private String timeStamp;
     private String message;
-    private OTPResponse  data;
+    private OTPResponse data;
     private boolean status;
 }
