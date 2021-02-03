@@ -40,19 +40,22 @@ pipeline {
       }
     }
     stage ('Starting the deployment job') {
-        build job: 'waya-2.0-auth-service-deploy-dev', 
+	    steps {
+                build job: 'waya-2.0-api-gateway-deploy-dev', 
 		parameters: [[$class: 'StringParameterValue', name: 'FROM_BUILD', value: "${BUILD_NUMBER}"]
 	        ]
-    }	    
+	    }	    
+    }	  
+       
    stage('Remove Unused docker image') {
       steps{
         /* sh "docker rmi $registry:$BUILD_NUMBER" */
 	   sh "docker rmi $registry"
       }
     } 
-     stage('Trig') {
+    /* stage('Trig') {
        build job: 'waya-2.0-api-gateway-deploy-dev', propagate: true, wait: true
-    }
+    } */
  }
 
 }
