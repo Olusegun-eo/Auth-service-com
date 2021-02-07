@@ -2,6 +2,7 @@ package com.waya.wayaauthenticationservice.service.impl;
 
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.ContactPojo;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
@@ -90,6 +91,20 @@ public class UserServiceImpl implements UserService {
         } else {
             return new ResponseEntity<>(new SuccessResponse("User info fetched", user), HttpStatus.OK);
         }    }
+
+    @Override
+    public ResponseEntity wayaContactCheck(List<String> contacts) {
+        List<ContactPojo> contactPojos = new ArrayList<>();
+        for (String c: contacts) {
+            if (usersRepo.findByPhoneNumber(c).orElse(null) != null){
+                contactPojos.add(new ContactPojo(c,true));
+            } else {
+                contactPojos.add(new ContactPojo(c,false));
+            }
+        }
+        return new ResponseEntity<>(new SuccessResponse("Contact processed", contactPojos), HttpStatus.OK);
+    }
+
 
     @Override
     public ResponseEntity getMyInfo() {

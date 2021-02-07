@@ -2,6 +2,7 @@ package com.waya.wayaauthenticationservice.controller;
 
 import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.UserPojo;
 import com.waya.wayaauthenticationservice.repository.RedisUserDao;
 import com.waya.wayaauthenticationservice.service.UserService;
 import io.swagger.annotations.*;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -59,6 +61,13 @@ public class UserController {
     @GetMapping("phone/{phone}")
     public ResponseEntity getUserByPhone(@PathVariable String phone) {
         return userService.getUserByPhone(phone);
+    }
+
+    @ApiOperation("Phone Contact check  (Service consumption only. Do not Use)")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @PostMapping(path = "/contact-check", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<?> contactCheck(@RequestBody List<String> contacts) {
+        return userService.wayaContactCheck(contacts);
     }
 
     @ApiOperation(value = "Get my Info", notes = "This endpointis used by logged in users to fetch their info")
