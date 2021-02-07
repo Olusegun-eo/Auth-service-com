@@ -54,6 +54,12 @@ public class UserController {
         return userService.getUserByEmail(email);
     }
 
+    @ApiOperation("Get User Details by Phone (In-app use only)")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @GetMapping("phone/{phone}")
+    public ResponseEntity getUserByPhone(@PathVariable String phone) {
+        return userService.getUserByPhone(phone);
+    }
 
     @ApiOperation(value = "Get my Info", notes = "This endpointis used by logged in users to fetch their info")
     @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
