@@ -8,6 +8,7 @@ import javax.validation.constraints.Email;
 public interface AuthenticationService {
 
     ResponseEntity createUser(UserPojo userPojo);
+    ResponseEntity createCorporateUser(CorporateUserPojo corporateUserPojo);
     ResponseEntity createPin(PinPojo pinPojo);
     ResponseEntity verifyOTP(OTPPojo otpPojo);
     ResponseEntity verifyEmail(EmailPojo emailPojo);

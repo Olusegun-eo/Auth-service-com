@@ -15,11 +15,19 @@ public class AuthenticationController {
     @Autowired
     private AuthenticationServiceImpl authenticationServiceImpl;
 
-    @ApiOperation("User Registration")
+    @ApiOperation("Personal User Registration")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping(path = "/create", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<?> create(@RequestBody UserPojo user) {
         return authenticationServiceImpl.createUser(user);
+    }
+
+
+    @ApiOperation("Corporate User Registration")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @PostMapping(path = "/create-corporate", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<?> createCorporate(@RequestBody CorporateUserPojo user) {
+        return authenticationServiceImpl.createCorporateUser(user);
     }
 
 

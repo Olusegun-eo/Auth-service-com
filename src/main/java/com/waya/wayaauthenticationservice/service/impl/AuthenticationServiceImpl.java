@@ -108,6 +108,64 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
+    public ResponseEntity createCorporateUser(CorporateUserPojo mUser) {
+        // Check if email exists
+        Users existingEmail = userRepo.findByEmail(mUser.getEmail()).orElse(null);
+        if (existingEmail != null) {
+            return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
+        }
+
+        // Check if Phone exists
+        Users existingTelephone = userRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
+        if (existingTelephone != null) {
+            return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"), HttpStatus.BAD_REQUEST);
+        }
+
+        if (!startsWith234(mUser.getPhoneNumber(), 3).equals("234")) {
+            return new ResponseEntity<>(new ErrorResponse("Phone numbers must start with 234"), HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            Roles roles = new Roles();
+            roles.setId(1);
+            roles.setName("User");
+            Roles mRoles = rolesRepo.save(roles);
+            List<Roles> roleList = new ArrayList<>();
+            roleList.add(mRoles);
+
+            Users user = new ModelMapper().map(mUser, Users.class);
+            user.setId(0L);
+            user.setCorporate(true);
+            user.setDateCreated(LocalDateTime.now());
+            user.setPassword(passwordEncoder.encode(mUser.getPassword()));
+            user.setRolesList(roleList);
+            userRepo.save(user);
+
+            // Persist Profile
+            mUser.setUserId(user.getId());
+            if (!createCorporateProfile(mUser)) {
+                return new ResponseEntity<>(new ErrorResponse("There was an error completing registration"), HttpStatus.BAD_REQUEST);
+            }
+
+            // Create Wallet
+            WalletPojo walletPojo = new WalletPojo("Default",String.valueOf(user.getId()));
+            if (!createWallet(walletPojo)) {
+                return new ResponseEntity<>(new ErrorResponse("There was an error completing registration"), HttpStatus.BAD_REQUEST);
+            }
+
+            // Save User to Redis
+//            saveUserToRedis(user);
+
+
+            return new ResponseEntity<>(new SuccessResponse("User created successfully. An OTP has been sent to you", null), HttpStatus.CREATED);
+
+        } catch (Exception e) {
+            LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Override
     public ResponseEntity createPin(PinPojo pinPojo) {
         Users user = authenticatedUserFacade.getUser();
         if(!pinIs4Digit(pinPojo.getPin())){
@@ -291,6 +349,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 String.valueOf(user.getId())
         );
         ProfileResponse profileResponse = restTemplate.postForObject(PROFILE_SERVICE+"profile-service/personal-profile", profilePojo , ProfileResponse.class);
+        return profileResponse.isStatus();
+    }
+
+    private boolean createCorporateProfile(CorporateUserPojo user){
+        ProfilePojo2 profilePojo = new ProfilePojo2();
+        profilePojo.setBusinessType(user.getBusinessType());
+        profilePojo.setOrganisationEmail(user.getOrgEmail());
+        profilePojo.setOrganisationName(user.getOrgName());
+        profilePojo.setOrganisationType(user.getOrgType());
+        profilePojo.setReferralCode(user.getReferenceCode());
+        profilePojo.setEmail(user.getEmail());
+        profilePojo.setSurname(user.getSurname());
+        profilePojo.setUserId(String.valueOf(user.getUserId()));
+        ProfileResponse profileResponse = restTemplate.postForObject(PROFILE_SERVICE+"profile-service/corporate-profile", profilePojo , ProfileResponse.class);
         return profileResponse.isStatus();
     }
 
