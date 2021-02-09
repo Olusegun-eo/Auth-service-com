@@ -25,8 +25,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.waya.wayaauthenticationservice.util.Constant.ACCOUNT_CREATION;
-import static com.waya.wayaauthenticationservice.util.Constant.PROFILE_SERVICE;
+import static com.waya.wayaauthenticationservice.util.Constant.*;
 
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
@@ -95,9 +94,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 return new ResponseEntity<>(new ErrorResponse("There was an error completing registration"), HttpStatus.BAD_REQUEST);
             }
 
-            // Save User to Redis
+            // Create Wayagram Profile
+            if (!createWayagram(user)) {
+                return new ResponseEntity<>(new ErrorResponse("There was an error completing registration"), HttpStatus.BAD_REQUEST);
+            }
 //            saveUserToRedis(user);
-
 
             return new ResponseEntity<>(new SuccessResponse("User created successfully. An OTP has been sent to you", null), HttpStatus.CREATED);
 
@@ -352,6 +353,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         );
         ProfileResponse profileResponse = restTemplate.postForObject(PROFILE_SERVICE+"profile-service/personal-profile", profilePojo , ProfileResponse.class);
         return profileResponse.isStatus();
+    }
+
+    private boolean createWayagram(Users user){
+        WayagramPojo wayagramPojo = new WayagramPojo();
+        wayagramPojo.setUsername(user.getPhoneNumber());
+        wayagramPojo.setUser_id(String.valueOf(user.getId()));
+        GeneralResponse generalResponse = restTemplate.postForObject(WAYA_PROFILE_SERVICE+"http://157.245.84.14:2200/", wayagramPojo , GeneralResponse.class);
+        return generalResponse.isStatus();
     }
 
     private boolean createCorporateProfile(CorporateUserPojo user){
