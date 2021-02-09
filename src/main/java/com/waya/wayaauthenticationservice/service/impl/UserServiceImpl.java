@@ -3,6 +3,7 @@ package com.waya.wayaauthenticationservice.service.impl;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.ContactPojo;
+import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
@@ -74,6 +75,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public ResponseEntity getUsers() {
+        List<Users> users = usersRepo.findAll();
+        return new ResponseEntity<>(new SuccessResponse("User info fetched", users), HttpStatus.OK);
+    }
+
+    @Override
     public ResponseEntity getUserByEmail(String email) {
         Users user = usersRepo.findByEmail(email).orElse(null);
         if(user == null){
@@ -93,14 +100,13 @@ public class UserServiceImpl implements UserService {
         }    }
 
     @Override
-    public ResponseEntity wayaContactCheck(List<String> contacts) {
+    public ResponseEntity wayaContactCheck(ContactPojoReq contacts) {
         List<ContactPojo> contactPojos = new ArrayList<>();
-        for (String c: contacts) {
-            if (usersRepo.findByPhoneNumber(c).orElse(null) != null){
-                contactPojos.add(new ContactPojo(c,true));
-            } else {
-                contactPojos.add(new ContactPojo(c,false));
+        for (ContactPojo c: contacts.getContacts()) {
+            if (usersRepo.findByPhoneNumber(c.getPhone()).orElse(null) != null){
+                c.setWayaUser(true);
             }
+            contactPojos.add(c);
         }
         return new ResponseEntity<>(new SuccessResponse("Contact processed", contactPojos), HttpStatus.OK);
     }

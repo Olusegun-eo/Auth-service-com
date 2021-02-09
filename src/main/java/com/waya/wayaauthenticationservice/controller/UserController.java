@@ -2,6 +2,8 @@ package com.waya.wayaauthenticationservice.controller;
 
 import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.ContactPojo;
+import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
 import com.waya.wayaauthenticationservice.pojo.UserPojo;
 import com.waya.wayaauthenticationservice.repository.RedisUserDao;
 import com.waya.wayaauthenticationservice.service.UserService;
@@ -66,7 +68,7 @@ public class UserController {
     @ApiOperation("Phone Contact check  (Service consumption only. Do not Use)")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping(path = "/contact-check", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<?> contactCheck(@RequestBody List<String> contacts) {
+    public ResponseEntity<?> contactCheck(@RequestBody ContactPojoReq contacts) {
         return userService.wayaContactCheck(contacts);
     }
 

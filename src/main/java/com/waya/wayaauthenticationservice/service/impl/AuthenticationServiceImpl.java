@@ -322,9 +322,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public ResponseEntity validateUser() {
         Users user = authenticatedUserFacade.getUser();
-        //Implement Redis Fetch user
-        // ---
-        return new ResponseEntity<>(new SuccessResponse("User valid.", user), HttpStatus.OK);
+        if (user == null) {
+            return new ResponseEntity<>(new ErrorResponse("Invalid user."), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(new SuccessResponse("User valid.", user), HttpStatus.OK);
+        }
     }
 
 
