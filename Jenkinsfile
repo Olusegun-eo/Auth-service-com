@@ -22,6 +22,39 @@ pipeline {
                 
         }
 	    
+	stage('Code Quality Check via SonarQube') {
+		/*environment {
+                 SCANNER_HOME = tool 'SonarQubeScanner'
+                 ORGANIZATION = "igorstojanovski-github"
+                 PROJECT_NAME = "igorstojanovski_jenkins-pipeline-as-code" */
+             steps {
+                 script {
+                     def scannerHome = tool 'Jenkins-sonar-scanner';
+                     withSonarQubeEnv("Jenkins-sonar-scanner") {
+                     sh "${tool("Jenkins-sonar-scanner")}/bin/sonar-scanner \
+		     -Dsonar.projectName=waya-auth-service \
+	             -Dsonar.projectKey=waya-auth-service \
+	             -Dsonar.sources=/var/jenkins_home/workspace/waya-2.0-auth-service-dev \
+		     -Dsonar.projectBaseDir=/var/jenkins_home/workspace/waya-2.0-auth-service-dev \
+                     -Dsonar.sources=. \
+		     -Dsonar.projectVersion=1.0 \
+                     -Dsonar.language=java \
+                     -Dsonar.java.binaries=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/classes \
+                     -Dsonar.sourceEncoding=UTF-8 \
+                     -Dsonar.test.inclusions=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/src \
+		     -Dsonar.junit.reportsPath=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/surefire-reports \
+                     -Dsonar.surefire.reportsPath=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/surefire-reports \
+                     -Dsonar.jacoco.reportPath=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/coverage-reports/jacoco-unit.exec \
+                     -Dsonar.java.coveragePlugin=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/jacoco  \
+		     -Dsonar.host.url=https://sonarqube.waya-pay.com \
+		     -Dsonar.verbose=true "
+		     /*-Dsonar.login=af09e850c06ef09772eb902254bb8f532d13297a" */
+               }
+           }
+       }
+   }
+
+	    
     stage('Building image') {
       steps{
         script {
