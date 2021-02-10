@@ -154,6 +154,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 return new ResponseEntity<>(new ErrorResponse("There was an error completing registration"), HttpStatus.BAD_REQUEST);
             }
 
+            // Create Wayagram Profile
+            if (!createWayagram(user)) {
+                return new ResponseEntity<>(new ErrorResponse("There was an error completing registration"), HttpStatus.BAD_REQUEST);
+            }
+
             // Save User to Redis
 //            saveUserToRedis(user);
 
@@ -328,6 +333,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } else {
             return new ResponseEntity<>(new SuccessResponse("User valid.", user), HttpStatus.OK);
         }
+    }
+
+    @Override
+    public ResponseEntity validatePin(int pin) {
+        Users users = userRepo.findByPin(pin);
+        if (users == null ){
+            return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(new SuccessResponse("User valid.", users), HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity userByPhone(String phone) {
+        Users users = userRepo.findByPhoneNumber(phone).orElse(null);
+        if (users == null ){
+            return new ResponseEntity<>(new ErrorResponse("Invalid Phone Number."), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(new SuccessResponse("User valid.", users), HttpStatus.OK);
     }
 
 
