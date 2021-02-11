@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 public class WayagramPojo {
     private String user_id;
     private String username;
-    private boolean isPrivate = false;
+    private boolean isPrivate;
 }

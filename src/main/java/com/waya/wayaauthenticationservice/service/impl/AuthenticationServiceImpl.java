@@ -84,19 +84,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             userRepo.save(user);
 
             // Persist Profile
-            if (!createProfile(user)) {
-                return new ResponseEntity<>(new ErrorResponse("There was an error completing registration"), HttpStatus.BAD_REQUEST);
+            ProfileResponse profileResponse = createProfile(user);
+            if (!profileResponse.isStatus()) {
+                return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
             }
 
             // Create Wallet
             WalletPojo walletPojo = new WalletPojo("Default",String.valueOf(user.getId()));
-            if (!createWallet(walletPojo)) {
-                return new ResponseEntity<>(new ErrorResponse("There was an error completing registration"), HttpStatus.BAD_REQUEST);
+            WalletResponse walletResponse = createWallet(walletPojo);
+            if (!walletResponse.isStatus()) {
+                return new ResponseEntity<>(new ErrorResponse(walletResponse.getMessage()), HttpStatus.BAD_REQUEST);
             }
 
             // Create Wayagram Profile
-            if (!createWayagram(user)) {
-                return new ResponseEntity<>(new ErrorResponse("There was an error completing registration"), HttpStatus.BAD_REQUEST);
+            GeneralResponse wayagramResponse = createWayagram(user);
+            if (!wayagramResponse.isStatus()) {
+                return new ResponseEntity<>(new ErrorResponse(walletResponse.getMessage()), HttpStatus.BAD_REQUEST);
             }
 //            saveUserToRedis(user);
 
@@ -144,19 +147,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             // Persist Profile
             mUser.setUserId(user.getId());
-            if (!createCorporateProfile(mUser)) {
-                return new ResponseEntity<>(new ErrorResponse("There was an error completing registration"), HttpStatus.BAD_REQUEST);
+            GeneralResponse profileResponse = createCorporateProfile(mUser);
+            if (!profileResponse.isStatus()) {
+                return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
             }
 
             // Create Wallet
             WalletPojo walletPojo = new WalletPojo("Default",String.valueOf(user.getId()));
-            if (!createWallet(walletPojo)) {
-                return new ResponseEntity<>(new ErrorResponse("There was an error completing registration"), HttpStatus.BAD_REQUEST);
+            WalletResponse walletResponse = createWallet(walletPojo);
+            if (!walletResponse.isStatus()) {
+                return new ResponseEntity<>(new ErrorResponse(walletResponse.getMessage()), HttpStatus.BAD_REQUEST);
             }
 
             // Create Wayagram Profile
-            if (!createWayagram(user)) {
-                return new ResponseEntity<>(new ErrorResponse("There was an error completing registration"), HttpStatus.BAD_REQUEST);
+            GeneralResponse wayagramResponse = createWayagram(user);
+            if (!wayagramResponse.isStatus()) {
+                return new ResponseEntity<>(new ErrorResponse(wayagramResponse.getMessage()), HttpStatus.BAD_REQUEST);
             }
 
             // Save User to Redis
@@ -366,7 +372,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } else  {return  false ;}
     }
 
-    private boolean createProfile(Users user){
+    private ProfileResponse createProfile(Users user){
         ProfilePojo profilePojo = new ProfilePojo(
                 user.getEmail(),
                 user.getFirstName(),
@@ -375,18 +381,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 String.valueOf(user.getId())
         );
         ProfileResponse profileResponse = restTemplate.postForObject(PROFILE_SERVICE+"profile-service/personal-profile", profilePojo , ProfileResponse.class);
-        return profileResponse.isStatus();
+        return profileResponse;
     }
 
-    private boolean createWayagram(Users user){
+    private GeneralResponse createWayagram(Users user){
         WayagramPojo wayagramPojo = new WayagramPojo();
         wayagramPojo.setUsername(user.getPhoneNumber());
         wayagramPojo.setUser_id(String.valueOf(user.getId()));
-        GeneralResponse generalResponse = restTemplate.postForObject(WAYA_PROFILE_SERVICE+"http://157.245.84.14:2200/", wayagramPojo , GeneralResponse.class);
-        return generalResponse.isStatus();
+        wayagramPojo.setPrivate(false);
+        GeneralResponse generalResponse = restTemplate.postForObject(WAYA_PROFILE_SERVICE+"create", wayagramPojo , GeneralResponse.class);
+        return generalResponse;
     }
 
-    private boolean createCorporateProfile(CorporateUserPojo user){
+    private GeneralResponse createCorporateProfile(CorporateUserPojo user){
         ProfilePojo2 profilePojo = new ProfilePojo2();
         profilePojo.setBusinessType(user.getBusinessType());
         profilePojo.setOrganisationEmail(user.getOrgEmail());
@@ -396,13 +403,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         profilePojo.setEmail(user.getEmail());
         profilePojo.setSurname(user.getSurname());
         profilePojo.setUserId(String.valueOf(user.getUserId()));
-        ProfileResponse profileResponse = restTemplate.postForObject(PROFILE_SERVICE+"profile-service/corporate-profile", profilePojo , ProfileResponse.class);
-        return profileResponse.isStatus();
+        profilePojo.setPhoneNumber(user.getPhoneNumber());
+        profilePojo.setFirstName(user.getFirstName());
+        GeneralResponse profileResponse = restTemplate.postForObject(PROFILE_SERVICE+"profile-service/corporate-profile", profilePojo , GeneralResponse.class);
+        return profileResponse;
     }
 
-    private boolean createWallet(WalletPojo walletPojo){
+    private WalletResponse createWallet(WalletPojo walletPojo){
         WalletResponse walletResponse = restTemplate.postForObject(ACCOUNT_CREATION+"account-creation-service/api/account/createVirtualAccount", walletPojo , WalletResponse.class);
-        return walletResponse.isStatus();
+        return walletResponse;
     }
 
     private void saveUserToRedis(Users user){
