@@ -23,10 +23,7 @@ pipeline {
         }
 	    
 	stage('Code Quality Check via SonarQube') {
-		/*environment {
-                 SCANNER_HOME = tool 'SonarQubeScanner'
-                 ORGANIZATION = "igorstojanovski-github"
-                 PROJECT_NAME = "igorstojanovski_jenkins-pipeline-as-code" */
+
              steps {
                  script {
                      def scannerHome = tool 'Jenkins-sonar-scanner';
@@ -48,7 +45,6 @@ pipeline {
                      -Dsonar.java.coveragePlugin=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/jacoco  \
 		     -Dsonar.host.url=https://sonarqube.waya-pay.com \
 		     -Dsonar.verbose=true "
-		     /*-Dsonar.login=af09e850c06ef09772eb902254bb8f532d13297a" */
                }
            }
        }
