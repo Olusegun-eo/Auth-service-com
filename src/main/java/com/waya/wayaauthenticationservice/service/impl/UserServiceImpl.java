@@ -94,7 +94,7 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity getUserByPhone(String phone) {
         Users user = usersRepo.findByPhoneNumber(phone).orElse(null);
         if(user == null){
-            return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.OK);
         } else {
             return new ResponseEntity<>(new SuccessResponse("User info fetched", user), HttpStatus.OK);
         }    }

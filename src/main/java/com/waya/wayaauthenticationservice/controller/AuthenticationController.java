@@ -97,7 +97,6 @@ public class AuthenticationController {
     }
 
     @ApiOperation(value = "PIN verification (Service consumption only. Do not Use)", notes = "This endpoint help validate user by Pin and is meant for service consumption only")
-    @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @GetMapping("/validate-pin/{pin}")
     public ResponseEntity<?> validateUserByPin(@PathVariable int pin) {
         return authenticationServiceImpl.validatePin(pin);
