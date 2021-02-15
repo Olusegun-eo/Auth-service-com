@@ -352,8 +352,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public ResponseEntity validatePin(Long userId, int pin) {
-        Users users = userRepo.findById(userId).orElse(null);
-        Users validatedUser = userRepo.findByIdAndPin(userId, pin);
+        Users users = userRepo.findByIdAndPin(userId, pin);
         if (users == null ){
             return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.OK);
         }
