@@ -89,18 +89,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
             }
 
-            // Create Wallet
-            WalletPojo walletPojo = new WalletPojo("Default",String.valueOf(user.getId()));
-            WalletResponse walletResponse = createWallet(walletPojo);
+            // Create Virtual Account
+            VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo(mUser.getFirstName() +" "+mUser.getSurname(),String.valueOf(user.getId()));
+            WalletResponse walletResponse = createVirtual(virtualAccountPojo);
+            if (!walletResponse.isStatus()) {
+                return new ResponseEntity<>(new ErrorResponse(walletResponse.getMessage()), HttpStatus.BAD_REQUEST);
+            }
+
+            // Create Default Wallet
+            WalletPojo walletPojo = new WalletPojo(mUser.getEmail(), mUser.getFirstName(), mUser.getSurname(),mUser.getPhoneNumber());
+            GeneralResponse generalResponse = createWallet(walletPojo);
             if (!walletResponse.isStatus()) {
                 return new ResponseEntity<>(new ErrorResponse(walletResponse.getMessage()), HttpStatus.BAD_REQUEST);
             }
 
             // Create Wayagram Profile
-            GeneralResponse wayagramResponse = createWayagram(user);
-            if (!wayagramResponse.isStatus()) {
-                return new ResponseEntity<>(new ErrorResponse(walletResponse.getMessage()), HttpStatus.BAD_REQUEST);
-            }
+//            GeneralResponse wayagramResponse = createWayagram(user);
+//            if (!wayagramResponse.isStatus()) {
+//                return new ResponseEntity<>(new ErrorResponse(walletResponse.getMessage()), HttpStatus.BAD_REQUEST);
+//            }
 //            saveUserToRedis(user);
 
             return new ResponseEntity<>(new SuccessResponse("User created successfully. An OTP has been sent to you", null), HttpStatus.CREATED);
@@ -152,9 +159,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
             }
 
-            // Create Wallet
-            WalletPojo walletPojo = new WalletPojo("Default",String.valueOf(user.getId()));
-            WalletResponse walletResponse = createWallet(walletPojo);
+            // Create Virtual Account
+            VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo(mUser.getFirstName() +" "+mUser.getSurname(),String.valueOf(user.getId()));
+            WalletResponse walletResponse = createVirtual(virtualAccountPojo);
             if (!walletResponse.isStatus()) {
                 return new ResponseEntity<>(new ErrorResponse(walletResponse.getMessage()), HttpStatus.BAD_REQUEST);
             }
@@ -164,6 +171,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             if (!wayagramResponse.isStatus()) {
                 return new ResponseEntity<>(new ErrorResponse(wayagramResponse.getMessage()), HttpStatus.BAD_REQUEST);
             }
+
+
 
             // Save User to Redis
 //            saveUserToRedis(user);
@@ -342,8 +351,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ResponseEntity validatePin(int pin) {
-        Users users = userRepo.findByPin(pin);
+    public ResponseEntity validatePin(Long userId, int pin) {
+        Users users = userRepo.findById(userId).orElse(null);
         if (users == null ){
             return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.OK);
         }
@@ -409,8 +418,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return profileResponse;
     }
 
-    private WalletResponse createWallet(WalletPojo walletPojo){
-        WalletResponse walletResponse = restTemplate.postForObject(ACCOUNT_CREATION+"account-creation-service/api/account/createVirtualAccount", walletPojo , WalletResponse.class);
+    private WalletResponse createVirtual(VirtualAccountPojo virtualAccountPojo){
+        WalletResponse walletResponse = restTemplate.postForObject(ACCOUNT_CREATION+"account-creation-service/api/account/createVirtualAccount", virtualAccountPojo, WalletResponse.class);
+        return walletResponse;
+    }
+
+    private GeneralResponse createWallet(WalletPojo walletPojo){
+        GeneralResponse walletResponse = restTemplate.postForObject(WALLET_SERVICE+"wallet/create/user", walletPojo, GeneralResponse.class);
         return walletResponse;
     }
 

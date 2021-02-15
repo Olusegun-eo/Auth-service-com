@@ -6,4 +6,5 @@ public class Constant {
     public static final String ACCOUNT_CREATION = "http://46.101.41.187:7090/";
     public static final String PROFILE_SERVICE = "http://46.101.41.187:8080/";
     public static final String WAYA_PROFILE_SERVICE = "http://157.245.84.14:2200/";
+    public static final String WALLET_SERVICE = "http://157.230.223.54:5995/";
 }

@@ -1,15 +1,17 @@
 package com.waya.wayaauthenticationservice.pojo;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
 public class WalletPojo {
-    private String accountName;
-    private String userId;
+
+    private String email;
+    private String firstName;
+    private String lastName;
+    private String mobileNumber;
+
 }

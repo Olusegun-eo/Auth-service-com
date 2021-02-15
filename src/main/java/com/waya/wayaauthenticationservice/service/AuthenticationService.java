@@ -19,7 +19,7 @@ public interface AuthenticationService {
     ResponseEntity resendOTP(String phoneNumber, String email);
     ResponseEntity resendVerificationMail(String email, String userName);
     ResponseEntity validateUser();
-    ResponseEntity validatePin(int pin);
+    ResponseEntity validatePin(Long userId, int pin);
     ResponseEntity userByPhone(String phone);
 
 
