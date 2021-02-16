@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -85,8 +86,28 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             // Persist Profile
             ProfileResponse profileResponse = createProfile(user);
-            if (!profileResponse.isStatus()) {
-                return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
+            if (profileResponse.isStatus()) {
+                // Create Virtual Account
+                VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo(mUser.getFirstName() +" "+mUser.getSurname(),String.valueOf(user.getId()));
+                WalletResponse walletResponse = createVirtual(virtualAccountPojo);
+                if (walletResponse.isStatus()) {
+
+                    // Create Wayagram Profile
+                    GeneralResponse wayagramResponse = createWayagram(user);
+                    if (!wayagramResponse.isStatus()) {
+
+                        // Create Default Wallet
+                        WalletPojo walletPojo = new WalletPojo(mUser.getEmail(), mUser.getFirstName(), mUser.getSurname(),mUser.getPhoneNumber());
+                        GeneralResponse generalResponse = createWallet(walletPojo);
+                        if (walletResponse.isStatus()) {
+                            return new ResponseEntity<>(new SuccessResponse("User Created Successfully. An OTP has been sent"), HttpStatus.BAD_REQUEST);
+                        } else {
+
+                            return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
+                        }
+                    }
+
+                }
             }
 
             // Create Virtual Account
@@ -119,6 +140,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
+    @Async
     public ResponseEntity createCorporateUser(CorporateUserPojo mUser) {
         // Check if email exists
         Users existingEmail = userRepo.findByEmail(mUser.getEmail()).orElse(null);
@@ -155,29 +177,30 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             // Persist Profile
             mUser.setUserId(user.getId());
             GeneralResponse profileResponse = createCorporateProfile(mUser);
-            if (!profileResponse.isStatus()) {
-                return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
+            if (profileResponse.isStatus()) {
+
+                // Create Virtual Account
+                VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo(mUser.getFirstName() +" "+mUser.getSurname(),String.valueOf(user.getId()));
+                WalletResponse walletResponse = createVirtual(virtualAccountPojo);
+                if (walletResponse.isStatus()) {
+
+                    // Create Wayagram Profile
+                    GeneralResponse wayagramResponse = createWayagram(user);
+                    if (!wayagramResponse.isStatus()) {
+
+                        // Create Default Wallet
+                        WalletPojo walletPojo = new WalletPojo(mUser.getEmail(), mUser.getFirstName(), mUser.getSurname(),mUser.getPhoneNumber());
+                        GeneralResponse generalResponse = createWallet(walletPojo);
+                        if (walletResponse.isStatus()) {
+                            return new ResponseEntity<>(new SuccessResponse("User Created Successfully. An OTP has been sent"), HttpStatus.BAD_REQUEST);
+                        } else {
+
+                            return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
+                        }
+                    }
+
+                }
             }
-
-            // Create Virtual Account
-            VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo(mUser.getFirstName() +" "+mUser.getSurname(),String.valueOf(user.getId()));
-            WalletResponse walletResponse = createVirtual(virtualAccountPojo);
-            if (!walletResponse.isStatus()) {
-                return new ResponseEntity<>(new ErrorResponse(walletResponse.getMessage()), HttpStatus.BAD_REQUEST);
-            }
-
-            // Create Wayagram Profile
-            GeneralResponse wayagramResponse = createWayagram(user);
-            if (!wayagramResponse.isStatus()) {
-                return new ResponseEntity<>(new ErrorResponse(wayagramResponse.getMessage()), HttpStatus.BAD_REQUEST);
-            }
-
-
-
-            // Save User to Redis
-//            saveUserToRedis(user);
-
-
             return new ResponseEntity<>(new SuccessResponse("User created successfully. An OTP has been sent to you", null), HttpStatus.CREATED);
 
         } catch (Exception e) {
