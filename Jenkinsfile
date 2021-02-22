@@ -49,6 +49,11 @@ pipeline {
            }
        }
    }
+	    stage("Quality Gate") {
+		    steps {
+			    waitForQaulityGate abortPipeline: true 
+		    }
+	    }
 
 	    
     stage('Building image') {
