@@ -16,6 +16,17 @@ pipeline {
     	}
 
 	stages {
+		
+		 stage('Checkout') {
+            		steps {
+				cleanWs()
+                		git credentialsId: 'odenigbo-github-credentials', url: 'https://github.com/WAYA-PAY-CHAT-2.0-AUTH-SERVICE.git'
+				sh "git checkout dev"
+				sh "git branch"
+                		sh "ls -lart ./*"
+            		}
+        	}     
+		
         	stage('compile') {
             		steps {
                			sh "mvn clean install"
@@ -37,7 +48,7 @@ pipeline {
                      				-Dsonar.language=java \
                      				-Dsonar.java.binaries=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/classes \
                      				-Dsonar.sourceEncoding=UTF-8 \
-                     				-Dsonar.test.inclusions=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/src \
+                     				-Dsonar.exclusions=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/src/test/**/* \
 		     				-Dsonar.junit.reportsPath=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/surefire-reports \
                      				-Dsonar.surefire.reportsPath=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/surefire-reports \
                      				-Dsonar.jacoco.reportPath=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/coverage-reports/jacoco-unit.exec \
