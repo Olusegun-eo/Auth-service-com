@@ -349,7 +349,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         ProfilePojo profilePojo = new ProfilePojo(
                 user.getEmail(),
                 user.getFirstName(),
-                "+"+user.getPhoneNumber(),
+                user.getPhoneNumber(),
                 user.getSurname(),
                 String.valueOf(user.getId())
         );
