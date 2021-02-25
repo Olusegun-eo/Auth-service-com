@@ -49,6 +49,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Autowired
     private AuthenticatedUserFacade authenticatedUserFacade;
 
+    @Autowired
+    KafkaMessageProducer kafkaMessageProducer;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationFilter.class);
 
     @Override
@@ -84,54 +87,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setRolesList(roleList);
             userRepo.save(user);
 
-            // Persist Profile
-            ProfileResponse profileResponse = createProfile(user);
-            if (profileResponse.isStatus()) {
-                // Create Virtual Account
-                VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo(mUser.getFirstName() +" "+mUser.getSurname(),String.valueOf(user.getId()));
-                WalletResponse walletResponse = createVirtual(virtualAccountPojo);
-                if (walletResponse.isStatus()) {
+            createProfile(user);
 
-                    // Create Wayagram Profile
-                    GeneralResponse wayagramResponse = createWayagram(user);
-                    if (!wayagramResponse.isStatus()) {
+            // Process other accounts
+            processOtherAccounts(user, mUser);
 
-                        // Create Default Wallet
-                        WalletPojo walletPojo = new WalletPojo(mUser.getEmail(), mUser.getFirstName(), mUser.getSurname(),mUser.getPhoneNumber());
-                        GeneralResponse generalResponse = createWallet(walletPojo);
-                        if (walletResponse.isStatus()) {
-                            return new ResponseEntity<>(new SuccessResponse("User Created Successfully. An OTP has been sent"), HttpStatus.BAD_REQUEST);
-                        } else {
+            return new ResponseEntity<>(new SuccessResponse("User Created Successfully. An OTP has been sent"), HttpStatus.BAD_REQUEST);
 
-                            return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
-                        }
-                    }
-
-                }
-            }
-
-            // Create Virtual Account
-            VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo(mUser.getFirstName() +" "+mUser.getSurname(),String.valueOf(user.getId()));
-            WalletResponse walletResponse = createVirtual(virtualAccountPojo);
-            if (!walletResponse.isStatus()) {
-                return new ResponseEntity<>(new ErrorResponse(walletResponse.getMessage()), HttpStatus.BAD_REQUEST);
-            }
-
-            // Create Default Wallet
-            WalletPojo walletPojo = new WalletPojo(mUser.getEmail(), mUser.getFirstName(), mUser.getSurname(),mUser.getPhoneNumber());
-            GeneralResponse generalResponse = createWallet(walletPojo);
-            if (!walletResponse.isStatus()) {
-                return new ResponseEntity<>(new ErrorResponse(walletResponse.getMessage()), HttpStatus.BAD_REQUEST);
-            }
-
-            // Create Wayagram Profile
-//            GeneralResponse wayagramResponse = createWayagram(user);
-//            if (!wayagramResponse.isStatus()) {
-//                return new ResponseEntity<>(new ErrorResponse(walletResponse.getMessage()), HttpStatus.BAD_REQUEST);
-//            }
-//            saveUserToRedis(user);
-
-            return new ResponseEntity<>(new SuccessResponse("User created successfully. An OTP has been sent to you", null), HttpStatus.CREATED);
 
         } catch (Exception e) {
             LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
@@ -139,8 +101,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
+
     @Override
-    @Async
     public ResponseEntity createCorporateUser(CorporateUserPojo mUser) {
         // Check if email exists
         Users existingEmail = userRepo.findByEmail(mUser.getEmail()).orElse(null);
@@ -173,34 +135,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setPassword(passwordEncoder.encode(mUser.getPassword()));
             user.setRolesList(roleList);
             userRepo.save(user);
-
-            // Persist Profile
             mUser.setUserId(user.getId());
-            GeneralResponse profileResponse = createCorporateProfile(mUser);
-            if (profileResponse.isStatus()) {
 
-                // Create Virtual Account
-                VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo(mUser.getFirstName() +" "+mUser.getSurname(),String.valueOf(user.getId()));
-                WalletResponse walletResponse = createVirtual(virtualAccountPojo);
-                if (walletResponse.isStatus()) {
+            createCorporateProfile(mUser);
 
-                    // Create Wayagram Profile
-                    GeneralResponse wayagramResponse = createWayagram(user);
-                    if (!wayagramResponse.isStatus()) {
+            //Other services
+            processOtherCorporateAccounts(user, mUser);
 
-                        // Create Default Wallet
-                        WalletPojo walletPojo = new WalletPojo(mUser.getEmail(), mUser.getFirstName(), mUser.getSurname(),mUser.getPhoneNumber());
-                        GeneralResponse generalResponse = createWallet(walletPojo);
-                        if (walletResponse.isStatus()) {
-                            return new ResponseEntity<>(new SuccessResponse("User Created Successfully. An OTP has been sent"), HttpStatus.BAD_REQUEST);
-                        } else {
-
-                            return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
-                        }
-                    }
-
-                }
-            }
             return new ResponseEntity<>(new SuccessResponse("User created successfully. An OTP has been sent to you", null), HttpStatus.CREATED);
 
         } catch (Exception e) {
@@ -462,6 +403,50 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         redisUserDao.save(redisUser);
     }
 
+
+    private void processOtherAccounts(Users user, UserPojo mUser) {
+
+        // Publish profile creation to Kafka
+//        kafkaMessageProducer.send("personal-profile",user);
+
+        // Publish virtual account creation to Kafka
+        VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo(mUser.getFirstName() +" "+mUser.getSurname(),String.valueOf(user.getId()));
+        kafkaMessageProducer.send("virtual-account",virtualAccountPojo);
+
+        // Publish Wayagram proile creation to Kafka
+        WayagramPojo wayagramPojo = new WayagramPojo();
+        wayagramPojo.setUsername(user.getPhoneNumber());
+        wayagramPojo.setUser_id(String.valueOf(user.getId()));
+        wayagramPojo.setPrivate(false);
+        kafkaMessageProducer.send("wayagram-profile",wayagramPojo);
+
+        //Publish wallet creation to Kafka
+        WalletPojo walletPojo = new WalletPojo(mUser.getEmail(), mUser.getFirstName(), mUser.getSurname(),mUser.getPhoneNumber());
+        kafkaMessageProducer.send("wallet-account",wayagramPojo);
+
+    }
+
+    private void processOtherCorporateAccounts(Users user, CorporateUserPojo mUser) {
+
+        // Publish profile creation to Kafka
+//        kafkaMessageProducer.send("corporate-profile",user);
+
+        // Publish virtual account creation to Kafka
+        VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo(mUser.getFirstName() +" "+mUser.getSurname(),String.valueOf(user.getId()));
+        kafkaMessageProducer.send("virtual-account",virtualAccountPojo);
+
+        // Publish Wayagram proile creation to Kafka
+        WayagramPojo wayagramPojo = new WayagramPojo();
+        wayagramPojo.setUsername(user.getPhoneNumber());
+        wayagramPojo.setUser_id(String.valueOf(user.getId()));
+        wayagramPojo.setPrivate(false);
+        kafkaMessageProducer.send("wayagram-profile",wayagramPojo);
+
+        //Publish wallet creation to Kafka
+        WalletPojo walletPojo = new WalletPojo(mUser.getEmail(), mUser.getFirstName(), mUser.getSurname(),mUser.getPhoneNumber());
+        kafkaMessageProducer.send("wallet-account",wayagramPojo);
+
+    }
 
 
 
