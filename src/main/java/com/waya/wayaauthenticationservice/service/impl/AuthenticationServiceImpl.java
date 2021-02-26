@@ -354,6 +354,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 String.valueOf(user.getId())
         );
         ProfileResponse profileResponse = restTemplate.postForObject(PROFILE_SERVICE+"profile-service/personal-profile", profilePojo , ProfileResponse.class);
+        if (profileResponse.isStatus()){
+            createWayagram(user);
+        }
         return profileResponse;
     }
 
@@ -361,7 +364,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         WayagramPojo wayagramPojo = new WayagramPojo();
         wayagramPojo.setUsername(user.getPhoneNumber());
         wayagramPojo.setUser_id(String.valueOf(user.getId()));
-        wayagramPojo.setPrivate(false);
+        wayagramPojo.setNotPublic(false);
         GeneralResponse generalResponse = restTemplate.postForObject(WAYA_PROFILE_SERVICE+"create", wayagramPojo , GeneralResponse.class);
         return generalResponse;
     }
@@ -411,18 +414,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         // Publish virtual account creation to Kafka
         VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo(mUser.getFirstName() +" "+mUser.getSurname(),String.valueOf(user.getId()));
-        kafkaMessageProducer.send("virtual-account",virtualAccountPojo);
+        kafkaMessageProducer.send(VIRTUAL_ACCOUNT_TOPIC,virtualAccountPojo);
 
         // Publish Wayagram proile creation to Kafka
-        WayagramPojo wayagramPojo = new WayagramPojo();
-        wayagramPojo.setUsername(user.getPhoneNumber());
-        wayagramPojo.setUser_id(String.valueOf(user.getId()));
-        wayagramPojo.setPrivate(false);
-        kafkaMessageProducer.send("wayagram-profile",wayagramPojo);
-
-        //Publish wallet creation to Kafka
-        WalletPojo walletPojo = new WalletPojo(mUser.getEmail(), mUser.getFirstName(), mUser.getSurname(),mUser.getPhoneNumber());
-        kafkaMessageProducer.send("wallet-account",wayagramPojo);
+//        WayagramPojo wayagramPojo = new WayagramPojo();
+//        wayagramPojo.setUsername(user.getPhoneNumber());
+//        wayagramPojo.setUser_id(String.valueOf(user.getId()));
+//        wayagramPojo.setNotPublic(false);
+//        kafkaMessageProducer.send(WAYAGRAM_PROFILE_TOPIC,wayagramPojo);
+//
+//        //Publish wallet creation to Kafka
+//        WalletPojo walletPojo = new WalletPojo(mUser.getEmail(), mUser.getFirstName(), mUser.getSurname(),mUser.getPhoneNumber());
+//        kafkaMessageProducer.send(WALLET_ACCOUNT_TOPIC,walletPojo);
 
     }
 
@@ -439,7 +442,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         WayagramPojo wayagramPojo = new WayagramPojo();
         wayagramPojo.setUsername(user.getPhoneNumber());
         wayagramPojo.setUser_id(String.valueOf(user.getId()));
-        wayagramPojo.setPrivate(false);
+        wayagramPojo.setNotPublic(false);
         kafkaMessageProducer.send("wayagram-profile",wayagramPojo);
 
         //Publish wallet creation to Kafka

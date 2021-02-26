@@ -12,7 +12,6 @@ import java.util.Optional;
 @Getter
 @Setter
 public class GeneralResponse {
-
     private String timestamp;
     private String message;
     private Optional<Object>  data;
