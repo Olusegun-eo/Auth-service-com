@@ -342,7 +342,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String p = String.valueOf(pin);
         if(p.length() == 4) {
             return true;
-        } else  {return  false ;}
+        } else  {return  false ;
+        }
     }
 
     private ProfileResponse createProfile(Users user){
