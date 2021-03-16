@@ -59,7 +59,9 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
             UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
 
-            Users user = userLoginRepo.findByEmail(creds.getEmail()).orElseThrow(() -> new BadCredentialsException("User Does not exist"));
+            Users user = userLoginRepo.findByEmailOrPhoneNumber(creds.getEmail(), creds.getEmail()).orElseThrow(() -> new BadCredentialsException("User Does not exist"));
+
+            System.out.println(user.getPhoneNumber());
 
             List<Roles> roles = user.getRolesList();
             List<GrantedAuthority> grantedAuthorities = roles.stream().map(r -> {
@@ -87,7 +89,9 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
         UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
 
-        Users user = userLoginRepo.findByEmail(userName).get();
+        Users user = userLoginRepo.findByEmailOrPhoneNumber(userName, userName).get();
+        System.out.println(user.getPhoneNumber());
+//        Users user = userLoginRepo.findByEmail(userName).get();
 
         res.addHeader(SecurityConstants.HEADER_STRING, SecurityConstants.TOKEN_PREFIX + token);
 

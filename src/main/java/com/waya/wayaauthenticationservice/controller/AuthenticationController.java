@@ -1,6 +1,7 @@
 package com.waya.wayaauthenticationservice.controller;
 
 import com.waya.wayaauthenticationservice.pojo.*;
+import com.waya.wayaauthenticationservice.service.AuthenticationService;
 import com.waya.wayaauthenticationservice.service.impl.AuthenticationServiceImpl;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthenticationController {
 
     @Autowired
-    private AuthenticationServiceImpl authenticationServiceImpl;
+    private AuthenticationService authenticationServiceImpl;
 
     @ApiOperation("Personal User Registration")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})

@@ -25,6 +25,7 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.waya.wayaauthenticationservice.util.Constant.*;
 
@@ -87,13 +88,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setRolesList(roleList);
             userRepo.save(user);
 
-            createProfile(user);
-
-            // Process other accounts
-            processOtherAccounts(user, mUser);
-
-            return new ResponseEntity<>(new SuccessResponse("User Created Successfully. An OTP has been sent"), HttpStatus.BAD_REQUEST);
-
+            // Create profile by publishing to Kafka
+            ProfilePojo profilePojo = new ProfilePojo(
+                    user.getEmail(),
+                    user.getFirstName(),
+                    user.getPhoneNumber(),
+                    user.getSurname(),
+                    String.valueOf(user.getId()),
+                    false
+            );
+            kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC,profilePojo);
+            return new ResponseEntity<>(new SuccessResponse("User Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"), HttpStatus.CREATED);
 
         } catch (Exception e) {
             LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
@@ -137,18 +142,29 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             userRepo.save(user);
             mUser.setUserId(user.getId());
 
-            createCorporateProfile(mUser);
+            ProfilePojo2 profilePojo = new ProfilePojo2();
+            profilePojo.setBusinessType(mUser.getBusinessType());
+            profilePojo.setOrganisationEmail(mUser.getOrgEmail());
+            profilePojo.setOrganisationName(mUser.getOrgName());
+            profilePojo.setOrganisationType(mUser.getOrgType());
+            profilePojo.setReferralCode(user.getReferenceCode());
+            profilePojo.setEmail(user.getEmail());
+            profilePojo.setSurname(user.getSurname());
+            profilePojo.setUserId(String.valueOf(mUser.getUserId()));
+            profilePojo.setPhoneNumber(user.getPhoneNumber());
+            profilePojo.setFirstName(user.getFirstName());
+            profilePojo.setCorporate(true);
 
-            //Other services
-            processOtherCorporateAccounts(user, mUser);
+            kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC,profilePojo);
 
-            return new ResponseEntity<>(new SuccessResponse("User created successfully. An OTP has been sent to you", null), HttpStatus.CREATED);
+            return new ResponseEntity<>(new SuccessResponse("User Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"), HttpStatus.CREATED);
 
-        } catch (Exception e) {
+  } catch (Exception e) {
             LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
+
 
     @Override
     public ResponseEntity createPin(PinPojo pinPojo) {
@@ -310,7 +326,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if (user == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid user."), HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(new SuccessResponse("User valid.", user), HttpStatus.OK);
+            List<String> roles = new ArrayList<>();
+            List<Roles> userRoles = user.getRolesList();
+            for (Roles r: userRoles) {
+                roles.add(r.getName());
+            }
+            ValidateUserPojo validateUserPojo = new ModelMapper().map(user, ValidateUserPojo.class);
+            validateUserPojo.setRoles(roles);
+
+            return new ResponseEntity<>(new SuccessResponse("User valid.", validateUserPojo), HttpStatus.OK);
         }
     }
 
@@ -327,9 +351,40 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public ResponseEntity userByPhone(String phone) {
         Users users = userRepo.findByPhoneNumber(phone).orElse(null);
         if (users == null ){
-            return new ResponseEntity<>(new ErrorResponse("Invalid Phone Number."), HttpStatus.OK);
+            return new ResponseEntity<>(new ErrorResponse("Invalid Phone Number."), HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(new SuccessResponse("User valid.", users), HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity createVirtualAccount(VirtualAccountPojo virtualAccountPojo) {
+        kafkaMessageProducer.send(VIRTUAL_ACCOUNT_TOPIC,virtualAccountPojo);
+        return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity createWalletAccount(WalletPojo walletPojo) {
+        kafkaMessageProducer.send(WALLET_ACCOUNT_TOPIC,walletPojo);
+        return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
+
+    }
+
+    @Override
+    public ResponseEntity createWayagramAccount(WayagramPojo wayagramPojo) {
+        kafkaMessageProducer.send(WAYAGRAM_PROFILE_TOPIC,wayagramPojo);
+        return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity createProfileAccount(ProfilePojo profilePojo) {
+        kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC,profilePojo);
+        return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity createCorporateProfileAccount(ProfilePojo2 profilePojo2) {
+        kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC,profilePojo2);
+        return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
     }
 
 
@@ -346,56 +401,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
-    private ProfileResponse createProfile(Users user){
-        ProfilePojo profilePojo = new ProfilePojo(
-                user.getEmail(),
-                user.getFirstName(),
-                user.getPhoneNumber(),
-                user.getSurname(),
-                String.valueOf(user.getId())
-        );
-        ProfileResponse profileResponse = restTemplate.postForObject(PROFILE_SERVICE+"profile-service/personal-profile", profilePojo , ProfileResponse.class);
-        if (profileResponse.isStatus()){
-            createWayagram(user);
-        }
-        return profileResponse;
-    }
-
-    private GeneralResponse createWayagram(Users user){
-        WayagramPojo wayagramPojo = new WayagramPojo();
-        wayagramPojo.setUsername(user.getPhoneNumber());
-        wayagramPojo.setUser_id(String.valueOf(user.getId()));
-        wayagramPojo.setNotPublic(false);
-        GeneralResponse generalResponse = restTemplate.postForObject(WAYA_PROFILE_SERVICE+"create", wayagramPojo , GeneralResponse.class);
-        return generalResponse;
-    }
-
-    private GeneralResponse createCorporateProfile(CorporateUserPojo user){
-        ProfilePojo2 profilePojo = new ProfilePojo2();
-        profilePojo.setBusinessType(user.getBusinessType());
-        profilePojo.setOrganisationEmail(user.getOrgEmail());
-        profilePojo.setOrganisationName(user.getOrgName());
-        profilePojo.setOrganisationType(user.getOrgType());
-        profilePojo.setReferralCode(user.getReferenceCode());
-        profilePojo.setEmail(user.getEmail());
-        profilePojo.setSurname(user.getSurname());
-        profilePojo.setUserId(String.valueOf(user.getUserId()));
-        profilePojo.setPhoneNumber(user.getPhoneNumber());
-        profilePojo.setFirstName(user.getFirstName());
-        GeneralResponse profileResponse = restTemplate.postForObject(PROFILE_SERVICE+"profile-service/corporate-profile", profilePojo , GeneralResponse.class);
-        return profileResponse;
-    }
-
-    private WalletResponse createVirtual(VirtualAccountPojo virtualAccountPojo){
-        WalletResponse walletResponse = restTemplate.postForObject(ACCOUNT_CREATION+"account-creation-service/api/account/createVirtualAccount", virtualAccountPojo, WalletResponse.class);
-        return walletResponse;
-    }
-
-    private GeneralResponse createWallet(WalletPojo walletPojo){
-        GeneralResponse walletResponse = restTemplate.postForObject(WALLET_SERVICE+"wallet/create/user", walletPojo, GeneralResponse.class);
-        return walletResponse;
-    }
-
     private void saveUserToRedis(Users user){
         RedisUser redisUser = new RedisUser();
         redisUser.setId(user.getId());
@@ -406,52 +411,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         redisUserDao.save(redisUser);
     }
-
-
-    private void processOtherAccounts(Users user, UserPojo mUser) {
-
-        // Publish profile creation to Kafka
-//        kafkaMessageProducer.send("personal-profile",user);
-
-        // Publish virtual account creation to Kafka
-        VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo(mUser.getFirstName() +" "+mUser.getSurname(),String.valueOf(user.getId()));
-        kafkaMessageProducer.send(VIRTUAL_ACCOUNT_TOPIC,virtualAccountPojo);
-
-        // Publish Wayagram proile creation to Kafka
-//        WayagramPojo wayagramPojo = new WayagramPojo();
-//        wayagramPojo.setUsername(user.getPhoneNumber());
-//        wayagramPojo.setUser_id(String.valueOf(user.getId()));
-//        wayagramPojo.setNotPublic(false);
-//        kafkaMessageProducer.send(WAYAGRAM_PROFILE_TOPIC,wayagramPojo);
-//
-//        //Publish wallet creation to Kafka
-//        WalletPojo walletPojo = new WalletPojo(mUser.getEmail(), mUser.getFirstName(), mUser.getSurname(),mUser.getPhoneNumber());
-//        kafkaMessageProducer.send(WALLET_ACCOUNT_TOPIC,walletPojo);
-
-    }
-
-    private void processOtherCorporateAccounts(Users user, CorporateUserPojo mUser) {
-
-        // Publish profile creation to Kafka
-//        kafkaMessageProducer.send("corporate-profile",user);
-
-        // Publish virtual account creation to Kafka
-        VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo(mUser.getFirstName() +" "+mUser.getSurname(),String.valueOf(user.getId()));
-        kafkaMessageProducer.send("virtual-account",virtualAccountPojo);
-
-        // Publish Wayagram proile creation to Kafka
-        WayagramPojo wayagramPojo = new WayagramPojo();
-        wayagramPojo.setUsername(user.getPhoneNumber());
-        wayagramPojo.setUser_id(String.valueOf(user.getId()));
-        wayagramPojo.setNotPublic(false);
-        kafkaMessageProducer.send("wayagram-profile",wayagramPojo);
-
-        //Publish wallet creation to Kafka
-        WalletPojo walletPojo = new WalletPojo(mUser.getEmail(), mUser.getFirstName(), mUser.getSurname(),mUser.getPhoneNumber());
-        kafkaMessageProducer.send("wallet-account",wayagramPojo);
-
-    }
-
 
 
 }
