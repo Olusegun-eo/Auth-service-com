@@ -76,8 +76,38 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity getUsers() {
+        Users user = authenticatedUserFacade.getUser();
+        if(!validateAdmin(user)){
+            return new ResponseEntity<>(new ErrorResponse("Invalid Access"), HttpStatus.BAD_REQUEST);
+        }
         List<Users> users = usersRepo.findAll();
         return new ResponseEntity<>(new SuccessResponse("User info fetched", users), HttpStatus.OK);
+    }
+
+    private boolean validateAdmin(Users user) {
+        if (user == null){
+            return false;
+        }
+        Roles adminRole = rolesRepo.findByName("ADMIN");
+        List<Roles> roles = user.getRolesList();
+        if (!roles.contains(adminRole)){
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public ResponseEntity getUsersByRole(int roleId) {
+        Users user = authenticatedUserFacade.getUser();
+        if(!validateAdmin(user)){
+            return new ResponseEntity<>(new ErrorResponse("Invalid Access"), HttpStatus.BAD_REQUEST);
+        }
+        Roles role = rolesRepo.findById(roleId).orElse(null);
+        if (role == null) {
+            return new ResponseEntity<>(new ErrorResponse("Invalid Role"), HttpStatus.BAD_REQUEST);
+        }
+        List<Users> userList = role.getUsersList();
+        return new ResponseEntity<>(new SuccessResponse("User by roles fetched", userList), HttpStatus.OK);
     }
 
     @Override

@@ -2,8 +2,11 @@ package com.waya.wayaauthenticationservice.service;
 
 import com.waya.wayaauthenticationservice.pojo.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 
 import javax.validation.constraints.Email;
+
+
 
 public interface AuthenticationService {
 
@@ -21,6 +24,12 @@ public interface AuthenticationService {
     ResponseEntity validateUser();
     ResponseEntity validatePin(Long userId, int pin);
     ResponseEntity userByPhone(String phone);
+    ResponseEntity createVirtualAccount(VirtualAccountPojo virtualAccountPojo);
+    ResponseEntity createWalletAccount(WalletPojo walletPojo);
+    ResponseEntity createWayagramAccount(WayagramPojo wayagramPojo);
+    ResponseEntity createProfileAccount(ProfilePojo profilePojo);
+    ResponseEntity createCorporateProfileAccount(ProfilePojo2 profilePojo2);
+
 
 
 

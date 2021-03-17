@@ -14,6 +14,7 @@ public interface UserService extends UserDetailsService {
     Collection<? extends GrantedAuthority> getAuthorities(Collection<Roles> roles);
     ResponseEntity getUser(Long userId);
     ResponseEntity getUsers();
+    ResponseEntity getUsersByRole(int roleId);
     ResponseEntity getUserByEmail(String email);
     ResponseEntity getUserByPhone(String phone);
     ResponseEntity wayaContactCheck(ContactPojoReq contacts);

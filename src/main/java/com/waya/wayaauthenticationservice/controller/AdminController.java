@@ -6,10 +6,7 @@ import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin
 @RestController
@@ -29,6 +26,15 @@ public class AdminController {
     @GetMapping("/users")
     public ResponseEntity getUsers() {
         return userService.getUsers();
+    }
+
+
+    @ApiOperation(value = "Fetch Users by Roles (Admin Endpoint)")
+    @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @GetMapping("/users/byrole/{roleId}")
+    public ResponseEntity getUsersByRole(@PathVariable int roleId) {
+        return userService.getUsersByRole(roleId);
     }
 
 

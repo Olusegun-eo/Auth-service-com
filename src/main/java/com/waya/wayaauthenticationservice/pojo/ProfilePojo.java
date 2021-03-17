@@ -15,4 +15,5 @@ public class ProfilePojo {
     private String phoneNumber;
     private String surname;
     private String userId;
+    private boolean corporate = true;
 }
