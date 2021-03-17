@@ -1,5 +1,6 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
@@ -189,6 +190,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public ResponseEntity verifyOTP(OTPPojo otpPojo) {
         String url = PROFILE_SERVICE+"profile-service/otp-verify/"+otpPojo.getPhone()+"/"+otpPojo.getOtp();
         ProfileResponse profileResponse = restTemplate.getForObject(url, ProfileResponse.class);
+        LOGGER.info("Error::: {}, {} and {}", new Gson().toJson(profileResponse));
         if(profileResponse.isStatus()) {
             Users user = userRepo.findByPhoneNumber(otpPojo.getPhone()).orElse(null);
             user.setPhoneVerified(true);

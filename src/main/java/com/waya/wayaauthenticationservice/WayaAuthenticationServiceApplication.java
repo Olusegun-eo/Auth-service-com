@@ -38,7 +38,6 @@ public class WayaAuthenticationServiceApplication {
 	}
 
 	@Bean
-	@LoadBalanced
 	RestTemplate restTemplate(){
 		return new RestTemplate();
 	}
