@@ -9,9 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class WalletPojo {
 
-    private String email;
-    private String firstName;
-    private String lastName;
-    private String mobileNumber;
+    private boolean corporate;
+    private int userId;
 
 }

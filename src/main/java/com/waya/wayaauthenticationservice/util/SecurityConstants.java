@@ -19,5 +19,6 @@ public class SecurityConstants {
     private static final String base64SecretBytes = Base64.getEncoder().encodeToString(secretBytes);
 
     public static String getSecret() {
-        return base64SecretBytes;
+        return "wayas3cr3t";
+//        return base64SecretBytes;
     }}

@@ -61,8 +61,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
             Users user = userLoginRepo.findByEmailOrPhoneNumber(creds.getEmail(), creds.getEmail()).orElseThrow(() -> new BadCredentialsException("User Does not exist"));
 
-            System.out.println(user.getPhoneNumber());
-
             List<Roles> roles = user.getRolesList();
             List<GrantedAuthority> grantedAuthorities = roles.stream().map(r -> {
 
