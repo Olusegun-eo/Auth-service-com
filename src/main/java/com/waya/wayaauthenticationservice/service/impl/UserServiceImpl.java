@@ -4,10 +4,14 @@ import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.ContactPojo;
 import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
+import com.waya.wayaauthenticationservice.pojo.UserWalletPojo;
+import com.waya.wayaauthenticationservice.pojo.WalletPojo2;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
+import com.waya.wayaauthenticationservice.response.GeneralResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
+import com.waya.wayaauthenticationservice.response.WalletResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +23,14 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import static com.waya.wayaauthenticationservice.util.Constant.WALLET_SERVICE;
 import static java.util.stream.Collectors.toList;
 
 @Service
@@ -38,6 +44,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private AuthenticatedUserFacade authenticatedUserFacade;
+
+    @Autowired
+    RestTemplate restTemplate;
 
 
     @Autowired
@@ -123,11 +132,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity getUserByPhone(String phone) {
         Users user = usersRepo.findByPhoneNumber(phone).orElse(null);
+        String accoutNo = "";
         if(user == null){
             return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(new SuccessResponse("User info fetched", user), HttpStatus.OK);
-        }    }
+        }
+        WalletResponse gr = restTemplate.getForObject(WALLET_SERVICE+"wallet/accounts/"+ user.getId(), WalletResponse.class);
+        if(gr.isStatus()){
+            UserWalletPojo userWalletPojo = new UserWalletPojo(user, gr.getData().getAccountNo());
+            return new ResponseEntity<>(new SuccessResponse("User info fetched", userWalletPojo), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(new ErrorResponse(), HttpStatus.BAD_REQUEST);
+        }
 
     @Override
     public ResponseEntity wayaContactCheck(ContactPojoReq contacts) {

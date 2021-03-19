@@ -122,6 +122,8 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                 m.put("corporate", user.isCorporate());
                 UserProfileResponsePojo userp = new ModelMapper().map(user, UserProfileResponsePojo.class);
                 userp.setPhoneNumber(user.getPhoneNumber());
+                userp.setFirstName(user.getFirstName());
+                userp.setLastName(user.getSurname());
                 m.put("user", userp);
                 loginResponsePojo.setData(m);
             } else {
