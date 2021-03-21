@@ -144,6 +144,7 @@ public class UserServiceImpl implements UserService {
         return new ResponseEntity<>(new ErrorResponse(), HttpStatus.BAD_REQUEST);
         }
 
+
     @Override
     public ResponseEntity wayaContactCheck(ContactPojoReq contacts) {
         List<ContactPojo> contactPojos = new ArrayList<>();
