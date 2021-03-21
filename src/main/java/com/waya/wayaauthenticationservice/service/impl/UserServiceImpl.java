@@ -136,7 +136,7 @@ public class UserServiceImpl implements UserService {
         if(user == null){
             return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.OK);
         }
-        WalletResponse gr = restTemplate.getForObject(WALLET_SERVICE+"wallet/accounts/"+ user.getId(), WalletResponse.class);
+        WalletResponse gr = restTemplate.getForObject(WALLET_SERVICE+"wallet/default-account/"+ user.getId(), WalletResponse.class);
         if(gr.isStatus()){
             UserWalletPojo userWalletPojo = new UserWalletPojo(user, gr.getData().getAccountNo());
             return new ResponseEntity<>(new SuccessResponse("User info fetched", userWalletPojo), HttpStatus.OK);
