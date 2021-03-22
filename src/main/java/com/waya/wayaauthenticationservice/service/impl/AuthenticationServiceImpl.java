@@ -6,9 +6,12 @@ import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.*;
 import com.waya.wayaauthenticationservice.repository.RedisUserDao;
-import com.waya.wayaauthenticationservice.response.*;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.response.ErrorResponse;
+import com.waya.wayaauthenticationservice.response.GeneralResponse;
+import com.waya.wayaauthenticationservice.response.ProfileResponse;
+import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.security.AuthenticationFilter;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
@@ -18,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -26,7 +28,6 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.waya.wayaauthenticationservice.util.Constant.*;
 
@@ -333,9 +334,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             for (Roles r: userRoles) {
                 roles.add(r.getName());
             }
-            ValidateUserPojo validateUserPojo = new ModelMapper().map(user, ValidateUserPojo.class);
+            ValidateUserPojo validateUserPojo = new ValidateUserPojo();
+            validateUserPojo.setCorporate(user.isCorporate());
+            validateUserPojo.setEmail(user.getEmail());
+            validateUserPojo.setEmailVerified(user.isEmailVerified());
+            validateUserPojo.setFirstName(user.getFirstName());
+            validateUserPojo.setSurname(user.getSurname());
+            validateUserPojo.setPhoneVerified(user.isPhoneVerified());
+            validateUserPojo.setPinCreated(user.isPinCreated());
+            validateUserPojo.setId(user.getId());
+            validateUserPojo.setReferenceCode(user.getReferenceCode());
+            validateUserPojo.setPhoneNumber(user.getPhoneNumber());
             validateUserPojo.setRoles(roles);
-
             return new ResponseEntity<>(new SuccessResponse("User valid.", validateUserPojo), HttpStatus.OK);
         }
     }
@@ -344,9 +354,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public ResponseEntity validatePin(Long userId, int pin) {
         Users users = userRepo.findByIdAndPin(userId, pin);
         if (users == null ){
-            return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.OK);
+            return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(new SuccessResponse("User valid.", users), HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity validatePinFromUser(int pin) {
+        Users users = authenticatedUserFacade.getUser();
+        if (users == null ){
+            return new ResponseEntity<>(new ErrorResponse("Invalid User."), HttpStatus.BAD_REQUEST);
+        }
+        if (users.getPin() == pin){
+            return new ResponseEntity<>(new SuccessResponse("Pin valid."), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @Override
