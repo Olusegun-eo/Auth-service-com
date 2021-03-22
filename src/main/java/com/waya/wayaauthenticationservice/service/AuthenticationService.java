@@ -23,6 +23,7 @@ public interface AuthenticationService {
     ResponseEntity resendVerificationMail(String email, String userName);
     ResponseEntity validateUser();
     ResponseEntity validatePin(Long userId, int pin);
+    ResponseEntity validatePinFromUser(int pin);
     ResponseEntity userByPhone(String phone);
     ResponseEntity createVirtualAccount(VirtualAccountPojo virtualAccountPojo);
     ResponseEntity createWalletAccount(WalletPojo walletPojo);
