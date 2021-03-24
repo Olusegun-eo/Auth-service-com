@@ -4,6 +4,7 @@ import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.pojo.*;
 import com.waya.wayaauthenticationservice.repository.RedisUserDao;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
+import com.waya.wayaauthenticationservice.service.KafkaPushService;
 import com.waya.wayaauthenticationservice.service.UserService;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,9 @@ public class KafkaPushController {
 
     @Autowired
     AuthenticationService authenticationService;
+
+    @Autowired
+    KafkaPushService kafkaPushService;
 
 
 
@@ -57,6 +61,12 @@ public class KafkaPushController {
     @PostMapping("/create-wayagram-account")
     public ResponseEntity<?> createWayagramPush(@RequestBody WayagramPojo wayagramPojo) {
         return authenticationService.createWayagramAccount(wayagramPojo);
+    }
+
+    @ApiOperation(value = "Push Wayagram Chats (Service consumption only. Do not Use)", notes = "This endpoint pushes chat to kafka for delayed persistence")
+    @PostMapping("/post-chat")
+    public ResponseEntity<?> postChat(@RequestBody ChatPojo chatPojo) {
+        return kafkaPushService.postChat(chatPojo);
     }
 
 

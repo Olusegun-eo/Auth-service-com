@@ -6,6 +6,9 @@ import com.waya.wayaauthenticationservice.SpringApplicationContext;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.LoginResponsePojo;
+import com.waya.wayaauthenticationservice.repository.LoginHistoryRepository;
+import com.waya.wayaauthenticationservice.service.LoginHistoryService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
 import com.waya.wayaauthenticationservice.pojo.LoginDetailsPojo;
 import com.waya.wayaauthenticationservice.pojo.UserProfileResponsePojo;
@@ -40,6 +43,9 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final Gson gson = new Gson();
     private boolean isAdmin = false;
     private static final Logger LOGGER= LoggerFactory.getLogger(AuthenticationFilter.class);
+
+    @Autowired
+    LoginHistoryService loginHistoryService;
 
 
 
@@ -88,8 +94,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
 
         Users user = userLoginRepo.findByEmailOrPhoneNumber(userName, userName).get();
-        System.out.println(user.getPhoneNumber());
-//        Users user = userLoginRepo.findByEmail(userName).get();
+
 
         res.addHeader(SecurityConstants.HEADER_STRING, SecurityConstants.TOKEN_PREFIX + token);
 
@@ -126,6 +131,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                 userp.setLastName(user.getSurname());
                 m.put("user", userp);
                 loginResponsePojo.setData(m);
+
             } else {
                 loginResponsePojo.setCode(-3);
                 loginResponsePojo.setStatus(false);
@@ -170,4 +176,5 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         }
         return result;
     }
+
 }
