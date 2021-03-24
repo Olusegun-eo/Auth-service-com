@@ -13,4 +13,5 @@ public class Constant {
     public static final String WALLET_ACCOUNT_TOPIC = "wallet-account";
     public static final String PROFILE_ACCOUNT_TOPIC = "profile-account";
     public static final String CORPORATE_PROFILE_TOPIC = "corporate-profile-account";
+    public static final String CHAT_TOPIC = "wayagram-chat";
 }
