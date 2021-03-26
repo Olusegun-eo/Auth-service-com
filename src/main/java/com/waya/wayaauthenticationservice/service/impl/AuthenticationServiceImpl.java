@@ -157,9 +157,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             profilePojo.setFirstName(user.getFirstName());
             profilePojo.setCorporate(true);
 
-            kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC,profilePojo);
+            kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC,profilePojo);
 
-            return new ResponseEntity<>(new SuccessResponse("User Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"), HttpStatus.CREATED);
+            return new ResponseEntity<>(new SuccessResponse("Corporate Account Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"), HttpStatus.CREATED);
 
   } catch (Exception e) {
             LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
