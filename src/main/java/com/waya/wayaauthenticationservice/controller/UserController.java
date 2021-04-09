@@ -72,7 +72,7 @@ public class UserController {
         return userService.wayaContactCheck(contacts);
     }
 
-    @ApiOperation(value = "Get my Info", notes = "This endpointis used by logged in users to fetch their info")
+    @ApiOperation(value = "Get my Info change", notes = "This endpointis used by logged in users to fetch their info")
     @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/myinfo")
