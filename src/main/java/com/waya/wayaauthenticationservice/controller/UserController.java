@@ -81,7 +81,7 @@ public class UserController {
     }
 
     @ApiOperation(value = "Delete from redis", hidden = true)
-    @DeleteMapping("/{id}")
+    @DeleteMapping("delete/{id}")
     @CacheEvict(key = "#id",value = "User")
     public String remove(@PathVariable int id) {
         return dao.deleteUser(id);
