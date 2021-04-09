@@ -81,7 +81,9 @@ public class UserController {
     }
 
     @ApiOperation(value = "Delete from redis", hidden = true)
-    @DeleteMapping("delete/{id}")
+    @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @DeleteMapping("/delete/{id}")
     @CacheEvict(key = "#id",value = "User")
     public String remove(@PathVariable int id) {
         return dao.deleteUser(id);
