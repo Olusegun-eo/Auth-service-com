@@ -45,9 +45,10 @@ public class UserController {
     @ApiOperation("Get User Details and Roles by ID from Redis (In-app use only)")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/{id}")
-    @Cacheable(key = "#id",value = "User")
-    public RedisUser findUser(@PathVariable int id) {
-        return dao.findUserById(id);
+//    @Cacheable(key = "#id",value = "User")
+    public ResponseEntity<?> findUser(@PathVariable Long id) {
+    	System.out.println("::::Controller::::");
+        return userService.getUserById(id);
     }
 
 
@@ -84,7 +85,7 @@ public class UserController {
     @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @DeleteMapping("/delete/{id}")
-    @CacheEvict(key = "#id",value = "User")
+//    @CacheEvict(key = "#id",value = "User")
     public String remove(@PathVariable int id) {
         return dao.deleteUser(id);
     }

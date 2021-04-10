@@ -17,6 +17,7 @@ public interface UserService extends UserDetailsService {
     ResponseEntity getUsersByRole(int roleId);
     ResponseEntity getUserByEmail(String email);
     ResponseEntity getUserByPhone(String phone);
+    ResponseEntity getUserById(Long id);
     ResponseEntity wayaContactCheck(ContactPojoReq contacts);
     ResponseEntity getMyInfo();
 }

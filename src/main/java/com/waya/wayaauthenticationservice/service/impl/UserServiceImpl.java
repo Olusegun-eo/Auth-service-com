@@ -165,4 +165,19 @@ public class UserServiceImpl implements UserService {
         return new ResponseEntity<>(new SuccessResponse("User info fetched", user), HttpStatus.OK);
     }
 
+	@Override
+	public ResponseEntity<?> getUserById(Long id) {
+		try {
+			System.out.println(":::::User Service:::::");
+			Users user = usersRepo.findById(id).orElse(null);
+			if(user == null){
+	            return new ResponseEntity<>(new ErrorResponse("Invalid id"), HttpStatus.BAD_REQUEST);
+	        } else {
+	            return new ResponseEntity<>(new SuccessResponse("User info fetched", user), HttpStatus.OK);
+	        }
+		} catch (Exception e) {
+			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+		}
+	}
+
 }
