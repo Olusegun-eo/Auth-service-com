@@ -91,7 +91,7 @@ pipeline {
 		stage('Approval for deployment') {
 			steps{
 				script {
-					def deploymentDelay = input id: 'Deploy', message: 'Approval needed to deploy to production', submitter: 'odenigbojohnmary,admin', parameters: [choice(choices:[0,1], description: 'Hours to delay deployment?', name: 'deploymentDelay')]
+					def deploymentDelay = input id: 'Deploy', message: 'Approval needed to deploy to production', submitter: 'odenigbojohnmary,admin', parameters: [choice(choices:['0','1'], description: 'Hours to delay deployment?', name: 'deploymentDelay')]
                     sleep time: deploymentDelay.toInteger(), unit: 'HOURS'
                 }
             }
