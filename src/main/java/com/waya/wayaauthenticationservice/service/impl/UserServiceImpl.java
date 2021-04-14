@@ -2,6 +2,7 @@ package com.waya.wayaauthenticationservice.service.impl;
 
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.pojo.ContactPojo;
 import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
 import com.waya.wayaauthenticationservice.pojo.UserWalletPojo;
@@ -14,6 +15,9 @@ import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.response.WalletResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.service.UserService;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -51,6 +55,10 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private RolesRepository rolesRepo;
+    
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
+    
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities(Collection<Roles> roles) {
@@ -115,7 +123,16 @@ public class UserServiceImpl implements UserService {
         if (role == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid Role"), HttpStatus.BAD_REQUEST);
         }
-        List<Users> userList = role.getUsersList();
+        List<Users> userList = new ArrayList<Users>();
+        rolesRepo.findAll().forEach(roles -> {
+        	usersRepo.findAll().forEach(us -> {
+        		us.getRolesList().forEach(usRole -> {
+        			if(usRole.getId().equals(roleId)) {
+        				userList.add(us);
+        			}
+        		});
+        	});
+        });
         return new ResponseEntity<>(new SuccessResponse("User by roles fetched", userList), HttpStatus.OK);
     }
 
@@ -177,6 +194,44 @@ public class UserServiceImpl implements UserService {
 	        }
 		} catch (Exception e) {
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	@Override
+	public ResponseEntity<?> deleteUser(Long id) {
+		try {
+			return usersRepo.findById(id).map(users -> {
+				
+				users.getRolesList().forEach(role -> {
+					rolesRepo.delete(role);
+				});
+				usersRepo.delete(users);
+				return new ResponseEntity(new SuccessResponse("User deleted Successfully"), HttpStatus.OK);
+			}).orElse(new ResponseEntity<>(new ErrorResponse("Invalid id"), HttpStatus.BAD_REQUEST));
+		} catch (Exception e) {
+			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	@Override
+	public Integer getUsersCount(String roleName) {
+		try {
+			
+			List<Users> users = new ArrayList<Users>();
+			
+			rolesRepo.findAll().forEach(role -> {
+				usersRepo.findAll().forEach(user -> {
+					user.getRolesList().forEach(uRole -> {
+						if(uRole.getName().equals(roleName)) {
+							users.add(user);
+						}
+					});
+				});
+			});
+			return users.size();
+		} catch (Exception e) {
+			LOGGER.info("Error::: {}, {} and {}", e.getMessage(),2,3);
+			throw new CustomException(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
 		}
 	}
 

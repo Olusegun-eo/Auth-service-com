@@ -19,14 +19,14 @@ public class Roles implements Serializable {
     @Column(name = "id")
     private Integer id;
     @Size(max = 50)
-    @Column(name = "name")
+    @Column(name = "name", unique = true)
     private String name;
     private String description;
     @OneToMany(mappedBy = "role", fetch = FetchType.EAGER)
     private Set<Privilege> permissions;
-    @ManyToMany(mappedBy = "rolesList")
-    @JsonIgnore
-    private List<Users> usersList;
+//    @ManyToMany(mappedBy = "rolesList")
+//    @JsonIgnore
+//    private List<Users> usersList;
 
     public Roles() {
     }

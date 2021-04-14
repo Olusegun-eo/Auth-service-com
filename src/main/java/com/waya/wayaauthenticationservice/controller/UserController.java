@@ -86,7 +86,15 @@ public class UserController {
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @DeleteMapping("/delete/{id}")
 //    @CacheEvict(key = "#id",value = "User")
-    public String remove(@PathVariable int id) {
-        return dao.deleteUser(id);
+    public ResponseEntity remove(@PathVariable Long id) {
+        return userService.deleteUser(id);
+    }
+    
+    @ApiOperation(value = "Get Users By role name count", notes = "This endpointis used to get all users by role name, it returns an integer of count")
+    @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @GetMapping("/count/{role}")
+    public ResponseEntity<Integer> findAllUserByRoleCount(@PathVariable("role") String role) {
+    	return ResponseEntity.ok(userService.getUsersCount(role));
     }
 }
