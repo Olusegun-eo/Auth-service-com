@@ -1,7 +1,8 @@
 package com.waya.wayaauthenticationservice.pojo;
 
+import java.time.LocalDate;
+
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,9 +11,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class WalletPojo {
+public class WalletTimeLine {
 
-    private boolean corporate;
-    private int userId;
-
+	private LocalDate submittedOnDate;
 }

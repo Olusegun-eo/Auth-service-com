@@ -12,11 +12,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.http.HttpRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
 
 @CrossOrigin
 @RestController
@@ -61,9 +65,10 @@ public class UserController {
 
     @ApiOperation("Get User Details by Phone (In-app use only)")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @GetMapping("phone/{phone}")
-    public ResponseEntity getUserByPhone(@PathVariable String phone) {
-        return userService.getUserByPhone(phone);
+    public ResponseEntity getUserByPhone(@PathVariable String phone, HttpServletRequest req) {
+        return userService.getUserByPhone(phone, req.getHeader("Authorization"));
     }
 
     @ApiOperation("Phone Contact check  (Service consumption only. Do not Use)")

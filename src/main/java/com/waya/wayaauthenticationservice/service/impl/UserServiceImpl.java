@@ -5,8 +5,10 @@ import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.pojo.ContactPojo;
 import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
+import com.waya.wayaauthenticationservice.pojo.MainWalletResponse;
 import com.waya.wayaauthenticationservice.pojo.UserWalletPojo;
 import com.waya.wayaauthenticationservice.pojo.WalletPojo2;
+import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
@@ -19,6 +21,7 @@ import com.waya.wayaauthenticationservice.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.GrantedAuthority;
@@ -34,8 +37,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import javax.servlet.http.HttpServletRequest;
+
 import static com.waya.wayaauthenticationservice.util.Constant.WALLET_SERVICE;
 import static java.util.stream.Collectors.toList;
+
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -55,6 +61,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private RolesRepository rolesRepo;
+    
+    @Autowired
+    private WalletProxy walletProxy;
     
     
     private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
@@ -147,16 +156,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity getUserByPhone(String phone) {
+    public ResponseEntity getUserByPhone(String phone, String token) {
         Users user = usersRepo.findByPhoneNumber(phone).orElse(null);
-        String accoutNo = "";
         if(user == null){
             return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.OK);
         }
-        WalletResponse gr = restTemplate.getForObject(WALLET_SERVICE+"wallet/default-account/"+ user.getId(), WalletResponse.class);
-        if(gr.isStatus()){
-            if (gr.getData() != null){accoutNo = gr.getData().getAccountNo();}
-            UserWalletPojo userWalletPojo = new UserWalletPojo(user, accoutNo);
+        List<MainWalletResponse> mainWalletResponse = walletProxy.getWalletById(user.getId(), token);
+//        WalletResponse gr = restTemplate.getForObject(WALLET_SERVICE+"wallet/default-account/"+ user.getId(), WalletResponse.class);
+        if(mainWalletResponse != null){
+//            if (mainWalletResponse.size() > 0){accoutNo = gr.getData().getAccountNo();}
+            UserWalletPojo userWalletPojo = new UserWalletPojo(user, mainWalletResponse.get(0).getAccountNo());
             return new ResponseEntity<>(new SuccessResponse("User info fetched", userWalletPojo), HttpStatus.OK);
         }
         return new ResponseEntity<>(new ErrorResponse(), HttpStatus.BAD_REQUEST);
