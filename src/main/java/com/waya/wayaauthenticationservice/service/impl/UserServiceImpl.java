@@ -165,6 +165,7 @@ public class UserServiceImpl implements UserService {
 //        WalletResponse gr = restTemplate.getForObject(WALLET_SERVICE+"wallet/default-account/"+ user.getId(), WalletResponse.class);
         if(mainWalletResponse != null){
 //            if (mainWalletResponse.size() > 0){accoutNo = gr.getData().getAccountNo();}
+//          if (mainWalletResponse.size() > 0){accoutNo = gr.getData().getAccountNo();}
             UserWalletPojo userWalletPojo = new UserWalletPojo(user, mainWalletResponse.get(0).getAccountNo());
             return new ResponseEntity<>(new SuccessResponse("User info fetched", userWalletPojo), HttpStatus.OK);
         }
