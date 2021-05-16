@@ -16,5 +16,8 @@ public interface WalletProxy {
 
 	@GetMapping("/wallet/find/by/userId/{userId}")
 	public List<MainWalletResponse> getWalletById(@PathVariable("userId") Long userId, @RequestHeader("Authorization") String token);
+	
+	@GetMapping("/wallet/get/default/wallet")
+    MainWalletResponse getDefaultWallet(@RequestHeader("Authorization") String token);
 
 }

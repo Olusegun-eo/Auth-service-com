@@ -78,7 +78,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         try {
             Roles roles = new Roles();
             roles.setId(1);
-            roles.setName("User");
+            roles.setName("USER_LV1");
             Roles mRoles = rolesRepo.save(roles);
             List<Roles> roleList = new ArrayList<>();
             roleList.add(mRoles);
@@ -130,7 +130,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         try {
             Roles roles = new Roles();
             roles.setId(1);
-            roles.setName("User");
+            roles.setName("CORP_ADMIN");
             Roles mRoles = rolesRepo.save(roles);
             List<Roles> roleList = new ArrayList<>();
             roleList.add(mRoles);
