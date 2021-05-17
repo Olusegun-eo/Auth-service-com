@@ -1,10 +1,13 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
 import com.google.gson.Gson;
+import com.waya.wayaauthenticationservice.entity.CooperateUser;
 import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.*;
+import com.waya.wayaauthenticationservice.proxy.WalletProxy;
+import com.waya.wayaauthenticationservice.repository.CooperateUserRepository;
 import com.waya.wayaauthenticationservice.repository.RedisUserDao;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
@@ -54,6 +57,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Autowired
     KafkaMessageProducer kafkaMessageProducer;
+    
+    @Autowired
+    private CooperateUserRepository cooperateUserRepo;
+    
+    @Autowired
+    private WalletProxy walletProxy;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationFilter.class);
 
@@ -141,9 +150,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setDateCreated(LocalDateTime.now());
             user.setPassword(passwordEncoder.encode(mUser.getPassword()));
             user.setRolesList(roleList);
-            userRepo.save(user);
+            Users regUser = userRepo.save(user);
             mUser.setUserId(user.getId());
+            
+            CooperateUser coopUser = new ModelMapper().map(mUser, CooperateUser.class);
+            coopUser.setUserId(regUser.getId());
+            cooperateUserRepo.save(coopUser);
 
+            CreateAccountPojo createAccount = new CreateAccountPojo();
+            createAccount.setEmailAddress(regUser.getEmail());
+            createAccount.setExternalId(regUser.getId());
+            createAccount.setFirstName(regUser.getFirstName());
+            createAccount.setLastName(regUser.getSurname());
+            createAccount.setMobileNo(regUser.getPhoneNumber());
+            createAccount.setSavingsProductId(1);
+            
+            CreateAccountResponse coopAccount = walletProxy.createCooperateAccouont(createAccount);
+            
             ProfilePojo2 profilePojo = new ProfilePojo2();
             profilePojo.setBusinessType(mUser.getBusinessType());
             profilePojo.setOrganisationEmail(mUser.getOrgEmail());
