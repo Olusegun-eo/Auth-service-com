@@ -18,6 +18,10 @@ import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.security.AuthenticationFilter;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +34,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static com.waya.wayaauthenticationservice.util.Constant.*;
@@ -63,6 +68,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     
     @Autowired
     private WalletProxy walletProxy;
+    
+    public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
+    
+    private static final String SECRET_TOKEN = "wayas3cr3t" ;
+    
+    public static final String TOKEN_PREFIX = "serial ";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationFilter.class);
 
@@ -119,7 +130,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 
     @Override
-    public ResponseEntity createCorporateUser(CorporateUserPojo mUser, String token) {
+    public ResponseEntity createCorporateUser(CorporateUserPojo mUser) {
+    	
+    	
         // Check if email exists
         Users existingEmail = userRepo.findByEmail(mUser.getEmail()).orElse(null);
         if (existingEmail != null) {
@@ -144,12 +157,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             List<Roles> roleList = new ArrayList<>();
             roleList.add(mRoles);
 
-            Users user = new ModelMapper().map(mUser, Users.class);
+//            Users user = new ModelMapper().map(mUser, Users.class);
+            Users user = new Users();
             user.setId(0L);
             user.setCorporate(true);
             user.setDateCreated(LocalDateTime.now());
             user.setPassword(passwordEncoder.encode(mUser.getPassword()));
             user.setRolesList(roleList);
+            user.setEmail(mUser.getEmail());
+            user.setEmailVerified(false);
+            user.setFirstName(mUser.getFirstName());
+            user.setPhoneNumber(mUser.getPhoneNumber());
+            user.setPhoneVerified(false);
+            user.setPinCreated(false);
+            user.setReferenceCode(mUser.getReferenceCode());
+            user.setSurname(mUser.getSurname());
+            
             Users regUser = userRepo.save(user);
             mUser.setUserId(user.getId());
             
@@ -165,6 +188,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             createAccount.setMobileNo(regUser.getPhoneNumber());
             createAccount.setSavingsProductId(1);
             
+            String token = generateToken( regUser);
+            System.out.println("::::::mtoken::::"+token);
             CreateAccountResponse coopAccount = walletProxy.createCooperateAccouont(createAccount, token);
             
             ProfilePojo2 profilePojo = new ProfilePojo2();
@@ -188,6 +213,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         }
+    }
+    
+    public String generateToken(Users userResponse) {
+    	try {
+    		System.out.println("::::::GENERATE TOKEN:::::");
+        	String token = Jwts.builder().setSubject(userResponse.getEmail())
+                    .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
+                    .signWith(SignatureAlgorithm.HS512, SECRET_TOKEN).compact();
+        	System.out.println(":::::Token:::::");
+        	return TOKEN_PREFIX+token;
+    	} catch (Exception e) {
+    		
+    		System.out.println(e.fillInStackTrace());
+    		throw new RuntimeException(e.fillInStackTrace());
+    	}
+    	
     }
 
 
