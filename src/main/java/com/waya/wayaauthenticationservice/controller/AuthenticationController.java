@@ -4,6 +4,10 @@ import com.waya.wayaauthenticationservice.pojo.*;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
 import com.waya.wayaauthenticationservice.service.impl.AuthenticationServiceImpl;
 import io.swagger.annotations.*;
+import springfox.documentation.annotations.ApiIgnore;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +19,8 @@ public class AuthenticationController {
 
     @Autowired
     private AuthenticationService authenticationServiceImpl;
+    
+    public static final String HEADER_STRING = "Authorization";
 
     @ApiOperation("Personal User Registration")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
@@ -27,8 +33,9 @@ public class AuthenticationController {
     @ApiOperation("Corporate User Registration")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping(path = "/create-corporate", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<?> createCorporate(@RequestBody CorporateUserPojo user) {
-        return authenticationServiceImpl.createCorporateUser(user);
+    public ResponseEntity<?> createCorporate(@RequestBody CorporateUserPojo user,@ApiIgnore HttpServletRequest req) {
+    	String token = req.getHeader(HEADER_STRING);
+    	return authenticationServiceImpl.createCorporateUser(user, token);
     }
 
 

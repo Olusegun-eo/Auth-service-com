@@ -119,7 +119,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 
     @Override
-    public ResponseEntity createCorporateUser(CorporateUserPojo mUser) {
+    public ResponseEntity createCorporateUser(CorporateUserPojo mUser, String token) {
         // Check if email exists
         Users existingEmail = userRepo.findByEmail(mUser.getEmail()).orElse(null);
         if (existingEmail != null) {
@@ -165,7 +165,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             createAccount.setMobileNo(regUser.getPhoneNumber());
             createAccount.setSavingsProductId(1);
             
-            CreateAccountResponse coopAccount = walletProxy.createCooperateAccouont(createAccount);
+            CreateAccountResponse coopAccount = walletProxy.createCooperateAccouont(createAccount, token);
             
             ProfilePojo2 profilePojo = new ProfilePojo2();
             profilePojo.setBusinessType(mUser.getBusinessType());
