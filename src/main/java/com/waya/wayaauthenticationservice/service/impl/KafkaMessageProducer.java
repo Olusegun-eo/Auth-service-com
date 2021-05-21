@@ -104,7 +104,7 @@ public class KafkaMessageProducer implements MessageQueueProducer {
         Optional<Users> foundUser = userRepo.findByEmail(creds.getEmail());
         String mUserId = String.valueOf(foundUser.get().getId());
         
-        String token = generateToken( foundUser.get());
+        String token = generateToken(foundUser.get());
         
         CreateWayagram createWayagram = new CreateWayagram();
         createWayagram.setNotPublic(false);
@@ -133,9 +133,6 @@ public class KafkaMessageProducer implements MessageQueueProducer {
      // build the request
         HttpEntity request = new HttpEntity(createWayagram,headers);
         
-        // build the request
-//        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
-//        HttpEntity<String> entity = new HttpEntity<String>(headers);
      // build the request
         System.out.println(":::::loading transfer:::::");
         
@@ -158,7 +155,7 @@ public class KafkaMessageProducer implements MessageQueueProducer {
         	String token = Jwts.builder().setSubject(userResponse.getEmail())
                     .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
                     .signWith(SignatureAlgorithm.HS512, SECRET_TOKEN).compact();
-        	System.out.println(":::::Token:::::");
+        	System.out.println(":::::Token:::::"+TOKEN_PREFIX+token);
         	return TOKEN_PREFIX+token;
     	} catch (Exception e) {
     		

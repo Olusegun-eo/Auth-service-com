@@ -6,6 +6,7 @@ import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.*;
+import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
 import com.waya.wayaauthenticationservice.repository.CooperateUserRepository;
@@ -83,6 +84,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Autowired
     private WayagramProxy wayaramProxy;
     
+    @Autowired
+    private VirtualAccountProxy virtualAccountProxy;
+    
  // Spring Boot will create and configure DataSource and JdbcTemplate
     // To use it, just @Autowired
     @Autowired
@@ -128,10 +132,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setDateCreated(LocalDateTime.now());
             user.setPassword(passwordEncoder.encode(mUser.getPassword()));
             user.setRolesList(roleList);
-            userRepo.saveAndFlush(user);
+            Users regUser = userRepo.saveAndFlush(user);
+            String id = String.valueOf(regUser.getId());
+            VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
+            virtualAccountPojo.setAccountName(regUser.getFirstName()+ " "+ regUser.getSurname());
+            virtualAccountPojo.setUserId(id);
+            String token = generateToken(regUser);
             
+            ResponseEntity<String> response = virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token);
             
-            
+            System.out.println("Response"+ response.getBody());
             // Create profile by publishing to Kafka
             ProfilePojo profilePojo = new ProfilePojo(
                     user.getEmail(),
@@ -545,6 +555,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         redisUserDao.save(redisUser);
     }
+    
+    
 
 
 }
