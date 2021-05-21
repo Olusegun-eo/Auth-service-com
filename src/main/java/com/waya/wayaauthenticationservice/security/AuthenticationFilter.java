@@ -60,13 +60,18 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res)
             throws AuthenticationException {
         try {
+        	
             LoginDetailsPojo creds = new ObjectMapper().readValue(req.getInputStream(), LoginDetailsPojo.class);
             isAdmin = creds.isAdmin();
-
+            System.out.println("User Name up::"+creds.getEmail());
+            System.out.println("Password up::"+creds.getPassword());
             UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
-
+            userLoginRepo.findAll().forEach(us -> {
+            	System.out.println("Users::"+us.getFirstName()+" "+us.getPhoneNumber()+" "+us.getSurname());
+            });
             Users user = userLoginRepo.findByEmailOrPhoneNumber(creds.getEmail(), creds.getEmail()).orElseThrow(() -> new BadCredentialsException("User Does not exist"));
-
+            System.out.println("::::::::::::");
+            System.out.println("User first Name ::"+user.getFirstName());
             List<Roles> roles = user.getRolesList();
             List<GrantedAuthority> grantedAuthorities = roles.stream().map(r -> {
 
@@ -86,6 +91,8 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                                             Authentication auth) throws IOException, ServletException, SignatureException {
 
         String userName = ((User) auth.getPrincipal()).getUsername();
+        
+        System.out.println("User Name::"+userName);
 
         String token = Jwts.builder().setSubject(userName)
                 .setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))

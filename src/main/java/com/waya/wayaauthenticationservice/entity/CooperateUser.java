@@ -25,11 +25,13 @@ public class CooperateUser {
 	private Long userId;
 	@Column(nullable = false)
 	private String businessType;
+	@Column(nullable = false, unique = true)
 	private String email;
     private String surname;
     private String firstName;
     private String city;
     private String officeAddress;
+    @Column(nullable = false, unique = true)
     private String phoneNumber;
     private String password;
     private String state;

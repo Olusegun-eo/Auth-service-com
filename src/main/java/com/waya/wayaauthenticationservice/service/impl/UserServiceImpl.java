@@ -6,6 +6,7 @@ import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.pojo.ContactPojo;
 import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
 import com.waya.wayaauthenticationservice.pojo.MainWalletResponse;
+import com.waya.wayaauthenticationservice.pojo.UserEditPojo;
 import com.waya.wayaauthenticationservice.pojo.UserWalletPojo;
 import com.waya.wayaauthenticationservice.pojo.WalletPojo2;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
@@ -240,6 +241,26 @@ public class UserServiceImpl implements UserService {
 				});
 			});
 			return users.size();
+		} catch (Exception e) {
+			LOGGER.info("Error::: {}, {} and {}", e.getMessage(),2,3);
+			throw new CustomException(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+		}
+	}
+
+	
+	//Edit user, mostly to update role list from the role service
+	@Override
+	public UserEditPojo UpdateUser(UserEditPojo user) {
+		try {
+			return usersRepo.findById(user.getId()).map(mUser -> {
+				mUser.setCorporate(user.isCorporate());
+				mUser.setEmail(user.getEmail());
+				mUser.setFirstName(user.getFirstName());
+				mUser.setPhoneNumber(user.getPhoneNumber());
+				mUser.setRolesList(user.getRolesList());
+				usersRepo.save(mUser);
+				return user;
+			}).orElseThrow(() -> new CustomException("Id provided not found", HttpStatus.NOT_FOUND));
 		} catch (Exception e) {
 			LOGGER.info("Error::: {}, {} and {}", e.getMessage(),2,3);
 			throw new CustomException(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
