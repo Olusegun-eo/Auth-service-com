@@ -243,6 +243,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                  profilePojo.setPhoneNumber(user.getPhoneNumber());
                  profilePojo.setFirstName(user.getFirstName());
                  profilePojo.setCorporate(true);
+                 
+                 String id = String.valueOf(regUser.getId());
+                 VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
+                 virtualAccountPojo.setAccountName(regUser.getFirstName()+ " "+ regUser.getSurname());
+                 virtualAccountPojo.setUserId(id);
+                 String token = generateToken(regUser);
+                 
+                 ResponseEntity<String> response = virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token);
+                 
+                 System.out.println("Response"+ response.getBody());
 
                  kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC,profilePojo);
 
