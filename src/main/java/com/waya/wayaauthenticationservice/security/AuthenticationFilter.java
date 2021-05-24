@@ -63,16 +63,10 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         	
             LoginDetailsPojo creds = new ObjectMapper().readValue(req.getInputStream(), LoginDetailsPojo.class);
             isAdmin = creds.isAdmin();
-            System.out.println("User Name up::"+creds.getEmail());
-            System.out.println("Password up::"+creds.getPassword());
             UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
-            userLoginRepo.findAll().forEach(us -> {
-            	System.out.println("Users::"+us.getFirstName()+" "+us.getPhoneNumber()+" "+us.getSurname());
-            });
+            
             Users user = userLoginRepo.findByEmailOrPhoneNumber(creds.getEmail(), creds.getEmail()).orElseThrow(() -> new BadCredentialsException("User Does not exist"));
-            System.out.println("::::::::::::");
-            System.out.println("User first Name ::"+user.getFirstName());
-            List<Roles> roles = user.getRolesList();
+                        List<Roles> roles = user.getRolesList();
             List<GrantedAuthority> grantedAuthorities = roles.stream().map(r -> {
 
                 return new SimpleGrantedAuthority(r.getName());
@@ -92,7 +86,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
         String userName = ((User) auth.getPrincipal()).getUsername();
         
-        System.out.println("User Name::"+userName);
 
         String token = Jwts.builder().setSubject(userName)
                 .setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))

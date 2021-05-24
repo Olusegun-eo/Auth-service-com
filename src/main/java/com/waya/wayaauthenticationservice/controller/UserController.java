@@ -115,4 +115,13 @@ public class UserController {
     	
     	return ResponseEntity.ok(userService.UpdateUser(user));
     }
+    
+    @ApiOperation(value = "Get user details for role service consumption", notes = "This endpointis used to get user details for Role Service")
+    @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @GetMapping("/get/user/for/role/{id}")
+    public ResponseEntity<UserEditPojo> getUserForRole(@PathVariable("id") Long id) {
+    	return ResponseEntity.ok(userService.getUserForRole(id));
+    }
+    
 }

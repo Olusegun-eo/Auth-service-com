@@ -29,4 +29,6 @@ public interface UserService extends UserDetailsService {
     ResponseEntity getMyInfo();
     Integer getUsersCount(String roleName);
     UserEditPojo UpdateUser(UserEditPojo user);
+    //Get user details for Roles service
+    UserEditPojo getUserForRole(Long id);
 }
