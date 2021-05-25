@@ -5,6 +5,7 @@ import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.ContactPojo;
 import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
 import com.waya.wayaauthenticationservice.pojo.UserEditPojo;
+import com.waya.wayaauthenticationservice.pojo.UserRoleUpdateRequest;
 
 import org.springframework.http.HttpRequest;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +29,7 @@ public interface UserService extends UserDetailsService {
     ResponseEntity wayaContactCheck(ContactPojoReq contacts);
     ResponseEntity getMyInfo();
     Integer getUsersCount(String roleName);
-    UserEditPojo UpdateUser(UserEditPojo user);
+    UserRoleUpdateRequest UpdateUser(UserRoleUpdateRequest user);
     //Get user details for Roles service
     UserEditPojo getUserForRole(Long id);
 }

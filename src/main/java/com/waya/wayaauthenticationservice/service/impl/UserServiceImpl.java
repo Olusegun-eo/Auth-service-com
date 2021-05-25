@@ -7,6 +7,7 @@ import com.waya.wayaauthenticationservice.pojo.ContactPojo;
 import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
 import com.waya.wayaauthenticationservice.pojo.MainWalletResponse;
 import com.waya.wayaauthenticationservice.pojo.UserEditPojo;
+import com.waya.wayaauthenticationservice.pojo.UserRoleUpdateRequest;
 import com.waya.wayaauthenticationservice.pojo.UserWalletPojo;
 import com.waya.wayaauthenticationservice.pojo.WalletPojo2;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
@@ -250,14 +251,18 @@ public class UserServiceImpl implements UserService {
 	
 	//Edit user, mostly to update role list from the role service
 	@Override
-	public UserEditPojo UpdateUser(UserEditPojo user) {
+	public UserRoleUpdateRequest UpdateUser(UserRoleUpdateRequest user) {
 		try {
 			return usersRepo.findById(user.getId()).map(mUser -> {
-				mUser.setCorporate(user.isCorporate());
-				mUser.setEmail(user.getEmail());
-				mUser.setFirstName(user.getFirstName());
-				mUser.setPhoneNumber(user.getPhoneNumber());
-				mUser.setRolesList(user.getRolesList());
+				List<Roles> roleList = new ArrayList<>();
+				for(Integer i : user.getRolesList()) {
+					Optional<Roles> mUrole = rolesRepo.findById(i);
+					if(mUrole.isPresent()) {
+						roleList.add(mUrole.get());
+						mUser.getRolesList().add(mUrole.get());
+					}
+				}
+//				mUser.setRolesList(user.getRolesList());
 				usersRepo.save(mUser);
 				return user;
 			}).orElseThrow(() -> new CustomException("Id provided not found", HttpStatus.NOT_FOUND));

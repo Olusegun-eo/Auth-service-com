@@ -6,6 +6,7 @@ import com.waya.wayaauthenticationservice.pojo.ContactPojo;
 import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
 import com.waya.wayaauthenticationservice.pojo.UserEditPojo;
 import com.waya.wayaauthenticationservice.pojo.UserPojo;
+import com.waya.wayaauthenticationservice.pojo.UserRoleUpdateRequest;
 import com.waya.wayaauthenticationservice.repository.RedisUserDao;
 import com.waya.wayaauthenticationservice.service.UserService;
 import com.waya.wayaauthenticationservice.util.SecurityConstants;
@@ -111,7 +112,7 @@ public class UserController {
     @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @PutMapping("/update")
-    public ResponseEntity<UserEditPojo> updateUser(@RequestBody UserEditPojo user) {
+    public ResponseEntity<UserRoleUpdateRequest> updateUser(@RequestBody UserRoleUpdateRequest user) {
     	
     	return ResponseEntity.ok(userService.UpdateUser(user));
     }
