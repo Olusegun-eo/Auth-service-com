@@ -57,6 +57,8 @@ public class Users implements Serializable {
     private boolean pinCreated = false;
 
     private boolean isCorporate = false;
+    
+    private boolean isAdmin = false;
 
     @Transient
     private Roles role;

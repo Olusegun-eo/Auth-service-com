@@ -115,7 +115,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                 roles.add(rs.get(i).getName());
             }
 
-            if (isAdmin == roleCheck(rs, "Admin")){
+            if (isAdmin == roleCheck(rs, "ADMIN")){
                 loginResponsePojo.setCode(0);
                 loginResponsePojo.setStatus(true);
                 loginResponsePojo.setMessage("Login Successful");
