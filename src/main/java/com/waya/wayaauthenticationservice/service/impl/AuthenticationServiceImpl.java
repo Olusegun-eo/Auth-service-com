@@ -229,6 +229,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                  createAccount.setMobileNo(foundUser.get().getPhoneNumber());
                  createAccount.setSavingsProductId(1);
                  
+                 walletProxy.createCooperateAccouont(createAccount);
                  
                 
                  ProfilePojo2 profilePojo = new ProfilePojo2();

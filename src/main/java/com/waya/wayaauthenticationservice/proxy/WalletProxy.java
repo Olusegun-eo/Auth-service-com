@@ -25,6 +25,6 @@ public interface WalletProxy {
     MainWalletResponse getDefaultWallet(@RequestHeader("Authorization") String token);
 	
 	@PostMapping("/wallet/create/cooperate/user")
-	CreateAccountResponse createCooperateAccouont(@RequestBody CreateAccountPojo createAccountPojo, @RequestHeader("Authorization") String token);
+	CreateAccountResponse createCooperateAccouont(@RequestBody CreateAccountPojo createAccountPojo);
 
 }
