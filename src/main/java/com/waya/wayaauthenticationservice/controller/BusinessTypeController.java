@@ -29,28 +29,28 @@ public class BusinessTypeController {
 	private BusinessTypeService businessTypeService;
 	
 	
-	@ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
+	
 	@ApiOperation(value = "Create Business Type", notes = "Create Business Type")
 	@PostMapping("/create")
 	public ResponseEntity<ResponsePojo> create(@RequestBody BusinessType businessType) {
 		return ResponseEntity.ok(businessTypeService.createBusinessType(businessType));
 	}
 	
-	@ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
+	
 	@ApiOperation(value = "Edit Business Type", notes = "Edit Business Type")
 	@PutMapping("/edit")
 	public ResponseEntity<ResponsePojo> edit(@RequestBody BusinessType businessType) {
 		return ResponseEntity.ok(businessTypeService.edit(businessType));
 	}
 	
-	@ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
+	
 	@ApiOperation(value = "Find All Business Type", notes = "Find All Business types")
 	@GetMapping("/find/all")
 	public ResponseEntity<List<BusinessType>> findAll() {
 		return ResponseEntity.ok(businessTypeService.findAll());
 	}
 	
-	@ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
+	
 	@ApiOperation(value = "Delete Business Type", notes = "Delete Business Type")
 	@DeleteMapping("/delete")
 	public ResponseEntity<ResponsePojo> delete(@PathVariable("id") Long id) {
