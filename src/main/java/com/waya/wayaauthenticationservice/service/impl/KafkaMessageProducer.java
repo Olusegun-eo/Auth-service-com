@@ -49,18 +49,18 @@ public class KafkaMessageProducer implements MessageQueueProducer {
     @Autowired
     private UserRepository userRepo;
 
-
-    @Autowired
-    private   RestTemplate restClient;
-
-    @Autowired
-    private AppConfig appConfig;
-    
-    public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
-    
-    private static final String SECRET_TOKEN = "wayas3cr3t" ;
-    
-    public static final String TOKEN_PREFIX = "serial ";
+//
+//    @Autowired
+//    private   RestTemplate restClient;
+//
+//    @Autowired
+//    private AppConfig appConfig;
+//
+//    public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
+//
+//    private static final String SECRET_TOKEN = "wayas3cr3t" ;
+//
+//    public static final String TOKEN_PREFIX = "serial ";
 
     @Autowired
     public KafkaMessageProducer(KafkaTemplate<String, Object> template, Gson gson) {
@@ -112,43 +112,39 @@ public class KafkaMessageProducer implements MessageQueueProducer {
                 logger.error("failed to send notification", ex);
             }
         });
-        Optional<Users> foundUser = userRepo.findByEmail(creds.getEmail());
-
-        foundUser.ifPresent(users -> CompletableFuture.runAsync(() -> createProfile(users)));
+//        Optional<Users> foundUser = userRepo.findByEmail(creds.getEmail());
+//
+//        foundUser.ifPresent(users -> CompletableFuture.runAsync(() -> createProfile(users)));
 
     }
     
 
 
 
-    private void createProfile(Users user){
-        try{
-
-            log.info("creating user profile ... {}",user);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-            Map<String, Object> map = new HashMap<>();
-            map.put("email", user.getEmail());
-            map.put("firstName", user.getFirstName());
-            map.put("phoneNumber", user.getPhoneNumber());
-            map.put("referralCode", user.getReferenceCode());
-            map.put("surname", user.getSurname());
-            map.put("userId", String.valueOf(user.getId()));
-
-
-
-
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
-            ResponseEntity<String> response = restClient.postForEntity(appConfig.getUrl(), entity, String.class);
-            if (response.getStatusCode() == CREATED) {
-                log.info("User profile created {}", response.getBody());
-            } else {
-                log.info("User profile  Request Failed with body:: {}", response.getStatusCode());
-            }
-        }catch (Exception e){
-            log.error("User profile   Exception: ", e);
-        }
-    }
+//    private void createProfile(Users user){
+//        try{
+//
+//            log.info("creating user profile ... {}",user);
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.setContentType(MediaType.APPLICATION_JSON);
+//            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+//            Map<String, Object> map = new HashMap<>();
+//            map.put("email", user.getEmail());
+//            map.put("firstName", user.getFirstName());
+//            map.put("phoneNumber", user.getPhoneNumber());
+//            map.put("referralCode", user.getReferenceCode());
+//            map.put("surname", user.getSurname());
+//            map.put("userId", String.valueOf(user.getId()));
+//            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
+//            ResponseEntity<String> response = restClient.postForEntity(appConfig.getUrl(), entity, String.class);
+//            if (response.getStatusCode() == CREATED) {
+//                log.info("User profile created {}", response.getBody());
+//            } else {
+//                log.info("User profile  Request Failed with body:: {}", response.getStatusCode());
+//            }
+//        }catch (Exception e){
+//            log.error("User profile   Exception: ", e);
+//        }
+//    }
 
 }
