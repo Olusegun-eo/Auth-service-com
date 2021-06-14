@@ -40,6 +40,7 @@ public class Users implements Serializable {
     @NotBlank(message = "last Name cannot be null")
     private String surname;
 
+
     @JsonIgnore
     @NotBlank(message = "password cannot be null")
     @Length(min = 8, max = 100, message = "password must be greater than 8 characters")

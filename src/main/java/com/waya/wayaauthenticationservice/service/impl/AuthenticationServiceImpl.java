@@ -129,6 +129,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             Users user = new ModelMapper().map(mUser, Users.class);
             user.setId(0L);
+            user.setAdmin(false);
             user.setDateCreated(LocalDateTime.now());
             user.setPassword(passwordEncoder.encode(mUser.getPassword()));
             user.setRolesList(roleList);
@@ -151,7 +152,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     String.valueOf(user.getId()),
                     false
             );
-            kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC,profilePojo);
+           kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC,profilePojo);
             
             return new ResponseEntity<>(new SuccessResponse("User Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"), HttpStatus.CREATED);
 
