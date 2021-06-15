@@ -19,6 +19,7 @@ import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.response.WalletResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.service.UserService;
+import com.waya.wayaauthenticationservice.util.ApiResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -164,12 +165,12 @@ public class UserServiceImpl implements UserService {
             return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.OK);
         }
 //        List<MainWalletResponse> mainWalletResponse = walletProxy.getWalletById(user.getId(), token);
-        MainWalletResponse mainWalletResponse = walletProxy.getDefaultWallet(token);
+        ApiResponse<MainWalletResponse> mainWalletResponse = walletProxy.getDefaultWallet(token);
 //        WalletResponse gr = restTemplate.getForObject(WALLET_SERVICE+"wallet/default-account/"+ user.getId(), WalletResponse.class);
         if(mainWalletResponse != null){
 //            if (mainWalletResponse.size() > 0){accoutNo = gr.getData().getAccountNo();}
 //          if (mainWalletResponse.size() > 0){accoutNo = gr.getData().getAccountNo();}
-            UserWalletPojo userWalletPojo = new UserWalletPojo(user, mainWalletResponse.getAccountNo(), mainWalletResponse.getId());
+            UserWalletPojo userWalletPojo = new UserWalletPojo(user, mainWalletResponse.getData().getAccountNo(), mainWalletResponse.getData().getId());
             return new ResponseEntity<>(new SuccessResponse("User info fetched", userWalletPojo), HttpStatus.OK);
         }
         return new ResponseEntity<>(new ErrorResponse(), HttpStatus.BAD_REQUEST);
