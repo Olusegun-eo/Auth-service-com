@@ -61,6 +61,9 @@ public class Users implements Serializable {
     
     private boolean isAdmin = false;
 
+    private boolean isActive;
+    private LocalDateTime dateOfInactive;
+
     @Transient
     private Roles role;
 

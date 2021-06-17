@@ -1,18 +1,14 @@
 package com.waya.wayaauthenticationservice.pojo;
 
-import lombok.Setter;
+import lombok.*;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor
-@JsonDeserialize 
+@JsonDeserialize
+@Data
 public class MainWalletResponse {
 
 	private Long id;
@@ -23,7 +19,7 @@ public class MainWalletResponse {
     private String savingsProductName;
     private Long fieldOfficerId;
     private Double nominalAnnualInterestRate;
-    private WalletStatus status;
+  private WalletStatus status;
     private WalletTimeLine timeline;
     private WalletCurrency currency;
     private WalletSummary summary;

@@ -131,6 +131,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setId(0L);
             user.setAdmin(false);
             user.setDateCreated(LocalDateTime.now());
+            user.setActive(true);
             user.setPassword(passwordEncoder.encode(mUser.getPassword()));
             user.setRolesList(roleList);
             Users regUser = userRepo.saveAndFlush(user);

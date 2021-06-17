@@ -63,6 +63,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         	
             LoginDetailsPojo creds = new ObjectMapper().readValue(req.getInputStream(), LoginDetailsPojo.class);
             isAdmin = creds.isAdmin();
+            logger.info(isAdmin+" is admin");
             UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
             
             Users user = userLoginRepo.findByEmailOrPhoneNumber(creds.getEmail(), creds.getEmail()).orElseThrow(() -> new BadCredentialsException("User Does not exist"));
@@ -111,10 +112,10 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
             List<String> roles = new ArrayList<>();
             List<Roles> rs = user.getRolesList();
-            for (int i = 0; i < rs.size(); i++) {
-                roles.add(rs.get(i).getName());
+            for (Roles r : rs) {
+                roles.add(r.getName());
             }
-
+                //true == true
             if (isAdmin == roleCheck(rs, "ADMIN")){
                 loginResponsePojo.setCode(0);
                 loginResponsePojo.setStatus(true);
@@ -129,6 +130,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                 userp.setPhoneNumber(user.getPhoneNumber());
                 userp.setFirstName(user.getFirstName());
                 userp.setLastName(user.getSurname());
+                userp.setEmailVerified(user.isEmailVerified());
                 m.put("user", userp);
                 loginResponsePojo.setData(m);
 
@@ -167,14 +169,15 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     }
 
     public boolean roleCheck(List<Roles> rolesList, String role){
-        boolean result = false;
-        for (Roles r: rolesList) {
-            if (r.getName().equals(role)) {
-                result = true;
-                break;
-            }
-        }
-        return result;
+       // boolean result = false;
+      return rolesList.stream().anyMatch(e -> e.getName().equals(role));
+//        for (Roles r: rolesList) {
+//            if (r.getName().equals(role)) {
+//                result = true;
+//                break;
+//            }
+//        }
+//        return result;
     }
 
 }

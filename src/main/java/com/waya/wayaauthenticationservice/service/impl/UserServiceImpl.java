@@ -34,6 +34,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -66,6 +68,9 @@ public class UserServiceImpl implements UserService {
     
     @Autowired
     private WalletProxy walletProxy;
+
+    @Autowired
+    private   RestTemplate restClient;
     
     
     private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
@@ -296,4 +301,19 @@ public class UserServiceImpl implements UserService {
 		}
 	}
 
+
+	// creating deleted user
+
+    public void deleteUser(long userId, String tokenString){
+        Users user=  usersRepo.findById(userId)
+                .orElseThrow(()-> new CustomException("User with id  not found",HttpStatus.NOT_FOUND));
+        user.setActive(false);
+        user.setDateOfInactive(LocalDateTime.now());
+        usersRepo.saveAndFlush(user);
+
+        //Delete user profile
+
+
+
+    }
 }

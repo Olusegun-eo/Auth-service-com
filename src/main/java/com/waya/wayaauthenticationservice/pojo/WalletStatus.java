@@ -1,14 +1,16 @@
 package com.waya.wayaauthenticationservice.pojo;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.*;
+
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
+@JsonDeserialize
+@Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class WalletStatus {
 
 	private Long id;
@@ -21,3 +23,18 @@ public class WalletStatus {
     private boolean active;
     private boolean closed;
 }
+
+
+/**
+ *    "status": {
+ *         "id": 93,
+ *         "code": "savingsAccountStatusType.active",
+ *         "value": "Active",
+ *         "submittedAndPendingApproval": false,
+ *         "approved": true,
+ *         "rejected": false,
+ *         "withdrawnByApplicant": false,
+ *         "active": true,
+ *         "closed": false
+ *       },
+ */
