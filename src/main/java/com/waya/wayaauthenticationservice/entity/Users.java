@@ -1,19 +1,34 @@
 package com.waya.wayaauthenticationservice.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.validator.constraints.Length;
-
-import javax.persistence.*;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.Transient;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.validator.constraints.Length;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.waya.wayaauthenticationservice.model.AuthProvider;
+
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 @Data
 @Entity
@@ -28,6 +43,9 @@ public class Users implements Serializable {
     @Email(message = "email should be valid")
     @Column(unique = true)
     private String email;
+    
+    @Column(name = "full_name")
+    private String name;
 
     @NotNull(message = "phone number cannot be null")
     private String phoneNumber;
@@ -60,6 +78,14 @@ public class Users implements Serializable {
 
     @Transient
     private Roles role;
+    
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private AuthProvider provider;
+
+    private String providerId;
+    
+    private String imageUrl;
 
     @ApiModelProperty(hidden = true)
     @JsonIgnore

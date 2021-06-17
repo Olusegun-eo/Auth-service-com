@@ -1,10 +1,7 @@
 package com.waya.wayaauthenticationservice.config;
 
-import com.waya.wayaauthenticationservice.security.AuthenticationFilter;
-import com.waya.wayaauthenticationservice.security.AuthorizationFilter;
-import com.waya.wayaauthenticationservice.security.JwtAuthenticationEntryPoint;
-import com.waya.wayaauthenticationservice.service.UserService;
-import com.waya.wayaauthenticationservice.service.impl.UserServiceImpl;
+import java.util.Arrays;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +12,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.firewall.DefaultHttpFirewall;
 import org.springframework.security.web.firewall.HttpFirewall;
@@ -23,7 +19,14 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
+import com.waya.wayaauthenticationservice.security.AuthenticationFilter;
+import com.waya.wayaauthenticationservice.security.AuthorizationFilter;
+import com.waya.wayaauthenticationservice.security.JwtAuthenticationEntryPoint;
+import com.waya.wayaauthenticationservice.security.oauth2.CustomOAuth2UserService;
+import com.waya.wayaauthenticationservice.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
+import com.waya.wayaauthenticationservice.security.oauth2.OAuth2AuthenticationFailureHandler;
+import com.waya.wayaauthenticationservice.security.oauth2.OAuth2AuthenticationSuccessHandler;
+import com.waya.wayaauthenticationservice.service.UserService;
 
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -35,6 +38,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private CustomOAuth2UserService customOAuth2UserService;
+
+    @Autowired
+    private OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+
+    @Autowired
+    private OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
 
 
     @Autowired
@@ -57,24 +69,47 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
 
-        httpSecurity.
-                cors().and().csrf().disable()
-                // dont authenticate this particular request
-                .authorizeRequests()
+     httpSecurity
+        .cors()
+            .and()
+        .sessionManagement()
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
+        .csrf()
+            .disable()
+        .formLogin()
+            .disable()
+        .httpBasic()
+            .disable()
+        .exceptionHandling()
+            .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+            .and()
+        .authorizeRequests()
                 .antMatchers("/auth/**").permitAll()
                 .antMatchers("/user/**").permitAll()
                 .antMatchers("/admin/**").permitAll()
                 .antMatchers("/kafka/**").permitAll()
                 .antMatchers("/history/**").permitAll()
                 .antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
-                // all other requests need to be authenticated
-                .anyRequest().authenticated().and()
-                // make sure we use stateless session; session won't be used to
-                // store user's state.
+                .antMatchers("/api/v1/auth/**", "/oauth2/**")
+                .permitAll()
+				.antMatchers("/swagger-resources/**", "/v2/api-docs", "/swagger-ui.html", "/v3/api-docs").permitAll()
+				.and()
+				.oauth2Login()
+                .authorizationEndpoint()
+                    .baseUri("/oauth2/authorize")
+                    .authorizationRequestRepository(cookieAuthorizationRequestRepository())
+                    .and()
+                .redirectionEndpoint()
+                    .baseUri("/oauth2/callback/*")
+                    .and()
+                .userInfoEndpoint()
+                    .userService(customOAuth2UserService)
+                    .and()
+                .successHandler(oAuth2AuthenticationSuccessHandler)
+                .failureHandler(oAuth2AuthenticationFailureHandler).and()
                 .addFilter(getAuthenticationFilter())
-                .addFilter(new AuthorizationFilter(authenticationManager())).sessionManagement()
-
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+                .addFilter(new AuthorizationFilter(authenticationManager()));
 
     }
 
@@ -104,5 +139,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public HttpFirewall defaultHttpFirewall() {
         return new DefaultHttpFirewall();
+    }
+    
+    @Bean
+    public HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository() {
+        return new HttpCookieOAuth2AuthorizationRequestRepository();
     }
 }

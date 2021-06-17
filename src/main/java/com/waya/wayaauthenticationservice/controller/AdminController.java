@@ -7,10 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @CrossOrigin
 @RestController
-@RequestMapping("admin")
+@RequestMapping("/api/v1/admin")
+@Tag(name = "ADMIN", description = "Admin Authentication Service API")
 @EnableCaching
 public class AdminController {
 
@@ -20,7 +22,7 @@ public class AdminController {
     @Autowired
     UserService userService;
 
-    @ApiOperation(value = "Fetch all Users (Admin Endpoint)")
+    @ApiOperation(value = "Fetch all Users (Admin Endpoint)" ,tags = { "ADMIN" })
     @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/users")
@@ -29,7 +31,7 @@ public class AdminController {
     }
 
 
-    @ApiOperation(value = "Fetch Users by Roles (Admin Endpoint)")
+    @ApiOperation(value = "Fetch Users by Roles (Admin Endpoint)",tags = { "ADMIN" })
     @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/users/byrole/{roleId}")
