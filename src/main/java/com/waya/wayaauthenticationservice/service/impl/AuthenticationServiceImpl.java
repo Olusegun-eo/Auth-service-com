@@ -212,7 +212,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setReferenceCode(mUser.getReferenceCode());
             user.setSurname(mUser.getSurname());
             
-            Users regUser = userRepo.saveAndFlush(user);
+            Users regUser = userRepo.save(user);
 
             
             Optional<Users> foundUser = userRepo.findByEmail(regUser.getEmail());
