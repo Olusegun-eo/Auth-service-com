@@ -25,7 +25,7 @@ public interface UserService extends UserDetailsService {
     ResponseEntity getUserByEmail(String email);
     ResponseEntity getUserByPhone(String phone, String token);
     ResponseEntity getUserById(Long id);
-    ResponseEntity deleteUser(Long id);
+    ResponseEntity deleteUser(Long id,String token);
     ResponseEntity wayaContactCheck(ContactPojoReq contacts);
     ResponseEntity getMyInfo();
     Integer getUsersCount(String roleName);

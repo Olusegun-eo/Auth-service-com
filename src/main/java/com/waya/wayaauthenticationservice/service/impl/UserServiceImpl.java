@@ -1,5 +1,6 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import com.waya.wayaauthenticationservice.config.ApplicationConfig;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
@@ -21,12 +22,11 @@ import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.service.UserService;
 import com.waya.wayaauthenticationservice.util.ApiResponse;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -37,18 +37,18 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 import javax.servlet.http.HttpServletRequest;
 
 import static com.waya.wayaauthenticationservice.util.Constant.WALLET_SERVICE;
 import static java.util.stream.Collectors.toList;
+import static org.springframework.http.HttpStatus.OK;
 
 
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     @Autowired
@@ -72,6 +72,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private   RestTemplate restClient;
+
+    @Autowired
+    private ApplicationConfig applicationConfig;
     
     
     private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
@@ -217,19 +220,27 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ResponseEntity<?> deleteUser(Long id) {
-		try {
-			return usersRepo.findById(id).map(users -> {
-				
-				users.getRolesList().forEach(role -> {
-					rolesRepo.delete(role);
-				});
-				usersRepo.delete(users);
-				return new ResponseEntity(new SuccessResponse("User deleted Successfully"), HttpStatus.OK);
-			}).orElse(new ResponseEntity<>(new ErrorResponse("Invalid id"), HttpStatus.BAD_REQUEST));
-		} catch (Exception e) {
-			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
-		}
+	public ResponseEntity<?> deleteUser(Long id,String token) {
+
+        try {
+
+            if(validateUser(token)){
+                Users user = usersRepo.findById(id)
+                        .orElseThrow(() -> new CustomException("User with id  not found", HttpStatus.NOT_FOUND));
+                user.setActive(false);
+                user.setDateOfInactive(LocalDateTime.now());
+                usersRepo.saveAndFlush(user);
+                CompletableFuture.runAsync(() -> deleteUser(String.valueOf(id), token));
+                return new ResponseEntity<>(new CustomException("Account deleted", OK), OK);
+            }else{
+                 return new ResponseEntity<>(new ErrorResponse("Invalid Token"), HttpStatus.BAD_REQUEST);
+            }
+
+
+        }catch (Exception e){
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+
 	}
 
 	@Override
@@ -316,5 +327,54 @@ public class UserServiceImpl implements UserService {
 
 
 
+    }
+
+
+    private boolean deleteUser(String token,String userId){
+        try{
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+            headers.set("authorization",token);
+            Map<String, Object> map = new HashMap<>();
+            map.put("userId",userId);
+            map.put("deleteType","DELETE");
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
+            ResponseEntity<String> response = restClient.postForEntity(applicationConfig.getDeleteProfileUrl(), entity, String.class);
+            if (response.getStatusCode() == OK) {
+                log.info("User deleted {}", response.getBody());
+                return true;
+            } else {
+                log.info("User not deleted :: {}", response.getStatusCode());
+                return false;
+            }
+        }catch (Exception e){
+            log.error("Error deleting user: ", e);
+            return false;
+        }
+    }
+
+    private boolean validateUser(String token){
+        try{
+
+            log.info("validating user token ... {}",token);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+            headers.set("authorization",token);
+            Map<String, Object> map = new HashMap<>();
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
+            ResponseEntity<String> response = restClient.postForEntity(applicationConfig.getValidateUser(), entity, String.class);
+            if (response.getStatusCode() == OK) {
+                log.info("User verified with body {}", response.getBody());
+                return true;
+            } else {
+                log.info("user not verified :: {}", response.getStatusCode());
+                return false;
+            }
+        }catch (Exception e){
+            log.error("Error verifying user: ", e);
+            return false;
+        }
     }
 }

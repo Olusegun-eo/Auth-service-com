@@ -94,9 +94,8 @@ public class UserController {
     @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @DeleteMapping("/delete/{id}")
-//    @CacheEvict(key = "#id",value = "User")
-    public ResponseEntity remove(@PathVariable Long id) {
-        return userService.deleteUser(id);
+    public ResponseEntity remove(@PathVariable Long id,@RequestHeader("Authorization") String authorization) {
+        return userService.deleteUser(id,authorization);
     }
     
     @ApiOperation(value = "Get Users By role name count", notes = "This endpointis used to get all users by role name, it returns an integer of count")
