@@ -32,4 +32,5 @@ public interface UserService extends UserDetailsService {
     UserRoleUpdateRequest UpdateUser(UserRoleUpdateRequest user);
     //Get user details for Roles service
     UserEditPojo getUserForRole(Long id);
+    public ResponseEntity<?> isUserAdmin(long userId);
 }

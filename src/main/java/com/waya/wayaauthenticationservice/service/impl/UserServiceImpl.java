@@ -10,14 +10,11 @@ import com.waya.wayaauthenticationservice.pojo.MainWalletResponse;
 import com.waya.wayaauthenticationservice.pojo.UserEditPojo;
 import com.waya.wayaauthenticationservice.pojo.UserRoleUpdateRequest;
 import com.waya.wayaauthenticationservice.pojo.UserWalletPojo;
-import com.waya.wayaauthenticationservice.pojo.WalletPojo2;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
-import com.waya.wayaauthenticationservice.response.GeneralResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
-import com.waya.wayaauthenticationservice.response.WalletResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.service.UserService;
 import com.waya.wayaauthenticationservice.util.ApiResponse;
@@ -35,14 +32,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-import javax.servlet.http.HttpServletRequest;
-
-import static com.waya.wayaauthenticationservice.util.Constant.WALLET_SERVICE;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.http.HttpStatus.OK;
 
@@ -243,6 +236,28 @@ public class UserServiceImpl implements UserService {
 
 	}
 
+    public ResponseEntity<?> isUserAdmin(Long id) {
+        try {
+            System.out.println(":::::User Service:::::");
+            Users user = usersRepo.findById(id).orElse(null);
+            if(user == null){
+                return new ResponseEntity<>(new ErrorResponse("Invalid id"), HttpStatus.BAD_REQUEST);
+            } else {
+                return new ResponseEntity<>(new SuccessResponse("User info fetched", user), HttpStatus.OK);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+
+    public ResponseEntity<?> isUserAdmin(long userId){
+        Users user = usersRepo.findById(userId)
+                .orElseThrow(() -> new CustomException("User with id  not found", HttpStatus.BAD_REQUEST));
+        return new ResponseEntity<>(new SuccessResponse("IsUserAdmin", user.isAdmin()), HttpStatus.OK);
+
+    }
+
 	@Override
 	public Integer getUsersCount(String roleName) {
 		try {
@@ -314,23 +329,9 @@ public class UserServiceImpl implements UserService {
 	}
 
 
-	// creating deleted user
-
-    public void deleteUser(long userId, String tokenString){
-        Users user=  usersRepo.findById(userId)
-                .orElseThrow(()-> new CustomException("User with id  not found",HttpStatus.NOT_FOUND));
-        user.setActive(false);
-        user.setDateOfInactive(LocalDateTime.now());
-        usersRepo.saveAndFlush(user);
-
-        //Delete user profile
 
 
-
-    }
-
-
-    private boolean deleteUser(String token,String userId){
+    private void deleteUser(String token, String userId){
         try{
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -343,14 +344,11 @@ public class UserServiceImpl implements UserService {
             ResponseEntity<String> response = restClient.postForEntity(applicationConfig.getDeleteProfileUrl(), entity, String.class);
             if (response.getStatusCode() == OK) {
                 log.info("User deleted {}", response.getBody());
-                return true;
             } else {
                 log.info("User not deleted :: {}", response.getStatusCode());
-                return false;
             }
         }catch (Exception e){
             log.error("Error deleting user: ", e);
-            return false;
         }
     }
 

@@ -123,5 +123,12 @@ public class UserController {
     public ResponseEntity<UserEditPojo> getUserForRole(@PathVariable("id") Long id) {
     	return ResponseEntity.ok(userService.getUserForRole(id));
     }
+
+    @ApiOperation("Check if user is an admin: (Internal Consumption only)")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @GetMapping("/is-user-admin/{userId}")
+    public ResponseEntity<?> isUserAdmin(@PathVariable Long userId) {
+        return userService.isUserAdmin(userId);
+    }
     
 }
