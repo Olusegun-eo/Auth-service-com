@@ -90,7 +90,7 @@ public class UserController {
         return userService.getMyInfo();
     }
 
-    @ApiOperation(value = "Delete from redis", notes = "Delete user data")
+    @ApiOperation(value = "Delete User profiles", notes = "Disable user's accounts")
     @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @DeleteMapping("/delete/{id}")

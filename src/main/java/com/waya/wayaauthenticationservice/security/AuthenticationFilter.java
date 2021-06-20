@@ -108,7 +108,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
             loginResponsePojo.setMessage("Your Phone number has not been verified");
         }
         else if(!user.isActive()){
-            loginResponsePojo.setCode(-2);
+            loginResponsePojo.setCode(-3);
             loginResponsePojo.setStatus(false);
             loginResponsePojo.setMessage("User account is disabled,kindly contact Waya Admin");
         }
