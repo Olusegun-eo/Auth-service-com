@@ -153,7 +153,7 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity getUserByEmail(String email) {
         Users user = usersRepo.findByEmail(email).orElse(null);
         if(user == null){
-            return new ResponseEntity<>(new ErrorResponse("Invalid email"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse("Invalid email"), OK);
         } else {
             return new ResponseEntity<>(new SuccessResponse("User info fetched", user), HttpStatus.OK);
         }
