@@ -345,6 +345,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
         if(generalResponse.isStatus()) {
             Users user = userRepo.findByEmail(emailPojo.getEmail()).orElse(null);
+            if(user == null){
+                return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
+            }
             user.setEmailVerified(true);
             try {
                 userRepo.save(user);

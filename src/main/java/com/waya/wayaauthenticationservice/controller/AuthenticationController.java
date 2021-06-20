@@ -2,6 +2,7 @@ package com.waya.wayaauthenticationservice.controller;
 
 import com.waya.wayaauthenticationservice.pojo.*;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
+import com.waya.wayaauthenticationservice.service.UserService;
 import com.waya.wayaauthenticationservice.service.impl.AuthenticationServiceImpl;
 import io.swagger.annotations.*;
 import springfox.documentation.annotations.ApiIgnore;
@@ -21,6 +22,9 @@ public class AuthenticationController {
     private AuthenticationService authenticationServiceImpl;
     
     public static final String HEADER_STRING = "Authorization";
+
+    @Autowired
+    UserService userService;
 
     @ApiOperation("Personal User Registration")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
@@ -130,6 +134,13 @@ public class AuthenticationController {
     @GetMapping("/resend-otp-mail/{email}/{userId}")
     public ResponseEntity<?> resendOTPEmail(@PathVariable String email, String userId) {
         return authenticationServiceImpl.resendVerificationMail(email, userId);
+    }
+
+    @ApiOperation("Check if user is an admin: (Internal Consumption only)")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @GetMapping("/is-user-admin/{userId}")
+    public ResponseEntity<?> isUserAdmin(@PathVariable Long userId) {
+        return userService.isUserAdmin(userId);
     }
 
 

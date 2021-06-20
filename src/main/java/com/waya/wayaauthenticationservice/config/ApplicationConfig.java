@@ -14,4 +14,5 @@ import org.springframework.context.annotation.Configuration;
 public class ApplicationConfig {
 private String deleteProfileUrl;
 private String validateUser;
+private String disableWayagramUrl;
 }

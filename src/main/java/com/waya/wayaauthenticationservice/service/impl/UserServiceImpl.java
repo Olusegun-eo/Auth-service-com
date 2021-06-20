@@ -223,7 +223,7 @@ public class UserServiceImpl implements UserService {
                 user.setActive(false);
                 user.setDateOfInactive(LocalDateTime.now());
                 usersRepo.saveAndFlush(user);
-                CompletableFuture.runAsync(() -> deleteUser(String.valueOf(id), token));
+                CompletableFuture.runAsync(() -> disableUserProfile(String.valueOf(id), token));
                 return new ResponseEntity<>(new CustomException("Account deleted", OK), OK);
             }else{
                  return new ResponseEntity<>(new ErrorResponse("Invalid Token"), HttpStatus.BAD_REQUEST);
@@ -331,7 +331,7 @@ public class UserServiceImpl implements UserService {
 
 
 
-    private void deleteUser(String token, String userId){
+    private void disableUserProfile(String token, String userId){
         try{
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
