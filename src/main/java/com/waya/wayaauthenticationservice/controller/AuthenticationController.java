@@ -1,15 +1,36 @@
 package com.waya.wayaauthenticationservice.controller;
 
-import com.waya.wayaauthenticationservice.pojo.*;
-import com.waya.wayaauthenticationservice.service.AuthenticationService;
-import com.waya.wayaauthenticationservice.service.impl.AuthenticationServiceImpl;
-import io.swagger.annotations.*;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.waya.wayaauthenticationservice.pojo.CorporateUserPojo;
+import com.waya.wayaauthenticationservice.pojo.EmailPojo;
+import com.waya.wayaauthenticationservice.pojo.LoginDetailsPojo;
+import com.waya.wayaauthenticationservice.pojo.OTPPojo;
+import com.waya.wayaauthenticationservice.pojo.PasswordPojo;
+import com.waya.wayaauthenticationservice.pojo.PasswordPojo2;
+import com.waya.wayaauthenticationservice.pojo.PinPojo;
+import com.waya.wayaauthenticationservice.pojo.PinPojo2;
+import com.waya.wayaauthenticationservice.pojo.UserPojo;
+import com.waya.wayaauthenticationservice.service.AuthenticationService;
+
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -84,7 +105,15 @@ public class AuthenticationController {
     public void login(@RequestBody LoginDetailsPojo loginRequestModel) {
         throw new IllegalStateException("This Method should not be called!");
     }
-
+    
+    @GetMapping("/social")
+    @Produces(javax.ws.rs.core.MediaType.TEXT_HTML)
+    @ApiOperation(value="Github login" ,tags = { "AUTH" })
+    public String login() {
+        //return "Log in with <a href=\"http://localhost:8059/oauth2/callback/authorization/github\">GitHub</a>";
+    	return "<a href=\"http://localhost:8080/oauth2/authorize/google\"> Log in with Google</a><br><br><a href=\"http://localhost:8080/oauth2/authorize/facebook\">Log in with Facebook</a><br><br><a href=\"http://localhost:8080/oauth2/authorize/github\">Log in with Github</a>";
+    }
+   
     @ApiOperation(value = "Pin Creation", notes = "This endpoint help user create transaction PIN" ,tags = { "AUTH" })
     @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @PostMapping("/create-pin")

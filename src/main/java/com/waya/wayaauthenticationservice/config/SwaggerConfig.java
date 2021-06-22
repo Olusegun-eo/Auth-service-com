@@ -39,7 +39,8 @@ public class SwaggerConfig {
 
     }
     
-    private SecurityContext securityContext() {
+    @SuppressWarnings("deprecation")
+	private SecurityContext securityContext() {
         return SecurityContext.builder()
             .securityReferences(defaultAuth())
             .forPaths(PathSelectors.ant("/api/v1/**"))

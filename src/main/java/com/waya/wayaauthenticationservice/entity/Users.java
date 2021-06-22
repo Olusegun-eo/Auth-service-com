@@ -2,6 +2,7 @@ package com.waya.wayaauthenticationservice.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -16,6 +17,8 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
@@ -44,15 +47,15 @@ public class Users implements Serializable {
     @Column(unique = true)
     private String email;
     
-    @Column(name = "full_name")
+    @Column(name = "name", nullable = true)
     private String name;
 
     @NotNull(message = "phone number cannot be null")
     private String phoneNumber;
 
     private String referenceCode;
+    
     @NotBlank(message = "first Name cannot be null")
-
     private String firstName;
 
     @NotBlank(message = "last Name cannot be null")
@@ -86,6 +89,31 @@ public class Users implements Serializable {
     private String providerId;
     
     private String imageUrl;
+    
+    @Column(name = "account_non_expired", nullable = false)
+	private boolean accountNonExpired;
+
+	@Column(name = "account_non_locked", nullable = false)
+	private boolean accountNonLocked;
+
+	@Column(name = "account_credentials_non_expired", nullable = false)
+	private boolean credentialsNonExpired;
+
+	@Column(name = "account_active", nullable = false)
+	private boolean enabled;
+
+	@Column(name = "first_time_login_remaining", nullable = false)
+	private boolean firstTimeloginRemaining;
+
+	@Column(name = "is_deleted", nullable = false)
+	private boolean deleted;
+	
+	@Column(name = "last_time_password_updated")
+	@Temporal(TemporalType.DATE)
+	private Date lastTimePasswordUpdated;
+
+	@Column(name = "password_never_expires", nullable = false)
+	private boolean passwordNeverExpires;
 
     @ApiModelProperty(hidden = true)
     @JsonIgnore
@@ -102,6 +130,10 @@ public class Users implements Serializable {
     @ApiModelProperty(hidden = true)
     private LocalDateTime dateCreated;
 
-    public Users() {}
+    public Users() {
+    	provider = AuthProvider.local;
+    	this.accountNonLocked = false;
+		this.credentialsNonExpired = false;
+    }
 
 }

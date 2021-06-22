@@ -9,10 +9,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.firewall.DefaultHttpFirewall;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.web.cors.CorsConfiguration;
@@ -21,6 +23,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.waya.wayaauthenticationservice.security.AuthenticationFilter;
 import com.waya.wayaauthenticationservice.security.AuthorizationFilter;
+import com.waya.wayaauthenticationservice.security.JWTAuthenticationFilter;
+import com.waya.wayaauthenticationservice.security.JWTLoginFilter;
 import com.waya.wayaauthenticationservice.security.JwtAuthenticationEntryPoint;
 import com.waya.wayaauthenticationservice.security.oauth2.CustomOAuth2UserService;
 import com.waya.wayaauthenticationservice.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
@@ -32,9 +36,6 @@ import com.waya.wayaauthenticationservice.service.UserService;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-
-    @Autowired
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Autowired
     private UserService userService;
@@ -77,23 +78,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             .and()
         .csrf()
             .disable()
-        .formLogin()
-            .disable()
-        .httpBasic()
-            .disable()
         .exceptionHandling()
-            .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+            .authenticationEntryPoint(getBasicAuthEntryPoint())
             .and()
         .authorizeRequests()
                 .antMatchers("/auth/**").permitAll()
-                .antMatchers("/user/**").permitAll()
-                .antMatchers("/admin/**").permitAll()
-                .antMatchers("/kafka/**").permitAll()
-                .antMatchers("/history/**").permitAll()
-                .antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
-                .antMatchers("/api/v1/auth/**", "/oauth2/**")
-                .permitAll()
-				.antMatchers("/swagger-resources/**", "/v2/api-docs", "/swagger-ui.html", "/v3/api-docs").permitAll()
 				.and()
 				.oauth2Login()
                 .authorizationEndpoint()
@@ -108,6 +97,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                     .and()
                 .successHandler(oAuth2AuthenticationSuccessHandler)
                 .failureHandler(oAuth2AuthenticationFailureHandler).and()
+                .addFilterBefore(new JWTLoginFilter("/login", authenticationManager()),UsernamePasswordAuthenticationFilter.class)
+				.addFilterBefore(new JWTAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .addFilter(getAuthenticationFilter())
                 .addFilter(new AuthorizationFilter(authenticationManager()));
 
@@ -145,4 +136,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     public HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository() {
         return new HttpCookieOAuth2AuthorizationRequestRepository();
     }
+    
+    @Bean
+	public JwtAuthenticationEntryPoint getBasicAuthEntryPoint() {
+		return new JwtAuthenticationEntryPoint();
+	}
+    
+    public void configure(WebSecurity web) throws Exception {
+		web.ignoring().antMatchers("/v2/api-docs", "/configuration/ui", "/swagger-resources/**",
+				"/configuration/security", "/swagger-ui.html", "/webjars/**", "/swagger-ui/**", "/v3/api-docs");
+	}
 }
