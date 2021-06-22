@@ -1,12 +1,11 @@
 package com.waya.wayaauthenticationservice.response;
 
 import com.waya.wayaauthenticationservice.pojo.WalletPojo2;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.Optional;
 
 @NoArgsConstructor
 @AllArgsConstructor

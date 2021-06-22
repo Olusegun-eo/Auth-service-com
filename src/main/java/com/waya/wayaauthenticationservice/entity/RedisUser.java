@@ -15,7 +15,11 @@ import java.util.List;
 @AllArgsConstructor
 @RedisHash("User")
 public class RedisUser implements Serializable {
-    @Id
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -7426379250883171400L;
+	@Id
     private Long id;
     private String firstName;
     private String surname;

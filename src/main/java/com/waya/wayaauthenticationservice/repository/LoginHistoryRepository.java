@@ -1,12 +1,12 @@
 package com.waya.wayaauthenticationservice.repository;
 
-import com.waya.wayaauthenticationservice.entity.LoginHistory;
-import com.waya.wayaauthenticationservice.entity.Users;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.waya.wayaauthenticationservice.entity.LoginHistory;
+import com.waya.wayaauthenticationservice.entity.Users;
 
 @Repository
 public interface LoginHistoryRepository extends JpaRepository<LoginHistory, Long> {
