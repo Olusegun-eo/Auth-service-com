@@ -2,7 +2,6 @@ package com.waya.wayaauthenticationservice.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -17,8 +16,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
@@ -28,13 +26,13 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.validator.constraints.Length;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.waya.wayaauthenticationservice.model.AuthProvider;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 @Data
 @Entity
+@Table(name = "m_users")
 public class Users implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -46,20 +44,18 @@ public class Users implements Serializable {
     @Email(message = "email should be valid")
     @Column(unique = true)
     private String email;
-    
-    @Column(name = "name", nullable = true)
-    private String name;
 
     @NotNull(message = "phone number cannot be null")
     private String phoneNumber;
 
     private String referenceCode;
-    
     @NotBlank(message = "first Name cannot be null")
+
     private String firstName;
 
     @NotBlank(message = "last Name cannot be null")
     private String surname;
+
 
     @JsonIgnore
     @NotBlank(message = "password cannot be null")
@@ -74,10 +70,17 @@ public class Users implements Serializable {
 
     @JsonIgnore
     private boolean emailVerified = false;
+    
+    @Column(name = "email_verified_date")
+    private LocalDateTime emailVerifiededDate;
 
     private boolean pinCreated = false;
 
     private boolean isCorporate = false;
+    
+    private boolean isAdmin = false;
+    
+    private LocalDateTime dateOfInactive;
 
     @Transient
     private Roles role;
@@ -88,38 +91,58 @@ public class Users implements Serializable {
 
     private String providerId;
     
+    private String regDeviceType;
+    
+    private String regDevicePlatform;
+    
+    private String regDeviceIP;
+    
     private String imageUrl;
     
     @Column(name = "account_non_expired", nullable = false)
 	private boolean accountNonExpired;
+    
+    @Column(name = "account_expired_date")
+	private LocalDateTime accountExpiredDate;
 
 	@Column(name = "account_non_locked", nullable = false)
 	private boolean accountNonLocked;
+	
+	@Column(name = "account_lock_date")
+	private LocalDateTime accountLockDate;
 
 	@Column(name = "account_credentials_non_expired", nullable = false)
 	private boolean credentialsNonExpired;
+	
+	@Column(name = "credential_expired_date")
+	private LocalDateTime credentialExpiredDate;
 
-	@Column(name = "account_active", nullable = false)
-	private boolean enabled;
+	@Column(name = "is_active", nullable = false)
+	private boolean isActive;
 
 	@Column(name = "first_time_login_remaining", nullable = false)
 	private boolean firstTimeloginRemaining;
-
+	
+	@Column(name = "first_time_login_date")
+	private LocalDateTime firstTimeloginDate;
+	
 	@Column(name = "is_deleted", nullable = false)
 	private boolean deleted;
 	
 	@Column(name = "last_time_password_updated")
-	@Temporal(TemporalType.DATE)
-	private Date lastTimePasswordUpdated;
+	@CreationTimestamp
+    @ApiModelProperty(hidden = true)
+	private LocalDateTime lastTimePasswordUpdated;
 
 	@Column(name = "password_never_expires", nullable = false)
 	private boolean passwordNeverExpires;
+
 
     @ApiModelProperty(hidden = true)
     @JsonIgnore
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(
-            name = "users_roles",
+            name = "m_users_roles",
             joinColumns = @JoinColumn(
                     name = "user_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(
@@ -129,11 +152,16 @@ public class Users implements Serializable {
     @CreationTimestamp
     @ApiModelProperty(hidden = true)
     private LocalDateTime dateCreated;
+    
+    private LocalDateTime pinCreatedDate;
+    
+    private LocalDateTime dateOfActivation;
 
     public Users() {
     	provider = AuthProvider.local;
-    	this.accountNonLocked = false;
-		this.credentialsNonExpired = false;
+    	this.accountNonLocked = true;
+		this.credentialsNonExpired = true;
+		this.accountNonExpired = true;
     }
 
 }
