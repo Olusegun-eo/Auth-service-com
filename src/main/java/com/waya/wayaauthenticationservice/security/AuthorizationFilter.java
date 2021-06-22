@@ -19,6 +19,7 @@ import com.waya.wayaauthenticationservice.util.SecurityConstants;
 
 import io.jsonwebtoken.Jwts;
 
+
 public class AuthorizationFilter extends BasicAuthenticationFilter {
 
     private static final Logger LOGGER= LoggerFactory.getLogger(AuthorizationFilter.class);
@@ -29,8 +30,12 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
             throws IOException, ServletException {
+    	
+    	System.out.println(":::::REQUEST:::::"+req.getAuthType());
         String header = req.getHeader(SecurityConstants.HEADER_STRING);
 
+        System.out.println("::::::::::auth::::::::");
+        System.out.println(":::::Header:::::"+header);
         if (header == null || !header.startsWith(SecurityConstants.TOKEN_PREFIX)) {
             chain.doFilter(req, res);
             return;
@@ -42,13 +47,15 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
     }
 
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
+    	System.out.println(":::::::Authorization filter:::::");
         String token = request.getHeader(SecurityConstants.HEADER_STRING);
-
+        String user = null;
         if (token != null) {
 
             token = token.replace(SecurityConstants.TOKEN_PREFIX, "");
 
-            String user = Jwts.parser().setSigningKey(SecurityConstants.getSecret()).parseClaimsJws(token).getBody()
+            System.out.println("::::config Token::::"+token);
+            user = Jwts.parser().setSigningKey(SecurityConstants.getSecret()).parseClaimsJws(token).getBody()
                     .getSubject();
 
             if (user != null) {
@@ -58,7 +65,7 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
             return null;
         }
 
-        return null;
+        return new UsernamePasswordAuthenticationToken(user, null,null);
 
     }
 }

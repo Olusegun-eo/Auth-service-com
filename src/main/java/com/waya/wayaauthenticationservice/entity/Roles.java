@@ -1,13 +1,18 @@
 package com.waya.wayaauthenticationservice.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Data;
-
-import javax.persistence.*;
-import javax.validation.constraints.Size;
 import java.io.Serializable;
-import java.util.List;
 import java.util.Set;
+
+import javax.persistence.Basic;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.validation.constraints.Size;
+
+import lombok.Data;
 
 @Entity
 @Data
@@ -20,14 +25,14 @@ public class Roles implements Serializable {
     @Column(name = "id")
     private Integer id;
     @Size(max = 50)
-    @Column(name = "name")
+    @Column(name = "name", unique = true)
     private String name;
     private String description;
     @OneToMany(mappedBy = "role", fetch = FetchType.EAGER)
     private Set<Privilege> permissions;
-    @ManyToMany(mappedBy = "rolesList")
-    @JsonIgnore
-    private List<Users> usersList;
+//    @ManyToMany(mappedBy = "rolesList")
+//    @JsonIgnore
+//    private List<Users> usersList;
 
     public Roles() {
     }

@@ -12,9 +12,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.firewall.DefaultHttpFirewall;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.web.cors.CorsConfiguration;
@@ -23,13 +21,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.waya.wayaauthenticationservice.security.AuthenticationFilter;
 import com.waya.wayaauthenticationservice.security.AuthorizationFilter;
-import com.waya.wayaauthenticationservice.security.JWTAuthenticationFilter;
-import com.waya.wayaauthenticationservice.security.JWTLoginFilter;
 import com.waya.wayaauthenticationservice.security.JwtAuthenticationEntryPoint;
-import com.waya.wayaauthenticationservice.security.oauth2.CustomOAuth2UserService;
 import com.waya.wayaauthenticationservice.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
-import com.waya.wayaauthenticationservice.security.oauth2.OAuth2AuthenticationFailureHandler;
-import com.waya.wayaauthenticationservice.security.oauth2.OAuth2AuthenticationSuccessHandler;
 import com.waya.wayaauthenticationservice.service.UserService;
 
 @Configuration
@@ -39,16 +32,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private UserService userService;
-    
-    @Autowired
-    private CustomOAuth2UserService customOAuth2UserService;
-
-    @Autowired
-    private OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
-
-    @Autowired
-    private OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
-
 
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -69,36 +52,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
-
-     httpSecurity
-        .cors()
-            .and()
-        .sessionManagement()
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            .and()
-        .csrf()
-            .disable()
-        .exceptionHandling()
-            .authenticationEntryPoint(getBasicAuthEntryPoint())
-            .and()
-        .authorizeRequests()
-                .antMatchers("/auth/**").permitAll()
-				.and()
-				.oauth2Login()
-                .authorizationEndpoint()
-                    .baseUri("/oauth2/authorize")
-                    .authorizationRequestRepository(cookieAuthorizationRequestRepository())
-                    .and()
-                .redirectionEndpoint()
-                    .baseUri("/oauth2/callback/*")
-                    .and()
-                .userInfoEndpoint()
-                    .userService(customOAuth2UserService)
-                    .and()
-                .successHandler(oAuth2AuthenticationSuccessHandler)
-                .failureHandler(oAuth2AuthenticationFailureHandler).and()
-                .addFilterBefore(new JWTLoginFilter("/login", authenticationManager()),UsernamePasswordAuthenticationFilter.class)
-				.addFilterBefore(new JWTAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+        httpSecurity.
+                cors().and().csrf().disable()
+                // dont authenticate this particular request
+                .authorizeRequests()
+                .antMatchers("/auth/**","/user/phone/**","/user/email/**","/business/type/**").permitAll()
+                .antMatchers("/admin/**", "/auth/create-corporate").permitAll()
+                .antMatchers("/kafka/**").permitAll()
+                .antMatchers("/history/**").permitAll()
+                .antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
+                // all other requests need to be authenticated
+                .anyRequest().authenticated().and()
+                // make sure we use stateless session; session won't be used to
+                // store user's state.
                 .addFilter(getAuthenticationFilter())
                 .addFilter(new AuthorizationFilter(authenticationManager()));
 

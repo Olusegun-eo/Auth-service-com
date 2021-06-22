@@ -60,14 +60,14 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res)
             throws AuthenticationException {
         try {
+        	
             LoginDetailsPojo creds = new ObjectMapper().readValue(req.getInputStream(), LoginDetailsPojo.class);
             isAdmin = creds.isAdmin();
-
+            logger.info(isAdmin+" is admin");
             UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
-
+            
             Users user = userLoginRepo.findByEmailOrPhoneNumber(creds.getEmail(), creds.getEmail()).orElseThrow(() -> new BadCredentialsException("User Does not exist"));
-
-            List<Roles> roles = user.getRolesList();
+                        List<Roles> roles = user.getRolesList();
             List<GrantedAuthority> grantedAuthorities = roles.stream().map(r -> {
 
                 return new SimpleGrantedAuthority(r.getName());
@@ -86,6 +86,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                                             Authentication auth) throws IOException, ServletException, SignatureException {
 
         String userName = ((User) auth.getPrincipal()).getUsername();
+        
 
         String token = Jwts.builder().setSubject(userName)
                 .setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))
@@ -106,16 +107,20 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
             loginResponsePojo.setStatus(false);
             loginResponsePojo.setMessage("Your Phone number has not been verified");
         }
-
+        else if(!user.isActive()){
+            loginResponsePojo.setCode(-3);
+            loginResponsePojo.setStatus(false);
+            loginResponsePojo.setMessage("User account is disabled,kindly contact Waya Admin");
+        }
         else {
 
             List<String> roles = new ArrayList<>();
             List<Roles> rs = user.getRolesList();
-            for (int i = 0; i < rs.size(); i++) {
-                roles.add(rs.get(i).getName());
+            for (Roles r : rs) {
+                roles.add(r.getName());
             }
-
-            if (isAdmin == roleCheck(rs, "Admin")){
+                //true == true
+            if (isAdmin == roleCheck(rs, "ADMIN")){
                 loginResponsePojo.setCode(0);
                 loginResponsePojo.setStatus(true);
                 loginResponsePojo.setMessage("Login Successful");
@@ -129,6 +134,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                 userp.setPhoneNumber(user.getPhoneNumber());
                 userp.setFirstName(user.getFirstName());
                 userp.setLastName(user.getSurname());
+                userp.setEmailVerified(user.isEmailVerified());
                 m.put("user", userp);
                 loginResponsePojo.setData(m);
 
@@ -167,14 +173,15 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     }
 
     public boolean roleCheck(List<Roles> rolesList, String role){
-        boolean result = false;
-        for (Roles r: rolesList) {
-            if (r.getName().equals(role)) {
-                result = true;
-                break;
-            }
-        }
-        return result;
+       // boolean result = false;
+      return rolesList.stream().anyMatch(e -> e.getName().equals(role));
+//        for (Roles r: rolesList) {
+//            if (r.getName().equals(role)) {
+//                result = true;
+//                break;
+//            }
+//        }
+//        return result;
     }
 
 }

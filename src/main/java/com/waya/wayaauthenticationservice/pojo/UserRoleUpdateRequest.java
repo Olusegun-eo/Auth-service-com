@@ -1,8 +1,10 @@
 package com.waya.wayaauthenticationservice.pojo;
 
-import com.waya.wayaauthenticationservice.entity.Users;
+import java.util.List;
+
+import com.waya.wayaauthenticationservice.entity.Roles;
+
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,10 +13,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserWalletPojo {
+public class UserRoleUpdateRequest {
 
-    Users user;
-    String accountNo;
-    Long walletId;
-
+	private long id;
+	private List<Integer> rolesList;
 }

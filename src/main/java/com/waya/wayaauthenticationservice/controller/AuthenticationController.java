@@ -1,7 +1,5 @@
 package com.waya.wayaauthenticationservice.controller;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +22,7 @@ import com.waya.wayaauthenticationservice.pojo.PinPojo;
 import com.waya.wayaauthenticationservice.pojo.PinPojo2;
 import com.waya.wayaauthenticationservice.pojo.UserPojo;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
+import com.waya.wayaauthenticationservice.service.UserService;
 
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -39,6 +38,11 @@ public class AuthenticationController {
 
     @Autowired
     private AuthenticationService authenticationServiceImpl;
+    
+    public static final String HEADER_STRING = "Authorization";
+
+    @Autowired
+    UserService userService;
 
     @ApiOperation(value="Personal User Registration",tags = { "AUTH" })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
@@ -52,7 +56,8 @@ public class AuthenticationController {
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping(path = "/create-corporate", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<?> createCorporate(@RequestBody CorporateUserPojo user) {
-        return authenticationServiceImpl.createCorporateUser(user);
+    	
+    	return authenticationServiceImpl.createCorporateUser(user);
     }
 
 
@@ -156,6 +161,14 @@ public class AuthenticationController {
     public ResponseEntity<?> resendOTPEmail(@PathVariable String email, String userId) {
         return authenticationServiceImpl.resendVerificationMail(email, userId);
     }
+
+    @ApiOperation("Check if user is an admin: (Internal Consumption only)")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @GetMapping("/is-user-admin/{userId}")
+    public ResponseEntity<?> isUserAdmin(@PathVariable Long userId) {
+        return userService.isUserAdmin(userId);
+    }
+
 
 
 }

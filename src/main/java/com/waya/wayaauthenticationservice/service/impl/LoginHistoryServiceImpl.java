@@ -97,4 +97,7 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
         return new ResponseEntity<>(new SuccessResponse("Result Fetched", loginHistory), HttpStatus.OK);
 
     }
+
+
+
 }

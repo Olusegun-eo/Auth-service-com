@@ -1,10 +1,15 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
 import com.google.gson.Gson;
+import com.waya.wayaauthenticationservice.entity.CooperateUser;
 import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.*;
+import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
+import com.waya.wayaauthenticationservice.proxy.WalletProxy;
+import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
+import com.waya.wayaauthenticationservice.repository.CooperateUserRepository;
 import com.waya.wayaauthenticationservice.repository.RedisUserDao;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
@@ -15,19 +20,33 @@ import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.security.AuthenticationFilter;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import static com.waya.wayaauthenticationservice.util.Constant.*;
 
@@ -45,6 +64,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Autowired
     private RestTemplate restTemplate;
+    
 
     @Autowired
     private RedisUserDao redisUserDao;
@@ -54,10 +74,34 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Autowired
     KafkaMessageProducer kafkaMessageProducer;
+    
+    @Autowired
+    private CooperateUserRepository cooperateUserRepo;
+    
+    @Autowired
+    private WalletProxy walletProxy;
+    
+    @Autowired
+    private WayagramProxy wayaramProxy;
+    
+    @Autowired
+    private VirtualAccountProxy virtualAccountProxy;
+    
+ // Spring Boot will create and configure DataSource and JdbcTemplate
+    // To use it, just @Autowired
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+    
+    public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
+    
+    private static final String SECRET_TOKEN = "wayas3cr3t" ;
+    
+    public static final String TOKEN_PREFIX = "serial ";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationFilter.class);
 
     @Override
+    @Transactional
     public ResponseEntity createUser(UserPojo mUser) {
         // Check if email exists
         Users existingEmail = userRepo.findByEmail(mUser.getEmail()).orElse(null);
@@ -78,18 +122,28 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         try {
             Roles roles = new Roles();
             roles.setId(1);
-            roles.setName("User");
+            roles.setName("USER_LV1");
             Roles mRoles = rolesRepo.save(roles);
             List<Roles> roleList = new ArrayList<>();
             roleList.add(mRoles);
 
             Users user = new ModelMapper().map(mUser, Users.class);
             user.setId(0L);
+            user.setAdmin(false);
             user.setDateCreated(LocalDateTime.now());
+            user.setActive(true);
             user.setPassword(passwordEncoder.encode(mUser.getPassword()));
             user.setRolesList(roleList);
-            userRepo.save(user);
-
+            Users regUser = userRepo.saveAndFlush(user);
+            String id = String.valueOf(regUser.getId());
+            VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
+            virtualAccountPojo.setAccountName(regUser.getFirstName()+ " "+ regUser.getSurname());
+            virtualAccountPojo.setUserId(id);
+            String token = generateToken(regUser);
+            
+            ResponseEntity<String> response = virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token);
+            
+            System.out.println("Response"+ response.getBody());
             // Create profile by publishing to Kafka
             ProfilePojo profilePojo = new ProfilePojo(
                     user.getEmail(),
@@ -99,7 +153,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     String.valueOf(user.getId()),
                     false
             );
-            kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC,profilePojo);
+           kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC,profilePojo);
+            
             return new ResponseEntity<>(new SuccessResponse("User Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"), HttpStatus.CREATED);
 
         } catch (Exception e) {
@@ -107,13 +162,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
+    
+
 
 
     @Override
     public ResponseEntity createCorporateUser(CorporateUserPojo mUser) {
+    	
+    	
         // Check if email exists
         Users existingEmail = userRepo.findByEmail(mUser.getEmail()).orElse(null);
         if (existingEmail != null) {
+        	String token = generateToken( existingEmail);
+            System.out.println("::::::mtoken::::"+token);
             return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
         }
 
@@ -130,55 +191,125 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         try {
             Roles roles = new Roles();
             roles.setId(1);
-            roles.setName("User");
+            roles.setName("CORP_ADMIN");
             Roles mRoles = rolesRepo.save(roles);
             List<Roles> roleList = new ArrayList<>();
             roleList.add(mRoles);
 
-            Users user = new ModelMapper().map(mUser, Users.class);
+//            Users user = new ModelMapper().map(mUser, Users.class);
+            Users user = new Users();
             user.setId(0L);
             user.setCorporate(true);
             user.setDateCreated(LocalDateTime.now());
             user.setPassword(passwordEncoder.encode(mUser.getPassword()));
             user.setRolesList(roleList);
-            userRepo.save(user);
-            mUser.setUserId(user.getId());
+            user.setEmail(mUser.getEmail());
+            user.setEmailVerified(false);
+            user.setFirstName(mUser.getFirstName());
+            user.setPhoneNumber(mUser.getPhoneNumber());
+            user.setPhoneVerified(false);
+            user.setPinCreated(false);
+            user.setReferenceCode(mUser.getReferenceCode());
+            user.setSurname(mUser.getSurname());
+            
+            Users regUser = userRepo.save(user);
 
-            ProfilePojo2 profilePojo = new ProfilePojo2();
-            profilePojo.setBusinessType(mUser.getBusinessType());
-            profilePojo.setOrganisationEmail(mUser.getOrgEmail());
-            profilePojo.setOrganisationName(mUser.getOrgName());
-            profilePojo.setOrganisationType(mUser.getOrgType());
-            profilePojo.setReferralCode(user.getReferenceCode());
-            profilePojo.setEmail(user.getEmail());
-            profilePojo.setSurname(user.getSurname());
-            profilePojo.setUserId(String.valueOf(mUser.getUserId()));
-            profilePojo.setPhoneNumber(user.getPhoneNumber());
-            profilePojo.setFirstName(user.getFirstName());
-            profilePojo.setCorporate(true);
+            
+            Optional<Users> foundUser = userRepo.findByEmail(regUser.getEmail());
+            if(foundUser.isPresent()) {
+            	 mUser.setUserId(foundUser.get().getId());
+                 
+                 CooperateUser coopUser = new ModelMapper().map(mUser, CooperateUser.class);
+                 coopUser.setUserId(foundUser.get().getId());
+                 cooperateUserRepo.save(coopUser);
 
-            kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC,profilePojo);
+                 CreateAccountPojo createAccount = new CreateAccountPojo();
+                 createAccount.setEmailAddress(foundUser.get().getEmail());
+                 createAccount.setExternalId(foundUser.get().getId());
+                 createAccount.setFirstName(foundUser.get().getFirstName());
+                 createAccount.setLastName(foundUser.get().getSurname());
+                 createAccount.setMobileNo(foundUser.get().getPhoneNumber());
+                 createAccount.setSavingsProductId(1);
+                 
+                 walletProxy.createCooperateAccouont(createAccount);
+                 
+                
+                 ProfilePojo2 profilePojo = new ProfilePojo2();
+                 profilePojo.setBusinessType(mUser.getBusinessType());
+                 profilePojo.setOrganisationEmail(mUser.getOrgEmail());
+                 profilePojo.setOrganisationName(mUser.getOrgName());
+                 profilePojo.setOrganisationType(mUser.getOrgType());
+                 profilePojo.setReferralCode(user.getReferenceCode());
+                 profilePojo.setEmail(user.getEmail());
+                 profilePojo.setSurname(user.getSurname());
+                 profilePojo.setUserId(String.valueOf(mUser.getUserId()));
+                 profilePojo.setPhoneNumber(user.getPhoneNumber());
+                 profilePojo.setFirstName(user.getFirstName());
+                 profilePojo.setCorporate(true);
+                 
+                 String id = String.valueOf(regUser.getId());
+                 VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
+                 virtualAccountPojo.setAccountName(regUser.getFirstName()+ " "+ regUser.getSurname());
+                 virtualAccountPojo.setUserId(id);
+                 String token = generateToken(regUser);
+                 
+                 ResponseEntity<String> response = virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token);
+                 
+                 System.out.println("Response"+ response.getBody());
 
-            return new ResponseEntity<>(new SuccessResponse("Corporate Account Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"), HttpStatus.CREATED);
+                 kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC,profilePojo);
+
+                 return new ResponseEntity<>(new SuccessResponse("Corporate Account Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"), HttpStatus.CREATED);
+            } 
+            
+            return new ResponseEntity(new ErrorResponse("iD PROVIDED NOT FOUND"), HttpStatus.NOT_FOUND);
 
   } catch (Exception e) {
             LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
+    
+    public String generateToken(Users userResponse) {
+    	try {
+    		System.out.println("::::::GENERATE TOKEN:::::");
+        	String token = Jwts.builder().setSubject(userResponse.getEmail())
+                    .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
+                    .signWith(SignatureAlgorithm.HS512, SECRET_TOKEN).compact();
+        	System.out.println(":::::Token:::::");
+        	return TOKEN_PREFIX+token;
+    	} catch (Exception e) {
+    		
+    		System.out.println(e.fillInStackTrace());
+    		throw new RuntimeException(e.fillInStackTrace());
+    	}
+    	
+    }
 
 
     @Override
     public ResponseEntity createPin(PinPojo pinPojo) {
-        Users user = authenticatedUserFacade.getUser();
-        if(!pinIs4Digit(pinPojo.getPin())){
-            return new ResponseEntity<>(new ErrorResponse("Transaction pin should be exactly 4 Digits"), HttpStatus.BAD_REQUEST);
-        }
-        user.setPin(pinPojo.getPin());
-        user.setPinCreated(true);
+    	
         try {
-            userRepo.save(user);
-            return new ResponseEntity<>(new SuccessResponse("Transaction pin created successfully.", null), HttpStatus.CREATED);
+        	// Check if email exists
+            Users existingEmail = userRepo.findById(pinPojo.getUserId()).orElse(null);
+            
+            if (existingEmail != null) {
+            	String token = generateToken( existingEmail);
+                System.out.println("::::::mtoken::::"+token);
+//              Users user = authenticatedUserFacade.getUser();
+                if(!pinIs4Digit(pinPojo.getPin())){
+                    return new ResponseEntity<>(new ErrorResponse("Transaction pin should be exactly 4 Digits"), HttpStatus.BAD_REQUEST);
+                }
+                existingEmail.setPin(pinPojo.getPin());
+                existingEmail.setPinCreated(true);
+                userRepo.save(existingEmail);
+                return new ResponseEntity<>(new SuccessResponse("Transaction pin created successfully.", null), HttpStatus.CREATED);
+                
+            } else {
+            	return new ResponseEntity<>(new ErrorResponse("This email does exists"), HttpStatus.BAD_REQUEST);
+            }
+
 
         } catch (Exception e) {
             LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
@@ -214,6 +345,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
         if(generalResponse.isStatus()) {
             Users user = userRepo.findByEmail(emailPojo.getEmail()).orElse(null);
+            if(user == null){
+                return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
+            }
             user.setEmailVerified(true);
             try {
                 userRepo.save(user);
@@ -325,6 +459,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public ResponseEntity validateUser() {
+    	
         Users user = authenticatedUserFacade.getUser();
         if (user == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid user."), HttpStatus.OK);
@@ -436,6 +571,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         redisUserDao.save(redisUser);
     }
+    
+    
 
 
 }

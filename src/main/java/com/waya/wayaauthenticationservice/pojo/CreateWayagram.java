@@ -1,20 +1,17 @@
 package com.waya.wayaauthenticationservice.pojo;
 
-import com.waya.wayaauthenticationservice.entity.Users;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
-public class UserWalletPojo {
+@NoArgsConstructor
+public class CreateWayagram {
 
-    Users user;
-    String accountNo;
-    Long walletId;
-
+	private String user_id;
+    private String username;
+    private boolean notPublic = false;
 }

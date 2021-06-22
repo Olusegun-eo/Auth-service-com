@@ -1,20 +1,18 @@
 package com.waya.wayaauthenticationservice.pojo;
 
-import com.waya.wayaauthenticationservice.entity.Users;
+
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
-public class UserWalletPojo {
+@NoArgsConstructor
+public class WalletSummary {
 
-    Users user;
-    String accountNo;
-    Long walletId;
-
+	private WalletCurrency currency;
+	private Double accountBalance;
+    private Double availableBalance;
 }

@@ -17,7 +17,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -26,6 +25,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.validator.constraints.Length;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.waya.wayaauthenticationservice.model.AuthProvider;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -64,6 +64,9 @@ public class Users implements Serializable {
 
     @JsonIgnore
     private int pin;
+    
+    @JsonIgnore
+    private String name;
 
     @JsonIgnore
     private boolean phoneVerified = false;
@@ -79,10 +82,7 @@ public class Users implements Serializable {
     private boolean isCorporate = false;
     
     private boolean isAdmin = false;
-    
-    private LocalDateTime dateOfInactive;
 
-    @Transient
     private Roles role;
     
     @NotNull

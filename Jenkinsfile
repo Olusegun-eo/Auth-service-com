@@ -87,6 +87,7 @@ pipeline {
         			}
       			}
     		}
+<<<<<<< HEAD
 		
 		stage('Approval for deployment') {
 			steps{
@@ -96,6 +97,8 @@ pipeline {
                 }
             }
         }
+=======
+>>>>>>> 3aac3cf4a7f9202ab7a8ce0c4d20f0f286b7029b
 				
     
 		stage ('Starting the deployment job') {
