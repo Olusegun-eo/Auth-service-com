@@ -71,7 +71,7 @@ public class UserController {
     @ApiOperation(value="Get User Details by Email (In-app use only)" ,tags = { "USER SERVICE" })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("email/{email}")
-    public ResponseEntity getUserByEmail(@PathVariable String email) {
+    public ResponseEntity<?> getUserByEmail(@PathVariable String email) {
         return userService.getUserByEmail(email);
     }
 
@@ -79,7 +79,7 @@ public class UserController {
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @GetMapping("phone/{phone}")
-    public ResponseEntity getUserByPhone(@PathVariable String phone, HttpServletRequest req) {
+    public ResponseEntity<?> getUserByPhone(@PathVariable String phone, HttpServletRequest req) {
         return userService.getUserByPhone(phone, req.getHeader("Authorization"));
     }
 
@@ -94,20 +94,19 @@ public class UserController {
     @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/myinfo")
-    public ResponseEntity getMyInfo() {
+    public ResponseEntity<?> getMyInfo() {
         return userService.getMyInfo();
     }
 
-    @ApiOperation(value = "DDelete User profiles", notes = "Disable user's accounts" ,tags = { "USER SERVICE" })
-
+    @ApiOperation(value = "Delete User profiles", notes = "Disable user's accounts" ,tags = { "USER SERVICE" })
     @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity remove(@PathVariable Long id, @RequestHeader("Authorization") String authorization) {
+    public ResponseEntity<?> remove(@PathVariable Long id, @RequestHeader("Authorization") String authorization) {
         return userService.deleteUser(id,authorization);
     }
     
-    @ApiOperation(value = "Get Users By role name count", notes = "This endpointis used to get all users by role name, it returns an integer of count")
+    @ApiOperation(value = "Get Users By role name count", notes = "This endpointis used to get all users by role name, it returns an integer of count",tags = { "USER SERVICE" })
     @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/count/{role}")
@@ -116,7 +115,7 @@ public class UserController {
     }
     
     
-    @ApiOperation(value = "Edit User Details", notes = "This endpointis used update user details")
+    @ApiOperation(value = "Edit User Details", notes = "This endpointis used update user details",tags = { "USER SERVICE" })
     @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @PutMapping("/update")
@@ -125,7 +124,7 @@ public class UserController {
     	return ResponseEntity.ok(userService.UpdateUser(user));
     }
     
-    @ApiOperation(value = "Get user details for role service consumption", notes = "This endpointis used to get user details for Role Service")
+    @ApiOperation(value = "Get user details for role service consumption", notes = "This endpointis used to get user details for Role Service",tags = { "USER SERVICE" })
     @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/get/user/for/role/{id}")

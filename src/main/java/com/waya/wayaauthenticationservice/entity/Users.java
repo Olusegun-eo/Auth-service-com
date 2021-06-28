@@ -2,7 +2,7 @@ package com.waya.wayaauthenticationservice.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Collection;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -17,6 +17,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -83,6 +84,7 @@ public class Users implements Serializable {
     
     private boolean isAdmin = false;
 
+    @Transient
     private Roles role;
     
     @NotNull
@@ -147,7 +149,7 @@ public class Users implements Serializable {
                     name = "user_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(
                     name = "role_id", referencedColumnName = "id"))
-    private List<Roles> rolesList;
+    private Collection<Roles> rolesList;
 
     @CreationTimestamp
     @ApiModelProperty(hidden = true)

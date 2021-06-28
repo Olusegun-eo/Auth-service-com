@@ -2,6 +2,7 @@ package com.waya.wayaauthenticationservice.config;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import org.springframework.context.annotation.Bean;
@@ -34,7 +35,7 @@ public class SwaggerConfig {
                     .build()
                     .securitySchemes(Arrays.asList(new ApiKey("Token Access", HttpHeaders.AUTHORIZATION, In.HEADER.name())))
                     .securityContexts(Arrays.asList(securityContext()))
-                    //.apiInfo(apiInfo())
+                    .protocols(new HashSet<>(Arrays.asList("HTTP")))
                     .apiInfo(DEFAULT_API_INFO);
 
     }

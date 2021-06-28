@@ -10,7 +10,12 @@ import java.io.Serializable;
 @Data
 public class ApiResponse<E> implements Serializable {
 
-    private Boolean status;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -4953161112228607177L;
+
+	private Boolean status;
 
     private Integer code;
 
@@ -37,7 +42,7 @@ public class ApiResponse<E> implements Serializable {
         this.status = status;
         this.code = code;
         this.message = message;
-        this.data = data;
+        //this.data = data;
     }
 
 //    public ApiResponse(Boolean status, Integer code, String message, E data, String token) {
@@ -110,22 +115,26 @@ public class ApiResponse<E> implements Serializable {
         public Builder(){
         }
 
-        public Builder setStatus(boolean status){
+        @SuppressWarnings("rawtypes")
+		public Builder setStatus(boolean status){
             this.status = status;
             return this;
         }
 
-        public Builder setCode(Integer code){
+        @SuppressWarnings("rawtypes")
+		public Builder setCode(Integer code){
             this.code = code;
             return this;
         }
 
-        public Builder setMessage(String message){
+        @SuppressWarnings("rawtypes")
+		public Builder setMessage(String message){
             this.message = message;
             return this;
         }
 
-        public Builder setData(E e){
+        @SuppressWarnings("rawtypes")
+		public Builder setData(E e){
             this.data = e;
             return this;
         }
@@ -135,15 +144,18 @@ public class ApiResponse<E> implements Serializable {
 //            return this;
 //        }
 
-        public ApiResponse build(){
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+		public ApiResponse build(){
             return new ApiResponse(this.status, this.code, this.message, this.data);
         }
 
-        public ApiResponse buildSuccess(String message, E e){
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+		public ApiResponse buildSuccess(String message, E e){
             return new ApiResponse(true, Code.SUCCESS, message, e);
         }
 
-        public ApiResponse buildSuccess(String message){
+        @SuppressWarnings("rawtypes")
+		public ApiResponse buildSuccess(String message){
             return new ApiResponse(true, Code.SUCCESS, message);
         }
 

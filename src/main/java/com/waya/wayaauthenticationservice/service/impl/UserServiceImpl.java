@@ -1,5 +1,33 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import static java.util.stream.Collectors.toList;
+import static org.springframework.http.HttpStatus.OK;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
 import com.waya.wayaauthenticationservice.config.ApplicationConfig;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
@@ -20,24 +48,6 @@ import com.waya.wayaauthenticationservice.service.UserService;
 import com.waya.wayaauthenticationservice.util.ApiResponse;
 
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-
-import static java.util.stream.Collectors.toList;
-import static org.springframework.http.HttpStatus.OK;
 
 
 @Service
@@ -47,8 +57,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository usersRepo;
 
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    //@Autowired
+    //private BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
     private AuthenticatedUserFacade authenticatedUserFacade;
@@ -84,8 +94,6 @@ public class UserServiceImpl implements UserService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Optional<Users> user = usersRepo.findByEmail(email);
 
-        List<Users> allUsers = usersRepo.findAll();
-
         if (!user.isPresent()) {
             throw new UsernameNotFoundException(email);
         }else {
@@ -95,7 +103,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity getUser(Long userId) {
+    public ResponseEntity<?> getUser(Long userId) {
         Users user = usersRepo.findById(userId).orElse(null);
         if(user == null){
             return new ResponseEntity<>(new ErrorResponse("Invalid Id"), HttpStatus.BAD_REQUEST);
@@ -105,7 +113,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity getUsers() {
+    public ResponseEntity<?> getUsers() {
         Users user = authenticatedUserFacade.getUser();
         if(!validateAdmin(user)){
             return new ResponseEntity<>(new ErrorResponse("Invalid Access"), HttpStatus.BAD_REQUEST);
@@ -118,8 +126,8 @@ public class UserServiceImpl implements UserService {
         if (user == null){
             return false;
         }
-        Roles adminRole = rolesRepo.findByName("ADMIN");
-        List<Roles> roles = user.getRolesList();
+        Roles adminRole = rolesRepo.findByName("ROLE_ADMIN");
+        List<Roles> roles = new ArrayList<Roles>(user.getRolesList());
         if (!roles.contains(adminRole)){
             return false;
         }
@@ -127,7 +135,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity getUsersByRole(int roleId) {
+    public ResponseEntity<?> getUsersByRole(int roleId) {
         Users user = authenticatedUserFacade.getUser();
         if(!validateAdmin(user)){
             return new ResponseEntity<>(new ErrorResponse("Invalid Access"), HttpStatus.BAD_REQUEST);
@@ -150,7 +158,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity getUserByEmail(String email) {
+    public ResponseEntity<?> getUserByEmail(String email) {
         Users user = usersRepo.findByEmail(email).orElse(null);
         if(user == null){
             return new ResponseEntity<>(new ErrorResponse("Invalid email"), OK);
@@ -160,7 +168,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity getUserByPhone(String phone, String token) {
+    public ResponseEntity<?> getUserByPhone(String phone, String token) {
         Users user = usersRepo.findByPhoneNumber(phone).orElse(null);
         if(user == null){
             return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.OK);
@@ -176,7 +184,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public ResponseEntity wayaContactCheck(ContactPojoReq contacts) {
+    public ResponseEntity<?> wayaContactCheck(ContactPojoReq contacts) {
         List<ContactPojo> contactPojos = new ArrayList<>();
         for (ContactPojo c: contacts.getContacts()) {
             if (usersRepo.findByPhoneNumber(c.getPhone()).orElse(null) != null){
@@ -189,7 +197,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public ResponseEntity getMyInfo() {
+    public ResponseEntity<?> getMyInfo() {
         Users user = authenticatedUserFacade.getUser();
         return new ResponseEntity<>(new SuccessResponse("User info fetched", user), HttpStatus.OK);
     }
@@ -314,7 +322,7 @@ public class UserServiceImpl implements UserService {
 				us.setPhoneVerified(user.isPhoneVerified());
 				us.setPinCreated(user.isPinCreated());
 				us.setReferenceCode(user.getReferenceCode());
-				us.setRolesList(user.getRolesList());
+				us.setRolesList(new ArrayList<Roles>(user.getRolesList()));
 				us.setSurname(user.getSurname());
 				us.setEmailVerified(user.isEmailVerified());
 				return  us;

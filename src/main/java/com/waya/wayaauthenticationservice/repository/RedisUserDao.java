@@ -11,24 +11,29 @@ import java.util.List;
 public class RedisUserDao {
 
     public static final String HASH_KEY = "User";
-    @Autowired
+    @SuppressWarnings("rawtypes")
+	@Autowired
     private RedisTemplate template;
 
-    public RedisUser save(RedisUser redisUser){
+    @SuppressWarnings("unchecked")
+	public RedisUser save(RedisUser redisUser){
         template.opsForHash().put(HASH_KEY,redisUser.getId(),redisUser);
         return redisUser;
     }
 
-    public List<RedisUser> findAll(){
+    @SuppressWarnings("unchecked")
+	public List<RedisUser> findAll(){
         return template.opsForHash().values(HASH_KEY);
     }
 
-    public RedisUser findUserById(int id){
+    @SuppressWarnings("unchecked")
+	public RedisUser findUserById(int id){
         return (RedisUser) template.opsForHash().get(HASH_KEY,id);
     }
 
 
-    public String deleteUser(int id){
+    @SuppressWarnings("unchecked")
+	public String deleteUser(int id){
         template.opsForHash().delete(HASH_KEY,id);
         return "user deleted !!";
     }

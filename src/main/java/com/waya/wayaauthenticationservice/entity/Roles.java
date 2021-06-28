@@ -1,7 +1,7 @@
 package com.waya.wayaauthenticationservice.entity;
 
 import java.io.Serializable;
-import java.util.Set;
+import java.util.Collection;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -29,7 +29,7 @@ public class Roles implements Serializable {
     private String name;
     private String description;
     @OneToMany(mappedBy = "role", fetch = FetchType.EAGER)
-    private Set<Privilege> permissions;
+    private Collection<Privilege> permissions;
 //    @ManyToMany(mappedBy = "rolesList")
 //    @JsonIgnore
 //    private List<Users> usersList;

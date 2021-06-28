@@ -12,7 +12,7 @@ public class AuthClientConfiguration {
 
 	public Encoder feignEncoder() {
 
-        HttpMessageConverter jacksonConverter = new MappingJackson2HttpMessageConverter();
+        HttpMessageConverter<?> jacksonConverter = new MappingJackson2HttpMessageConverter();
 
         ObjectFactory<HttpMessageConverters> objectFactory = () -> new HttpMessageConverters(jacksonConverter);
 
