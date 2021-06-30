@@ -1,7 +1,7 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
 import com.google.gson.Gson;
-import com.waya.wayaauthenticationservice.entity.CooperateUser;
+import com.waya.wayaauthenticationservice.entity.CoporateUser;
 import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
@@ -219,7 +219,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             if(foundUser.isPresent()) {
             	 mUser.setUserId(foundUser.get().getId());
                  
-                 CooperateUser coopUser = new ModelMapper().map(mUser, CooperateUser.class);
+                 CoporateUser coopUser = new ModelMapper().map(mUser, CoporateUser.class);
                  coopUser.setUserId(foundUser.get().getId());
                  cooperateUserRepo.save(coopUser);
 
