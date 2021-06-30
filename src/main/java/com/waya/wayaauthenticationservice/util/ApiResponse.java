@@ -1,14 +1,15 @@
 package com.waya.wayaauthenticationservice.util;
 
+import java.io.Serializable;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.Data;
 
-import java.io.Serializable;
-
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
 public class ApiResponse<E> implements Serializable {
+
 
 	private static final long serialVersionUID = -4953161112228607177L;
 
@@ -22,9 +23,7 @@ public class ApiResponse<E> implements Serializable {
 
 	private E data;
 
-	private ApiResponse() {
-
-	}
+	private ApiResponse() {}
 
 	private ApiResponse(Boolean status, Integer code, String message, E data) {
 		this.status = status;
@@ -37,6 +36,7 @@ public class ApiResponse<E> implements Serializable {
 		this.status = status;
 		this.code = code;
 		this.message = message;
+		// this.data = data;
 	}
 
 //    public ApiResponse(Boolean status, Integer code, String message, E data, String token) {
@@ -95,29 +95,33 @@ public class ApiResponse<E> implements Serializable {
 
 		private String message = "Unknow Error";
 
-		//private String token = null;
+//        private String token = null;
 
 		private E data = null;
 
 		public Builder() {
 		}
 
-		public Builder<E> setStatus(boolean status) {
+		@SuppressWarnings("rawtypes")
+		public Builder setStatus(boolean status) {
 			this.status = status;
 			return this;
 		}
 
-		public Builder<E> setCode(Integer code) {
+		@SuppressWarnings("rawtypes")
+		public Builder setCode(Integer code) {
 			this.code = code;
 			return this;
 		}
 
-		public Builder<E> setMessage(String message) {
+		@SuppressWarnings("rawtypes")
+		public Builder setMessage(String message) {
 			this.message = message;
 			return this;
 		}
 
-		public Builder<E> setData(E e) {
+		@SuppressWarnings("rawtypes")
+		public Builder setData(E e) {
 			this.data = e;
 			return this;
 		}
@@ -127,16 +131,19 @@ public class ApiResponse<E> implements Serializable {
 //            return this;
 //        }
 
-		public ApiResponse<E> build() {
-			return new ApiResponse<E>(this.status, this.code, this.message, this.data);
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		public ApiResponse build() {
+			return new ApiResponse(this.status, this.code, this.message, this.data);
 		}
 
-		public ApiResponse<E> buildSuccess(String message, E e) {
-			return new ApiResponse<E>(true, Code.SUCCESS, message, e);
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		public ApiResponse buildSuccess(String message, E e) {
+			return new ApiResponse(true, Code.SUCCESS, message, e);
 		}
 
-		public ApiResponse<?> buildSuccess(String message) {
-			return new ApiResponse<Object>(true, Code.SUCCESS, message);
+		@SuppressWarnings("rawtypes")
+		public ApiResponse buildSuccess(String message) {
+			return new ApiResponse(true, Code.SUCCESS, message);
 		}
 
 //        public ApiResponse buildSuccessWithToken(String message, E data, String token) {
@@ -200,6 +207,7 @@ public class ApiResponse<E> implements Serializable {
 		public static final Integer USER_NOT_REFERRER = 721;
 
 		// Access Control
+
 		public static final Integer UNAUTHORIZED_ADMIN_ACCESS = 820;
 		public static final Integer USER_NOT_ADMIN = 822;
 		public static final Integer INVALID_PERMISSION_NAME = 823;

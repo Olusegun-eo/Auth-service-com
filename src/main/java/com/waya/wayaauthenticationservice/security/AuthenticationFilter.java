@@ -1,25 +1,24 @@
 package com.waya.wayaauthenticationservice.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.waya.wayaauthenticationservice.SpringApplicationContext;
-import com.waya.wayaauthenticationservice.entity.Roles;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.LoginResponsePojo;
-import com.waya.wayaauthenticationservice.repository.LoginHistoryRepository;
-import com.waya.wayaauthenticationservice.service.LoginHistoryService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.User;
-import com.waya.wayaauthenticationservice.pojo.LoginDetailsPojo;
-import com.waya.wayaauthenticationservice.pojo.UserProfileResponsePojo;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.util.SecurityConstants;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.SignatureException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -28,16 +27,26 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.waya.wayaauthenticationservice.SpringApplicationContext;
+import com.waya.wayaauthenticationservice.entity.Privilege;
+import com.waya.wayaauthenticationservice.entity.Roles;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.LoginDetailsPojo;
+import com.waya.wayaauthenticationservice.pojo.LoginResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.UserProfileResponsePojo;
+import com.waya.wayaauthenticationservice.repository.PrivilegeRepository;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.service.LoginHistoryService;
+import com.waya.wayaauthenticationservice.util.SecurityConstants;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.SignatureException;
 
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final Gson gson = new Gson();
@@ -46,6 +55,9 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     @Autowired
     LoginHistoryService loginHistoryService;
+    
+    @Autowired
+    PrivilegeRepository privilegeRepos;
 
 
 
@@ -67,7 +79,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
             UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
             
             Users user = userLoginRepo.findByEmailOrPhoneNumber(creds.getEmail(), creds.getEmail()).orElseThrow(() -> new BadCredentialsException("User Does not exist"));
-                        List<Roles> roles = user.getRolesList();
+                        List<Roles> roles = new ArrayList<Roles>(user.getRolesList());
             List<GrantedAuthority> grantedAuthorities = roles.stream().map(r -> {
 
                 return new SimpleGrantedAuthority(r.getName());
@@ -100,14 +112,14 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         res.addHeader(SecurityConstants.HEADER_STRING, SecurityConstants.TOKEN_PREFIX + token);
 
         LoginResponsePojo loginResponsePojo = new LoginResponsePojo();
-        Map m = new HashMap();
+        Map<String, Object> m = new HashMap<String, Object>();
 
-        if(!user.isPhoneVerified()){
+        /*if(!user.isPhoneVerified()){
             loginResponsePojo.setCode(-2);
             loginResponsePojo.setStatus(false);
             loginResponsePojo.setMessage("Your Phone number has not been verified");
-        }
-        else if(!user.isActive()){
+        }*/
+        if(!user.isActive()){
             loginResponsePojo.setCode(-3);
             loginResponsePojo.setStatus(false);
             loginResponsePojo.setMessage("User account is disabled,kindly contact Waya Admin");
@@ -115,18 +127,20 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         else {
 
             List<String> roles = new ArrayList<>();
-            List<Roles> rs = user.getRolesList();
+            Collection<Privilege> permit = null;
+            Collection<Roles> rs = user.getRolesList();
             for (Roles r : rs) {
                 roles.add(r.getName());
+                //permit = r.getPermissions(); 
             }
                 //true == true
-            if (isAdmin == roleCheck(rs, "ADMIN")){
+            if (isAdmin == roleCheck(rs, "ROLE_ADMIN")){
                 loginResponsePojo.setCode(0);
                 loginResponsePojo.setStatus(true);
                 loginResponsePojo.setMessage("Login Successful");
 
                 m.put("token", SecurityConstants.TOKEN_PREFIX + token);
-
+                m.put("privilege", permit);
                 m.put("roles", roles);
                 m.put("pinCreated", user.isPinCreated());
                 m.put("corporate", user.isCorporate());
@@ -135,6 +149,13 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                 userp.setFirstName(user.getFirstName());
                 userp.setLastName(user.getSurname());
                 userp.setEmailVerified(user.isEmailVerified());
+                userp.setActive(user.isActive());
+                userp.setAccountDeleted(user.isDeleted());
+                userp.setAdmin(user.isAdmin());
+                userp.setAccountExpired(!user.isAccountNonExpired());
+                userp.setAccountLocked(!user.isAccountNonLocked());
+                userp.setCredentialsExpired(!user.isCredentialsNonExpired());
+                
                 m.put("user", userp);
                 loginResponsePojo.setData(m);
 
@@ -161,7 +182,8 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType(MediaType.ALL_VALUE);
-        Map m = new HashMap();
+        @SuppressWarnings("rawtypes")
+		Map<String, Comparable> m = new HashMap<String, Comparable>();
         m.put("code", -1);
         m.put("status", false);
         m.put("message", "Invalid Login");
@@ -172,7 +194,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         pr.write(str);
     }
 
-    public boolean roleCheck(List<Roles> rolesList, String role){
+    public boolean roleCheck(Collection<Roles> rolesList, String role){
        // boolean result = false;
       return rolesList.stream().anyMatch(e -> e.getName().equals(role));
 //        for (Roles r: rolesList) {

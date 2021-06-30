@@ -1,53 +1,29 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.waya.wayaauthenticationservice.config.AppConfig;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.CreateWayagram;
-import com.waya.wayaauthenticationservice.pojo.LoginDetailsPojo;
-import com.waya.wayaauthenticationservice.pojo.ProfilePojo2;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
-
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-
-import java.net.URISyntaxException;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaProducerException;
 import org.springframework.kafka.core.KafkaSendCallback;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import org.springframework.util.concurrent.ListenableFuture;
-import org.springframework.web.client.RestTemplate;
 
-import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.HttpStatus.OK;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.waya.wayaauthenticationservice.pojo.ProfilePojo2;
+import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
 
 @Service
-@Slf4j
 public class KafkaMessageProducer implements MessageQueueProducer {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final KafkaTemplate<String, Object> template;
     private final Gson gson;
-    @Autowired
-    private UserRepository userRepo;
+    
 
 //
 //    @Autowired
@@ -74,7 +50,8 @@ public class KafkaMessageProducer implements MessageQueueProducer {
      * @param topic
      * @param data
      */
-    @Override
+    @SuppressWarnings("unused")
+	@Override
     public void send(String topic, Object data) {
     	ProfilePojo2 creds = null;
 		try {

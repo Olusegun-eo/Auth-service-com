@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.firewall.DefaultHttpFirewall;
 import org.springframework.security.web.firewall.HttpFirewall;
@@ -54,12 +55,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.
                 cors().and().csrf().disable()
-                // dont authenticate this particular request
-                .authorizeRequests()
-                .antMatchers("/auth/**","/user/phone/**","/user/email/**","/business/type/**").permitAll()
-                .antMatchers("/admin/**", "/auth/create-corporate").permitAll()
-                .antMatchers("/kafka/**").permitAll()
-                .antMatchers("/history/**").permitAll()
+                .exceptionHandling().authenticationEntryPoint(getBasicAuthEntryPoint()).and()
+				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+				.and().authorizeRequests()
+                .antMatchers("/api/v1/auth/login").permitAll()
+                .antMatchers("/api/v1/auth/create","/api/v1/auth/create-corporate").permitAll()
                 .antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
                 // all other requests need to be authenticated
                 .anyRequest().authenticated().and()
@@ -74,7 +74,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected AuthenticationFilter getAuthenticationFilter() throws Exception {
         //JwtRequestFilter filter = new JwtRequestFilter(authenticationManager());
         final AuthenticationFilter filter = new AuthenticationFilter(authenticationManager());
-        filter.setFilterProcessesUrl("/auth/login");
+        filter.setFilterProcessesUrl("/api/v1/auth/login");
         return filter;
     }
 

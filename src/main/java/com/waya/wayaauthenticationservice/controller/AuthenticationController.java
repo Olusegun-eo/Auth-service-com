@@ -1,10 +1,12 @@
 package com.waya.wayaauthenticationservice.controller;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Produces;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mobile.device.Device;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,17 +49,17 @@ public class AuthenticationController {
     @ApiOperation(value="Personal User Registration",tags = { "AUTH" })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping(path = "/create", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<?> create(@RequestBody UserPojo user) {
-        return authenticationServiceImpl.createUser(user);
+    public ResponseEntity<?> create(@RequestBody UserPojo user,HttpServletRequest request,Device device) {
+        return authenticationServiceImpl.createUser(user,request,device);
     }
 
 
     @ApiOperation(value="Corporate User Registration" ,tags = { "AUTH" })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping(path = "/create-corporate", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<?> createCorporate(@RequestBody CorporateUserPojo user) {
+    public ResponseEntity<?> createCorporate(@RequestBody CorporateUserPojo user,HttpServletRequest request,Device device) {
     	
-    	return authenticationServiceImpl.createCorporateUser(user);
+    	return authenticationServiceImpl.createCorporateUser(user,request,device);
     }
 
 
@@ -162,7 +164,7 @@ public class AuthenticationController {
         return authenticationServiceImpl.resendVerificationMail(email, userId);
     }
 
-    @ApiOperation("Check if user is an admin: (Internal Consumption only)")
+    @ApiOperation(value="Check if user is an admin: (Internal Consumption only)" ,tags = { "AUTH" })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/is-user-admin/{userId}")
     public ResponseEntity<?> isUserAdmin(@PathVariable Long userId) {

@@ -1,13 +1,14 @@
 package com.waya.wayaauthenticationservice.service;
 
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.UserPojo;
-import org.springframework.http.ResponseEntity;
+import javax.servlet.http.HttpServletRequest;
 
-import java.util.List;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mobile.device.Device;
+
+import com.waya.wayaauthenticationservice.pojo.UserPojo;
 
 public interface AdminService {
-    ResponseEntity getCorporateUsers();
-    ResponseEntity getUsersByRole(long roleId);
-    ResponseEntity createUser(UserPojo userPojo, long roleId);
+    ResponseEntity<?> getCorporateUsers();
+    ResponseEntity<?> getUsersByRole(long roleId);
+    ResponseEntity<?> createUser(UserPojo userPojo, long roleId,HttpServletRequest request,Device device);
 }

@@ -26,7 +26,7 @@ public class AdminController {
     @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/users")
-    public ResponseEntity getUsers() {
+    public ResponseEntity<?> getUsers() {
         return userService.getUsers();
     }
 
@@ -35,7 +35,7 @@ public class AdminController {
     @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/users/byrole/{roleId}")
-    public ResponseEntity getUsersByRole(@PathVariable int roleId) {
+    public ResponseEntity<?> getUsersByRole(@PathVariable int roleId) {
         return userService.getUsersByRole(roleId);
     }
 
