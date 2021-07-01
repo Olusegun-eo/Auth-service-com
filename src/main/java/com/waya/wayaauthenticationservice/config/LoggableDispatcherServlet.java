@@ -2,7 +2,6 @@ package com.waya.wayaauthenticationservice.config;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -59,23 +58,25 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
 		jsonObject.addProperty("timeTakenMs", timeTaken);
 		jsonObject.addProperty("clientIP", reqUtil.getClientIP(request));
 		jsonObject.addProperty("javaMethod", handler.toString());
+		//jsonObject.addProperty("session", request.getSession().getId());
 		jsonObject.addProperty("response", getResponsePayload(response));
-		jsonObject.addProperty("session", request.getSession().getId());
+
 		if (status > 299) {
-			String requestBody = null;
+			String requestData = null;
 			try {
 				jsonObject.addProperty("request", request.getReader().readLine());
-				requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+				//requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+				requestData = getRequestData(request);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			jsonObject.addProperty("requestBody", requestBody);
+			jsonObject.addProperty("requestBody", requestData);
 			jsonObject.addProperty("requestParams", request.getQueryString());
 
-			String json = gson.toJson(jsonObject);
-			log.info(json);
+			
 		}
-		logger.info(jsonObject);
+		String json = gson.toJson(jsonObject);
+		log.info(json);
 
 	}
 
@@ -97,6 +98,19 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
 		}
 		return "[unknown]";
 	}
+	
+
+    private String getRequestData(final HttpServletRequest request) throws UnsupportedEncodingException {
+        String payload = null;
+        ContentCachingRequestWrapper wrapper = WebUtils.getNativeRequest(request, ContentCachingRequestWrapper.class);
+        if (wrapper != null) {
+            byte[] buf = wrapper.getContentAsByteArray();
+            if (buf.length > 0) {
+                payload = new String(buf, 0, buf.length, wrapper.getCharacterEncoding());
+            }
+        }
+        return payload;
+    }
 
 	private void updateResponse(HttpServletResponse response) throws IOException {
 		ContentCachingResponseWrapper responseWrapper = WebUtils.getNativeResponse(response,

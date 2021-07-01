@@ -12,6 +12,7 @@ import java.io.Serializable;
 @Table(name = "m_privilege")
 @JsonIgnoreType
 public class Privilege implements Serializable {
+	
     private static final long serialVersionUID = 1L;
 
     @Id

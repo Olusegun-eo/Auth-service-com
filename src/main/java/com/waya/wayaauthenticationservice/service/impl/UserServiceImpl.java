@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,7 @@ import com.waya.wayaauthenticationservice.config.ApplicationConfig;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.model.user.UserDTO;
 import com.waya.wayaauthenticationservice.pojo.ContactPojo;
 import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
 import com.waya.wayaauthenticationservice.pojo.MainWalletResponse;
@@ -66,6 +68,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     RestTemplate restTemplate;
 
+    @Autowired
+    ModelMapper modelMapper;
 
     @Autowired
     private RolesRepository rolesRepo;
@@ -207,10 +211,11 @@ public class UserServiceImpl implements UserService {
 		try {
 			System.out.println(":::::User Service:::::");
 			Users user = usersRepo.findById(id).orElse(null);
-			if(user == null){
+			UserDTO userDto = modelMapper.map(user, UserDTO.class);
+			if(userDto == null){
 	            return new ResponseEntity<>(new ErrorResponse("Invalid id"), HttpStatus.BAD_REQUEST);
 	        } else {
-	            return new ResponseEntity<>(new SuccessResponse("User info fetched", user), HttpStatus.OK);
+	            return new ResponseEntity<>(new SuccessResponse("User info fetched", userDto), HttpStatus.OK);
 	        }
 		} catch (Exception e) {
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);

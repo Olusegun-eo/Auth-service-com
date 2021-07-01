@@ -17,7 +17,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -83,8 +82,8 @@ public class Users implements Serializable {
 
 	private boolean isAdmin = false;
 
-	@Transient
-	private Roles role;
+	//@Transient
+	//private Roles role;
 
 	@NotNull
 	@Enumerated(EnumType.STRING)

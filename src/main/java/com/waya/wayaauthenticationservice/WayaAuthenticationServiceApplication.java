@@ -2,6 +2,10 @@ package com.waya.wayaauthenticationservice;
 
 import java.util.Collections;
 
+import org.modelmapper.ModelMapper;
+import org.modelmapper.config.Configuration.AccessLevel;
+import org.modelmapper.convention.MatchingStrategies;
+import org.modelmapper.convention.NamingConventions;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration;
@@ -67,6 +71,17 @@ public class WayaAuthenticationServiceApplication {
 		}));
 
 		return restClient;
+	}
+	
+	@Bean
+	public ModelMapper modelMapper() {
+		ModelMapper modelMapper = new ModelMapper();
+		modelMapper.getConfiguration()
+				.setFieldMatchingEnabled(true)
+				.setMatchingStrategy(MatchingStrategies.STRICT)
+				.setFieldAccessLevel(AccessLevel.PRIVATE)
+				.setSourceNamingConvention(NamingConventions.JAVABEANS_MUTATOR);
+		return modelMapper;
 	}
 
 }

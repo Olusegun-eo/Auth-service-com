@@ -61,6 +61,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/auth/login").permitAll()
                 .antMatchers("/api/v1/auth/create","/api/v1/auth/create-corporate").permitAll()
                 .antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
+                .antMatchers("/swagger-ui.html", "/swagger-resources/**","/v2/api-docs").permitAll()
                 // all other requests need to be authenticated
                 .anyRequest().authenticated().and()
                 // make sure we use stateless session; session won't be used to
@@ -69,6 +70,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .addFilter(new AuthorizationFilter(authenticationManager()));
 
     }
+
+	@Override
+	public void configure(WebSecurity web) throws Exception {
+		web.ignoring().antMatchers("/v2/api-docs", "/configuration/ui", "/swagger-resources/**",
+				"/configuration/security", "/swagger-ui/index.html", "/webjars/**");
+	}
 
 
     protected AuthenticationFilter getAuthenticationFilter() throws Exception {
@@ -108,8 +115,4 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		return new JwtAuthenticationEntryPoint();
 	}
     
-    public void configure(WebSecurity web) throws Exception {
-		web.ignoring().antMatchers("/v2/api-docs", "/configuration/ui", "/swagger-resources/**",
-				"/configuration/security", "/swagger-ui.html", "/webjars/**", "/swagger-ui/**", "/v3/api-docs");
-	}
 }
