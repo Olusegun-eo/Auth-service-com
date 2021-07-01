@@ -171,14 +171,11 @@
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
-<<<<<<< HEAD
-=======
 		<dependency>
 			<groupId>org.springframework.mobile</groupId>
 			<artifactId>spring-mobile-device</artifactId>
 			<version>2.0.0.M3</version>
 		</dependency>
->>>>>>> 5b32112750c7ea61ccac03db912e4eef40653d63
 	</dependencies>
 
 	<dependencyManagement>
