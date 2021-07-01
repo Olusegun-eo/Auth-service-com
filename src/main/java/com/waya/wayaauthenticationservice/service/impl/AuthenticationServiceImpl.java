@@ -9,16 +9,14 @@ import static com.waya.wayaauthenticationservice.util.Constant.WAYAGRAM_PROFILE_
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.modelmapper.ModelMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +33,7 @@ import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.pojo.CreateAccountPojo;
+import com.waya.wayaauthenticationservice.pojo.DevicePojo;
 import com.waya.wayaauthenticationservice.pojo.EmailPojo;
 import com.waya.wayaauthenticationservice.pojo.OTPPojo;
 import com.waya.wayaauthenticationservice.pojo.PasswordPojo;
@@ -48,7 +47,6 @@ import com.waya.wayaauthenticationservice.pojo.ValidateUserPojo;
 import com.waya.wayaauthenticationservice.pojo.VirtualAccountPojo;
 import com.waya.wayaauthenticationservice.pojo.WalletPojo;
 import com.waya.wayaauthenticationservice.pojo.WayagramPojo;
-import com.waya.wayaauthenticationservice.pojo.DevicePojo;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.repository.CooperateUserRepository;
@@ -60,7 +58,6 @@ import com.waya.wayaauthenticationservice.response.GeneralResponse;
 import com.waya.wayaauthenticationservice.response.ProfileResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
-import com.waya.wayaauthenticationservice.security.AuthenticationFilter;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
 import com.waya.wayaauthenticationservice.util.ReqIPUtils;
 
@@ -105,47 +102,47 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	@Autowired
 	private ReqIPUtils reqUtil;
 
+	@Autowired
+	private ModelMapper mapper;
+
 	public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
-
 	private static final String SECRET_TOKEN = "wayas3cr3t";
-
 	public static final String TOKEN_PREFIX = "serial ";
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationFilter.class);
 
 	@Override
 	@Transactional
 	public ResponseEntity<?> createUser(UserPojo mUser, HttpServletRequest request, Device device) {
-		// Check if email exists
-		Users existingEmail = userRepo.findByEmail(mUser.getEmail()).orElse(null);
-		if (existingEmail != null) {
-			return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
-		}
-
-		// Check if Phone exists
-		Users existingTelephone = userRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
-		if (existingTelephone != null) {
-			return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"), HttpStatus.BAD_REQUEST);
-		}
-
-		if (!startsWith234(mUser.getPhoneNumber(), 3).equals("234")) {
-			return new ResponseEntity<>(new ErrorResponse("Phone numbers must start with 234"), HttpStatus.BAD_REQUEST);
-		}
 
 		try {
+			// Check if email exists
+			Users existingEmail = userRepo.findByEmail(mUser.getEmail()).orElse(null);
+			if (existingEmail != null)
+				return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
+
+			if (mUser.getPhoneNumber().startsWith("234"))
+				return new ResponseEntity<>(new ErrorResponse("Phone numbers must start with 234"),
+						HttpStatus.BAD_REQUEST);
+
+			// Check if Phone exists
+			Users existingTelephone = userRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
+			if (existingTelephone != null)
+				return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
+						HttpStatus.BAD_REQUEST);
 
 			Roles mRoles = rolesRepo.findByName("ROLE_USER");
 			List<Roles> roleList = new ArrayList<>();
 			roleList.add(mRoles);
+			if (mUser.isAdmin())
+				roleList.add(rolesRepo.findByName("ROLE_ADMIN"));
 
 			final String ip = reqUtil.getClientIP(request);
 			log.info("Request IP: " + ip);
 
 			DevicePojo dev = GetDevice(device);
 
-			Users user = new ModelMapper().map(mUser, Users.class);
+			Users user = this.mapper.map(mUser, Users.class);
 			user.setId(0L);
-			user.setAdmin(false);
+			user.setAdmin(mUser.isAdmin());
 			user.setDateCreated(LocalDateTime.now());
 			user.setActive(true);
 			user.setRegDeviceIP(ip);
@@ -154,27 +151,31 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			user.setDateOfActivation(LocalDateTime.now());
 			user.setPassword(passwordEncoder.encode(mUser.getPassword()));
 			user.setRolesList(roleList);
+
 			Users regUser = userRepo.saveAndFlush(user);
 			String id = String.valueOf(regUser.getId());
+
 			VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
 			virtualAccountPojo.setAccountName(regUser.getFirstName() + " " + regUser.getSurname());
 			virtualAccountPojo.setUserId(id);
+
 			String token = generateToken(regUser);
 
 			ResponseEntity<String> response = virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token);
 
-			System.out.println("Response" + response.getBody());
+			log.info("Response: {}", response.getBody());
+
 			// Create profile by publishing to Kafka
 			ProfilePojo profilePojo = new ProfilePojo(user.getEmail(), user.getFirstName(), user.getPhoneNumber(),
 					user.getSurname(), String.valueOf(user.getId()), false);
+			
 			kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC, profilePojo);
 
 			return new ResponseEntity<>(new SuccessResponse(
 					"User Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
 					HttpStatus.CREATED);
-
 		} catch (Exception e) {
-			LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+			log.error("Error::: {}, {} and {}", e.getMessage(), 2, 3);
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -182,36 +183,38 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	@Override
 	public ResponseEntity<?> createCorporateUser(CorporateUserPojo mUser, HttpServletRequest request, Device device) {
 
-		// Check if email exists
-		Users existingEmail = userRepo.findByEmail(mUser.getEmail()).orElse(null);
-		if (existingEmail != null) {
-			String token = generateToken(existingEmail);
-			System.out.println("::::::mtoken::::" + token);
-			return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
-		}
-
-		// Check if Phone exists
-		Users existingTelephone = userRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
-		if (existingTelephone != null) {
-			return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"), HttpStatus.BAD_REQUEST);
-		}
-
-		if (!startsWith234(mUser.getPhoneNumber(), 3).equals("234")) {
-			return new ResponseEntity<>(new ErrorResponse("Phone numbers must start with 234"), HttpStatus.BAD_REQUEST);
-		}
-
 		try {
+			// Check if email exists
+			Users existingEmail = userRepo.findByEmail(mUser.getEmail()).orElse(null);
+			if (existingEmail != null) {
+				// String token = generateToken(existingEmail);
+				// System.out.println("::::::mtoken::::" + token);
+				return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
+			}
 
-			Roles mRoles = rolesRepo.findByName("ROLE_MARCH");
+			if (mUser.getPhoneNumber().startsWith("234"))
+				return new ResponseEntity<>(new ErrorResponse("Phone numbers must start with 234"),
+						HttpStatus.BAD_REQUEST);
+
+			// Check if Phone exists
+			Users existingTelephone = userRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
+			if (existingTelephone != null)
+				return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
+						HttpStatus.BAD_REQUEST);
+
+			Roles merchRole = rolesRepo.findByName("ROLE_MERCH");
+			if (merchRole == null)
+				return new ResponseEntity<>(new ErrorResponse("Merchant Role Not Available"), HttpStatus.BAD_REQUEST);
+
+			Roles userRole = rolesRepo.findByName("ROLE_USER");
 			List<Roles> roleList = new ArrayList<>();
-			roleList.add(mRoles);
+			roleList.addAll(Arrays.asList(userRole, merchRole));
 
 			final String ip = reqUtil.getClientIP(request);
 			log.info("Request IP: " + ip);
 
 			DevicePojo dev = GetDevice(device);
 
-//            Users user = new ModelMapper().map(mUser, Users.class);
 			Users user = new Users();
 			user.setId(0L);
 			user.setCorporate(true);
@@ -232,59 +235,55 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			user.setSurname(mUser.getSurname());
 
 			Users regUser = userRepo.save(user);
+			if (regUser == null)
+				return new ResponseEntity<>(new ErrorResponse("iD PROVIDED NOT FOUND"), HttpStatus.NOT_FOUND);
 
-			Optional<Users> foundUser = userRepo.findByEmail(regUser.getEmail());
-			if (foundUser.isPresent()) {
-				mUser.setUserId(foundUser.get().getId());
+			mUser.setUserId(regUser.getId());
 
-				CoporateUser coopUser = new ModelMapper().map(mUser, CoporateUser.class);
-				coopUser.setUserId(foundUser.get().getId());
-				cooperateUserRepo.save(coopUser);
+			CoporateUser coopUser = mapper.map(mUser, CoporateUser.class);
+			coopUser.setUserId(regUser.getId());
+			cooperateUserRepo.save(coopUser);
 
-				CreateAccountPojo createAccount = new CreateAccountPojo();
-				createAccount.setEmailAddress(foundUser.get().getEmail());
-				createAccount.setExternalId(foundUser.get().getId());
-				createAccount.setFirstName(foundUser.get().getFirstName());
-				createAccount.setLastName(foundUser.get().getSurname());
-				createAccount.setMobileNo(foundUser.get().getPhoneNumber());
-				createAccount.setSavingsProductId(1);
+			CreateAccountPojo createAccount = new CreateAccountPojo();
+			createAccount.setEmailAddress(regUser.getEmail());
+			createAccount.setExternalId(regUser.getId());
+			createAccount.setFirstName(regUser.getFirstName());
+			createAccount.setLastName(regUser.getSurname());
+			createAccount.setMobileNo(regUser.getPhoneNumber());
+			createAccount.setSavingsProductId(1);
+			walletProxy.createCooperateAccouont(createAccount);
 
-				walletProxy.createCooperateAccouont(createAccount);
+			ProfilePojo2 profilePojo = new ProfilePojo2();
+			profilePojo.setBusinessType(mUser.getBusinessType());
+			profilePojo.setOrganisationEmail(mUser.getOrgEmail());
+			profilePojo.setOrganisationName(mUser.getOrgName());
+			profilePojo.setOrganisationType(mUser.getOrgType());
+			profilePojo.setReferralCode(user.getReferenceCode());
+			profilePojo.setEmail(user.getEmail());
+			profilePojo.setSurname(user.getSurname());
+			profilePojo.setUserId(String.valueOf(mUser.getUserId()));
+			profilePojo.setPhoneNumber(user.getPhoneNumber());
+			profilePojo.setFirstName(user.getFirstName());
+			profilePojo.setCorporate(true);
 
-				ProfilePojo2 profilePojo = new ProfilePojo2();
-				profilePojo.setBusinessType(mUser.getBusinessType());
-				profilePojo.setOrganisationEmail(mUser.getOrgEmail());
-				profilePojo.setOrganisationName(mUser.getOrgName());
-				profilePojo.setOrganisationType(mUser.getOrgType());
-				profilePojo.setReferralCode(user.getReferenceCode());
-				profilePojo.setEmail(user.getEmail());
-				profilePojo.setSurname(user.getSurname());
-				profilePojo.setUserId(String.valueOf(mUser.getUserId()));
-				profilePojo.setPhoneNumber(user.getPhoneNumber());
-				profilePojo.setFirstName(user.getFirstName());
-				profilePojo.setCorporate(true);
+			String id = String.valueOf(regUser.getId());
+			VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
+			virtualAccountPojo.setAccountName(regUser.getFirstName() + " " + regUser.getSurname());
+			virtualAccountPojo.setUserId(id);
+			String token = generateToken(regUser);
 
-				String id = String.valueOf(regUser.getId());
-				VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
-				virtualAccountPojo.setAccountName(regUser.getFirstName() + " " + regUser.getSurname());
-				virtualAccountPojo.setUserId(id);
-				String token = generateToken(regUser);
+			ResponseEntity<String> response = virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token);
 
-				ResponseEntity<String> response = virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token);
+			log.info("Response: {}", response.getBody());
 
-				System.out.println("Response" + response.getBody());
+			kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC, profilePojo);
 
-				kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC, profilePojo);
-
-				return new ResponseEntity<>(new SuccessResponse(
-						"Corporate Account Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
-						HttpStatus.CREATED);
-			}
-
-			return new ResponseEntity<>(new ErrorResponse("iD PROVIDED NOT FOUND"), HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(new SuccessResponse(
+					"Corporate Account Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
+					HttpStatus.CREATED);
 
 		} catch (Exception e) {
-			LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+			log.error("Error::: {}, {} and {}", e.getMessage(), 2, 3);
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -330,7 +329,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			}
 
 		} catch (Exception e) {
-			LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+			log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
 			return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
 		}
 
@@ -340,7 +339,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	public ResponseEntity<?> verifyOTP(OTPPojo otpPojo) {
 		String url = PROFILE_SERVICE + "profile-service/otp-verify/" + otpPojo.getPhone() + "/" + otpPojo.getOtp();
 		ProfileResponse profileResponse = restTemplate.getForObject(url, ProfileResponse.class);
-		LOGGER.info("Error::: {}, {} and {}", new Gson().toJson(profileResponse));
+		log.info("Error::: {}, {} and {}", new Gson().toJson(profileResponse));
 		if (profileResponse.isStatus()) {
 			Users user = userRepo.findByPhoneNumber(otpPojo.getPhone()).orElse(null);
 			user.setPhoneVerified(true);
@@ -350,7 +349,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 						HttpStatus.CREATED);
 
 			} catch (Exception e) {
-				LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+				log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
 				return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
 			}
 		} else {
@@ -375,7 +374,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 						HttpStatus.CREATED);
 
 			} catch (Exception e) {
-				LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+				log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
 				return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
 			}
 

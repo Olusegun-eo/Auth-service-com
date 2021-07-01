@@ -10,9 +10,6 @@ import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import org.springframework.util.concurrent.ListenableFuture;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.pojo.ProfilePojo2;
 import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
@@ -54,15 +51,13 @@ public class KafkaMessageProducer implements MessageQueueProducer {
 	@Override
     public void send(String topic, Object data) {
     	ProfilePojo2 creds = null;
-		try {
-			creds = new ObjectMapper().readValue(gson.toJson(data), ProfilePojo2.class);
-		} catch (JsonMappingException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (JsonProcessingException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+		/*
+		 * try { creds = new ObjectMapper().readValue(gson.toJson(data),
+		 * ProfilePojo2.class); } catch (JsonMappingException e1) {
+		 * log.error("An error has occured {}", e1.getMessage()); } catch
+		 * (JsonProcessingException e1) { log.error("An error has occured {}",
+		 * e1.getMessage()); }
+		 */
         ListenableFuture<SendResult<String, Object>> future = template.send(topic, gson.toJson(data));
         future.addCallback(new KafkaSendCallback<>() {
 

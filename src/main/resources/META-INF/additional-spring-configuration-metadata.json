@@ -13,5 +13,20 @@
     "name": "app.oauth2.authorized-redirect-uris",
     "type": "java.util.List",
     "description": "A description for 'app.oauth2.authorized-redirect-uris'"
+  },
+  {
+    "name": "jwt.secret",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.secret'"
+  },
+  {
+    "name": "deleteprofile.deleteWayagram",
+    "type": "java.lang.String",
+    "description": "A description for 'deleteprofile.deleteWayagram'"
+  },
+  {
+    "name": "deleteprofile.deleteWallet",
+    "type": "java.lang.String",
+    "description": "A description for 'deleteprofile.deleteWallet'"
   }
 ]}
