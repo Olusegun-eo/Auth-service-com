@@ -5,5 +5,5 @@ import org.springframework.http.ResponseEntity;
 
 public interface KafkaPushService {
 
-    ResponseEntity postChat(ChatPojo chatPojo);
+    ResponseEntity<?> postChat(ChatPojo chatPojo);
 }

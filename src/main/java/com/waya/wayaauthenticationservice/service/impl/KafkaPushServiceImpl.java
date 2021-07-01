@@ -19,7 +19,7 @@ public class KafkaPushServiceImpl implements KafkaPushService {
     KafkaMessageProducer kafkaMessageProducer;
 
     @Override
-    public ResponseEntity postChat(ChatPojo chatPojo) {
+    public ResponseEntity<SuccessResponse> postChat(ChatPojo chatPojo) {
         kafkaMessageProducer.send(CHAT_TOPIC,chatPojo);
         return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
     }
