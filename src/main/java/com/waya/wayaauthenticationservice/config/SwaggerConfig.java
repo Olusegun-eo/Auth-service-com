@@ -2,10 +2,6 @@ package com.waya.wayaauthenticationservice.config;
 
 import java.util.Arrays;
 import java.util.Collections;
-<<<<<<< HEAD
-=======
-import java.util.HashSet;
->>>>>>> 5b32112750c7ea61ccac03db912e4eef40653d63
 import java.util.List;
 
 import org.springframework.context.annotation.Bean;
@@ -29,7 +25,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableSwagger2
 public class SwaggerConfig {
     
-    @Bean
+	@Bean
     public Docket docket() {
         return new Docket(DocumentationType.SWAGGER_2)
                     .select()
@@ -38,22 +34,7 @@ public class SwaggerConfig {
                     .build()
                     .securitySchemes(Arrays.asList(new ApiKey("Token Access", HttpHeaders.AUTHORIZATION, In.HEADER.name())))
                     .securityContexts(Arrays.asList(securityContext()))
-<<<<<<< HEAD
                     //.apiInfo(apiInfo())
-                    .apiInfo(DEFAULT_API_INFO);
-
-    }
-    
-    private SecurityContext securityContext() {
-        return SecurityContext.builder()
-            .securityReferences(defaultAuth())
-            .forPaths(PathSelectors.ant("/api/v1/**"))
-            .build();
-    
-    }
-    
-=======
-                    .protocols(new HashSet<>(Arrays.asList("HTTP")))
                     .apiInfo(DEFAULT_API_INFO);
 
     }
@@ -67,7 +48,6 @@ public class SwaggerConfig {
     
     }
     
->>>>>>> 5b32112750c7ea61ccac03db912e4eef40653d63
     List<SecurityReference> defaultAuth() {
         AuthorizationScope authorizationScope = new AuthorizationScope("ADMIN", "accessEverything");
         AuthorizationScope[] authorizationScopes = new AuthorizationScope[1];

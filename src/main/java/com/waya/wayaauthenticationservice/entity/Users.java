@@ -2,20 +2,14 @@ package com.waya.wayaauthenticationservice.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-<<<<<<< HEAD
-import java.util.List;
-=======
+
 import java.util.Collection;
->>>>>>> 5b32112750c7ea61ccac03db912e4eef40653d63
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-<<<<<<< HEAD
-=======
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
->>>>>>> 5b32112750c7ea61ccac03db912e4eef40653d63
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -24,10 +18,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
-<<<<<<< HEAD
-import javax.persistence.Transient;
-=======
->>>>>>> 5b32112750c7ea61ccac03db912e4eef40653d63
+
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -36,10 +27,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.validator.constraints.Length;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-<<<<<<< HEAD
-=======
 import com.waya.wayaauthenticationservice.model.AuthProvider;
->>>>>>> 5b32112750c7ea61ccac03db912e4eef40653d63
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

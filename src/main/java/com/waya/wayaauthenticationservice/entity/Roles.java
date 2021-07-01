@@ -1,22 +1,7 @@
 package com.waya.wayaauthenticationservice.entity;
 
 import java.io.Serializable;
-<<<<<<< HEAD
-import java.util.Set;
-=======
 import java.util.Collection;
-
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.validation.constraints.Size;
-
-import lombok.Data;
->>>>>>> 5b32112750c7ea61ccac03db912e4eef40653d63
 
 import javax.persistence.Basic;
 import javax.persistence.Column;

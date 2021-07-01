@@ -10,37 +10,7 @@ import java.util.List;
 @Repository
 public class RedisUserDao {
 
-<<<<<<< HEAD
-    public static final String HASH_KEY = "User";
-    
-    @SuppressWarnings("rawtypes")
-	@Autowired
-    private RedisTemplate template;
-
-    @SuppressWarnings("unchecked")
-	public RedisUser save(RedisUser redisUser){
-        template.opsForHash().put(HASH_KEY,redisUser.getId(),redisUser);
-        return redisUser;
-    }
-
-    @SuppressWarnings("unchecked")
-	public List<RedisUser> findAll(){
-        return template.opsForHash().values(HASH_KEY);
-    }
-
-    @SuppressWarnings("unchecked")
-	public RedisUser findUserById(int id){
-        return (RedisUser) template.opsForHash().get(HASH_KEY,id);
-    }
-
-
-    @SuppressWarnings("unchecked")
-	public String deleteUser(int id){
-        template.opsForHash().delete(HASH_KEY,id);
-        return "user deleted !!";
-    }
-=======
-	public static final String HASH_KEY = "User";
+public static final String HASH_KEY = "User";
 
 	@SuppressWarnings("rawtypes")
 	
@@ -68,6 +38,5 @@ public class RedisUserDao {
 		template.opsForHash().delete(HASH_KEY, id);
 		return "user deleted !!";
 	}
->>>>>>> 5b32112750c7ea61ccac03db912e4eef40653d63
 
 }
