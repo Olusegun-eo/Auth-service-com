@@ -4,7 +4,6 @@ spring:
   datasource:#    url: jdbc:postgresql://127.0.0.1:5432/app_dev
 #    username: app_dev
 #    password: e1bc9e7f864d
-#    driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaPayChatAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
     username: WayaPayChat2020
     password: gh9shfit2m53g4xz
@@ -49,9 +48,8 @@ spring:
             tokenUri: https://graph.facebook.com/v3.0/oauth/access_token
             userInfoUri: https://graph.facebook.com/v3.0/me?fields=id,first_name,middle_name,last_name,name,email,verified,is_verified,picture.width(250).height(250)
 
+server:  port: 8059 
 
-server:  port: 8080 
-  servlet:    context-path: /
 eureka:  client:    serviceUrl:
       defaultZone: http://46.101.41.187:8761/eureka
     service-url:
