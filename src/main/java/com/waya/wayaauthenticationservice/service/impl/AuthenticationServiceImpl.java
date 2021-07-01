@@ -119,7 +119,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			if (existingEmail != null)
 				return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
 
-			if (mUser.getPhoneNumber().startsWith("234"))
+			if (!mUser.getPhoneNumber().startsWith("234"))
 				return new ResponseEntity<>(new ErrorResponse("Phone numbers must start with 234"),
 						HttpStatus.BAD_REQUEST);
 
@@ -192,7 +192,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
 			}
 
-			if (mUser.getPhoneNumber().startsWith("234"))
+			if (!mUser.getPhoneNumber().startsWith("234"))
 				return new ResponseEntity<>(new ErrorResponse("Phone numbers must start with 234"),
 						HttpStatus.BAD_REQUEST);
 
