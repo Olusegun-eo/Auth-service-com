@@ -1,24 +1,25 @@
 package com.waya.wayaauthenticationservice;
 
+import com.waya.wayaauthenticationservice.config.LoggableDispatcherServlet;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.config.Configuration.AccessLevel;
+import org.modelmapper.convention.MatchingStrategies;
+import org.modelmapper.convention.NamingConventions;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration;
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.DispatcherServlet;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
-import javax.persistence.Basic;
 import java.util.Collections;
 
 @SpringBootApplication
@@ -38,16 +39,24 @@ public class WayaAuthenticationServiceApplication {
 	}
 
 	@Bean
+	public ServletRegistrationBean<DispatcherServlet> dispatcherRegistration() {
+		return new ServletRegistrationBean<DispatcherServlet>(dispatcherServlet());
+	}
+
+	@Bean(name = DispatcherServletAutoConfiguration.DEFAULT_DISPATCHER_SERVLET_BEAN_NAME)
+	public DispatcherServlet dispatcherServlet() {
+		return new LoggableDispatcherServlet();
+	}
+
+	@Bean
 	public BCryptPasswordEncoder bCryptPasswordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
 
 	@Bean
-	RestTemplate restTemplate(){
+	RestTemplate restTemplate() {
 		return new RestTemplate();
 	}
-
-
 
 	@Bean(name = "restClient")
 	public RestTemplate getRestClient() {
@@ -55,10 +64,22 @@ public class WayaAuthenticationServiceApplication {
 				new BufferingClientHttpRequestFactory(new SimpleClientHttpRequestFactory()));
 
 		restClient.setInterceptors(Collections.singletonList((request, body, execution) -> {
-			log.debug("Intercepted RestTemplate logs .... {}",request);
+			log.debug("Intercepted RestTemplate logs .... {}", request);
 			return execution.execute(request, body);
 		}));
 
 		return restClient;
 	}
+	
+	@Bean
+	public ModelMapper modelMapper() {
+		ModelMapper modelMapper = new ModelMapper();
+		modelMapper.getConfiguration()
+				.setFieldMatchingEnabled(true)
+				.setMatchingStrategy(MatchingStrategies.STRICT)
+				.setFieldAccessLevel(AccessLevel.PRIVATE)
+				.setSourceNamingConvention(NamingConventions.JAVABEANS_MUTATOR);
+		return modelMapper;
+	}
+
 }

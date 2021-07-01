@@ -2,8 +2,6 @@ package com.waya.wayaauthenticationservice.pojo;
 
 import java.util.List;
 
-import com.waya.wayaauthenticationservice.entity.Roles;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

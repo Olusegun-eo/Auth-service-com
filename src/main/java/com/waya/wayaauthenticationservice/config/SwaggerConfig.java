@@ -2,6 +2,10 @@ package com.waya.wayaauthenticationservice.config;
 
 import java.util.Arrays;
 import java.util.Collections;
+<<<<<<< HEAD
+=======
+import java.util.HashSet;
+>>>>>>> 5b32112750c7ea61ccac03db912e4eef40653d63
 import java.util.List;
 
 import org.springframework.context.annotation.Bean;
@@ -34,6 +38,7 @@ public class SwaggerConfig {
                     .build()
                     .securitySchemes(Arrays.asList(new ApiKey("Token Access", HttpHeaders.AUTHORIZATION, In.HEADER.name())))
                     .securityContexts(Arrays.asList(securityContext()))
+<<<<<<< HEAD
                     //.apiInfo(apiInfo())
                     .apiInfo(DEFAULT_API_INFO);
 
@@ -47,6 +52,22 @@ public class SwaggerConfig {
     
     }
     
+=======
+                    .protocols(new HashSet<>(Arrays.asList("HTTP")))
+                    .apiInfo(DEFAULT_API_INFO);
+
+    }
+    
+    @SuppressWarnings("deprecation")
+	private SecurityContext securityContext() {
+        return SecurityContext.builder()
+            .securityReferences(defaultAuth())
+            .forPaths(PathSelectors.ant("/api/v1/**"))
+            .build();
+    
+    }
+    
+>>>>>>> 5b32112750c7ea61ccac03db912e4eef40653d63
     List<SecurityReference> defaultAuth() {
         AuthorizationScope authorizationScope = new AuthorizationScope("ADMIN", "accessEverything");
         AuthorizationScope[] authorizationScopes = new AuthorizationScope[1];

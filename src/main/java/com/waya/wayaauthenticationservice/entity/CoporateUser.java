@@ -17,8 +17,13 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+<<<<<<< HEAD:src/main/java/com/waya/wayaauthenticationservice/entity/CooperateUser.java
 @Table(name = "m_corporate_users")
 public class CooperateUser {
+=======
+@Table(name = "m_corporate_user")
+public class CoporateUser {
+>>>>>>> 5b32112750c7ea61ccac03db912e4eef40653d63:src/main/java/com/waya/wayaauthenticationservice/entity/CoporateUser.java
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
