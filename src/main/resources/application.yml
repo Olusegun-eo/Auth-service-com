@@ -1,19 +1,31 @@
 spring:
-  profiles:    active:    - dev
-  application:    name: auth-service
-  datasource:    url: jdbc:postgresql://127.0.0.1:5432/app_dev
-    username: app_dev
-    password: e1bc9e7f864d
+  profiles:
+    active:
+    - dev
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaPayChatAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+    username: WayaPayChat2020
+    password: gh9shfit2m53g4xz
     driver-class-name: org.postgresql.Driver
   jpa:
-    hibernate:      ddl-auto: update    properties:      hibernate:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   jackson:
-    serialization:      fail-on-empty-beans: false     
-  session:    store-type: jdbc
+    serialization:
+      fail-on-empty-beans: false     
+  session:
+    store-type: jdbc
   kafka:
-    bootstrapServers: 209.97.178.170:9092    consumer:      group-id: waya
-      auto-offset-reset: earliest        
+    bootstrapServers: 209.97.178.170:9092
+    consumer:
+      group-id: waya
+      auto-offset-reset: earliest
+        
   security:
     oauth2:
       client:
@@ -46,17 +58,23 @@ spring:
             userInfoUri: https://graph.facebook.com/v3.0/me?fields=id,first_name,middle_name,last_name,name,email,verified,is_verified,picture.width(250).height(250)
 
 
-server:  port: 8080 
-  servlet:    context-path: /
-eureka:  client:    serviceUrl:
+server:
+  port: 8080 
+  servlet:
+    context-path: /
+eureka:
+  client:
+    serviceUrl:
       defaultZone: http://46.101.41.187:8761/eureka
     service-url:
       default-zone: http://46.101.41.187:8761/eureka
-  instance:    preferIpAddress: true
+  instance:
+    preferIpAddress: true
 
 jwt:
   secret: mysecret
-deleteprofile:  delete-profile-url: http://46.101.41.187:8080/profile-service/delete-restore
+deleteprofile:
+  delete-profile-url: http://46.101.41.187:8080/profile-service/delete-restore
   validate-user: http://46.101.41.187:8080/profile-service/delete-restore
   deleteWallet: http://46.101.41.187:1000/main/profile/delete-profile-by-id
   deleteWayagram: http://46.101.41.187:1000/main/profile/delete-profile-by-id
