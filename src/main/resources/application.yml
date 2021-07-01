@@ -1,5 +1,5 @@
 spring:
-  profiles:    active:    - devs
+  profiles:    active:    - dev
   application:    name: auth-service
   datasource:#    url: jdbc:postgresql://127.0.0.1:5432/app_dev
 #    username: app_dev
