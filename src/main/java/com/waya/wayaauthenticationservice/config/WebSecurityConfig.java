@@ -30,44 +30,48 @@ import com.waya.wayaauthenticationservice.service.UserService;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+	
+    @Autowired
+    private UserService userService;
 
-	@Autowired
-	private UserService userService;
+    @Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
 
-	@Autowired
-	private BCryptPasswordEncoder bCryptPasswordEncoder;
+    @Autowired
+    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+        // configure AuthenticationManager so that it knows from where to load
+        // user for matching credentials
+        // Use BCryptPasswordEncoder
+        auth.userDetailsService(userService).passwordEncoder(bCryptPasswordEncoder);
+    }
 
-	@Autowired
-	public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-		// configure AuthenticationManager so that it knows from where to load
-		// user for matching credentials
-		// Use BCryptPasswordEncoder
-		auth.userDetailsService(userService).passwordEncoder(bCryptPasswordEncoder);
-	}
+    @Bean
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
 
-	@Bean
-	@Override
-	public AuthenticationManager authenticationManagerBean() throws Exception {
-		return super.authenticationManagerBean();
-	}
+    @Override
+    protected void configure(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity.
+                cors().and().csrf().disable()
+                .exceptionHandling().authenticationEntryPoint(getBasicAuthEntryPoint()).and()
+				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+				.and().authorizeRequests()
+                .antMatchers("/api/v1/auth/login").permitAll()
+                .antMatchers("/api/v1/auth/create","/api/v1/auth/create-corporate").permitAll()
+                .antMatchers("/api/v1/resend-otp/**","/api/v1/verify-otp","/api/v1/forgot-password").permitAll()
+                .antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
+                .antMatchers("/swagger-ui.html", "/swagger-resources/**","/v2/api-docs").permitAll()
+                // all other requests need to be authenticated
+                .anyRequest().authenticated().and()
+                // make sure we use stateless session; session won't be used to
+                // store user's state.
+                .addFilter(getAuthenticationFilter())
+                .addFilter(new AuthorizationFilter(authenticationManager()));
 
-	@Override
-	protected void configure(HttpSecurity httpSecurity) throws Exception {
-		httpSecurity.cors().and().csrf().disable().exceptionHandling()
-				.authenticationEntryPoint(getBasicAuthEntryPoint()).and().sessionManagement()
-				.sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().authorizeRequests()
-				.antMatchers("/api/v1/auth/login").permitAll()
-				.antMatchers("/api/v1/auth/create", "/api/v1/auth/create-corporate").permitAll()
-				.antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
-				.antMatchers("/api/v1/auth/resend-otp*/**", "/api/v1/auth/verify-otp").permitAll()
-				.antMatchers("/api/v1/auth/verify-email", "/api/v1/auth/forgot-password").permitAll()
-				// all other requests need to be authenticated
-				.anyRequest().authenticated().and()
-				// make sure we use stateless session; session won't be used to
-				// store user's state.
-				.addFilter(getAuthenticationFilter()).addFilter(new AuthorizationFilter(authenticationManager()));
-
-	}
+    }
+	
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
