@@ -1,9 +1,6 @@
 spring:
-  profiles:
-    active:
-    - dev
-  application:
-    name: auth-service
+  profiles:    active:    - dev
+  application:    name: auth-service
   datasource:
     url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaPayChatAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
     username: WayaPayChat2020
@@ -56,7 +53,6 @@ spring:
             authorizationUri: https://www.facebook.com/v3.0/dialog/oauth
             tokenUri: https://graph.facebook.com/v3.0/oauth/access_token
             userInfoUri: https://graph.facebook.com/v3.0/me?fields=id,first_name,middle_name,last_name,name,email,verified,is_verified,picture.width(250).height(250)
-
 
 server:
   port: 8059 

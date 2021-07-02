@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public class RedisUserDao {
 
-	public static final String HASH_KEY = "User";
+public static final String HASH_KEY = "User";
 
 	@SuppressWarnings("rawtypes")
 	

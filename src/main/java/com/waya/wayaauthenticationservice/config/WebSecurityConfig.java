@@ -30,7 +30,7 @@ import com.waya.wayaauthenticationservice.service.UserService;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-
+	
     @Autowired
     private UserService userService;
 
@@ -71,6 +71,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .addFilter(new AuthorizationFilter(authenticationManager()));
 
     }
+	
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
@@ -78,42 +79,41 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				"/configuration/security", "/swagger-ui/index.html", "/webjars/**");
 	}
 
+	protected AuthenticationFilter getAuthenticationFilter() throws Exception {
+		// JwtRequestFilter filter = new JwtRequestFilter(authenticationManager());
+		final AuthenticationFilter filter = new AuthenticationFilter(authenticationManager());
+		filter.setFilterProcessesUrl("/api/v1/auth/login");
+		return filter;
+	}
 
-    protected AuthenticationFilter getAuthenticationFilter() throws Exception {
-        //JwtRequestFilter filter = new JwtRequestFilter(authenticationManager());
-        final AuthenticationFilter filter = new AuthenticationFilter(authenticationManager());
-        filter.setFilterProcessesUrl("/api/v1/auth/login");
-        return filter;
-    }
+	@Bean
+	public CorsConfigurationSource corsConfigurationSource() {
+		final org.springframework.web.cors.CorsConfiguration configuration = new CorsConfiguration();
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        final org.springframework.web.cors.CorsConfiguration configuration = new CorsConfiguration();
+		configuration.setAllowedOrigins(Arrays.asList("*"));
+		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+		configuration.setAllowCredentials(true);
+		configuration.setAllowedHeaders(Arrays.asList("*"));
 
-        configuration.setAllowedOrigins(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowCredentials(true);
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+		final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", configuration);
 
-        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+		return source;
+	}
 
-        return source;
-    }
+	@Bean
+	public HttpFirewall defaultHttpFirewall() {
+		return new DefaultHttpFirewall();
+	}
 
-    @Bean
-    public HttpFirewall defaultHttpFirewall() {
-        return new DefaultHttpFirewall();
-    }
-    
-    @Bean
-    public HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository() {
-        return new HttpCookieOAuth2AuthorizationRequestRepository();
-    }
-    
-    @Bean
+	@Bean
+	public HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository() {
+		return new HttpCookieOAuth2AuthorizationRequestRepository();
+	}
+
+	@Bean
 	public JwtAuthenticationEntryPoint getBasicAuthEntryPoint() {
 		return new JwtAuthenticationEntryPoint();
 	}
-    
+
 }

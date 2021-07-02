@@ -31,7 +31,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
-import com.waya.wayaauthenticationservice.entity.Privilege;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.LoginDetailsPojo;
@@ -72,26 +71,26 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			LoginDetailsPojo creds = new ObjectMapper().readValue(req.getInputStream(), LoginDetailsPojo.class);
 			isAdmin = creds.isAdmin();
 			log.info("Admin is {}", isAdmin);
-		
+
 			UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
 
 			Users user = userLoginRepo.findByEmailOrPhoneNumber(creds.getEmail(), creds.getEmail())
 					.orElseThrow(() -> new BadCredentialsException("User Does not exist"));
-			
+
 			List<Roles> roles = new ArrayList<Roles>(user.getRolesList());
-			
+
 			List<GrantedAuthority> grantedAuthorities = roles.stream().map(r -> {
 				return new SimpleGrantedAuthority(r.getName());
 			}).collect(Collectors.toList());
-			
-			grantedAuthorities.addAll(
-					getGrantedAuthorities(getPrivileges(roles)));
 
-			//return getAuthenticationManager().authenticate(
-			//		new UsernamePasswordAuthenticationToken(creds.getEmail(), creds.getPassword(), grantedAuthorities));
-			
+			grantedAuthorities.addAll(getGrantedAuthorities(getPrivileges(roles)));
+
+			// return getAuthenticationManager().authenticate(
+			// new UsernamePasswordAuthenticationToken(creds.getEmail(),
+			// creds.getPassword(), grantedAuthorities));
+
 			return getAuthenticationManager().authenticate(
-							new UsernamePasswordAuthenticationToken(user.getEmail(), creds.getPassword(), grantedAuthorities));
+					new UsernamePasswordAuthenticationToken(user.getEmail(), creds.getPassword(), grantedAuthorities));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -124,51 +123,44 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		if (!user.isActive()) {
 			loginResponsePojo.setCode(-3);
 			loginResponsePojo.setStatus(false);
-			loginResponsePojo.setMessage("User account is disabled,kindly contact Waya Admin");
+			loginResponsePojo.setMessage("User account is disabled, kindly contact Waya Admin");
 		} else {
-			Collection<Privilege> permit = null;
-			Collection<Roles> rs = user.getRolesList();
-			//for (Roles r : rs) {
-			//	roles.add(r.getName());
-				// permit = r.getPermissions();
-			//}
-			
-			List<String> roles = user.getRolesList().stream()
-					.map(u -> u.getName())
-				    .collect(Collectors.toList());
-			
+			Collection<String> permit = getPrivileges(user.getRolesList());
+			List<String> roles = user.getRolesList().stream().map(u -> u.getName()).collect(Collectors.toList());
+
 			// true == true
-			if (isAdmin == roleCheck(rs, "ROLE_ADMIN")) {
-				loginResponsePojo.setCode(0);
-				loginResponsePojo.setStatus(true);
-				loginResponsePojo.setMessage("Login Successful");
+			// if (isAdmin == roleCheck(rs, "ROLE_ADMIN")) {
+			loginResponsePojo.setCode(0);
+			loginResponsePojo.setStatus(true);
+			loginResponsePojo.setMessage("Login Successful");
 
-				m.put("token", SecurityConstants.TOKEN_PREFIX + token);
-				m.put("privilege", permit);
-				m.put("roles", roles);
-				m.put("pinCreated", user.isPinCreated());
-				m.put("corporate", user.isCorporate());
-				
-				UserProfileResponsePojo userp = new ModelMapper().map(user, UserProfileResponsePojo.class);
-				userp.setPhoneNumber(user.getPhoneNumber());
-				userp.setFirstName(user.getFirstName());
-				userp.setLastName(user.getSurname());
-				userp.setEmailVerified(user.isEmailVerified());
-				userp.setActive(user.isActive());
-				userp.setAccountDeleted(user.isDeleted());
-				userp.setAdmin(user.isAdmin());
-				userp.setAccountExpired(!user.isAccountNonExpired());
-				userp.setAccountLocked(!user.isAccountNonLocked());
-				userp.setCredentialsExpired(!user.isCredentialsNonExpired());
+			m.put("token", SecurityConstants.TOKEN_PREFIX + token);
+			m.put("privilege", permit);
+			m.put("roles", roles);
+			m.put("pinCreated", user.isPinCreated());
+			m.put("corporate", user.isCorporate());
 
-				m.put("user", userp);
-				loginResponsePojo.setData(m);
+			UserProfileResponsePojo userp = new ModelMapper().map(user, UserProfileResponsePojo.class);
+			userp.setPhoneNumber(user.getPhoneNumber());
+			userp.setFirstName(user.getFirstName());
+			userp.setLastName(user.getSurname());
+			userp.setEmailVerified(user.isEmailVerified());
+			userp.setActive(user.isActive());
+			userp.setAccountDeleted(user.isDeleted());
+			userp.setAdmin(user.isAdmin());
+			userp.setRoles(roles);
+			userp.setAccountExpired(!user.isAccountNonExpired());
+			userp.setAccountLocked(!user.isAccountNonLocked());
+			userp.setCredentialsExpired(!user.isCredentialsNonExpired());
 
-			} else {
-				loginResponsePojo.setCode(-3);
-				loginResponsePojo.setStatus(false);
-				loginResponsePojo.setMessage("Invalid Login");
-			}
+			m.put("user", userp);
+			loginResponsePojo.setData(m);
+
+			//} else {
+			//	loginResponsePojo.setCode(-3);
+			//	loginResponsePojo.setStatus(false);
+			//	loginResponsePojo.setMessage("Invalid Login");
+			//}
 		}
 
 		String str = gson.toJson(loginResponsePojo);
@@ -213,8 +205,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	private final List<String> getPrivileges(final Collection<Roles> roles) {
 		List<String> privileges = new ArrayList<String>();
 		for (Roles role : roles) {
-			privileges.addAll(role.getPermissions().stream()
-			.map(p -> p.getName()).collect(Collectors.toList()));
+			privileges.addAll(role.getPermissions().stream().map(p -> p.getName()).collect(Collectors.toList()));
 		}
 		return privileges;
 	}
