@@ -1,13 +1,18 @@
 package com.waya.wayaauthenticationservice.pojo;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
 @Data
-@Getter
-@Setter
+@Builder
 public class UserProfileResponsePojo {
+	
+	@JsonProperty("userId")
     private Long id;
     
     private String email;
@@ -33,5 +38,8 @@ public class UserProfileResponsePojo {
 	private boolean isActive;
 	
 	private boolean isAccountDeleted;
+	
+	@Builder.Default
+	private List<String> roles = new ArrayList<>();
 
 }

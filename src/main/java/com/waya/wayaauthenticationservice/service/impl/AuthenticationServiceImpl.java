@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -180,6 +181,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		}
 	}
 
+
+	@Override
+	public ResponseEntity<?> createUsers(Set<UserPojo> userList, HttpServletRequest request, Device device) {
+		
+		
+		
+		return null;
+	}
+	
 	@Override
 	public ResponseEntity<?> createCorporateUser(CorporateUserPojo mUser, HttpServletRequest request, Device device) {
 
@@ -623,5 +633,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 		return new DevicePojo(deviceType, platform);
 	}
+
 
 }
