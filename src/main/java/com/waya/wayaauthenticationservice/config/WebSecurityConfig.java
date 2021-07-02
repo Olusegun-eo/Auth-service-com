@@ -60,7 +60,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				.and().authorizeRequests()
                 .antMatchers("/api/v1/auth/login").permitAll()
                 .antMatchers("/api/v1/auth/create","/api/v1/auth/create-corporate").permitAll()
-                .antMatchers("/api/v1/resend-otp/**","/api/v1/verify-otp","/api/v1/forgot-password").permitAll()
+                .antMatchers("/api/v1/auth/resend-otp/**","/api/v1/auth/verify-otp","/api/v1/auth/forgot-password").permitAll()
                 .antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
                 .antMatchers("/swagger-ui.html", "/swagger-resources/**","/v2/api-docs").permitAll()
                 // all other requests need to be authenticated
