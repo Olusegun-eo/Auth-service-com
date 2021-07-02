@@ -18,11 +18,9 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.validator.constraints.Length;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.waya.wayaauthenticationservice.model.AuthProvider;
@@ -45,26 +43,27 @@ public class Users implements Serializable {
 	@Column(unique = true)
 	private String email;
 
-	@NotNull(message = "phone number cannot be null")
+	@Column(unique = true)
 	private String phoneNumber;
 
+	@Column(nullable = false)
 	private String referenceCode;
-	@NotBlank(message = "first Name cannot be null")
 
+	@Column(nullable = false)
 	private String firstName;
 
-	@NotBlank(message = "last Name cannot be null")
+	@Column(nullable = false)
 	private String surname;
 
 	@JsonIgnore
-	@NotBlank(message = "password cannot be null")
-	@Length(min = 8, max = 100, message = "password must be greater than 8 characters")
+	@Column(nullable = false)
 	private String password;
 
 	@JsonIgnore
 	private int pin;
 
 	@JsonIgnore
+	@Column(nullable = false)
 	private String name;
 
 	@JsonIgnore
@@ -82,8 +81,8 @@ public class Users implements Serializable {
 
 	private boolean isAdmin = false;
 
-	//@Transient
-	//private Roles role;
+	// @Transient
+	// private Roles role;
 
 	@NotNull
 	@Enumerated(EnumType.STRING)

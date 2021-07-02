@@ -11,6 +11,9 @@ spring:
   jpa:
     hibernate:      ddl-auto: update    properties:      hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          time_zone: UTC
+
   jackson:
     serialization:      fail-on-empty-beans: false     
   session:    store-type: jdbc

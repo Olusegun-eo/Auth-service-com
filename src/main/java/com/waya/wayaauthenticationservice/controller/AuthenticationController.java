@@ -1,15 +1,13 @@
 package com.waya.wayaauthenticationservice.controller;
 
-import java.util.Set;
-
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import javax.ws.rs.Produces;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,17 +51,8 @@ public class AuthenticationController {
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@PostMapping(path = "/create", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {
 			MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<?> create(@RequestBody UserPojo user, HttpServletRequest request, Device device) {
+	public ResponseEntity<?> create(@Valid @RequestBody UserPojo user, HttpServletRequest request, Device device) {
 		return authenticationServiceImpl.createUser(user, request, device);
-	}
-	
-	@ApiOperation(value = "Bulk User Registration", tags = { "AUTH" })
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
-	@PostMapping(path = "/create-bulk", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {
-			MediaType.APPLICATION_JSON_VALUE })
-	@PreAuthorize(value = "hasRole('ADMIN')")
-	public ResponseEntity<?> create(@RequestBody Set<UserPojo> userList, HttpServletRequest request, Device device) {
-		return authenticationServiceImpl.createUsers(userList, request, device);
 	}
 
 	@ApiOperation(value = "Corporate User Registration", tags = { "AUTH" })

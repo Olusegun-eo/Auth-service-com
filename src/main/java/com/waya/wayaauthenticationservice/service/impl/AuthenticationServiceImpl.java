@@ -13,7 +13,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -32,6 +31,7 @@ import com.waya.wayaauthenticationservice.entity.CoporateUser;
 import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.pojo.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.pojo.CreateAccountPojo;
 import com.waya.wayaauthenticationservice.pojo.DevicePojo;
@@ -113,28 +113,35 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	@Override
 	@Transactional
 	public ResponseEntity<?> createUser(UserPojo mUser, HttpServletRequest request, Device device) {
-
 		try {
 			// Check if email exists
 			Users existingEmail = userRepo.findByEmail(mUser.getEmail()).orElse(null);
 			if (existingEmail != null)
 				return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
 
-			if (!mUser.getPhoneNumber().startsWith("234"))
+			if (mUser.getPhoneNumber() != null && !mUser.getPhoneNumber().startsWith("234"))
 				return new ResponseEntity<>(new ErrorResponse("Phone numbers must start with 234"),
 						HttpStatus.BAD_REQUEST);
 
 			// Check if Phone exists
-			Users existingTelephone = userRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
+			Users existingTelephone = mUser.getPhoneNumber() == null ? null
+					: userRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
 			if (existingTelephone != null)
 				return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
 						HttpStatus.BAD_REQUEST);
 
-			Roles mRoles = rolesRepo.findByName("ROLE_USER");
 			List<Roles> roleList = new ArrayList<>();
-			roleList.add(mRoles);
-			if (mUser.isAdmin())
-				roleList.add(rolesRepo.findByName("ROLE_ADMIN"));
+
+			Roles userRole = rolesRepo.findByName("ROLE_USER")
+					.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+
+			roleList.add(userRole);
+
+			if (mUser.isAdmin()) {
+				Roles adminRole = rolesRepo.findByName("ROLE_ADMIN")
+						.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+				roleList.add(adminRole);
+			}
 
 			final String ip = reqUtil.getClientIP(request);
 			log.info("Request IP: " + ip);
@@ -166,10 +173,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			log.info("Response: {}", response.getBody());
 
-			// Create profile by publishing to Kafka
+			// TODO: Confirm that the Number is important for Profile Service Call to Fly
 			ProfilePojo profilePojo = new ProfilePojo(user.getEmail(), user.getFirstName(), user.getPhoneNumber(),
 					user.getSurname(), String.valueOf(user.getId()), false);
-			
+
+			// TODO: Confirm and refactor the Kafka Call
 			kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC, profilePojo);
 
 			return new ResponseEntity<>(new SuccessResponse(
@@ -181,15 +189,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		}
 	}
 
-
-	@Override
-	public ResponseEntity<?> createUsers(Set<UserPojo> userList, HttpServletRequest request, Device device) {
-		
-		
-		
-		return null;
-	}
-	
 	@Override
 	public ResponseEntity<?> createCorporateUser(CorporateUserPojo mUser, HttpServletRequest request, Device device) {
 
@@ -197,8 +196,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			// Check if email exists
 			Users existingEmail = userRepo.findByEmail(mUser.getEmail()).orElse(null);
 			if (existingEmail != null) {
-				// String token = generateToken(existingEmail);
-				// System.out.println("::::::mtoken::::" + token);
 				return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
 			}
 
@@ -212,11 +209,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
 						HttpStatus.BAD_REQUEST);
 
-			Roles merchRole = rolesRepo.findByName("ROLE_MERCH");
-			if (merchRole == null)
-				return new ResponseEntity<>(new ErrorResponse("Merchant Role Not Available"), HttpStatus.BAD_REQUEST);
+			Roles merchRole = rolesRepo.findByName("ROLE_MERCH")
+					.orElseThrow(() -> new CustomException("Merchant Role Not Available", HttpStatus.BAD_REQUEST));
+			;
 
-			Roles userRole = rolesRepo.findByName("ROLE_USER");
+			Roles userRole = rolesRepo.findByName("ROLE_USER")
+					.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+
 			List<Roles> roleList = new ArrayList<>();
 			roleList.addAll(Arrays.asList(userRole, merchRole));
 
@@ -246,7 +245,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			Users regUser = userRepo.save(user);
 			if (regUser == null)
-				return new ResponseEntity<>(new ErrorResponse("iD PROVIDED NOT FOUND"), HttpStatus.NOT_FOUND);
+				return new ResponseEntity<>(new ErrorResponse("ID PROVIDED NOT FOUND"), HttpStatus.NOT_FOUND);
 
 			mUser.setUserId(regUser.getId());
 
@@ -633,6 +632,5 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 		return new DevicePojo(deviceType, platform);
 	}
-
 
 }

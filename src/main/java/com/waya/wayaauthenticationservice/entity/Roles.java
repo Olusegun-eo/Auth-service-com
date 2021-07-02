@@ -12,10 +12,12 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.Size;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Table(name = "m_roles")
 public class Roles implements Serializable {
 
@@ -34,6 +36,7 @@ public class Roles implements Serializable {
 	
 	@OneToMany(mappedBy = "role", fetch = FetchType.EAGER)
 	private Collection<Privilege> permissions;
+	
 //    @ManyToMany(mappedBy = "rolesList")
 //    @JsonIgnore
 //    private List<Users> usersList;
@@ -49,6 +52,10 @@ public class Roles implements Serializable {
 	public Roles(Integer id) {
 		this.id = id;
 
+	}
+
+	public Roles(String name) {
+		this.name = name;
 	}
 
 	@Override
@@ -68,7 +75,7 @@ public class Roles implements Serializable {
 		if (name == null) {
 			if (other.name != null)
 				return false;
-		} else if (!name.equals(other.name))
+		} else if (!name.equalsIgnoreCase(other.name))
 			return false;
 		return true;
 	}

@@ -32,10 +32,14 @@ public class Privilege implements Serializable {
     )
     @JsonIgnore
     private Roles role;
-
+    
     public Privilege(long id) {
         this.id =id;
     }
 
     public Privilege(){}
+
+	public Privilege(String name) {
+		this.name = name;
+	}
 }

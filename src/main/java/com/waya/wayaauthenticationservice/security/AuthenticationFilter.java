@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.servlet.FilterChain;
@@ -39,6 +41,7 @@ import com.waya.wayaauthenticationservice.pojo.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.repository.PrivilegeRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.service.LoginHistoryService;
+import com.waya.wayaauthenticationservice.service.UserService;
 import com.waya.wayaauthenticationservice.util.SecurityConstants;
 
 import io.jsonwebtoken.Jwts;
@@ -56,6 +59,9 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 	@Autowired
 	PrivilegeRepository privilegeRepos;
+
+	@Autowired
+	UserService userService;
 
 	public AuthenticationFilter(AuthenticationManager manager) {
 		super.setAuthenticationManager(manager);
@@ -79,9 +85,9 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 			List<Roles> roles = new ArrayList<Roles>(user.getRolesList());
 
-			List<GrantedAuthority> grantedAuthorities = roles.stream().map(r -> {
+			Collection<GrantedAuthority> grantedAuthorities = roles.stream().map(r -> {
 				return new SimpleGrantedAuthority(r.getName());
-			}).collect(Collectors.toList());
+			}).collect(Collectors.toSet());
 
 			grantedAuthorities.addAll(getGrantedAuthorities(getPrivileges(roles)));
 
@@ -115,52 +121,53 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		LoginResponsePojo loginResponsePojo = new LoginResponsePojo();
 		Map<String, Object> m = new HashMap<String, Object>();
 
-		/*
-		 * if(!user.isPhoneVerified()){ loginResponsePojo.setCode(-2);
-		 * loginResponsePojo.setStatus(false);
-		 * loginResponsePojo.setMessage("Your Phone number has not been verified"); }
-		 */
-		if (!user.isActive()) {
-			loginResponsePojo.setCode(-3);
+		if (!user.isPhoneVerified() || !user.isEmailVerified()) {
+			loginResponsePojo.setCode(-2);
 			loginResponsePojo.setStatus(false);
-			loginResponsePojo.setMessage("User account is disabled, kindly contact Waya Admin");
+			loginResponsePojo.setMessage("Your Phone number and or Email has not been verified");
 		} else {
-			Collection<String> permit = getPrivileges(user.getRolesList());
-			List<String> roles = user.getRolesList().stream().map(u -> u.getName()).collect(Collectors.toList());
+			if (!user.isActive()) {
+				loginResponsePojo.setCode(-3);
+				loginResponsePojo.setStatus(false);
+				loginResponsePojo.setMessage("User account is disabled, kindly contact Waya Admin");
+			} else {
+				Set<String> permit = getPrivileges(user.getRolesList());
+				Set<String> roles = user.getRolesList().stream().map(u -> u.getName()).collect(Collectors.toSet());
 
-			// true == true
-			// if (isAdmin == roleCheck(rs, "ROLE_ADMIN")) {
-			loginResponsePojo.setCode(0);
-			loginResponsePojo.setStatus(true);
-			loginResponsePojo.setMessage("Login Successful");
+				// true == true
+				// if (isAdmin == roleCheck(rs, "ROLE_ADMIN")) {
+				loginResponsePojo.setCode(0);
+				loginResponsePojo.setStatus(true);
+				loginResponsePojo.setMessage("Login Successful");
 
-			m.put("token", SecurityConstants.TOKEN_PREFIX + token);
-			m.put("privilege", permit);
-			m.put("roles", roles);
-			m.put("pinCreated", user.isPinCreated());
-			m.put("corporate", user.isCorporate());
+				m.put("token", SecurityConstants.TOKEN_PREFIX + token);
+				m.put("privilege", permit);
+				m.put("roles", roles);
+				m.put("pinCreated", user.isPinCreated());
+				m.put("corporate", user.isCorporate());
 
-			UserProfileResponsePojo userp = new ModelMapper().map(user, UserProfileResponsePojo.class);
-			userp.setPhoneNumber(user.getPhoneNumber());
-			userp.setFirstName(user.getFirstName());
-			userp.setLastName(user.getSurname());
-			userp.setEmailVerified(user.isEmailVerified());
-			userp.setActive(user.isActive());
-			userp.setAccountDeleted(user.isDeleted());
-			userp.setAdmin(user.isAdmin());
-			userp.setRoles(roles);
-			userp.setAccountExpired(!user.isAccountNonExpired());
-			userp.setAccountLocked(!user.isAccountNonLocked());
-			userp.setCredentialsExpired(!user.isCredentialsNonExpired());
+				UserProfileResponsePojo userp = new ModelMapper().map(user, UserProfileResponsePojo.class);
+				userp.setPhoneNumber(user.getPhoneNumber());
+				userp.setFirstName(user.getFirstName());
+				userp.setLastName(user.getSurname());
+				userp.setEmailVerified(user.isEmailVerified());
+				userp.setActive(user.isActive());
+				userp.setAccountDeleted(user.isDeleted());
+				userp.setAdmin(user.isAdmin());
+				userp.setRoles(roles);
+				userp.setAccountExpired(!user.isAccountNonExpired());
+				userp.setAccountLocked(!user.isAccountNonLocked());
+				userp.setCredentialsExpired(!user.isCredentialsNonExpired());
 
-			m.put("user", userp);
-			loginResponsePojo.setData(m);
+				m.put("user", userp);
+				loginResponsePojo.setData(m);
 
-			//} else {
-			//	loginResponsePojo.setCode(-3);
-			//	loginResponsePojo.setStatus(false);
-			//	loginResponsePojo.setMessage("Invalid Login");
-			//}
+				// } else {
+				// loginResponsePojo.setCode(-3);
+				// loginResponsePojo.setStatus(false);
+				// loginResponsePojo.setMessage("Invalid Login");
+				// }
+			}
 		}
 
 		String str = gson.toJson(loginResponsePojo);
@@ -191,26 +198,18 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	}
 
 	public boolean roleCheck(Collection<Roles> rolesList, String role) {
-		// boolean result = false;
 		return rolesList.stream().anyMatch(e -> e.getName().equals(role));
-//        for (Roles r: rolesList) {
-//            if (r.getName().equals(role)) {
-//                result = true;
-//                break;
-//            }
-//        }
-//        return result;
 	}
 
-	private final List<String> getPrivileges(final Collection<Roles> roles) {
-		List<String> privileges = new ArrayList<String>();
+	private final Set<String> getPrivileges(final Collection<Roles> roles) {
+		Set<String> privileges = new HashSet<String>();
 		for (Roles role : roles) {
-			privileges.addAll(role.getPermissions().stream().map(p -> p.getName()).collect(Collectors.toList()));
+			privileges.addAll(role.getPermissions().stream().map(p -> p.getName()).collect(Collectors.toSet()));
 		}
 		return privileges;
 	}
 
-	private List<GrantedAuthority> getGrantedAuthorities(List<String> privileges) {
+	private List<GrantedAuthority> getGrantedAuthorities(Set<String> privileges) {
 		List<GrantedAuthority> authorities = new ArrayList<>();
 		for (String privilege : privileges) {
 			authorities.add(new SimpleGrantedAuthority(privilege));

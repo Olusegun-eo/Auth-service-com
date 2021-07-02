@@ -1,7 +1,5 @@
 package com.waya.wayaauthenticationservice.service;
 
-import java.util.Set;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.http.ResponseEntity;
@@ -63,7 +61,5 @@ public interface AuthenticationService {
 	ResponseEntity<?> createProfileAccount(ProfilePojo profilePojo);
 
 	ResponseEntity<?> createCorporateProfileAccount(ProfilePojo2 profilePojo2);
-
-	ResponseEntity<?> createUsers(Set<UserPojo> userList, HttpServletRequest request, Device device);
 
 }

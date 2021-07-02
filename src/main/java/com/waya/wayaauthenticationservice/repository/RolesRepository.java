@@ -1,10 +1,14 @@
 package com.waya.wayaauthenticationservice.repository;
 
-import com.waya.wayaauthenticationservice.entity.Roles;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import com.waya.wayaauthenticationservice.entity.Roles;
+
 @Repository
 public interface RolesRepository extends JpaRepository<Roles, Integer> {
-    public Roles findByName(String name);
+	
+	 Optional<Roles> findByName(String name);
 }
