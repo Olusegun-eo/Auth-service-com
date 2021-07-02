@@ -3,12 +3,16 @@ package com.waya.wayaauthenticationservice.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Collection;
 
 @Entity
-@Data
+@Setter
+@Getter
 @Table(name = "m_privilege")
 @JsonIgnoreType
 public class Privilege implements Serializable {
