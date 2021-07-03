@@ -7,6 +7,7 @@ import static com.waya.wayaauthenticationservice.util.Constant.VIRTUAL_ACCOUNT_T
 import static com.waya.wayaauthenticationservice.util.Constant.WALLET_ACCOUNT_TOPIC;
 import static com.waya.wayaauthenticationservice.util.Constant.WAYAGRAM_PROFILE_TOPIC;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,12 +15,19 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import org.springframework.scheduling.annotation.Async;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -27,7 +35,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonParser.Feature;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
 import com.waya.wayaauthenticationservice.entity.CoporateUser;
 import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.entity.Roles;
@@ -102,13 +115,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Autowired
 	private ReqIPUtils reqUtil;
+	
+	@Autowired
+	ProfileServiceDAO profileServiceDAO;
 
 	@Autowired
 	private ModelMapper mapper;
+	
 
 	public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
 	private static final String SECRET_TOKEN = "wayas3cr3t";
 	public static final String TOKEN_PREFIX = "serial ";
+	
+	@Value("${app.wallet.profile.url}")
+	private String profileURL;
 
 	@Override
 	@Transactional
@@ -171,6 +191,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 					user.getSurname(), String.valueOf(user.getId()), false);
 			
 			kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC, profilePojo);
+			
+			Integer checkcount = profileServiceDAO.getProfileCount(String.valueOf(user.getId()), user.getPhoneNumber());
+			if(checkcount == 0) {
+				log.info("Profile does not exist: use an async");
+				postProfile(profilePojo);
+			}
 
 			return new ResponseEntity<>(new SuccessResponse(
 					"User Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
@@ -287,6 +313,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			log.info("Response: {}", response.getBody());
 
 			kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC, profilePojo);
+			
+			Integer checkcount = profileServiceDAO.getProfileCount(String.valueOf(user.getId()), user.getPhoneNumber());
+			if(checkcount == 0) {
+				log.info("Profile does not exist: use an async");
+				postProfile(profilePojo);
+			}
 
 			return new ResponseEntity<>(new SuccessResponse(
 					"Corporate Account Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
@@ -633,6 +665,50 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 		return new DevicePojo(deviceType, platform);
 	}
+	
+	@Async("asyncExecutor")
+    public CompletableFuture<HttpEntity<String>> postProfile(ProfilePojo profilePojo) throws InterruptedException 
+    {
+        log.info("Profile creation starts for {}", profilePojo.getEmail());
+ 
+        //EmployeeNames employeeNameData = restTemplate.getForObject("http://localhost:8080/name", EmployeeNames.class);
+        HttpEntity<String> json = HttpRequest(profilePojo);
+        ResponseEntity<String> resp = restTemplate.exchange(profileURL,HttpMethod.POST, json, String.class);
+        log.info("ProfileData, {}", profilePojo);
+        Thread.sleep(1000L);    //Intentional delay
+        log.info("Profile creation completed");
+        return CompletableFuture.completedFuture(resp);
+    }
+	
+	public HttpEntity<String> HttpRequest(Object obj) {
+		String jsonInString = null;
+		HttpEntity<String> requestBody = null;
+		HttpHeaders headers = new HttpHeaders();
+		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+		headers.add("user-agent",
+				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
+		// Request to return JSON format
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		headers.set("Content-Type", "application/json");
+		headers.set("Cache-Control", "no-cache");
+
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(Feature.AUTO_CLOSE_SOURCE, true);
+		// Convert object to JSON string
+		try {
+			jsonInString = mapper.writeValueAsString(obj);
+			log.info("================== :" + jsonInString);
+			requestBody = new HttpEntity<>(jsonInString, headers);
+		} catch (JsonGenerationException e) {
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return requestBody;
+	}
+	
 
 
 }
