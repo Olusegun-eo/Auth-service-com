@@ -3,12 +3,13 @@ package com.waya.wayaauthenticationservice.service.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.core.KafkaProducerException;
-import org.springframework.kafka.core.KafkaSendCallback;
+//import org.springframework.kafka.core.KafkaProducerException;
+//import org.springframework.kafka.core.KafkaSendCallback;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import org.springframework.util.concurrent.ListenableFuture;
+import org.springframework.util.concurrent.ListenableFutureCallback;
 
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.pojo.ProfilePojo2;
@@ -51,6 +52,7 @@ public class KafkaMessageProducer implements MessageQueueProducer {
 	@Override
     public void send(String topic, Object data) {
     	ProfilePojo2 creds = null;
+    	logger.info(String.format("#### -> Producing message -> %s", data.toString()));
 		/*
 		 * try { creds = new ObjectMapper().readValue(gson.toJson(data),
 		 * ProfilePojo2.class); } catch (JsonMappingException e1) {
@@ -59,7 +61,8 @@ public class KafkaMessageProducer implements MessageQueueProducer {
 		 * e1.getMessage()); }
 		 */
         ListenableFuture<SendResult<String, Object>> future = template.send(topic, gson.toJson(data));
-        future.addCallback(new KafkaSendCallback<>() {
+        //future.addCallback(new KafkaSendCallback<>() {
+        future.addCallback(new ListenableFutureCallback<SendResult<String, Object>>() {
 
             /**
              * Called when the {@link ListenableFuture} completes with success.
@@ -70,6 +73,8 @@ public class KafkaMessageProducer implements MessageQueueProducer {
             @Override
             public void onSuccess(SendResult<String, Object> result) {
                 //persist in app event as a successful event
+            	logger.info("Sent message=[" + data.toString() + 
+                        "] with offset=[" + result.getRecordMetadata().offset() + "]");
                 logger.info("notification sent to the event queue");
             }
 
@@ -78,11 +83,23 @@ public class KafkaMessageProducer implements MessageQueueProducer {
              *
              * @param ex the exception.
              */
-            @Override
+            /*@Override
             public void onFailure(KafkaProducerException ex) {
                 //persist in app event as a failed even
+            	logger.error("Unable to send message=[" 
+                        + data + "] due to : " + ex.getMessage());
                 logger.error("failed to send notification", ex);
-            }
+            }*/
+
+			@Override
+			public void onFailure(Throwable ex) {
+				//persist in app event as a failed even
+            	logger.error("Unable to send message=[" 
+                        + data + "] due to : " + ex.getMessage());
+                logger.error("failed to send notification", ex.getMessage());
+                logger.error("Full Error", ex);
+				
+			}
         });
 //        Optional<Users> foundUser = userRepo.findByEmail(creds.getEmail());
 //

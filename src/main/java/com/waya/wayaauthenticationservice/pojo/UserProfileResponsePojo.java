@@ -12,16 +12,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Relation(collectionRelation = "productResponse", itemRelation = "item")
+@Relation(collectionRelation = "userResponse", itemRelation = "user")
 @JsonInclude(Include.NON_NULL)
 public class UserProfileResponsePojo extends RepresentationModel<UserProfileResponsePojo> {
 	
@@ -61,5 +63,6 @@ public class UserProfileResponsePojo extends RepresentationModel<UserProfileResp
 	
 	@Builder.Default
 	private Set<String> permits = new HashSet<>();
+
 
 }

@@ -31,7 +31,6 @@ import com.waya.wayaauthenticationservice.security.oauth2.HttpCookieOAuth2Author
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-
 	@Autowired
 	UserPrincipalDetailsService userService;
 

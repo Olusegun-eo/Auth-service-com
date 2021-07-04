@@ -2,7 +2,6 @@ package com.waya.wayaauthenticationservice.config;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 
 import org.springframework.context.annotation.Bean;
@@ -26,7 +25,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableSwagger2
 public class SwaggerConfig {
     
-    @Bean
+	@Bean
     public Docket docket() {
         return new Docket(DocumentationType.SWAGGER_2)
                     .select()
@@ -35,7 +34,7 @@ public class SwaggerConfig {
                     .build()
                     .securitySchemes(Arrays.asList(new ApiKey("Token Access", HttpHeaders.AUTHORIZATION, In.HEADER.name())))
                     .securityContexts(Arrays.asList(securityContext()))
-                    .protocols(new HashSet<>(Arrays.asList("HTTP")))
+                    //.apiInfo(apiInfo())
                     .apiInfo(DEFAULT_API_INFO);
 
     }

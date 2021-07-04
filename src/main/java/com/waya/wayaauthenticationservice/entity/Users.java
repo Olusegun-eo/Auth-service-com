@@ -2,6 +2,7 @@ package com.waya.wayaauthenticationservice.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
 import java.util.Collection;
 
 import javax.persistence.CascadeType;
@@ -17,6 +18,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
+
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 
