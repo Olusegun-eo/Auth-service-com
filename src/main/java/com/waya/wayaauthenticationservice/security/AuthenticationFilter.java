@@ -41,7 +41,6 @@ import com.waya.wayaauthenticationservice.pojo.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.repository.PrivilegeRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.service.LoginHistoryService;
-import com.waya.wayaauthenticationservice.service.UserService;
 import com.waya.wayaauthenticationservice.util.SecurityConstants;
 
 import io.jsonwebtoken.Jwts;
@@ -59,9 +58,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 	@Autowired
 	PrivilegeRepository privilegeRepos;
-
-	@Autowired
-	UserService userService;
 
 	public AuthenticationFilter(AuthenticationManager manager) {
 		super.setAuthenticationManager(manager);

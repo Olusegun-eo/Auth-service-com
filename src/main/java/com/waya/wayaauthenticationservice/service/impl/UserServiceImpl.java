@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.modelmapper.ModelMapper;
@@ -421,9 +420,11 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ResponseEntity<?> createUsers(@Valid BulkPrivateUserCreationDTO userBulk, HttpServletRequest request,
+	public ResponseEntity<?> createUsers(@Valid BulkPrivateUserCreationDTO userBulk, String requestToken,
 			Device device) {
-		// TODO Auto-generated method stub
+		
+		
+		
 		return null;
 	}
 

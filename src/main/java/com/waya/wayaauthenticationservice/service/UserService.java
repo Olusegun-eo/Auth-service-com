@@ -2,7 +2,6 @@ package com.waya.wayaauthenticationservice.service;
 
 import java.util.Collection;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.springframework.data.domain.Page;
@@ -54,5 +53,5 @@ public interface UserService extends UserDetailsService {
 
 	Page<Users> getAllUsers(int page, int size);
 
-	ResponseEntity<?> createUsers(@Valid BulkPrivateUserCreationDTO userBulk, HttpServletRequest request, Device device);
+	ResponseEntity<?> createUsers(@Valid BulkPrivateUserCreationDTO userBulk, String requestToken, Device device);
 }

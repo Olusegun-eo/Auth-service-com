@@ -40,7 +40,7 @@ public class Users implements Serializable {
 	private long id;
 
 	@Email(message = "email should be valid")
-	@Column(unique = true)
+	@Column(nullable = false, unique = true)
 	private String email;
 
 	@Column(unique = true)

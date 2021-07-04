@@ -23,16 +23,17 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.waya.wayaauthenticationservice.security.AuthenticationFilter;
 import com.waya.wayaauthenticationservice.security.AuthorizationFilter;
 import com.waya.wayaauthenticationservice.security.JwtAuthenticationEntryPoint;
+import com.waya.wayaauthenticationservice.security.UserPrincipalDetailsService;
 import com.waya.wayaauthenticationservice.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
-import com.waya.wayaauthenticationservice.service.UserService;
 
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
+
 	@Autowired
-	private UserService userService;
+	UserPrincipalDetailsService userService;
 
 	@Autowired
 	private BCryptPasswordEncoder bCryptPasswordEncoder;

@@ -1,7 +1,5 @@
 package com.waya.wayaauthenticationservice.controller;
 
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
@@ -29,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.waya.wayaauthenticationservice.assembler.UserAssembler;
-import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.BulkPrivateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
@@ -65,26 +62,27 @@ public class UserController {
 	@Autowired
 	UserAssembler userAssembler;
 
-	@ApiOperation(value = "Save users to redis", hidden = false, tags = { "USER SERVICE" })
-	@PostMapping
-	public RedisUser save(@RequestBody RedisUser redisUser) {
-		return dao.save(redisUser);
-	}
-
-	@ApiOperation(value = "Get all users from redis", hidden = false, tags = { "USER SERVICE" })
-	@GetMapping
-	public List<RedisUser> getAllUsers() {
-		return dao.findAll();
-	}
-
+	/*
+	 * @ApiOperation(value = "Save users to redis", hidden = false, tags = {
+	 * "USER SERVICE" })
+	 * 
+	 * @PostMapping public RedisUser save(@RequestBody RedisUser redisUser) { return
+	 * dao.save(redisUser); }
+	 * 
+	 * @ApiOperation(value = "Get all users from redis", hidden = false, tags = {
+	 * "USER SERVICE" })
+	 * 
+	 * @GetMapping public List<RedisUser> getAllUsers() { return dao.findAll(); }
+	 */
+	
 	@ApiOperation(value = "Bulk Private User Registration", tags = { "AUTH" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@PostMapping(path = "/create-bulk-user", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {
 			MediaType.APPLICATION_JSON_VALUE })
 	@PreAuthorize(value = "hasRole('ADMIN')")
-	public ResponseEntity<?> create(@Valid @RequestBody BulkPrivateUserCreationDTO userList, HttpServletRequest request,
+	public ResponseEntity<?> create(@Valid @RequestBody BulkPrivateUserCreationDTO userList, HttpServletRequest req,
 			Device device) {
-		return userService.createUsers(userList, request, device);
+		return userService.createUsers(userList, req.getHeader("Authorization"), device);
 	}
 	
 	@ApiOperation(value = "Get all users from Database", hidden = false, tags = { "USER SERVICE" })
