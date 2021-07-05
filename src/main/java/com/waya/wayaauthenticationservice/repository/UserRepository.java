@@ -11,6 +11,7 @@ import com.waya.wayaauthenticationservice.entity.Users;
 public interface UserRepository extends JpaRepository<Users, Long> {
 
     Optional<Users> findByEmailOrPhoneNumber(String email, String phone);
+
     Optional<Users> findByEmail(String email);
 
     Optional<Users> findByPhoneNumber(String phoneNumber);

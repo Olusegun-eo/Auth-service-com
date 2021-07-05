@@ -62,7 +62,7 @@ public class Users implements Serializable {
 	private String password;
 
 	@JsonIgnore
-	private int pin;
+	private String pinHash;
 
 	@JsonIgnore
 	@Column(nullable = false)
@@ -75,7 +75,7 @@ public class Users implements Serializable {
 	private boolean emailVerified = false;
 
 	@Column(name = "email_verified_date")
-	private LocalDateTime emailVerifiededDate;
+	private LocalDateTime emailVerifiedDate;
 
 	private boolean pinCreated = false;
 

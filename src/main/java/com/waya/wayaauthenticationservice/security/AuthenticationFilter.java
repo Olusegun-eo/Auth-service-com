@@ -49,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
+
 	private final Gson gson = new Gson();
 	private boolean isAdmin = false;
 
@@ -99,69 +100,70 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 	@Override
 	protected void successfulAuthentication(HttpServletRequest req, HttpServletResponse res, FilterChain chain,
-			Authentication auth) throws IOException, ServletException, SignatureException {
+			Authentication auth) throws IOException, SignatureException {
 
-		String userName = ((UserPrincipal) auth.getPrincipal()).getUsername();
+		String userName = ((UserPrincipal) auth.getPrincipal()).getName();
 
 		String token = Jwts.builder().setSubject(userName)
 				.setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))
 				.signWith(SignatureAlgorithm.HS256, SecurityConstants.getSecret()).compact();
 
-		UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
-		Users user = userLoginRepo.findByEmailOrPhoneNumber(userName, userName).get();
-		//Users user = authenticatedUserFacade.getUser();
+		Users user = ((UserPrincipal) auth.getPrincipal()).getUser().orElse(null);
 
 		LoginResponsePojo loginResponsePojo = new LoginResponsePojo();
-		Map<String, Object> m = new HashMap<>();
-		//if (user.isPhoneVerified() || user.isEmailVerified()) {
-		if (!user.isActive()) {
-			loginResponsePojo.setCode(-3);
-			loginResponsePojo.setStatus(false);
-			loginResponsePojo.setMessage("User account is disabled, kindly contact Waya Admin");
+		if(user != null){
+
+			Map<String, Object> m = new HashMap<>();
+			//if (user.isPhoneVerified() || user.isEmailVerified()) {
+			if (!user.isActive()) {
+				loginResponsePojo.setCode(-3);
+				loginResponsePojo.setStatus(false);
+				loginResponsePojo.setMessage("User account is disabled, kindly contact Waya Admin");
+			} else {
+				Set<String> permit = getPrivileges(user.getRolesList());
+				Set<String> roles = user.getRolesList().stream().map(u -> u.getName()).collect(Collectors.toSet());
+				// true == true
+				// if (isAdmin == roleCheck(rs, "ROLE_ADMIN")) {
+				loginResponsePojo.setCode(0);
+				loginResponsePojo.setStatus(true);
+				loginResponsePojo.setMessage("Login Successful");
+
+				m.put("token", SecurityConstants.TOKEN_PREFIX + token);
+				m.put("privilege", permit);
+				m.put("roles", roles);
+				m.put("pinCreated", user.isPinCreated());
+				m.put("corporate", user.isCorporate());
+
+				res.addHeader(SecurityConstants.HEADER_STRING, SecurityConstants.TOKEN_PREFIX + token);
+
+				UserProfileResponsePojo userProfile = new ModelMapper().map(user, UserProfileResponsePojo.class);
+				userProfile.setPhoneNumber(user.getPhoneNumber());
+				userProfile.setFirstName(user.getFirstName());
+				userProfile.setLastName(user.getSurname());
+				userProfile.setEmailVerified(user.isEmailVerified());
+				userProfile.setActive(user.isActive());
+				userProfile.setAccountDeleted(user.isDeleted());
+				userProfile.setAdmin(user.isAdmin());
+				userProfile.setRoles(roles);
+				userProfile.setPermits(permit);
+				userProfile.setAccountExpired(!user.isAccountNonExpired());
+				userProfile.setAccountLocked(!user.isAccountNonLocked());
+				userProfile.setCredentialsExpired(!user.isCredentialsNonExpired());
+
+				m.put("user", userProfile);
+				loginResponsePojo.setData(m);
+
+				// } else {
+				// loginResponsePojo.setCode(-3);
+				// loginResponsePojo.setStatus(false);
+				// loginResponsePojo.setMessage("Invalid Login");
+				// }
+			}
 		} else {
-			Set<String> permit = getPrivileges(user.getRolesList());
-			Set<String> roles = user.getRolesList().stream().map(u -> u.getName()).collect(Collectors.toSet());
-			// true == true
-			// if (isAdmin == roleCheck(rs, "ROLE_ADMIN")) {
-			loginResponsePojo.setCode(0);
-			loginResponsePojo.setStatus(true);
-			loginResponsePojo.setMessage("Login Successful");
-
-			m.put("token", SecurityConstants.TOKEN_PREFIX + token);
-			m.put("privilege", permit);
-			m.put("roles", roles);
-			m.put("pinCreated", user.isPinCreated());
-			m.put("corporate", user.isCorporate());
-
-			res.addHeader(SecurityConstants.HEADER_STRING, SecurityConstants.TOKEN_PREFIX + token);
-
-			UserProfileResponsePojo userProfile = new ModelMapper().map(user, UserProfileResponsePojo.class);
-			userProfile.setPhoneNumber(user.getPhoneNumber());
-			userProfile.setFirstName(user.getFirstName());
-			userProfile.setLastName(user.getSurname());
-			userProfile.setEmailVerified(user.isEmailVerified());
-			userProfile.setActive(user.isActive());
-			userProfile.setAccountDeleted(user.isDeleted());
-			userProfile.setAdmin(user.isAdmin());
-			userProfile.setRoles(roles);
-			userProfile.setAccountExpired(!user.isAccountNonExpired());
-			userProfile.setAccountLocked(!user.isAccountNonLocked());
-			userProfile.setCredentialsExpired(!user.isCredentialsNonExpired());
-
-			m.put("user", userProfile);
-			loginResponsePojo.setData(m);
-
-			// } else {
-			// loginResponsePojo.setCode(-3);
-			// loginResponsePojo.setStatus(false);
-			// loginResponsePojo.setMessage("Invalid Login");
-			// }
+			loginResponsePojo.setCode(-2);
+			loginResponsePojo.setStatus(false);
+			loginResponsePojo.setMessage("User Fetch Error");
 		}
-//		} else {
-//			loginResponsePojo.setCode(-2);
-//			loginResponsePojo.setStatus(false);
-//			loginResponsePojo.setMessage("Your Phone number and or Email has not been verified");
-//		}
 
 		String str = gson.toJson(loginResponsePojo);
 		PrintWriter pr = res.getWriter();
@@ -173,7 +175,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 	@Override
 	protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
-			AuthenticationException failed) throws IOException, ServletException {
+			AuthenticationException failed) throws IOException {
 
 		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 		response.setContentType(MediaType.ALL_VALUE);
