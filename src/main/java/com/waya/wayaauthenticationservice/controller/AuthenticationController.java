@@ -59,7 +59,7 @@ public class AuthenticationController {
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@PostMapping(path = "/create-corporate", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {
 			MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<?> createCorporate(@RequestBody CorporateUserPojo user, HttpServletRequest request,
+	public ResponseEntity<?> createCorporate(@Valid @RequestBody CorporateUserPojo user, HttpServletRequest request,
 			Device device) {
 
 		return authenticationServiceImpl.createCorporateUser(user, request, device);

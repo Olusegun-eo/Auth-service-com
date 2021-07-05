@@ -1,16 +1,11 @@
 package com.waya.wayaauthenticationservice.service;
 
-import java.util.Collection;
-
 import javax.validation.Valid;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetailsService;
 
-import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.BulkPrivateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
@@ -18,9 +13,7 @@ import com.waya.wayaauthenticationservice.pojo.UserEditPojo;
 import com.waya.wayaauthenticationservice.pojo.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.UserRoleUpdateRequest;
 
-public interface UserService extends UserDetailsService {
-	
-	Collection<? extends GrantedAuthority> getAuthorities(Collection<Roles> roles);
+public interface UserService {
 
 	ResponseEntity<?> getUser(Long userId);
 

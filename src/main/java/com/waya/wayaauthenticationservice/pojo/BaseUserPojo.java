@@ -16,14 +16,13 @@ public abstract class BaseUserPojo {
 	@Pattern(regexp = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\." + "[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@"
 			+ "(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message = "Invalid Email")
 	private String email;
-	
+
 	@Size(min = 10, message = "Phone Number must be at least 10 characters")
 	@NotBlank(message = "phoneNumber Cannot be blank")
 	private String phoneNumber;
 	
-	@NotNull(message = "Reference Code Cannot be Null")
 	@Size(min = 3, message = "Reference Code must be at least 3 characters")
-	@NotBlank(message = "Referennce Code Cannot be blank")
+	@NotBlank(message = "Reference Code Cannot be blank")
 	private String referenceCode;
 	
 	@NotNull(message = "First Name Cannot be Null")

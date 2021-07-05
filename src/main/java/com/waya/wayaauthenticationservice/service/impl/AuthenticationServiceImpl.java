@@ -18,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,7 +41,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
-import com.waya.wayaauthenticationservice.entity.CoporateUser;
+import com.waya.wayaauthenticationservice.entity.CorporateUser;
 import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
@@ -63,7 +64,7 @@ import com.waya.wayaauthenticationservice.pojo.WalletPojo;
 import com.waya.wayaauthenticationservice.pojo.WayagramPojo;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
-import com.waya.wayaauthenticationservice.repository.CooperateUserRepository;
+import com.waya.wayaauthenticationservice.repository.CorporateUserRepository;
 import com.waya.wayaauthenticationservice.repository.RedisUserDao;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
@@ -105,7 +106,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	KafkaMessageProducer kafkaMessageProducer;
 
 	@Autowired
-	private CooperateUserRepository cooperateUserRepo;
+	private CorporateUserRepository corporateUserRepository;
 
 	@Autowired
 	private WalletProxy walletProxy;
@@ -126,7 +127,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	private static final String SECRET_TOKEN = "wayas3cr3t";
 	public static final String TOKEN_PREFIX = "serial ";
 
-	@Value("${app.wallet.profile.url}")
+	@Value("${wallet.profile.url}")
 	private String profileURL;
 
 	@Override
@@ -199,8 +200,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			// TODO: Confirm and refactor the Kafka Call
 			kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC, profilePojo);
 
-			Integer checkcount = profileServiceDAO.getProfileCount(String.valueOf(user.getId()), user.getPhoneNumber());
-			if (checkcount == 0) {
+			Integer checkCount = profileServiceDAO.getProfileCount(String.valueOf(user.getId()), user.getPhoneNumber());
+			if (checkCount == 0) {
 				log.info("Profile does not exist: use an async");
 				postProfile(profilePojo);
 			}
@@ -236,7 +237,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			Roles merchRole = rolesRepo.findByName("ROLE_MERCH")
 					.orElseThrow(() -> new CustomException("Merchant Role Not Available", HttpStatus.BAD_REQUEST));
-			;
 
 			Roles userRole = rolesRepo.findByName("ROLE_USER")
 					.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
@@ -270,13 +270,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			Users regUser = userRepo.save(user);
 			if (regUser == null)
-				return new ResponseEntity<>(new ErrorResponse("ID PROVIDED NOT FOUND"), HttpStatus.NOT_FOUND);
+				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.COULD_NOT_INSERT_RECORD.getErrorMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 
 			mUser.setUserId(regUser.getId());
 
-			CoporateUser coopUser = mapper.map(mUser, CoporateUser.class);
+			CorporateUser coopUser = mapper.map(mUser, CorporateUser.class);
 			coopUser.setUserId(regUser.getId());
-			cooperateUserRepo.save(coopUser);
+			corporateUserRepository.save(coopUser);
 
 			CreateAccountPojo createAccount = new CreateAccountPojo();
 			createAccount.setEmailAddress(regUser.getEmail());
@@ -285,7 +285,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			createAccount.setLastName(regUser.getSurname());
 			createAccount.setMobileNo(regUser.getPhoneNumber());
 			createAccount.setSavingsProductId(1);
-			walletProxy.createCooperateAccouont(createAccount);
+			walletProxy.createCorporateAccount(createAccount);
 
 			ProfilePojo2 profilePojo = new ProfilePojo2();
 			profilePojo.setBusinessType(mUser.getBusinessType());
@@ -312,8 +312,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC, profilePojo);
 
-			Integer checkcount = profileServiceDAO.getProfileCount(String.valueOf(user.getId()), user.getPhoneNumber());
-			if (checkcount == 0) {
+			Integer profileCount = profileServiceDAO.getProfileCount(String.valueOf(user.getId()), user.getPhoneNumber());
+			if (profileCount == 0) {
 				log.info("Profile does not exist: use an async");
 				postProfile(profilePojo);
 			}
@@ -340,7 +340,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			System.out.println(e.fillInStackTrace());
 			throw new RuntimeException(e.fillInStackTrace());
 		}
-
 	}
 
 	@Override
@@ -367,7 +366,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			} else {
 				return new ResponseEntity<>(new ErrorResponse("This email does exists"), HttpStatus.BAD_REQUEST);
 			}
-
 		} catch (Exception e) {
 			log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
 			return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);

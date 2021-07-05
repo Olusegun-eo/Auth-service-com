@@ -1,6 +1,5 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import static java.util.stream.Collectors.toList;
 import static org.springframework.http.HttpStatus.OK;
 
 import java.time.LocalDateTime;
@@ -19,8 +18,6 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 import org.modelmapper.ModelMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,10 +28,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -69,9 +62,6 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private UserRepository usersRepo;
 
-	// @Autowired
-	// private BCryptPasswordEncoder passwordEncoder;
-
 	@Autowired
 	private AuthenticatedUserFacade authenticatedUserFacade;
 
@@ -92,27 +82,6 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	private ApplicationConfig applicationConfig;
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
-
-	@Override
-	public Collection<? extends GrantedAuthority> getAuthorities(Collection<Roles> roles) {
-		List<GrantedAuthority> authorities = roles.stream().map(p -> new SimpleGrantedAuthority(p.getName()))
-				.collect(toList());
-		return authorities;
-	}
-
-	@Override
-	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-		Optional<Users> user = usersRepo.findByEmailOrPhoneNumber(email, email);
-
-		if (!user.isPresent()) {
-			throw new UsernameNotFoundException(email);
-		} else {
-			return new org.springframework.security.core.userdetails.User(user.get().getEmail(),
-					user.get().getPassword(), true, true, true, true, new ArrayList<>());
-		}
-	}
 
 	@Override
 	public ResponseEntity<?> getUser(Long userId) {
@@ -144,7 +113,6 @@ public class UserServiceImpl implements UserService {
 		Roles adminRole = rolesRepo.findByName("ROLE_ADMIN")
 				.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
 		Optional<Collection<Roles>> roles = Optional.ofNullable(user.getRolesList());
-
 		if (!roles.isPresent())
 			return false;
 
@@ -192,7 +160,7 @@ public class UserServiceImpl implements UserService {
 		if (user == null) {
 			return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.OK);
 		}
-		ApiResponse<MainWalletResponse> mainWalletResponse = walletProxy.getDefaultWallet(token);
+		ApiResponse<MainWalletResponse> mainWalletResponse = this.walletProxy.getDefaultWallet(token);
 //        WalletResponse gr = restTemplate.getForObject(WALLET_SERVICE+"wallet/default-account/"+ user.getId(), WalletResponse.class);
 		if (mainWalletResponse != null) {
 			UserWalletPojo userWalletPojo = new UserWalletPojo(user, mainWalletResponse.getData().getAccountNo(),
@@ -281,7 +249,7 @@ public class UserServiceImpl implements UserService {
 			});
 			return users.size();
 		} catch (Exception e) {
-			LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+			log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
 			throw new CustomException(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
 		}
 	}
@@ -304,7 +272,7 @@ public class UserServiceImpl implements UserService {
 				return user;
 			}).orElseThrow(() -> new CustomException("Id provided not found", HttpStatus.NOT_FOUND));
 		} catch (Exception e) {
-			LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+			log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
 			throw new CustomException(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
 		}
 	}
@@ -328,7 +296,7 @@ public class UserServiceImpl implements UserService {
 				return us;
 			}).orElseThrow(() -> new CustomException("", HttpStatus.UNPROCESSABLE_ENTITY));
 		} catch (Exception e) {
-			LOGGER.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+			log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
 			throw new CustomException(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
 		}
 	}
