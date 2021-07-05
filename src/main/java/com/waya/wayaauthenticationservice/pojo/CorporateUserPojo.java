@@ -28,4 +28,5 @@ public class CorporateUserPojo extends BaseUserPojo{
 	@NotNull(message="Kindly provide valid UserId")
 	private Long userId;
 
+	private boolean isAdmin = false;
 }

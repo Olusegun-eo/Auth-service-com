@@ -93,7 +93,7 @@ public class ApiResponse<E> implements Serializable {
 
 		private Integer code = Code.UNKNOWN_ERROR;
 
-		private String message = "Unknow Error";
+		private String message = "Unknown Error";
 
 //        private String token = null;
 

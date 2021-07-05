@@ -1,6 +1,5 @@
 package com.waya.wayaauthenticationservice.pojo;
 
-import com.waya.wayaauthenticationservice.entity.Users;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,7 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UserWalletPojo {
 
-    Users user;
+    UserProfileResponsePojo user;
     String accountNo;
     Long walletId;
 

@@ -76,7 +76,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 			UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
 
-			Users user = userLoginRepo.findByEmailOrPhoneNumber(creds.getEmailOrPhoneNumber(), creds.getEmailOrPhoneNumber())
+			Users user = userLoginRepo.findByEmailOrPhoneNumber(creds.getEmailOrPhoneNumber())
 					.orElseThrow(() -> new BadCredentialsException("User Does not exist"));
 
 			List<Roles> roles = new ArrayList<Roles>(user.getRolesList());

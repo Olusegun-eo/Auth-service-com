@@ -63,8 +63,8 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
                     .getSubject();
             UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
 
-            Users user = userLoginRepo.findByEmailOrPhoneNumber(userToken,userToken)
-                                      .orElseThrow(() -> new BadCredentialsException("User Does not exist"));
+            Users user = userLoginRepo.findByEmailOrPhoneNumber(userToken).orElse(null);
+                        // .orElseThrow(() -> new BadCredentialsException("User Does not exist"));
             if (user != null) {
                 List<Roles> roles = new ArrayList<>(user.getRolesList());
                 grantedAuthorities = roles.stream().map(r -> new SimpleGrantedAuthority(r.getName())).collect(Collectors.toSet());

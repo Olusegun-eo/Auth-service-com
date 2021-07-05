@@ -20,9 +20,7 @@ public abstract class BaseUserPojo {
 	@Size(min = 10, message = "Phone Number must be at least 10 characters")
 	@NotBlank(message = "phoneNumber Cannot be blank")
 	private String phoneNumber;
-	
-	@Size(min = 3, message = "Reference Code must be at least 3 characters")
-	@NotBlank(message = "Reference Code Cannot be blank")
+
 	private String referenceCode;
 	
 	@NotNull(message = "First Name Cannot be Null")
@@ -36,5 +34,6 @@ public abstract class BaseUserPojo {
 	@NotNull(message = "Password Cannot be null")
 	@Size(min = 8, message = "Password must be at least 8 characters")
 	private String password;
-	
+
+	private boolean isAdmin = false;
 }

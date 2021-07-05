@@ -20,7 +20,7 @@ public class UserPrincipalDetailsService implements UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		Users userEntity = this.userRepo.findByEmailOrPhoneNumber(username, username)
+		Users userEntity = this.userRepo.findByEmailOrPhoneNumber(username)
 					.orElseThrow(() -> new UsernameNotFoundException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + username));
 
 		UserPrincipal user = new UserPrincipal(userEntity);
