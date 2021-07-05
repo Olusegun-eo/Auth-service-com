@@ -27,15 +27,12 @@ public class BusinessTypeController {
 
 	@Autowired
 	private BusinessTypeService businessTypeService;
-	
-	
-	
+
 	@ApiOperation(value = "Create Business Type", notes = "Create Business Type",tags = { "BUSINESS TYPE" })
 	@PostMapping("/create")
 	public ResponseEntity<ResponsePojo> create(@RequestBody BusinessType businessType) {
 		return ResponseEntity.ok(businessTypeService.createBusinessType(businessType));
 	}
-	
 	
 	@ApiOperation(value = "Edit Business Type", notes = "Edit Business Type",tags = { "BUSINESS TYPE" })
 	@PutMapping("/edit")
@@ -43,13 +40,11 @@ public class BusinessTypeController {
 		return ResponseEntity.ok(businessTypeService.edit(businessType));
 	}
 	
-	
 	@ApiOperation(value = "Find All Business Type", notes = "Find All Business types",tags = { "BUSINESS TYPE" })
 	@GetMapping("/find/all")
 	public ResponseEntity<List<BusinessType>> findAll() {
 		return ResponseEntity.ok(businessTypeService.findAll());
 	}
-	
 	
 	@ApiOperation(value = "Delete Business Type", notes = "Delete Business Type",tags = { "BUSINESS TYPE" })
 	@DeleteMapping("/delete")
