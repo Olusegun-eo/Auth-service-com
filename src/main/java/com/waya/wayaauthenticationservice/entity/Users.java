@@ -119,7 +119,7 @@ public class Users implements Serializable {
 	private LocalDateTime credentialExpiredDate;
 
 	@Column(name = "is_active", nullable = false)
-	private boolean isActive;
+	private boolean isActive = false;
 
 	@Column(name = "first_time_login_remaining", nullable = false)
 	private boolean firstTimeloginRemaining;

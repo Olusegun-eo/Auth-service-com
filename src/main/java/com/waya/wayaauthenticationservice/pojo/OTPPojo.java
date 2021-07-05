@@ -10,10 +10,11 @@ import javax.validation.constraints.NotNull;
 @Setter
 public class OTPPojo {
 
-    @NotNull(message = "Phone Cannot be Null")
-    @NotBlank(message = "phoneNumber Cannot be blank")
-    private String phone;
+    @NotNull(message = "PhoneNumber or Email  Cannot be Null")
+    @NotBlank(message = "PhoneNumber or Email Cannot be blank")
+    private String phoneOrEmail;
 
     @NotNull(message = "OTP Cannot be Null")
-    private int otp;
+    @NotBlank(message = "OTP Cannot be blank")
+    private String otp;
 }

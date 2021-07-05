@@ -172,7 +172,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			user.setId(0L);
 			user.setAdmin(mUser.isAdmin());
 			user.setDateCreated(LocalDateTime.now());
-			user.setActive(true);
 			user.setRegDeviceIP(ip);
 			user.setRegDevicePlatform(dev.getPlatform());
 			user.setRegDeviceType(dev.getDeviceType());
@@ -374,13 +373,39 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	}
 
 	@Override
-	public ResponseEntity<?> verifyOTP(OTPPojo otpPojo) {
-		String url = PROFILE_SERVICE + "profile-service/otp-verify/" + otpPojo.getPhone() + "/" + otpPojo.getOtp();
+	public ResponseEntity<?> verifyAccountCreation(OTPPojo otpPojo) {
+		String url = PROFILE_SERVICE + "profile-service/otp-verify/" + otpPojo.getPhoneOrEmail() + "/" + otpPojo.getOtp();
 		ProfileResponse profileResponse = restTemplate.getForObject(url, ProfileResponse.class);
 		log.info("Error::: {}, {} and {}", new Gson().toJson(profileResponse));
 		if (profileResponse.isStatus()) {
-			Users user = userRepo.findByPhoneNumber(otpPojo.getPhone()).orElse(null);
+			Users user = userRepo.findByEmailOrPhoneNumber(otpPojo.getPhoneOrEmail(), otpPojo.getPhoneOrEmail()).orElse(null);
+			//user.setPhoneVerified(true);
+			if(user == null) return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage() +
+					"For User with " + otpPojo.getPhoneOrEmail()), HttpStatus.BAD_REQUEST);
+			user.setActive(true);
+			try {
+				userRepo.save(user);
+				return new ResponseEntity<>(new SuccessResponse("OTP verified successfully. Please login.", null),
+						HttpStatus.CREATED);
+
+			} catch (Exception e) {
+				log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+				return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
+			}
+		} else {
+			return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	@Override
+	public ResponseEntity<?> verifyPhoneUsingOTP(OTPPojo otpPojo) {
+		String url = PROFILE_SERVICE + "profile-service/otp-verify/" + otpPojo.getPhoneOrEmail() + "/" + otpPojo.getOtp();
+		ProfileResponse profileResponse = restTemplate.getForObject(url, ProfileResponse.class);
+		log.info("Error::: {}, {} and {}", new Gson().toJson(profileResponse));
+		if (profileResponse.isStatus()) {
+			Users user = userRepo.findByPhoneNumber(otpPojo.getPhoneOrEmail()).orElse(null);
 			user.setPhoneVerified(true);
+			//user.setActive(true);
 			try {
 				userRepo.save(user);
 				return new ResponseEntity<>(new SuccessResponse("OTP verified successfully. Please login.", null),
@@ -406,6 +431,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
 			}
 			user.setEmailVerified(true);
+			user.setActive(true);
 			try {
 				userRepo.save(user);
 				return new ResponseEntity<>(new SuccessResponse("Email verified successfully. Please login.", null),

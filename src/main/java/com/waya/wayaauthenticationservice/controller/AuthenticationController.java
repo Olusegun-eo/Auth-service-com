@@ -42,7 +42,7 @@ public class AuthenticationController {
 	@Autowired
 	private AuthenticationService authenticationServiceImpl;
 
-	public static final String HEADER_STRING = "Authorization";
+	//public static final String HEADER_STRING = "Authorization";
 
 	@Autowired
 	UserService userService;
@@ -61,15 +61,21 @@ public class AuthenticationController {
 			MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<?> createCorporate(@Valid @RequestBody CorporateUserPojo user, HttpServletRequest request,
 			Device device) {
-
 		return authenticationServiceImpl.createCorporateUser(user, request, device);
+	}
+
+	@ApiOperation(value = "Verify Account with OTP", tags = { "AUTH" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@PostMapping("/verify-otp")
+	public ResponseEntity<?> verifyAccount(@RequestBody OTPPojo otpPojo) {
+		return authenticationServiceImpl.verifyAccountCreation(otpPojo);
 	}
 
 	@ApiOperation(value = "Verify phone number with OTP", tags = { "AUTH" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
-	@PostMapping("/verify-otp")
+	@PostMapping("/verify-phone")
 	public ResponseEntity<?> verifyOTP(@RequestBody OTPPojo otpPojo) {
-		return authenticationServiceImpl.verifyOTP(otpPojo);
+		return authenticationServiceImpl.verifyPhoneUsingOTP(otpPojo);
 	}
 
 	@ApiOperation(value = "Verify email", tags = { "AUTH" })
@@ -162,8 +168,8 @@ public class AuthenticationController {
 
 	@ApiOperation(value = "Resend OTP to Phone", tags = { "AUTH" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
-	@GetMapping("/resend-otp/{phoneNumber}/{email}")
-	public ResponseEntity<?> resendOTP(@PathVariable String phoneNumber, String email) {
+	@GetMapping("/resend-otp/{phoneNumber}")
+	public ResponseEntity<?> resendOTP(@PathVariable String phoneNumber, @PathVariable  String email) {
 		return authenticationServiceImpl.resendOTP(phoneNumber, email);
 	}
 
