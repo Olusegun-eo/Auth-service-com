@@ -1,20 +1,31 @@
 package com.waya.wayaauthenticationservice.pojo;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.server.core.Relation;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserProfileResponsePojo {
+@EqualsAndHashCode(callSuper = false)
+@Relation(collectionRelation = "userResponse", itemRelation = "user")
+@JsonInclude(Include.NON_NULL)
+public class UserProfileResponsePojo extends RepresentationModel<UserProfileResponsePojo> {
 	
 	@JsonProperty("userId")
     private Long id;
@@ -43,8 +54,15 @@ public class UserProfileResponsePojo {
 	
 	private boolean isAccountDeleted;
 	
-	@Builder.Default
-	private List<String> roles = new ArrayList<>();
+	private boolean pinCreated;
+
+	private boolean isCorporate;
 	
+	@Builder.Default
+	private Set<String> roles = new HashSet<>();
+	
+	@Builder.Default
+	private Set<String> permits = new HashSet<>();
+
 
 }

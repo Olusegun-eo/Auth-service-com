@@ -14,12 +14,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import org.springframework.scheduling.annotation.Async;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,10 +41,11 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
-import com.waya.wayaauthenticationservice.entity.CoporateUser;
+import com.waya.wayaauthenticationservice.entity.CorporateUser;
 import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.pojo.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.pojo.CreateAccountPojo;
 import com.waya.wayaauthenticationservice.pojo.DevicePojo;
@@ -63,7 +64,7 @@ import com.waya.wayaauthenticationservice.pojo.WalletPojo;
 import com.waya.wayaauthenticationservice.pojo.WayagramPojo;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
-import com.waya.wayaauthenticationservice.repository.CooperateUserRepository;
+import com.waya.wayaauthenticationservice.repository.CorporateUserRepository;
 import com.waya.wayaauthenticationservice.repository.RedisUserDao;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
@@ -105,7 +106,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	KafkaMessageProducer kafkaMessageProducer;
 
 	@Autowired
-	private CooperateUserRepository cooperateUserRepo;
+	private CorporateUserRepository corporateUserRepository;
 
 	@Autowired
 	private WalletProxy walletProxy;
@@ -115,46 +116,52 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Autowired
 	private ReqIPUtils reqUtil;
-	
+
 	@Autowired
 	ProfileServiceDAO profileServiceDAO;
 
 	@Autowired
 	private ModelMapper mapper;
-	
 
 	public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
 	private static final String SECRET_TOKEN = "wayas3cr3t";
 	public static final String TOKEN_PREFIX = "serial ";
-	
-	@Value("${app.wallet.profile.url}")
+
+	@Value("${wallet.profile.url}")
 	private String profileURL;
 
 	@Override
 	@Transactional
 	public ResponseEntity<?> createUser(UserPojo mUser, HttpServletRequest request, Device device) {
-
 		try {
 			// Check if email exists
 			Users existingEmail = userRepo.findByEmail(mUser.getEmail()).orElse(null);
 			if (existingEmail != null)
 				return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
 
-			if (!mUser.getPhoneNumber().startsWith("234"))
+			if (mUser.getPhoneNumber() != null && !mUser.getPhoneNumber().startsWith("234"))
 				return new ResponseEntity<>(new ErrorResponse("Phone numbers must start with 234"),
 						HttpStatus.BAD_REQUEST);
 
 			// Check if Phone exists
-			Users existingTelephone = userRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
+			Users existingTelephone = mUser.getPhoneNumber() == null ? null
+					: userRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
 			if (existingTelephone != null)
 				return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
 						HttpStatus.BAD_REQUEST);
 
-			Roles mRoles = rolesRepo.findByName("ROLE_USER");
 			List<Roles> roleList = new ArrayList<>();
-			roleList.add(mRoles);
-			if (mUser.isAdmin())
-				roleList.add(rolesRepo.findByName("ROLE_ADMIN"));
+
+			Roles userRole = rolesRepo.findByName("ROLE_USER")
+					.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+
+			roleList.add(userRole);
+
+			if (mUser.isAdmin()) {
+				Roles adminRole = rolesRepo.findByName("ROLE_ADMIN")
+						.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+				roleList.add(adminRole);
+			}
 
 			final String ip = reqUtil.getClientIP(request);
 			log.info("Request IP: " + ip);
@@ -186,14 +193,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			log.info("Response: {}", response.getBody());
 
-			// Create profile by publishing to Kafka
+			// TODO: Confirm that the Number is important for Profile Service Call to Fly
 			ProfilePojo profilePojo = new ProfilePojo(user.getEmail(), user.getFirstName(), user.getPhoneNumber(),
 					user.getSurname(), String.valueOf(user.getId()), false);
-			
+
+			// TODO: Confirm and refactor the Kafka Call
 			kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC, profilePojo);
-			
-			Integer checkcount = profileServiceDAO.getProfileCount(String.valueOf(user.getId()), user.getPhoneNumber());
-			if(checkcount == 0) {
+
+			Integer checkCount = profileServiceDAO.getProfileCount(String.valueOf(user.getId()), user.getPhoneNumber());
+			if (checkCount == 0) {
 				log.info("Profile does not exist: use an async");
 				postProfile(profilePojo);
 			}
@@ -207,15 +215,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		}
 	}
 
-
-	@Override
-	public ResponseEntity<?> createUsers(Set<UserPojo> userList, HttpServletRequest request, Device device) {
-		
-		
-		
-		return null;
-	}
-	
 	@Override
 	public ResponseEntity<?> createCorporateUser(CorporateUserPojo mUser, HttpServletRequest request, Device device) {
 
@@ -223,8 +222,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			// Check if email exists
 			Users existingEmail = userRepo.findByEmail(mUser.getEmail()).orElse(null);
 			if (existingEmail != null) {
-				// String token = generateToken(existingEmail);
-				// System.out.println("::::::mtoken::::" + token);
 				return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
 			}
 
@@ -238,11 +235,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
 						HttpStatus.BAD_REQUEST);
 
-			Roles merchRole = rolesRepo.findByName("ROLE_MERCH");
-			if (merchRole == null)
-				return new ResponseEntity<>(new ErrorResponse("Merchant Role Not Available"), HttpStatus.BAD_REQUEST);
+			Roles merchRole = rolesRepo.findByName("ROLE_MERCH")
+					.orElseThrow(() -> new CustomException("Merchant Role Not Available", HttpStatus.BAD_REQUEST));
 
-			Roles userRole = rolesRepo.findByName("ROLE_USER");
+			Roles userRole = rolesRepo.findByName("ROLE_USER")
+					.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+
 			List<Roles> roleList = new ArrayList<>();
 			roleList.addAll(Arrays.asList(userRole, merchRole));
 
@@ -272,13 +270,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			Users regUser = userRepo.save(user);
 			if (regUser == null)
-				return new ResponseEntity<>(new ErrorResponse("iD PROVIDED NOT FOUND"), HttpStatus.NOT_FOUND);
+				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.COULD_NOT_INSERT_RECORD.getErrorMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 
 			mUser.setUserId(regUser.getId());
 
-			CoporateUser coopUser = mapper.map(mUser, CoporateUser.class);
+			CorporateUser coopUser = mapper.map(mUser, CorporateUser.class);
 			coopUser.setUserId(regUser.getId());
-			cooperateUserRepo.save(coopUser);
+			corporateUserRepository.save(coopUser);
 
 			CreateAccountPojo createAccount = new CreateAccountPojo();
 			createAccount.setEmailAddress(regUser.getEmail());
@@ -287,7 +285,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			createAccount.setLastName(regUser.getSurname());
 			createAccount.setMobileNo(regUser.getPhoneNumber());
 			createAccount.setSavingsProductId(1);
-			walletProxy.createCooperateAccouont(createAccount);
+			walletProxy.createCorporateAccount(createAccount);
 
 			ProfilePojo2 profilePojo = new ProfilePojo2();
 			profilePojo.setBusinessType(mUser.getBusinessType());
@@ -313,9 +311,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			log.info("Response: {}", response.getBody());
 
 			kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC, profilePojo);
-			
-			Integer checkcount = profileServiceDAO.getProfileCount(String.valueOf(user.getId()), user.getPhoneNumber());
-			if(checkcount == 0) {
+
+			Integer profileCount = profileServiceDAO.getProfileCount(String.valueOf(user.getId()), user.getPhoneNumber());
+			if (profileCount == 0) {
 				log.info("Profile does not exist: use an async");
 				postProfile(profilePojo);
 			}
@@ -342,7 +340,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			System.out.println(e.fillInStackTrace());
 			throw new RuntimeException(e.fillInStackTrace());
 		}
-
 	}
 
 	@Override
@@ -369,7 +366,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			} else {
 				return new ResponseEntity<>(new ErrorResponse("This email does exists"), HttpStatus.BAD_REQUEST);
 			}
-
 		} catch (Exception e) {
 			log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
 			return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
@@ -665,21 +661,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 		return new DevicePojo(deviceType, platform);
 	}
-	
+
 	@Async("asyncExecutor")
-    public CompletableFuture<HttpEntity<String>> postProfile(ProfilePojo profilePojo) throws InterruptedException 
-    {
-        log.info("Profile creation starts for {}", profilePojo.getEmail());
- 
-        //EmployeeNames employeeNameData = restTemplate.getForObject("http://localhost:8080/name", EmployeeNames.class);
-        HttpEntity<String> json = HttpRequest(profilePojo);
-        ResponseEntity<String> resp = restTemplate.exchange(profileURL,HttpMethod.POST, json, String.class);
-        log.info("ProfileData, {}", profilePojo);
-        Thread.sleep(1000L);    //Intentional delay
-        log.info("Profile creation completed");
-        return CompletableFuture.completedFuture(resp);
-    }
-	
+	public CompletableFuture<HttpEntity<String>> postProfile(ProfilePojo profilePojo) throws InterruptedException {
+		log.info("Profile creation starts for {}", profilePojo.getEmail());
+
+		HttpEntity<String> json = HttpRequest(profilePojo);
+		ResponseEntity<String> resp = restTemplate.exchange(profileURL, HttpMethod.POST, json, String.class);
+		log.info("ProfileData, {}", profilePojo);
+		Thread.sleep(10000); // Intentional delay
+		log.info("Profile creation completed");
+		return CompletableFuture.completedFuture(resp);
+	}
+
 	public HttpEntity<String> HttpRequest(Object obj) {
 		String jsonInString = null;
 		HttpEntity<String> requestBody = null;
@@ -708,7 +702,5 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		}
 		return requestBody;
 	}
-	
-
 
 }

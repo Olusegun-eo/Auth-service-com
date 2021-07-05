@@ -1,7 +1,13 @@
 spring:
-  profiles:    active:    - dev
-  application:    name: auth-service
+#  profiles:
+#    active:
+#    - dev
+  application:
+    name: auth-service
   datasource:
+    #    url: jdbc:postgresql://127.0.0.1:5432/app_dev
+    #    username: app_dev
+    #    password: e1bc9e7f864d
     url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaPayChatAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
     username: WayaPayChat2020
     password: gh9shfit2m53g4xz
@@ -12,6 +18,10 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        show-sql: true
+        jdbc:
+          time_zone: UTC
+
   jackson:
     serialization:
       fail-on-empty-beans: false     
@@ -58,6 +68,16 @@ server:
   port: 8059 
   servlet:
     context-path: /
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
 eureka:
   client:
     serviceUrl:
@@ -74,6 +94,7 @@ deleteprofile:
   validate-user: http://46.101.41.187:8080/profile-service/delete-restore
   deleteWallet: http://46.101.41.187:1000/main/profile/delete-profile-by-id
   deleteWayagram: http://46.101.41.187:1000/main/profile/delete-profile-by-id
+
 app:
   auth:
     tokenSecret: 926D96C90030DD58429D2751AC1BDBBC
@@ -87,6 +108,6 @@ app:
       - http://localhost:3000/oauth2/redirect
       - myandroidapp://oauth2/redirect
       - myiosapp://oauth2/redirect
-  wallet:
-     profile:
-           url: http://46.101.41.187:8080/profile-service/personal-profile
+wallet:
+  profile:
+    url: http://46.101.41.187:8080/profile-service/personal-profile

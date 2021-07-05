@@ -28,5 +28,15 @@
     "name": "deleteprofile.deleteWallet",
     "type": "java.lang.String",
     "description": "A description for 'deleteprofile.deleteWallet'"
+  },
+  {
+    "name": "app.wallet.profile.url",
+    "type": "java.lang.String",
+    "description": "A description for 'app.wallet.profile.url'"
+  },
+  {
+    "name": "wallet.profile.url",
+    "type": "java.lang.String",
+    "description": "A description for 'wallet.profile.url'"
   }
 ]}

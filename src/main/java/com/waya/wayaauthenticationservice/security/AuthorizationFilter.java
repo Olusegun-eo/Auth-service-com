@@ -34,7 +34,6 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
         String header = req.getHeader(SecurityConstants.HEADER_STRING);
 
         System.out.println("::::::::::auth::::::::");
-        System.out.println(":::::Header:::::"+header);
         if (header == null || !header.startsWith(SecurityConstants.TOKEN_PREFIX)) {
             chain.doFilter(req, res);
             return;
@@ -53,14 +52,12 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
 
             token = token.replace(SecurityConstants.TOKEN_PREFIX, "");
 
-            System.out.println("::::config Token::::"+token);
             user = Jwts.parser().setSigningKey(SecurityConstants.getSecret()).parseClaimsJws(token).getBody()
                     .getSubject();
 
             if (user != null) {
                 return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
             }
-
             return null;
         }
 
