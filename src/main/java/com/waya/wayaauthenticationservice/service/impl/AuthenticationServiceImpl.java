@@ -349,14 +349,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			Users existingEmail = userRepo.findById(pinPojo.getUserId()).orElse(null);
 
 			if (existingEmail != null) {
-				String token = generateToken(existingEmail);
-				System.out.println("::::::mtoken::::" + token);
+//				String token = generateToken(existingEmail);
+//				System.out.println("::::::mtoken::::" + token);
 //              Users user = authenticatedUserFacade.getUser();
 				if (!pinIs4Digit(pinPojo.getPin())) {
 					return new ResponseEntity<>(new ErrorResponse("Transaction pin should be exactly 4 Digits"),
 							HttpStatus.BAD_REQUEST);
 				}
-				existingEmail.setPin(pinPojo.getPin());
+				existingEmail.setPinHash(passwordEncoder.encode(String.valueOf(pinPojo.getPin())));
 				existingEmail.setPinCreated(true);
 				userRepo.save(existingEmail);
 				return new ResponseEntity<>(new SuccessResponse("Transaction pin created successfully.", null),
@@ -490,15 +490,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		if (user == null) {
 			return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
 		}
-		boolean isPinMatched = user.getPin() == pinPojo.getOldPin();
+		boolean isPinMatched = passwordEncoder.matches(String.valueOf(pinPojo.getOldPin()), user.getPinHash());
 		if (!isPinMatched) {
 			return new ResponseEntity<>(new ErrorResponse("Incorrect Old Pin"), HttpStatus.BAD_REQUEST);
 		}
-		user.setPin(pinPojo.getNewPin());
+		user.setPinHash(passwordEncoder.encode(String.valueOf(pinPojo.getNewPin())));
 		try {
 			userRepo.save(user);
 			return new ResponseEntity<>(new SuccessResponse("Pin Changed.", null), HttpStatus.OK);
-
 		} catch (Exception e) {
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
@@ -508,21 +507,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	public ResponseEntity<?> forgotPin(PinPojo pinPojo) {
 		Users user = userRepo.findByEmail(pinPojo.getEmail()).orElse(null);
 		if (user == null) {
-			return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.NOT_FOUND);
 		}
-		user.setPin(pinPojo.getPin());
+		user.setPinHash(passwordEncoder.encode(String.valueOf(pinPojo.getPin())));
 		try {
 			userRepo.save(user);
 			return new ResponseEntity<>(new SuccessResponse("Pin Changed.", null), HttpStatus.OK);
-
 		} catch (Exception e) {
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
 	}
 
 	@Override
-	public ResponseEntity<?> resendOTP(String phoneNumber, String email) {
-		String url = PROFILE_SERVICE + "profile-service/otp/" + phoneNumber + "/" + email;
+	public ResponseEntity<?> resendOTPPhone(String phoneNumber) {
+		Users user = userRepo.findByPhoneNumber(phoneNumber).orElse(null);
+		if(user == null)
+			return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()), HttpStatus.NOT_FOUND);
+
+		String url = PROFILE_SERVICE + "profile-service/otp/" + phoneNumber + "/" + user.getEmail();
 		GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
 		if (generalResponse.isStatus()) {
 			return new ResponseEntity<>(new SuccessResponse("OTP sent successfully.", null), HttpStatus.OK);
@@ -532,8 +534,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	}
 
 	@Override
-	public ResponseEntity<?> resendVerificationMail(String email, String userName) {
-		String url = PROFILE_SERVICE + "profile-service/email-token/" + email + "/" + userName;
+	public ResponseEntity<?> resendVerificationMail(String email) {
+		Users user = userRepo.findByEmail(email).orElse(null);
+		if(user == null)
+			return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()), HttpStatus.NOT_FOUND);
+
+		String url = PROFILE_SERVICE + "profile-service/email-token/" + email + "/" + user.getId();
 		GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
 		if (generalResponse.isStatus()) {
 			return new ResponseEntity<>(new SuccessResponse("Verification email sent successfully.", null),
@@ -573,20 +579,26 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Override
 	public ResponseEntity<?> validatePin(Long userId, int pin) {
-		Users users = userRepo.findByIdAndPin(userId, pin);
+		Users users = userRepo.findById(userId).orElse(null);
 		if (users == null) {
 			return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.BAD_REQUEST);
 		}
-		return new ResponseEntity<>(new SuccessResponse("User valid.", users), HttpStatus.OK);
+		boolean isPinMatched = passwordEncoder.matches(String.valueOf(pin), users.getPinHash());
+		if (isPinMatched) {
+			return new ResponseEntity<>(new SuccessResponse("Pin valid."), HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.BAD_REQUEST);
+		}
 	}
 
 	@Override
 	public ResponseEntity<?> validatePinFromUser(int pin) {
 		Users users = authenticatedUserFacade.getUser();
 		if (users == null) {
-			return new ResponseEntity<>(new ErrorResponse("Invalid User."), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(new ErrorResponse("Invalid User."), HttpStatus.NOT_FOUND);
 		}
-		if (users.getPin() == pin) {
+		boolean isPinMatched = passwordEncoder.matches(String.valueOf(pin), users.getPinHash());
+		if (isPinMatched) {
 			return new ResponseEntity<>(new SuccessResponse("Pin valid."), HttpStatus.OK);
 		} else {
 			return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.BAD_REQUEST);
@@ -612,7 +624,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	public ResponseEntity<?> createWalletAccount(WalletPojo walletPojo) {
 		kafkaMessageProducer.send(WALLET_ACCOUNT_TOPIC, walletPojo);
 		return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
-
 	}
 
 	@Override
@@ -634,7 +645,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	}
 
 	public String startsWith234(String phoneNumber, int count) {
-
 		return phoneNumber.substring(0, count);
 	}
 

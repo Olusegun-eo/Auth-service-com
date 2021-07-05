@@ -9,8 +9,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
@@ -43,11 +45,6 @@ public class UserPrincipal implements OAuth2User, UserDetails {
 	@Override
 	public String getPassword() {
 		return user.getPassword();
-	}
-
-	@Override
-	public String getUsername() {
-		return user.getEmail();
 	}
 
 	@Override
@@ -91,11 +88,6 @@ public class UserPrincipal implements OAuth2User, UserDetails {
 	public void setAttributes(Map<String, Object> attributes) {
 		this.attributes = attributes;
 	}
-
-	@Override
-	public String getName() {
-		return user.getEmail();
-	}
 	
 	public Optional<Users> getUser() {
 		return Optional.of(this.user);
@@ -116,4 +108,27 @@ public class UserPrincipal implements OAuth2User, UserDetails {
 		}
 		return authorities;
 	}
+
+	/**
+	 * Returns the name of the authenticated <code>Principal</code>. Never
+	 * <code>null</code>.
+	 *
+	 * @return the name of the authenticated <code>Principal</code>
+	 */
+	@Override
+	public String getName() {
+		return this.user.getEmail();
+	}
+
+	/**
+	 * Returns the username used to authenticate the user. Cannot return
+	 * <code>null</code>.
+	 *
+	 * @return the username (never <code>null</code>)
+	 */
+	@Override
+	public String getUsername() {
+		return this.user.getEmail();
+	}
+
 }

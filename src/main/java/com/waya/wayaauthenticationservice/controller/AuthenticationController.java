@@ -169,15 +169,15 @@ public class AuthenticationController {
 	@ApiOperation(value = "Resend OTP to Phone", tags = { "AUTH" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("/resend-otp/{phoneNumber}")
-	public ResponseEntity<?> resendOTP(@PathVariable String phoneNumber, @PathVariable  String email) {
-		return authenticationServiceImpl.resendOTP(phoneNumber, email);
+	public ResponseEntity<?> resendOTPPhone(@PathVariable() String phoneNumber) {
+		return authenticationServiceImpl.resendOTPPhone(phoneNumber);
 	}
 
 	@ApiOperation(value = "Resend Verification Email", tags = { "AUTH" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
-	@GetMapping("/resend-otp-mail/{email}/{userId}")
-	public ResponseEntity<?> resendOTPEmail(@PathVariable String email, String userId) {
-		return authenticationServiceImpl.resendVerificationMail(email, userId);
+	@GetMapping("/resend-otp-mail/{email}")
+	public ResponseEntity<?> resendOTPEmail(@PathVariable String email) {
+		return authenticationServiceImpl.resendVerificationMail(email);
 	}
 
 	@ApiOperation(value = "Check if user is an admin: (Internal Consumption only)", tags = { "AUTH" })

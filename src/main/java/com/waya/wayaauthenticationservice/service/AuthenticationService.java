@@ -42,9 +42,9 @@ public interface AuthenticationService {
 
 	ResponseEntity<?> forgotPin(PinPojo pinPojo);
 
-	ResponseEntity<?> resendOTP(String phoneNumber, String email);
+	ResponseEntity<?> resendOTPPhone(String phoneNumber);
 
-	ResponseEntity<?> resendVerificationMail(String email, String userName);
+	ResponseEntity<?> resendVerificationMail(String email);
 
 	ResponseEntity<?> validateUser();
 
