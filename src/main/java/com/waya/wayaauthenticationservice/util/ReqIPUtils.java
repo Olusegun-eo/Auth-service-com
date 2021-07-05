@@ -50,5 +50,9 @@ public class ReqIPUtils {
         }
         return request.getRemoteAddr();
     }
+	
+	public void getMessage() {
+		
+	}
 
 }
