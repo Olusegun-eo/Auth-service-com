@@ -46,7 +46,6 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
             chain.doFilter(req, res);
             return;
         }
-
         UsernamePasswordAuthenticationToken authentication = getAuthentication(req);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         chain.doFilter(req, res);
@@ -71,7 +70,8 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
                 grantedAuthorities = roles.stream().map(r -> new SimpleGrantedAuthority(r.getName())).collect(Collectors.toSet());
                 grantedAuthorities.addAll(getGrantedAuthorities(getPrivileges(roles)));
 
-                return new UsernamePasswordAuthenticationToken(userToken, null, grantedAuthorities);
+                UserPrincipal userPrincipal = new UserPrincipal(user);
+                return new UsernamePasswordAuthenticationToken(userPrincipal, null, grantedAuthorities);
             }
             return null;
         }

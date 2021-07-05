@@ -259,18 +259,16 @@ public class UserServiceImpl implements UserService {
 	public UserRoleUpdateRequest UpdateUser(UserRoleUpdateRequest user) {
 		try {
 			return usersRepo.findById(user.getId()).map(mUser -> {
-				List<Roles> roleList = new ArrayList<>();
 				for (Integer i : user.getRolesList()) {
-					Optional<Roles> mUrole = rolesRepo.findById(i);
-					if (mUrole.isPresent()) {
-						roleList.add(mUrole.get());
-						mUser.getRolesList().add(mUrole.get());
+					Optional<Roles> mRole = rolesRepo.findById(i);
+					if (mRole.isPresent()) {
+						if (mUser.getRolesList().contains(mRole.get())) continue;
+						mUser.getRolesList().add(mRole.get());
 					}
 				}
-//				mUser.setRolesList(user.getRolesList());
 				usersRepo.save(mUser);
 				return user;
-			}).orElseThrow(() -> new CustomException("Id provided not found", HttpStatus.NOT_FOUND));
+			}).orElseThrow(() -> new CustomException("User Id provided not found", HttpStatus.NOT_FOUND));
 		} catch (Exception e) {
 			log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
 			throw new CustomException(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
