@@ -579,11 +579,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Override
 	public ResponseEntity<?> validatePin(Long userId, int pin) {
-		Users users = userRepo.findByIdAndPin(userId, pin);
+		Users users = userRepo.findById(userId).orElse(null);
 		if (users == null) {
 			return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.BAD_REQUEST);
 		}
-		return new ResponseEntity<>(new SuccessResponse("User valid.", users), HttpStatus.OK);
+		boolean isPinMatched = passwordEncoder.matches(String.valueOf(pin), users.getPinHash());
+		if (isPinMatched) {
+			return new ResponseEntity<>(new SuccessResponse("Pin valid."), HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.BAD_REQUEST);
+		}
 	}
 
 	@Override
@@ -619,7 +624,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	public ResponseEntity<?> createWalletAccount(WalletPojo walletPojo) {
 		kafkaMessageProducer.send(WALLET_ACCOUNT_TOPIC, walletPojo);
 		return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
-
 	}
 
 	@Override
@@ -641,7 +645,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	}
 
 	public String startsWith234(String phoneNumber, int count) {
-
 		return phoneNumber.substring(0, count);
 	}
 
