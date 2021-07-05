@@ -87,7 +87,7 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<?> getUser(Long userId) {
 		Users user = usersRepo.findById(userId).orElse(null);
 		if (user == null) {
-			return new ResponseEntity<>(new ErrorResponse("Invalid Id"), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(new ErrorResponse("Invalid Id"), HttpStatus.NOT_FOUND);
 		} else {
 			UserProfileResponsePojo userDto = this.toModelDTO(user);
 			return new ResponseEntity<>(new SuccessResponse("User info fetched", userDto), HttpStatus.OK);
@@ -147,7 +147,7 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<?> getUserByEmail(String email) {
 		Users user = usersRepo.findByEmail(email).orElse(null);
 		if (user == null) {
-			return new ResponseEntity<>(new ErrorResponse("Invalid email"), OK);
+			return new ResponseEntity<>(new ErrorResponse("Invalid email"), HttpStatus.NOT_FOUND);
 		} else {
 			UserProfileResponsePojo userDto = this.toModelDTO(user);
 			return new ResponseEntity<>(new SuccessResponse("User info fetched", userDto), HttpStatus.OK);
@@ -158,12 +158,13 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<?> getUserByPhone(String phone, String token) {
 		Users user = usersRepo.findByPhoneNumber(phone).orElse(null);
 		if (user == null) {
-			return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.OK);
+			return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.NOT_FOUND);
 		}
 		ApiResponse<MainWalletResponse> mainWalletResponse = this.walletProxy.getDefaultWallet(token);
 //        WalletResponse gr = restTemplate.getForObject(WALLET_SERVICE+"wallet/default-account/"+ user.getId(), WalletResponse.class);
 		if (mainWalletResponse != null) {
-			UserWalletPojo userWalletPojo = new UserWalletPojo(user, mainWalletResponse.getData().getAccountNo(),
+			UserProfileResponsePojo userDto = this.toModelDTO(user);
+			UserWalletPojo userWalletPojo = new UserWalletPojo(userDto, mainWalletResponse.getData().getAccountNo(),
 					mainWalletResponse.getData().getId());
 			return new ResponseEntity<>(new SuccessResponse("User info fetched", userWalletPojo), HttpStatus.OK);
 		}
@@ -259,18 +260,16 @@ public class UserServiceImpl implements UserService {
 	public UserRoleUpdateRequest UpdateUser(UserRoleUpdateRequest user) {
 		try {
 			return usersRepo.findById(user.getId()).map(mUser -> {
-				List<Roles> roleList = new ArrayList<>();
 				for (Integer i : user.getRolesList()) {
-					Optional<Roles> mUrole = rolesRepo.findById(i);
-					if (mUrole.isPresent()) {
-						roleList.add(mUrole.get());
-						mUser.getRolesList().add(mUrole.get());
+					Optional<Roles> mRole = rolesRepo.findById(i);
+					if (mRole.isPresent()) {
+						if (mUser.getRolesList().contains(mRole.get())) continue;
+						mUser.getRolesList().add(mRole.get());
 					}
 				}
-//				mUser.setRolesList(user.getRolesList());
 				usersRepo.save(mUser);
 				return user;
-			}).orElseThrow(() -> new CustomException("Id provided not found", HttpStatus.NOT_FOUND));
+			}).orElseThrow(() -> new CustomException("User Id provided not found", HttpStatus.NOT_FOUND));
 		} catch (Exception e) {
 			log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
 			throw new CustomException(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
@@ -290,7 +289,7 @@ public class UserServiceImpl implements UserService {
 				us.setPhoneVerified(user.isPhoneVerified());
 				us.setPinCreated(user.isPinCreated());
 				us.setReferenceCode(user.getReferenceCode());
-				us.setRolesList(new ArrayList<Roles>(user.getRolesList()));
+				us.setRolesList(new ArrayList<>(user.getRolesList()));
 				us.setSurname(user.getSurname());
 				us.setEmailVerified(user.isEmailVerified());
 				return us;
@@ -382,7 +381,7 @@ public class UserServiceImpl implements UserService {
 			log.error(ex.getCause() + "message");
 			String errorMessages = String.format("%s %s", ErrorMessages.INTERNAL_SERVER_ERROR.getErrorMessage(),
 					ex.getMessage());
-			throw new CustomException(errorMessages, HttpStatus.INTERNAL_SERVER_ERROR);
+			throw new CustomException(errorMessages, HttpStatus.UNPROCESSABLE_ENTITY);
 		}
 		return userPage;
 	}

@@ -130,10 +130,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	@Value("${wallet.profile.url}")
 	private String profileURL;
 
+	private String sanitizeInput(String value){
+		if(value == null) return "";
+		return value.replaceAll("[\\s()-]", "");
+	}
+
 	@Override
 	@Transactional
 	public ResponseEntity<?> createUser(UserPojo mUser, HttpServletRequest request, Device device) {
 		try {
+			mUser.setPhoneNumber(sanitizeInput(mUser.getPhoneNumber()));
 			// Check if email exists
 			Users existingEmail = userRepo.findByEmail(mUser.getEmail()).orElse(null);
 			if (existingEmail != null)
@@ -141,11 +147,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			if (mUser.getPhoneNumber() != null && !mUser.getPhoneNumber().startsWith("234"))
 				return new ResponseEntity<>(new ErrorResponse("Phone numbers must start with 234"),
-						HttpStatus.BAD_REQUEST);
+					HttpStatus.BAD_REQUEST);
 
 			// Check if Phone exists
 			Users existingTelephone = mUser.getPhoneNumber() == null ? null
 					: userRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
+
 			if (existingTelephone != null)
 				return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
 						HttpStatus.BAD_REQUEST);
@@ -218,12 +225,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	public ResponseEntity<?> createCorporateUser(CorporateUserPojo mUser, HttpServletRequest request, Device device) {
 
 		try {
+			mUser.setPhoneNumber(sanitizeInput(mUser.getPhoneNumber()));
+
 			// Check if email exists
 			Users existingEmail = userRepo.findByEmail(mUser.getEmail()).orElse(null);
 			if (existingEmail != null) {
 				return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
 			}
 
+			existingEmail = userRepo.findById(mUser.getUserId()).orElse(null);
+			if (existingEmail != null) {
+				return new ResponseEntity<>(new ErrorResponse("A User with Similar Id already exists"), HttpStatus.BAD_REQUEST);
+			}
 			if (!mUser.getPhoneNumber().startsWith("234"))
 				return new ResponseEntity<>(new ErrorResponse("Phone numbers must start with 234"),
 						HttpStatus.BAD_REQUEST);
@@ -249,6 +262,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			DevicePojo dev = GetDevice(device);
 
 			Users user = new Users();
+			user.setAdmin(mUser.isAdmin());
 			user.setId(0L);
 			user.setCorporate(true);
 			user.setDateCreated(LocalDateTime.now());
@@ -361,7 +375,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				userRepo.save(existingEmail);
 				return new ResponseEntity<>(new SuccessResponse("Transaction pin created successfully.", null),
 						HttpStatus.CREATED);
-
 			} else {
 				return new ResponseEntity<>(new ErrorResponse("This email does exists"), HttpStatus.BAD_REQUEST);
 			}
@@ -378,8 +391,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		ProfileResponse profileResponse = restTemplate.getForObject(url, ProfileResponse.class);
 		log.info("Error::: {}, {} and {}", new Gson().toJson(profileResponse));
 		if (profileResponse.isStatus()) {
-			Users user = userRepo.findByEmailOrPhoneNumber(otpPojo.getPhoneOrEmail(), otpPojo.getPhoneOrEmail()).orElse(null);
-			//user.setPhoneVerified(true);
+			Users user = userRepo.findByEmailOrPhoneNumber(otpPojo.getPhoneOrEmail()).orElse(null);
 			if(user == null) return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage() +
 					"For User with " + otpPojo.getPhoneOrEmail()), HttpStatus.BAD_REQUEST);
 			user.setActive(true);

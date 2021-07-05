@@ -10,6 +10,11 @@ public class ErrorResponse extends ResponseHelper {
         super(false, message, Strings.EMPTY);
     }
 
+    public ErrorResponse(String message, Object data){
+        super(false, message, data);
+    }
+
+
     public ErrorResponse(){
         super(false, ERROR_MESSAGE, Strings.EMPTY);
     }
