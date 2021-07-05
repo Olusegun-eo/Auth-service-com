@@ -56,12 +56,6 @@ public class UserController {
 	@Autowired
 	UserService userService;
 
-	@Autowired
-	PagedResourcesAssembler<Users> pagedResourcesAssembler;
-
-	@Autowired
-	UserAssembler userAssembler;
-
 	/*
 	 * @ApiOperation(value = "Save users to redis", hidden = false, tags = {
 	 * "USER SERVICE" })
@@ -83,17 +77,6 @@ public class UserController {
 	public ResponseEntity<?> create(@Valid @RequestBody BulkPrivateUserCreationDTO userList, HttpServletRequest req,
 			Device device) {
 		return userService.createUsers(userList, req.getHeader("Authorization"), device);
-	}
-	
-	@ApiOperation(value = "Get all users from Database", hidden = false, tags = { "USER SERVICE" })
-	@RequestMapping(value = "", method = RequestMethod.GET, produces = { MediaType.APPLICATION_JSON_VALUE,
-			MediaType.APPLICATION_XML_VALUE, "application/hal+json" })
-	public ResponseEntity<PagedModel<UserProfileResponsePojo>> getAllUsersDB(
-			@RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "20") int size) {
-		Page<Users> userPagedList = userService.getAllUsers(page, size);
-		PagedModel<UserProfileResponsePojo> userPagedModel = pagedResourcesAssembler.toModel(userPagedList, userAssembler);
-		return new ResponseEntity<>(userPagedModel, HttpStatus.OK);
 	}
 
 	@ApiOperation(value = "Get User Details and Roles by ID from Redis (In-app use only)", tags = { "USER SERVICE" })

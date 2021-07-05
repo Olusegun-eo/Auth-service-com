@@ -102,7 +102,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	protected void successfulAuthentication(HttpServletRequest req, HttpServletResponse res, FilterChain chain,
 			Authentication auth) throws IOException, ServletException, SignatureException {
 
-		String userName = ((User) auth.getPrincipal()).getUsername();
+		String userName = ((UserPrincipal) auth.getPrincipal()).getUsername();
 
 		String token = Jwts.builder().setSubject(userName)
 				.setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))
@@ -112,7 +112,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 		Users user = userLoginRepo.findByEmailOrPhoneNumber(userName, userName).get();
 
-		res.addHeader(SecurityConstants.HEADER_STRING, SecurityConstants.TOKEN_PREFIX + token);
+
 
 		LoginResponsePojo loginResponsePojo = new LoginResponsePojo();
 		Map<String, Object> m = new HashMap<String, Object>();
@@ -141,6 +141,8 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 				m.put("roles", roles);
 				m.put("pinCreated", user.isPinCreated());
 				m.put("corporate", user.isCorporate());
+
+				res.addHeader(SecurityConstants.HEADER_STRING, SecurityConstants.TOKEN_PREFIX + token);
 
 				UserProfileResponsePojo userp = new ModelMapper().map(user, UserProfileResponsePojo.class);
 				userp.setPhoneNumber(user.getPhoneNumber());

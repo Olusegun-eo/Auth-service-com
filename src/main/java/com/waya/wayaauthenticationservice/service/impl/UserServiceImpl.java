@@ -96,10 +96,10 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public ResponseEntity<?> getUsers() {
-		Users user = authenticatedUserFacade.getUser();
-		if (!validateAdmin(user)) {
-			return new ResponseEntity<>(new ErrorResponse("Invalid Access"), HttpStatus.BAD_REQUEST);
-		}
+//		Users user = authenticatedUserFacade.getUser();
+//		if (!validateAdmin(user)) {
+//			return new ResponseEntity<>(new ErrorResponse("Invalid Access"), HttpStatus.BAD_REQUEST);
+//		}
 		List<UserProfileResponsePojo> users = usersRepo.findAll().stream()
 				.map(u -> this.toModelDTO(u))
 				.collect(Collectors.toList());
@@ -121,10 +121,10 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public ResponseEntity<?> getUsersByRole(int roleId) {
-		Users user = authenticatedUserFacade.getUser();
-		if (!validateAdmin(user)) {
-			return new ResponseEntity<>(new ErrorResponse("Invalid Access"), HttpStatus.BAD_REQUEST);
-		}
+//		Users user = authenticatedUserFacade.getUser();
+//		if (!validateAdmin(user)) {
+//			return new ResponseEntity<>(new ErrorResponse("Invalid Access"), HttpStatus.BAD_REQUEST);
+//		}
 		Roles role = rolesRepo.findById(roleId).orElse(null);
 		if (role == null) {
 			return new ResponseEntity<>(new ErrorResponse("Invalid Role"), HttpStatus.BAD_REQUEST);
