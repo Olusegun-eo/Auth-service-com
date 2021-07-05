@@ -28,7 +28,9 @@ public interface AuthenticationService {
 
 	ResponseEntity<?> createPin(PinPojo pinPojo);
 
-	ResponseEntity<?> verifyOTP(OTPPojo otpPojo);
+	ResponseEntity<?> verifyAccountCreation(OTPPojo otpPojo);
+
+	ResponseEntity<?> verifyPhoneUsingOTP(OTPPojo otpPojo);
 
 	ResponseEntity<?> verifyEmail(EmailPojo emailPojo);
 

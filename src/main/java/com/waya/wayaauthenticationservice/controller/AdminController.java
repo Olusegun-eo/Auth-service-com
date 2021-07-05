@@ -28,7 +28,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/v1/admin")
 @Tag(name = "ADMIN", description = "Admin Authentication Service API")
 @EnableCaching
-@PreAuthorize(value = "hasAuthority('ROLE_ADMIN')")
+@PreAuthorize(value = "hasRole('ADMIN')")
 public class AdminController {
 
     @Autowired
@@ -44,7 +44,6 @@ public class AdminController {
     UserAssembler userAssembler;
 
     @ApiOperation(value = "Fetch all Users (Admin Endpoint)" ,tags = { "ADMIN" })
-    @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/users")
     public ResponseEntity<PagedModel<UserProfileResponsePojo>> getAllUsersDB(
@@ -57,7 +56,7 @@ public class AdminController {
 
 
     @ApiOperation(value = "Fetch Users by Roles (Admin Endpoint)",tags = { "ADMIN" })
-    @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
+    //@ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/users/byrole/{roleId}")
     public ResponseEntity<?> getUsersByRole(@PathVariable int roleId) {
