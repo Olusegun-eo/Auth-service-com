@@ -182,6 +182,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			user.setAdmin(mUser.isAdmin());
 			user.setDateCreated(LocalDateTime.now());
 			user.setRegDeviceIP(ip);
+			String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
+			user.setName(fullName);
 			user.setRegDevicePlatform(dev.getPlatform());
 			user.setRegDeviceType(dev.getDeviceType());
 			user.setDateOfActivation(LocalDateTime.now());
