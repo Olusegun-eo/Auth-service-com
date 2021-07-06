@@ -1,6 +1,15 @@
 package com.waya.wayaauthenticationservice.exception;
 
-import lombok.extern.slf4j.Slf4j;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+
 import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -20,10 +29,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import java.time.ZonedDateTime;
-import java.util.*;
+import lombok.extern.slf4j.Slf4j;
 
 @ControllerAdvice
 @RestController
@@ -173,11 +179,11 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
         return errors;
     }
 
-    private Map<String, String> getValidationErrors(List<FieldError> fieldErrors) {
-        Map<String, String> errors = new HashMap<>();
-        fieldErrors.forEach(e -> errors.put(e.getField(), e.getDefaultMessage()));
-        return errors;
-    }
+//    private Map<String, String> getValidationErrors(List<FieldError> fieldErrors) {
+//        Map<String, String> errors = new HashMap<>();
+//        fieldErrors.forEach(e -> errors.put(e.getField(), e.getDefaultMessage()));
+//        return errors;
+//    }
 
     private List<String> getBodyValidationErrors(List<FieldError> fieldErrors) {
         List<String> errors = new ArrayList<>();

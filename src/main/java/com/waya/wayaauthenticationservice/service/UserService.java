@@ -23,7 +23,7 @@ public interface UserService {
 
 	ResponseEntity<?> getUserByEmail(String email);
 
-	ResponseEntity<?> getUserByPhone(String phone, String token);
+	ResponseEntity<?> getUserByPhone(String phone);
 
 	ResponseEntity<?> getUserById(Long id);
 
@@ -47,4 +47,6 @@ public interface UserService {
 	Page<Users> getAllUsers(int page, int size);
 
 	ResponseEntity<?> createUsers(@Valid BulkPrivateUserCreationDTO userBulk, String requestToken, Device device);
+
+	ResponseEntity<?> getUserAndWalletByPhone(String phone);
 }

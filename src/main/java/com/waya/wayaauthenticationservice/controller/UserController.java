@@ -5,10 +5,6 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.data.domain.Page;
-import org.springframework.data.web.PagedResourcesAssembler;
-import org.springframework.hateoas.PagedModel;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
@@ -22,16 +18,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.waya.wayaauthenticationservice.assembler.UserAssembler;
-import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.BulkPrivateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
 import com.waya.wayaauthenticationservice.pojo.UserEditPojo;
-import com.waya.wayaauthenticationservice.pojo.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.UserRoleUpdateRequest;
 import com.waya.wayaauthenticationservice.repository.RedisUserDao;
 import com.waya.wayaauthenticationservice.service.UserService;
@@ -83,6 +75,7 @@ public class UserController {
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("/{id}")
 	//    @Cacheable(key = "#id",value = "User")
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#id, authentication)")
 	public ResponseEntity<?> findUser(@PathVariable Long id) {
 		return userService.getUserById(id);
 	}
@@ -90,17 +83,25 @@ public class UserController {
 	@ApiOperation(value = "Get User Details by Email (In-app use only)", tags = { "USER SERVICE" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("email/{email}")
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#email, authentication)")
 	public ResponseEntity<?> getUserByEmail(@PathVariable String email) {
 		return userService.getUserByEmail(email);
 	}
 
 	@ApiOperation(value = "Get User Details by Phone (In-app use only)", tags = { "USER SERVICE" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
-	@ApiImplicitParams({
-			@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
 	@GetMapping("phone/{phone}")
-	public ResponseEntity<?> getUserByPhone(@PathVariable String phone, HttpServletRequest req) {
-		return userService.getUserByPhone(phone, req.getHeader("Authorization"));
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#phone, authentication)")
+	public ResponseEntity<?> getUserByPhone(@PathVariable String phone) {
+		return userService.getUserByPhone(phone);
+	}
+	
+	@ApiOperation(value = "Get User and Wallet Details by Phone (In-app use only)", tags = { "USER SERVICE" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@GetMapping("walletByPhone")
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#phone, authentication)")
+	public ResponseEntity<?> getUserAndWalletByPhone(@RequestParam("phone") String phone) {
+		return userService.getUserAndWalletByPhone(phone);
 	}
 
 	@ApiOperation(value = "Phone Contact check  (Service consumption only. Do not Use)", tags = { "USER SERVICE" })

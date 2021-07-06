@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import java.util.Collection;
+import java.util.Objects;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -39,7 +40,7 @@ public class Users implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id", unique = true, nullable = false)
-	private long id;
+	private Long id;
 
 	@Email(message = "email should be valid")
 	@Column(nullable = false, unique = true)
@@ -48,7 +49,6 @@ public class Users implements Serializable {
 	@Column(unique = true)
 	private String phoneNumber;
 
-	@Column(nullable = false)
 	private String referenceCode;
 
 	@Column(nullable = false)
@@ -107,7 +107,7 @@ public class Users implements Serializable {
 	private LocalDateTime accountExpiredDate;
 
 	@Column(name = "account_non_locked", nullable = false)
-	private boolean accountNonLocked;
+	private boolean accountNonLocked =  false;
 
 	@Column(name = "account_lock_date")
 	private LocalDateTime accountLockDate;
@@ -159,4 +159,22 @@ public class Users implements Serializable {
 		this.accountNonExpired = true;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof Users)) {
+			return false;
+		}
+		Users other = (Users) obj;
+		return Objects.equals(email, other.email) && id == other.id && Objects.equals(phoneNumber, other.phoneNumber)
+				&& Objects.equals(surname, other.surname);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(email, id, phoneNumber, surname);
+	}
+	
 }

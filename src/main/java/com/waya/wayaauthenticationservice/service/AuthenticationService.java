@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 
+import com.waya.wayaauthenticationservice.pojo.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.pojo.EmailPojo;
 import com.waya.wayaauthenticationservice.pojo.OTPPojo;
@@ -14,14 +15,13 @@ import com.waya.wayaauthenticationservice.pojo.PinPojo;
 import com.waya.wayaauthenticationservice.pojo.PinPojo2;
 import com.waya.wayaauthenticationservice.pojo.ProfilePojo;
 import com.waya.wayaauthenticationservice.pojo.ProfilePojo2;
-import com.waya.wayaauthenticationservice.pojo.UserPojo;
 import com.waya.wayaauthenticationservice.pojo.VirtualAccountPojo;
 import com.waya.wayaauthenticationservice.pojo.WalletPojo;
 import com.waya.wayaauthenticationservice.pojo.WayagramPojo;
 
 public interface AuthenticationService {
 
-	ResponseEntity<?> createUser(UserPojo userPojo, HttpServletRequest request, Device device);
+	ResponseEntity<?> createUser(BaseUserPojo userPojo, HttpServletRequest request, Device device);
 
 	ResponseEntity<?> createCorporateUser(CorporateUserPojo corporateUserPojo, HttpServletRequest request,
 			Device device);

@@ -13,6 +13,7 @@ import com.waya.wayaauthenticationservice.config.AuthClientConfiguration;
 import com.waya.wayaauthenticationservice.pojo.CreateAccountPojo;
 import com.waya.wayaauthenticationservice.pojo.CreateAccountResponse;
 import com.waya.wayaauthenticationservice.pojo.MainWalletResponse;
+import com.waya.wayaauthenticationservice.pojo.WalletAccount;
 import com.waya.wayaauthenticationservice.util.ApiResponse;
 
 
@@ -27,5 +28,8 @@ public interface WalletProxy {
 	
 	@PostMapping("/create/cooperate/user")
 	ApiResponse<CreateAccountResponse> createCorporateAccount(@RequestBody CreateAccountPojo createAccountPojo);
+
+	@GetMapping("/accounts/{user_id}")
+	ApiResponse<List<WalletAccount>> getUsersWallet(@PathVariable("user_id") Long id);
 
 }

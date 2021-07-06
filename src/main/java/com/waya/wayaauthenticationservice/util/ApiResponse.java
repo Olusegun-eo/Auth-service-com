@@ -10,7 +10,6 @@ import lombok.Data;
 @Data
 public class ApiResponse<E> implements Serializable {
 
-
 	private static final long serialVersionUID = -4953161112228607177L;
 
 	private Boolean status;
@@ -23,7 +22,8 @@ public class ApiResponse<E> implements Serializable {
 
 	private E data;
 
-	private ApiResponse() {}
+	private ApiResponse() {
+	}
 
 	private ApiResponse(Boolean status, Integer code, String message, E data) {
 		this.status = status;

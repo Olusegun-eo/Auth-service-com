@@ -18,7 +18,7 @@ import java.util.concurrent.CompletableFuture;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.waya.wayaauthenticationservice.exception.ErrorMessages;
+import org.apache.commons.beanutils.BeanUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,6 +46,8 @@ import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.exception.ErrorMessages;
+import com.waya.wayaauthenticationservice.pojo.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.pojo.CreateAccountPojo;
 import com.waya.wayaauthenticationservice.pojo.DevicePojo;
@@ -57,7 +59,6 @@ import com.waya.wayaauthenticationservice.pojo.PinPojo;
 import com.waya.wayaauthenticationservice.pojo.PinPojo2;
 import com.waya.wayaauthenticationservice.pojo.ProfilePojo;
 import com.waya.wayaauthenticationservice.pojo.ProfilePojo2;
-import com.waya.wayaauthenticationservice.pojo.UserPojo;
 import com.waya.wayaauthenticationservice.pojo.ValidateUserPojo;
 import com.waya.wayaauthenticationservice.pojo.VirtualAccountPojo;
 import com.waya.wayaauthenticationservice.pojo.WalletPojo;
@@ -137,7 +138,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Override
 	@Transactional
-	public ResponseEntity<?> createUser(UserPojo mUser, HttpServletRequest request, Device device) {
+	public ResponseEntity<?> createUser(BaseUserPojo mUser, HttpServletRequest request, Device device) {
 		try {
 			mUser.setPhoneNumber(sanitizeInput(mUser.getPhoneNumber()));
 			// Check if email exists
@@ -175,7 +176,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			DevicePojo dev = GetDevice(device);
 
-			Users user = this.mapper.map(mUser, Users.class);
+			Users user = new Users();
+			BeanUtils.copyProperties(user, mUser);
 			user.setId(0L);
 			user.setAdmin(mUser.isAdmin());
 			user.setDateCreated(LocalDateTime.now());
@@ -222,6 +224,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntity<?> createCorporateUser(CorporateUserPojo mUser, HttpServletRequest request, Device device) {
 
 		try {
@@ -750,5 +753,4 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		}
 		return requestBody;
 	}
-
 }

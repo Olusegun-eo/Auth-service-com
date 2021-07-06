@@ -23,17 +23,38 @@ public class UserSecurity {
 		this.userRepo = userRepo;
 	}
 
-	public boolean useHierarchy(String userName, Authentication authentication) {
+	public boolean useHierarchy(Long id, Authentication authentication) {
 		Users user = ((UserPrincipal) authentication.getPrincipal()).getUser()
 				.orElseThrow(() -> new UserServiceException(ErrorMessages.AUTHENTICATION_FAILED.getErrorMessage()));
 
-		if (user.getEmail().equals(userName))
+		if (user.getId() == id)
 			return true;
 
-		Users returnObj = this.userRepo.findByEmail(userName).orElseThrow(
-				() -> new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + userName));
+		Users returnObj = this.userRepo.findById(id)
+				.orElseThrow(() -> new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + id));
 
 		boolean isOga = compareRoles(returnObj, user) > 0;
+
+		log.info("isOga returned {}", isOga);
+		return isOga;
+	}
+
+	public boolean useHierarchy(String emailOrPhoneNumber, Authentication authentication) {
+
+		Users user = ((UserPrincipal) authentication.getPrincipal()).getUser()
+				.orElseThrow(() -> new UserServiceException(ErrorMessages.AUTHENTICATION_FAILED.getErrorMessage()));
+
+		if (user.getEmail().equals(emailOrPhoneNumber))
+			return true;
+
+		if (user.getPhoneNumber().equals(emailOrPhoneNumber))
+			return true;
+
+		Users returnObj = this.userRepo.findByEmailOrPhoneNumber(emailOrPhoneNumber).orElseThrow(
+				() -> new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + emailOrPhoneNumber));
+
+		boolean isOga = compareRoles(returnObj, user) > 0;
+
 		log.info("isOga returned {}", isOga);
 		return isOga;
 	}
@@ -44,6 +65,9 @@ public class UserSecurity {
 		Integer returnEmp = 0;
 
 		// TODO: To Compare both User Roles and See who is greater
+		boolean role = roleCheck(authEmp.getRolesList(), "ROLE_ADMIN");
+		if (role)
+			authEmpLevel = 1;
 
 		log.info("Authenticating User level is {}, Target User level is {}", authEmpLevel, returnEmp);
 		return authEmpLevel.compareTo(returnEmp);

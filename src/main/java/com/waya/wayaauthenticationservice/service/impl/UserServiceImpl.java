@@ -4,7 +4,6 @@ import static org.springframework.http.HttpStatus.OK;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,11 +38,11 @@ import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.BulkPrivateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.ContactPojo;
 import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
-import com.waya.wayaauthenticationservice.pojo.MainWalletResponse;
 import com.waya.wayaauthenticationservice.pojo.UserEditPojo;
 import com.waya.wayaauthenticationservice.pojo.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.UserRoleUpdateRequest;
 import com.waya.wayaauthenticationservice.pojo.UserWalletPojo;
+import com.waya.wayaauthenticationservice.pojo.WalletAccount;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
@@ -106,18 +105,18 @@ public class UserServiceImpl implements UserService {
 		return new ResponseEntity<>(new SuccessResponse("User info fetched", users), HttpStatus.OK);
 	}
 
-	private boolean validateAdmin(Users user) {
-		if (user == null) {
-			return false;
-		}
-		Roles adminRole = rolesRepo.findByName("ROLE_ADMIN")
-				.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
-		Optional<Collection<Roles>> roles = Optional.ofNullable(user.getRolesList());
-		if (!roles.isPresent())
-			return false;
-
-		return roles.get().contains(adminRole);
-	}
+//	private boolean validateAdmin(Users user) {
+//		if (user == null) {
+//			return false;
+//		}
+//		Roles adminRole = rolesRepo.findByName("ROLE_ADMIN")
+//				.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+//		Optional<Collection<Roles>> roles = Optional.ofNullable(user.getRolesList());
+//		if (!roles.isPresent())
+//			return false;
+//
+//		return roles.get().contains(adminRole);
+//	}
 
 	@Override
 	public ResponseEntity<?> getUsersByRole(int roleId) {
@@ -155,17 +154,25 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ResponseEntity<?> getUserByPhone(String phone, String token) {
+	public ResponseEntity<?> getUserByPhone(String phone) {
 		Users user = usersRepo.findByPhoneNumber(phone).orElse(null);
 		if (user == null) {
 			return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.NOT_FOUND);
 		}
-		ApiResponse<MainWalletResponse> mainWalletResponse = this.walletProxy.getDefaultWallet(token);
-//        WalletResponse gr = restTemplate.getForObject(WALLET_SERVICE+"wallet/default-account/"+ user.getId(), WalletResponse.class);
-		if (mainWalletResponse != null) {
-			UserProfileResponsePojo userDto = this.toModelDTO(user);
-			UserWalletPojo userWalletPojo = new UserWalletPojo(userDto, mainWalletResponse.getData().getAccountNo(),
-					mainWalletResponse.getData().getId());
+		UserProfileResponsePojo userDtO = toModelDTO(user);
+		return new ResponseEntity<>(new SuccessResponse("User info fetched", userDtO), HttpStatus.OK);
+	}
+	
+	@Override
+	public ResponseEntity<?> getUserAndWalletByPhone(String phone) {
+		Users user = usersRepo.findByPhoneNumber(phone).orElse(null);
+		if (user == null) 
+			return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.NOT_FOUND);
+		UserProfileResponsePojo userDtO = toModelDTO(user);
+		ApiResponse<List<WalletAccount>> walletResponse = walletProxy.getUsersWallet(user.getId());
+		if(walletResponse != null) {
+			UserWalletPojo userWalletPojo = new UserWalletPojo(userDtO, walletResponse.getData(),
+					walletResponse.getMessage());
 			return new ResponseEntity<>(new SuccessResponse("User info fetched", userWalletPojo), HttpStatus.OK);
 		}
 		return new ResponseEntity<>(new ErrorResponse(), HttpStatus.BAD_REQUEST);
@@ -236,9 +243,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public Integer getUsersCount(String roleName) {
 		try {
-
 			List<Users> users = new ArrayList<Users>();
-
 			rolesRepo.findAll().forEach(role -> {
 				usersRepo.findAll().forEach(user -> {
 					user.getRolesList().forEach(uRole -> {
@@ -394,5 +399,7 @@ public class UserServiceImpl implements UserService {
 		
 		return null;
 	}
+
+
 
 }

@@ -1,6 +1,9 @@
 package com.waya.wayaauthenticationservice.pojo;
 
 
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,8 +15,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UserWalletPojo {
 
-    UserProfileResponsePojo user;
-    String accountNo;
-    Long walletId;
-
+    private UserProfileResponsePojo user;
+    private List<WalletAccount> walletAccounts = new ArrayList<>();
+    private String message;
 }

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.waya.wayaauthenticationservice.pojo.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.pojo.EmailPojo;
 import com.waya.wayaauthenticationservice.pojo.LoginDetailsPojo;
@@ -23,7 +24,6 @@ import com.waya.wayaauthenticationservice.pojo.PasswordPojo;
 import com.waya.wayaauthenticationservice.pojo.PasswordPojo2;
 import com.waya.wayaauthenticationservice.pojo.PinPojo;
 import com.waya.wayaauthenticationservice.pojo.PinPojo2;
-import com.waya.wayaauthenticationservice.pojo.UserPojo;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
 import com.waya.wayaauthenticationservice.service.UserService;
 
@@ -51,7 +51,7 @@ public class AuthenticationController {
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@PostMapping(path = "/create", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {
 			MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<?> create(@Valid @RequestBody UserPojo user, HttpServletRequest request, Device device) {
+	public ResponseEntity<?> create(@Valid @RequestBody BaseUserPojo user, HttpServletRequest request, Device device) {
 		return authenticationServiceImpl.createUser(user, request, device);
 	}
 
