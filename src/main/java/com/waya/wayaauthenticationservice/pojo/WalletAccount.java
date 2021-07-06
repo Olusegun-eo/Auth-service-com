@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 public class WalletAccount {
 
 	private Long id;
+	private String accountNo;
 	private String accountName;
 	private BigDecimal balance;
 	private BigDecimal lagerBalance;
