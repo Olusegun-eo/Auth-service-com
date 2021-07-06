@@ -118,6 +118,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 				loginResponsePojo.setCode(-3);
 				loginResponsePojo.setStatus(false);
 				loginResponsePojo.setMessage("User account is disabled, kindly contact Waya Admin");
+				res.setStatus(400);
 			} else {
 				Set<String> permit = getPrivileges(user.getRolesList());
 				Set<String> roles = user.getRolesList().stream().map(u -> u.getName()).collect(Collectors.toSet());
@@ -162,6 +163,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			loginResponsePojo.setCode(-2);
 			loginResponsePojo.setStatus(false);
 			loginResponsePojo.setMessage("User Fetch Error");
+			res.setStatus(400);
 		}
 
 		String str = gson.toJson(loginResponsePojo);

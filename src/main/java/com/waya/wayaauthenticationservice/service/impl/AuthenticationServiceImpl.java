@@ -205,12 +205,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			// TODO: Confirm that the Number is important for Profile Service Call to Fly
 			ProfilePojo profilePojo = new ProfilePojo(user.getEmail(), user.getFirstName(), user.getPhoneNumber(),
-					user.getSurname(), String.valueOf(user.getId()), false);
+					user.getSurname(), id, false);
 
 			// TODO: Confirm and refactor the Kafka Call
 			kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC, profilePojo);
 
-			Integer checkCount = profileServiceDAO.getProfileCount(String.valueOf(user.getId()), user.getPhoneNumber());
+			Integer checkCount = profileServiceDAO.getProfileCount(String.valueOf(id), user.getPhoneNumber());
 			if (checkCount == 0) {
 				log.info("Profile does not exist: use an async");
 				postProfile(profilePojo);
