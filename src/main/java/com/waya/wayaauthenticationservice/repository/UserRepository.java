@@ -14,7 +14,7 @@ public interface UserRepository extends JpaRepository<Users, Long> {
 
     Optional<Users> findByEmailOrPhoneNumber(String email, String phone);
 
-    Optional<Users> findByEmail(String email);
+    Optional<Users> findByEmailIgnoreCase(String email);
 
     @Query("SELECT u FROM Users u WHERE u.phoneNumber LIKE CONCAT('%', ?1)")
     Optional<Users> findByPhoneNumber(String phoneNumber);

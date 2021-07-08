@@ -1,13 +1,10 @@
 package com.waya.wayaauthenticationservice.controller;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mobile.device.Device;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.waya.wayaauthenticationservice.pojo.BulkPrivateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
 import com.waya.wayaauthenticationservice.pojo.UserEditPojo;
 import com.waya.wayaauthenticationservice.pojo.UserRoleUpdateRequest;
@@ -59,22 +55,12 @@ public class UserController {
 	 * 
 	 * @GetMapping public List<RedisUser> getAllUsers() { return dao.findAll(); }
 	 */
-	
-	@ApiOperation(value = "Bulk Private User Registration", tags = { "AUTH" })
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
-	@PostMapping(path = "/create-bulk-user", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {
-			MediaType.APPLICATION_JSON_VALUE })
-	//@PreAuthorize(value = "hasRole('ADMIN')")
-	public ResponseEntity<?> create(@Valid @RequestBody BulkPrivateUserCreationDTO userList, HttpServletRequest req,
-			Device device) {
-		return userService.createUsers(userList, req.getHeader("Authorization"), device);
-	}
 
 	@ApiOperation(value = "Get User Details and Roles by ID from Redis (In-app use only)", tags = { "USER SERVICE" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("/{id}")
 	//    @Cacheable(key = "#id",value = "User")
-	//@PreAuthorize(value = "@userSecurity.useHierarchy(#id, authentication)")
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#id, authentication)")
 	public ResponseEntity<?> findUser(@PathVariable Long id) {
 		return userService.getUserById(id);
 	}
@@ -82,7 +68,7 @@ public class UserController {
 	@ApiOperation(value = "Get User Details by Email (In-app use only)", tags = { "USER SERVICE" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("email/{email}")
-	//@PreAuthorize(value = "@userSecurity.useHierarchy(#email, authentication)")
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#email, authentication)")
 	public ResponseEntity<?> getUserByEmail(@PathVariable String email) {
 		return userService.getUserByEmail(email);
 	}
@@ -90,7 +76,7 @@ public class UserController {
 	@ApiOperation(value = "Get User Details by Phone (In-app use only)", tags = { "USER SERVICE" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("phone/{phone}")
-	//@PreAuthorize(value = "@userSecurity.useHierarchy(#phone, authentication)")
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#phone, authentication)")
 	public ResponseEntity<?> getUserByPhone(@PathVariable String phone) {
 		return userService.getUserByPhone(phone);
 	}
@@ -99,7 +85,21 @@ public class UserController {
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("walletByPhone")
 	public ResponseEntity<?> getUserAndWalletByPhone(@RequestParam("phone") String phone) {
-		return userService.getUserAndWalletByPhone(phone);
+		return userService.getUserAndWalletByPhoneOrEmail(phone.trim());
+	}
+
+	@ApiOperation(value = "Get User and Wallet Details by Email (In-app use only)", tags = { "USER SERVICE" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@GetMapping("walletByEmail")
+	public ResponseEntity<?> getUserAndWalletByEmail(@RequestParam("email") String email) {
+		return userService.getUserAndWalletByPhoneOrEmail(email.trim());
+	}
+
+	@ApiOperation(value = "Get User and Wallet Details by UserId (In-app use only)", tags = { "USER SERVICE" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@GetMapping("walletByUserId")
+	public ResponseEntity<?> getUserAndWalletById(@RequestParam("id") Long id) {
+		return userService.getUserAndWalletByUserId(id);
 	}
 	
 	@ApiOperation(value = "Phone Contact check  (Service consumption only. Do not Use)", tags = { "USER SERVICE" })

@@ -83,9 +83,6 @@ public class Users implements Serializable {
 
 	private boolean isAdmin = false;
 
-	// @Transient
-	// private Roles role;
-
 	@NotNull
 	@Enumerated(EnumType.STRING)
 	private AuthProvider provider;
@@ -128,7 +125,7 @@ public class Users implements Serializable {
 	private LocalDateTime firstTimeloginDate;
 
 	@Column(name = "is_deleted", nullable = false)
-	private boolean deleted;
+	private boolean deleted = false;
 
 	@Column(name = "last_time_password_updated")
 	@CreationTimestamp

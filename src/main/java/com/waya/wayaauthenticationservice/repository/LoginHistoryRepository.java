@@ -10,6 +10,7 @@ import com.waya.wayaauthenticationservice.entity.Users;
 
 @Repository
 public interface LoginHistoryRepository extends JpaRepository<LoginHistory, Long> {
+
     List<LoginHistory> findByUser(Users user);
 
     LoginHistory findTop1ByUserOrderByLoginDateDesc(Users user);

@@ -9,6 +9,6 @@ import lombok.Setter;
 @Setter
 public class BulkPrivateUserCreationDTO {
 
-	private Set<UserPojo> usersList;
+	private Set<BaseUserPojo> usersList;
 	
 }

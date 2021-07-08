@@ -1,10 +1,14 @@
 package com.waya.wayaauthenticationservice.service;
 
+import java.util.concurrent.CompletableFuture;
+
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 
+import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.pojo.EmailPojo;
@@ -63,5 +67,13 @@ public interface AuthenticationService {
 	ResponseEntity<?> createProfileAccount(ProfilePojo profilePojo);
 
 	ResponseEntity<?> createCorporateProfileAccount(ProfilePojo2 profilePojo2);
+
+	String generateToken(Users regUser);
+	
+	CompletableFuture<HttpEntity<String>> postProfile(ProfilePojo profilePojo);
+
+	void createCorporateUser(CorporateUserPojo mUser, Long id, String token);
+
+	void createPrivateUser(Users regUser);
 
 }
