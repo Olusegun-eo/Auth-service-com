@@ -26,7 +26,7 @@ public class CorporateUserPojo extends BaseUserPojo {
 	@NotBlank(message = "Business Type Cannot be null or blank")
 	private String businessType;
 
-	private Long userId;
+	private Long userId = 0L;
 
 	@Override
 	public int hashCode() {

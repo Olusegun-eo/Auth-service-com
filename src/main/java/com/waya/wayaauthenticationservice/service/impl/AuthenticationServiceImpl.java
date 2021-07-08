@@ -223,12 +223,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			List<Roles> roleList = new ArrayList<>();
 			roleList.addAll(Arrays.asList(userRole, merchRole));
 			
-			if (mUser.isAdmin()) {
-				Roles adminRole = rolesRepo.findByName("ROLE_ADMIN")
-						.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
-				roleList.add(adminRole);
-			}
-			
 			final String ip = reqUtil.getClientIP(request);
 			log.info("Request IP: " + ip);
 
@@ -253,6 +247,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			user.setPinCreated(false);
 			user.setReferenceCode(mUser.getReferenceCode());
 			user.setSurname(mUser.getSurname());
+			String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
+			user.setName(fullName);
 
 			Users regUser = userRepo.saveAndFlush(user);
 			if (regUser == null)

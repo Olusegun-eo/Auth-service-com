@@ -485,7 +485,8 @@ public class UserServiceImpl implements UserService {
 				user.setPinCreated(false);
 				user.setReferenceCode(mUser.getReferenceCode());
 				user.setSurname(mUser.getSurname());
-
+				String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
+				user.setName(fullName);
 				Users regUser = usersRepo.save(user);
 				if (regUser == null)
 					continue;
