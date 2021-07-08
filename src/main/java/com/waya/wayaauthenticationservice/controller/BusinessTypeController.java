@@ -20,6 +20,8 @@ import com.waya.wayaauthenticationservice.service.impl.BusinessTypeService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping("/api/v1/business/type")
 @Tag(name = "BUSINESS TYPE", description = "Business Type Service API")
@@ -30,13 +32,13 @@ public class BusinessTypeController {
 
 	@ApiOperation(value = "Create Business Type", notes = "Create Business Type",tags = { "BUSINESS TYPE" })
 	@PostMapping("/create")
-	public ResponseEntity<ResponsePojo> create(@RequestBody BusinessType businessType) {
+	public ResponseEntity<ResponsePojo> create(@Valid @RequestBody BusinessType businessType) {
 		return ResponseEntity.ok(businessTypeService.createBusinessType(businessType));
 	}
 	
 	@ApiOperation(value = "Edit Business Type", notes = "Edit Business Type",tags = { "BUSINESS TYPE" })
 	@PutMapping("/edit")
-	public ResponseEntity<ResponsePojo> edit(@RequestBody BusinessType businessType) {
+	public ResponseEntity<ResponsePojo> edit(@Valid @RequestBody BusinessType businessType) {
 		return ResponseEntity.ok(businessTypeService.edit(businessType));
 	}
 	
@@ -47,7 +49,7 @@ public class BusinessTypeController {
 	}
 	
 	@ApiOperation(value = "Delete Business Type", notes = "Delete Business Type",tags = { "BUSINESS TYPE" })
-	@DeleteMapping("/delete")
+	@DeleteMapping("/delete/{id}")
 	public ResponseEntity<ResponsePojo> delete(@PathVariable("id") Long id) {
 		return ResponseEntity.ok(businessTypeService.delete(id));
 	}

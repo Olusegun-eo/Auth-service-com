@@ -42,6 +42,7 @@ public class BusinessTypeService {
 		try {
 			return businessTypeRepo.findById(businessType.getId()).map(bus -> {
 				bus.setBusinessType(businessType.getBusinessType());
+				businessTypeRepo.save(bus);
 				return ResponsePojo.response(true, "Updated Successfully");
 			}).orElseThrow(() -> new CustomException("Id provided not found", HttpStatus.NOT_FOUND));
 		} catch (Exception e) {
