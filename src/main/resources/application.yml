@@ -96,6 +96,18 @@ deleteprofile:
   deleteWayagram: http://46.101.41.187:1000/main/profile/delete-profile-by-id
 
 app:
+  config:
+    referral:
+      base-url: http://46.101.41.187:8282/referral
+    auto:
+      follow:
+        base-url: http://157.245.84.14:1000/graph/friend/waya-auto-follow
+    main:
+      profile:
+        base-url: http://157.245.84.14:1000/main/profile/create
+    file:
+      resource:
+        base-url: http://46.101.41.187:9098/file-resource/api
   auth:
     tokenSecret: 926D96C90030DD58429D2751AC1BDBBC
     tokenExpirationMsec: 864000000
@@ -111,3 +123,4 @@ app:
 wallet:
   profile:
     url: http://46.101.41.187:8080/profile-service/personal-profile
+
