@@ -1,5 +1,6 @@
 package com.waya.wayaauthenticationservice.service;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.springframework.data.domain.Page;
@@ -7,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.BulkCorporateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.BulkPrivateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
 import com.waya.wayaauthenticationservice.pojo.UserEditPojo;
@@ -46,7 +48,11 @@ public interface UserService {
 
 	Page<Users> getAllUsers(int page, int size);
 
-	ResponseEntity<?> createUsers(@Valid BulkPrivateUserCreationDTO userBulk, String requestToken, Device device);
+	ResponseEntity<?> getUserAndWalletByPhoneOrEmail(String phone);
 
-	ResponseEntity<?> getUserAndWalletByPhone(String phone);
+	ResponseEntity<?> getUserAndWalletByUserId(Long id);
+
+	ResponseEntity<?> createUsers(@Valid BulkCorporateUserCreationDTO userList, HttpServletRequest request, Device device);
+
+	ResponseEntity<?> createUsers(@Valid BulkPrivateUserCreationDTO userList, HttpServletRequest request, Device device);
 }

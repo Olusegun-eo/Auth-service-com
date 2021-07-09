@@ -22,7 +22,6 @@ import com.waya.wayaauthenticationservice.service.LoginHistoryService;
 @Service
 public class LoginHistoryServiceImpl implements LoginHistoryService {
 
-
     @Autowired
     LoginHistoryRepository loginHistoryRepository;
 
@@ -85,7 +84,6 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
         }
         LoginHistory loginHistory = loginHistoryRepository.findTop1ByUserOrderByLoginDateDesc(user);
         return new ResponseEntity<>(new SuccessResponse("Result Fetched", loginHistory), HttpStatus.OK);
-
     }
 
     @Override

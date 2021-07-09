@@ -1,20 +1,19 @@
 package com.waya.wayaauthenticationservice.pojo;
 
+import java.util.Objects;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
+
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-
 @Getter
 @Setter
-public class CorporateUserPojo extends BaseUserPojo{
+public class CorporateUserPojo extends BaseUserPojo {
 
 	private String city;
-
 	private String officeAddress;
-
 	private String state;
 	private String orgName;
 	private String orgEmail;
@@ -25,6 +24,31 @@ public class CorporateUserPojo extends BaseUserPojo{
 	@NotBlank(message = "Business Type Cannot be null or blank")
 	private String businessType;
 
-	@NotNull(message="Kindly provide valid UserId")
-	private Long userId;
+	private Long userId = 0L;
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + Objects.hash(businessType, orgEmail, orgPhone);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!super.equals(obj)) {
+			return false;
+		}
+		if (!(obj instanceof CorporateUserPojo)) {
+			return false;
+		}
+		CorporateUserPojo other = (CorporateUserPojo) obj;
+		return Objects.equals(businessType, other.businessType) && Objects.equals(orgEmail, other.orgEmail)
+				&& Objects.equals(orgPhone, other.orgPhone);
+	}
+	
+	
 }

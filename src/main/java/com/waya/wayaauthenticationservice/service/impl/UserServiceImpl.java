@@ -1,9 +1,12 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 import static org.springframework.http.HttpStatus.OK;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.modelmapper.ModelMapper;
@@ -27,17 +31,24 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.waya.wayaauthenticationservice.config.ApplicationConfig;
+import com.waya.wayaauthenticationservice.controller.UserController;
+import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
+import com.waya.wayaauthenticationservice.pojo.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.BulkCorporateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.BulkPrivateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.ContactPojo;
 import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
+import com.waya.wayaauthenticationservice.pojo.CorporateUserPojo;
+import com.waya.wayaauthenticationservice.pojo.DevicePojo;
 import com.waya.wayaauthenticationservice.pojo.UserEditPojo;
 import com.waya.wayaauthenticationservice.pojo.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.UserRoleUpdateRequest;
@@ -49,8 +60,10 @@ import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
+import com.waya.wayaauthenticationservice.service.AuthenticationService;
 import com.waya.wayaauthenticationservice.service.UserService;
 import com.waya.wayaauthenticationservice.util.ApiResponse;
+import com.waya.wayaauthenticationservice.util.ReqIPUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -82,6 +95,21 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private ApplicationConfig applicationConfig;
 
+	@Autowired
+	private ReqIPUtils reqUtil;
+
+	@Autowired
+	private BCryptPasswordEncoder passwordEncoder;
+
+	@Autowired
+	private AuthenticationService authService;
+
+	@Autowired
+	KafkaMessageProducer kafkaMessageProducer;
+
+	@Autowired
+	ProfileServiceDAO profileServiceDAO;
+
 	@Override
 	public ResponseEntity<?> getUser(Long userId) {
 		Users user = usersRepo.findById(userId).orElse(null);
@@ -94,13 +122,29 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	public ResponseEntity<?> getUserById(Long id) {
+		try {
+			Users user = usersRepo.findById(id).orElse(null);
+
+			UserProfileResponsePojo userDto = this.toModelDTO(user);
+			if (userDto == null) {
+				return new ResponseEntity<>(new ErrorResponse("Invalid id"), HttpStatus.BAD_REQUEST);
+			} else {
+				return new ResponseEntity<>(new SuccessResponse("User info fetched", userDto), HttpStatus.OK);
+			}
+		} catch (Exception e) {
+			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+		}
+	}
+
+
+	@Override
 	public ResponseEntity<?> getUsers() {
 //		Users user = authenticatedUserFacade.getUser();
 //		if (!validateAdmin(user)) {
 //			return new ResponseEntity<>(new ErrorResponse("Invalid Access"), HttpStatus.BAD_REQUEST);
 //		}
-		List<UserProfileResponsePojo> users = usersRepo.findAll().stream()
-				.map(u -> this.toModelDTO(u))
+		List<UserProfileResponsePojo> users = usersRepo.findAll().stream().map(u -> this.toModelDTO(u))
 				.collect(Collectors.toList());
 		return new ResponseEntity<>(new SuccessResponse("User info fetched", users), HttpStatus.OK);
 	}
@@ -144,7 +188,7 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public ResponseEntity<?> getUserByEmail(String email) {
-		Users user = usersRepo.findByEmail(email).orElse(null);
+		Users user = usersRepo.findByEmailIgnoreCase(email).orElse(null);
 		if (user == null) {
 			return new ResponseEntity<>(new ErrorResponse("Invalid email"), HttpStatus.NOT_FOUND);
 		} else {
@@ -162,22 +206,37 @@ public class UserServiceImpl implements UserService {
 		UserProfileResponsePojo userDtO = toModelDTO(user);
 		return new ResponseEntity<>(new SuccessResponse("User info fetched", userDtO), HttpStatus.OK);
 	}
-	
+
 	@Override
-	public ResponseEntity<?> getUserAndWalletByPhone(String phone) {
-		Users user = usersRepo.findByPhoneNumber(phone).orElse(null);
-		if (user == null) 
+	public ResponseEntity<?> getUserAndWalletByPhoneOrEmail(String value) {
+		Users user = usersRepo.findByEmailOrPhoneNumber(value).orElse(null);
+		if (user == null)
 			return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.NOT_FOUND);
 		UserProfileResponsePojo userDtO = toModelDTO(user);
 		ApiResponse<List<WalletAccount>> walletResponse = walletProxy.getUsersWallet(user.getId());
-		if(walletResponse != null) {
+		if (walletResponse != null) {
 			UserWalletPojo userWalletPojo = new UserWalletPojo(userDtO, walletResponse.getData(),
 					walletResponse.getMessage());
 			return new ResponseEntity<>(new SuccessResponse("User info fetched", userWalletPojo), HttpStatus.OK);
 		}
 		return new ResponseEntity<>(new ErrorResponse(), HttpStatus.BAD_REQUEST);
 	}
-	
+
+	@Override
+	public ResponseEntity<?> getUserAndWalletByUserId(Long id) {
+		Users user = usersRepo.findById(id).orElse(null);
+		if (user == null)
+			return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.NOT_FOUND);
+		UserProfileResponsePojo userDtO = toModelDTO(user);
+		ApiResponse<List<WalletAccount>> walletResponse = walletProxy.getUsersWallet(user.getId());
+		if (walletResponse != null) {
+			UserWalletPojo userWalletPojo = new UserWalletPojo(userDtO, walletResponse.getData(),
+					walletResponse.getMessage());
+			return new ResponseEntity<>(new SuccessResponse("User info fetched", userWalletPojo), HttpStatus.OK);
+		}
+		return new ResponseEntity<>(new ErrorResponse(), HttpStatus.BAD_REQUEST);
+	}
+
 	@Override
 	public ResponseEntity<?> wayaContactCheck(ContactPojoReq contacts) {
 		List<ContactPojo> contactPojos = new ArrayList<>();
@@ -198,22 +257,6 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ResponseEntity<?> getUserById(Long id) {
-		try {
-			Users user = usersRepo.findById(id).orElse(null);
-
-			UserProfileResponsePojo userDto = this.toModelDTO(user);
-			if (userDto == null) {
-				return new ResponseEntity<>(new ErrorResponse("Invalid id"), HttpStatus.BAD_REQUEST);
-			} else {
-				return new ResponseEntity<>(new SuccessResponse("User info fetched", userDto), HttpStatus.OK);
-			}
-		} catch (Exception e) {
-			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
-		}
-	}
-
-	@Override
 	public ResponseEntity<?> deleteUser(Long id, String token) {
 		try {
 			if (validateUser(token)) {
@@ -231,7 +274,6 @@ public class UserServiceImpl implements UserService {
 		} catch (Exception e) {
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
-
 	}
 
 	public ResponseEntity<?> isUserAdmin(long userId) {
@@ -268,7 +310,8 @@ public class UserServiceImpl implements UserService {
 				for (Integer i : user.getRolesList()) {
 					Optional<Roles> mRole = rolesRepo.findById(i);
 					if (mRole.isPresent()) {
-						if (mUser.getRolesList().contains(mRole.get())) continue;
+						if (mUser.getRolesList().contains(mRole.get()))
+							continue;
 						mUser.getRolesList().add(mRole.get());
 					}
 				}
@@ -370,6 +413,9 @@ public class UserServiceImpl implements UserService {
 				.isAccountExpired(!user.isAccountNonExpired()).isCredentialsExpired(!user.isCredentialsNonExpired())
 				.isActive(user.isActive()).isAccountLocked(!user.isAccountNonLocked()).roles(roles).permits(permits)
 				.pinCreated(user.isPinCreated()).isCorporate(user.isCorporate()).build();
+
+		userDto.add(linkTo(methodOn(UserController.class).findUser(user.getId())).withSelfRel());
+
 		return userDto;
 	}
 
@@ -392,14 +438,138 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ResponseEntity<?> createUsers(@Valid BulkPrivateUserCreationDTO userBulk, String requestToken,
+	public ResponseEntity<?> createUsers(@Valid BulkCorporateUserCreationDTO userList, HttpServletRequest request,
 			Device device) {
-		
-		
-		
-		return null;
+		int count = 0;
+		try {
+			DevicePojo dev = reqUtil.GetDevice(device);
+			final String ip = reqUtil.getClientIP(request);
+			for (CorporateUserPojo mUser : userList.getUsersList()) {
+				// Check if email exists
+				Users existingEmail = mUser.getEmail() == null ? null
+						: usersRepo.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
+				if (existingEmail != null)
+					continue;
+
+				// Check if Phone exists
+				Users existingTelephone = mUser.getPhoneNumber() == null ? null
+						: usersRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
+				if (existingTelephone != null)
+					continue;
+
+				Roles merchRole = rolesRepo.findByName("ROLE_MERCH")
+						.orElseThrow(() -> new CustomException("Merchant Role Not Available", HttpStatus.BAD_REQUEST));
+
+				Roles userRole = rolesRepo.findByName("ROLE_USER")
+						.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+
+				List<Roles> roleList = new ArrayList<>();
+				roleList.addAll(Arrays.asList(userRole, merchRole));
+
+				Users user = new Users();
+				user.setAdmin(mUser.isAdmin());
+				user.setId(0L);
+				user.setCorporate(true);
+				user.setDateCreated(LocalDateTime.now());
+				user.setRegDeviceIP(ip);
+				user.setRegDevicePlatform(dev.getPlatform());
+				user.setRegDeviceType(dev.getDeviceType());
+				user.setPassword(passwordEncoder.encode(mUser.getPassword()));
+				user.setDateOfActivation(LocalDateTime.now());
+				user.setActive(true);
+				user.setRolesList(roleList);
+				user.setEmail(mUser.getEmail().trim());
+				user.setEmailVerified(false);
+				user.setFirstName(mUser.getFirstName());
+				user.setPhoneNumber(mUser.getPhoneNumber());
+				user.setPhoneVerified(false);
+				user.setPinCreated(false);
+				user.setReferenceCode(mUser.getReferenceCode());
+				user.setSurname(mUser.getSurname());
+				String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
+				user.setName(fullName);
+				Users regUser = usersRepo.save(user);
+				if (regUser == null)
+					continue;
+
+				String token = this.authService.generateToken(regUser);
+
+				this.authService.createCorporateUser(mUser, regUser.getId(), token);
+
+				++count;
+			}
+			String message = String.format("%s  Corporate Account Created Successfully and Sub-account creation in process.", count);
+			return new ResponseEntity<>(new SuccessResponse(message), HttpStatus.CREATED);
+		} catch (Exception e) {
+			log.error("Error in Creating Bulk Account:: {}", e.getMessage());
+			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+		}
 	}
 
+	@Override
+	public ResponseEntity<?> createUsers(@Valid BulkPrivateUserCreationDTO userList, HttpServletRequest request,
+			Device device) {
+		int count = 0;
+		try {
+			DevicePojo dev = reqUtil.GetDevice(device);
+			final String ip = reqUtil.getClientIP(request);
+			for (BaseUserPojo mUser : userList.getUsersList()) {
+				// Check if email exists
+				Users existingEmail = mUser.getEmail() == null ? null
+						: usersRepo.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
+				if (existingEmail != null)
+					continue;
 
+				// Check if Phone exists
+				Users existingTelephone = mUser.getPhoneNumber() == null ? null
+						: usersRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
+				if (existingTelephone != null)
+					continue;
+
+				List<Roles> roleList = new ArrayList<>();
+			
+				Roles userRole = rolesRepo.findByName("ROLE_USER")
+						.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+				roleList.add(userRole);
+				if (mUser.isAdmin()) {
+					Roles adminRole = rolesRepo.findByName("ROLE_ADMIN")
+							.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+					roleList.add(adminRole);
+				}
+
+				Users user = new Users();
+				user.setId(0L);
+				user.setAdmin(mUser.isAdmin());
+				user.setEmail(mUser.getEmail().trim());
+				user.setFirstName(mUser.getFirstName());
+				user.setPhoneNumber(mUser.getPhoneNumber());
+				user.setReferenceCode(mUser.getReferenceCode());
+				user.setSurname(mUser.getSurname());
+				user.setDateCreated(LocalDateTime.now());
+				user.setRegDeviceIP(ip);
+				String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
+				user.setName(fullName);
+				user.setRegDevicePlatform(dev.getPlatform());
+				user.setRegDeviceType(dev.getDeviceType());
+				user.setDateOfActivation(LocalDateTime.now());
+				user.setActive(true);
+				user.setPassword(passwordEncoder.encode(mUser.getPassword()));
+				user.setRolesList(roleList);
+
+				Users regUser = usersRepo.save(user);
+				if (regUser == null)
+					continue;
+
+				this.authService.createPrivateUser(regUser);
+
+				++count;
+			}
+			String message = String.format("%s Private Accounts Created Successfully and Sub-account creation in process.", count);
+			return new ResponseEntity<>(new SuccessResponse(message), HttpStatus.OK);
+		} catch (Exception e) {
+			log.error("Error in Creating Bulk Account:: {}", e.getMessage());
+			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+		}
+	}
 
 }

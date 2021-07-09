@@ -40,7 +40,7 @@ public class WayaAuthenticationServiceApplication {
 
 	@Bean
 	public ServletRegistrationBean<DispatcherServlet> dispatcherRegistration() {
-		return new ServletRegistrationBean<DispatcherServlet>(dispatcherServlet());
+		return new ServletRegistrationBean<>(dispatcherServlet());
 	}
 
 	@Bean(name = DispatcherServletAutoConfiguration.DEFAULT_DISPATCHER_SERVLET_BEAN_NAME)
@@ -62,12 +62,10 @@ public class WayaAuthenticationServiceApplication {
 	public RestTemplate getRestClient() {
 		RestTemplate restClient = new RestTemplate(
 				new BufferingClientHttpRequestFactory(new SimpleClientHttpRequestFactory()));
-
 		restClient.setInterceptors(Collections.singletonList((request, body, execution) -> {
 			log.debug("Intercepted RestTemplate logs .... {}", request);
 			return execution.execute(request, body);
 		}));
-
 		return restClient;
 	}
 	

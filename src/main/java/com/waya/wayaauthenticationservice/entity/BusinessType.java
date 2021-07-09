@@ -6,7 +6,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
+import com.waya.wayaauthenticationservice.util.CustomValidator;
+import com.waya.wayaauthenticationservice.util.Type;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,5 +28,7 @@ public class BusinessType {
 	private Long id;
 	
 	@Column(unique = true)
+	@NotNull(message = "Business Type cannot be Null")
+	@CustomValidator(message = "Business Type cannot contain Numeric characters", type = Type.TEXT_STRING)
 	private String businessType;
 }

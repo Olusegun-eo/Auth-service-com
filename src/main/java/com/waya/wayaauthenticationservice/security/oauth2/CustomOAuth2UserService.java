@@ -47,7 +47,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             throw new OAuth2AuthenticationProcessingException("Email not found from OAuth2 provider");
         }
 
-        Optional<Users> userOptional = userRepository.findByEmail(oAuth2UserInfo.getEmail());
+        Optional<Users> userOptional = userRepository.findByEmailOrPhoneNumber(oAuth2UserInfo.getEmail());
         Users user;
         if(userOptional.isPresent()) {
             user = userOptional.get();

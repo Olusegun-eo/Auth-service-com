@@ -12,18 +12,20 @@ import com.waya.wayaauthenticationservice.entity.Users;
 @Repository
 public interface UserRepository extends JpaRepository<Users, Long> {
 
-    Optional<Users> findByEmailOrPhoneNumber(String email, String phone);
+    @Query("SELECT u FROM Users u " +
+            "WHERE UPPER(u.email) = UPPER(:value) " +
+            " AND u.isDeleted = false")
+    Optional<Users> findByEmailIgnoreCase(@Param("value") String value);
 
-    Optional<Users> findByEmail(String email);
-
-    @Query("SELECT u FROM Users u WHERE u.phoneNumber LIKE CONCAT('%', ?1)")
+    @Query("SELECT u FROM Users u WHERE u.phoneNumber LIKE CONCAT('%', ?1)" +
+            " AND u.isDeleted = false")
     Optional<Users> findByPhoneNumber(String phoneNumber);
 
     @Query(value =
             "SELECT _user FROM Users _user " +
-            "WHERE " +
-            "UPPER(_user.email) = UPPER(:value) OR " +
-            "_user.phoneNumber LIKE CONCAT('%', :value)"
+            "WHERE UPPER(_user.email) = UPPER(:value) OR " +
+            "_user.phoneNumber LIKE CONCAT('%', :value) " +
+            "AND _user.isDeleted = false"
     )
     Optional<Users> findByEmailOrPhoneNumber(@Param("value") String value);
 }

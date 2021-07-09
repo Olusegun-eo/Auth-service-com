@@ -74,4 +74,6 @@ public class Constant {
     public static final String PHONE_NUMBER_REQUIRED = "Phone number is required";
 
     public static final int LIMIT = 10;
+
 }
+

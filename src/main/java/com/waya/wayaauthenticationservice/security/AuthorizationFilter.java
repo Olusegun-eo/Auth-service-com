@@ -1,12 +1,6 @@
 package com.waya.wayaauthenticationservice.security;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -15,18 +9,21 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.util.StringUtils;
 
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
-import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.util.SecurityConstants;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
+import io.jsonwebtoken.UnsupportedJwtException;
 
 
 public class AuthorizationFilter extends BasicAuthenticationFilter {
@@ -56,44 +53,57 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
 
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
     	System.out.println(":::::::Authorization filter:::::");
-        String token = request.getHeader(SecurityConstants.HEADER_STRING);
-        String userToken = null;
-        Collection<GrantedAuthority> grantedAuthorities = null;
-        if (token != null) {
-            token = token.replace(SecurityConstants.TOKEN_PREFIX, "");
-
-            userToken = Jwts.parser().setSigningKey(SecurityConstants.getSecret()).parseClaimsJws(token).getBody()
-                    .getSubject();
+        String token = parseJwt(request);
+        String userToken;
+        if (token != null && validateToken(token)) {
+            userToken = getUserNameFromToken(token);
             UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
 
             Users user = userLoginRepo.findByEmailOrPhoneNumber(userToken).orElse(null);
                         // .orElseThrow(() -> new BadCredentialsException("User Does not exist"));
             if (user != null) {
-                List<Roles> roles = new ArrayList<>(user.getRolesList());
-                grantedAuthorities = roles.stream().map(r -> new SimpleGrantedAuthority(r.getName())).collect(Collectors.toSet());
-                grantedAuthorities.addAll(getGrantedAuthorities(getPrivileges(roles)));
-
                 UserPrincipal userPrincipal = new UserPrincipal(user);
-                return new UsernamePasswordAuthenticationToken(userPrincipal, null, grantedAuthorities);
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userPrincipal, null, userPrincipal.getAuthorities());
+
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                return authentication;
             }
             return null;
         }
         return new UsernamePasswordAuthenticationToken(null, null,null);
     }
 
-    private final Set<String> getPrivileges(final Collection<Roles> roles) {
-        Set<String> privileges = new HashSet<String>();
-        for (Roles role : roles) {
-            privileges.addAll(role.getPermissions().stream().map(p -> p.getName()).collect(Collectors.toSet()));
+    private boolean validateToken(String authToken) {
+        try {
+            Jwts.parser().setSigningKey(SecurityConstants.getSecret()).parseClaimsJws(authToken);
+            return true;
+        } catch (SignatureException ex) {
+            logger.error("Invalid JWT signature");
+        } catch (MalformedJwtException ex) {
+            logger.error("Invalid JWT token");
+        } catch (ExpiredJwtException ex) {
+            logger.error("Expired JWT token");
+        } catch (UnsupportedJwtException ex) {
+            logger.error("Unsupported JWT token");
+        } catch (IllegalArgumentException ex) {
+            logger.error("JWT claims string is empty.");
         }
-        return privileges;
+        return false;
     }
 
-    private List<GrantedAuthority> getGrantedAuthorities(Set<String> privileges) {
-        List<GrantedAuthority> authorities = new ArrayList<>();
-        for (String privilege : privileges) {
-            authorities.add(new SimpleGrantedAuthority(privilege));
+    private String parseJwt(HttpServletRequest request) {
+        String headerAuth = request.getHeader(SecurityConstants.HEADER_STRING);
+
+        if (StringUtils.hasText(headerAuth) && headerAuth.startsWith(SecurityConstants.TOKEN_PREFIX)) {
+            return  headerAuth.replace(SecurityConstants.TOKEN_PREFIX, "");
         }
-        return authorities;
+        return null;
+    }
+
+    private String getUserNameFromToken(String token) {
+        return Jwts.parser().setSigningKey(SecurityConstants.getSecret()).parseClaimsJws(token).getBody().getSubject();
     }
 }
