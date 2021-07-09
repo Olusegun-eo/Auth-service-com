@@ -177,6 +177,19 @@
 			<artifactId>spring-mobile-device</artifactId>
 			<version>2.0.0.M3</version>
 		</dependency>
+
+		<!--Read and Write to Excel Files-->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>3.15</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>3.15</version>
+		</dependency>
+
 	</dependencies>
 
 	<dependencyManagement>

@@ -71,7 +71,10 @@ server:
 
 logging:
   level:
+    root: WARN
     org:
+      springframework:
+        web: DEBUG
       hibernate:
         SQL: DEBUG
         type:

@@ -13,9 +13,7 @@ import lombok.Setter;
 public class CorporateUserPojo extends BaseUserPojo {
 
 	private String city;
-
 	private String officeAddress;
-
 	private String state;
 	private String orgName;
 	private String orgEmail;

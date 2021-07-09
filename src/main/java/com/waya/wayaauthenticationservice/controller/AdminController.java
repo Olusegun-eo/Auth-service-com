@@ -1,8 +1,19 @@
 package com.waya.wayaauthenticationservice.controller;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-
+import com.waya.wayaauthenticationservice.assembler.UserAssembler;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.pojo.BulkCorporateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.BulkPrivateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.UserProfileResponsePojo;
+import com.waya.wayaauthenticationservice.repository.RedisUserDao;
+import com.waya.wayaauthenticationservice.response.ErrorResponse;
+import com.waya.wayaauthenticationservice.service.UserService;
+import com.waya.wayaauthenticationservice.util.ExcelHelper;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.domain.Page;
@@ -13,27 +24,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.waya.wayaauthenticationservice.assembler.UserAssembler;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.BulkCorporateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.BulkPrivateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.UserProfileResponsePojo;
-import com.waya.wayaauthenticationservice.repository.RedisUserDao;
-import com.waya.wayaauthenticationservice.service.UserService;
-
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import java.io.IOException;
 
 @CrossOrigin
 @RestController
@@ -54,25 +50,54 @@ public class AdminController {
 
     @Autowired
     UserAssembler userAssembler;
-	
-	@ApiOperation(value = "Bulk Private User Registration", tags = { "ADMIN" })
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
-	@PostMapping(path = "/create/bulk-user/private", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {
-			MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<?> createBulkPrivateUsers(@Valid @RequestBody BulkPrivateUserCreationDTO userList, HttpServletRequest request, Device device) {
-		return userService.createUsers(userList, request, device);
-	}
-	
-	@ApiOperation(value = "Bulk Corporate User Registration", tags = { "ADMIN" })
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
-	@PostMapping(path = "/create/bulk-user/corporate", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {
-			MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<?> createBulkCorporateUsers(@Valid @RequestBody BulkCorporateUserCreationDTO userList, HttpServletRequest request, Device device) {
-		return userService.createUsers(userList, request, device);
-	}
 
-    @ApiOperation(value = "Fetch all Users (Admin Endpoint)" ,tags = { "ADMIN" })
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @ApiOperation(value = "Bulk Private User Registration", tags = {"ADMIN"})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
+    @PostMapping(path = "/create/bulk-user/private", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {
+            MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<?> createBulkPrivateUsers(@Valid @RequestBody BulkPrivateUserCreationDTO userList, HttpServletRequest request, Device device) {
+        return userService.createUsers(userList, request, device);
+    }
+
+    @ApiOperation(value = "Bulk Corporate User Registration", tags = {"ADMIN"})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
+    @PostMapping(path = "/create/bulk-user/corporate", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {
+            MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<?> createBulkCorporateUsers(@Valid @RequestBody BulkCorporateUserCreationDTO userList, HttpServletRequest request, Device device) {
+        return userService.createUsers(userList, request, device);
+    }
+
+    @ApiOperation(value = "Bulk Corporate User Registration", tags = {"ADMIN"})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
+    @PostMapping(path = "/create/bulk-user-excel", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {
+            MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<?> createPrivateUserExcel(@RequestParam("file") MultipartFile file,
+                                                    @RequestParam(value = "isPrivate") boolean isPrivate,
+                                                    @RequestParam(value = "isCorporate") boolean isCorporate,
+                                                    HttpServletRequest request, Device device) {
+        String message = "";
+        if ((isPrivate && isCorporate) || (!isPrivate && !isCorporate)) {
+            message = "Both isPrivate and isCorporate field cannot be the same";
+            return new ResponseEntity<>(new ErrorResponse(message), HttpStatus.BAD_REQUEST);
+        }
+        if (ExcelHelper.hasExcelFormat(file)) {
+            try {
+                if (isPrivate)
+                    return userService.createUsers(ExcelHelper.excelToPrivateUserPojo(file.getInputStream(),
+                            file.getOriginalFilename()), request, device);
+                if (isCorporate)
+                    return userService.createUsers(ExcelHelper.excelToCorporatePojo(file.getInputStream(),
+                            file.getOriginalFilename()), request, device);
+            } catch (IOException e) {
+                throw new CustomException("fail to store excel data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+            }
+        }
+        message = "Please upload an excel file!";
+        return new ResponseEntity<>(new ErrorResponse(message), HttpStatus.BAD_REQUEST);
+    }
+
+    @ApiOperation(value = "Fetch all Users (Admin Endpoint)", tags = {"ADMIN"})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/users")
     public ResponseEntity<PagedModel<UserProfileResponsePojo>> getAllUsersDB(
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -82,9 +107,9 @@ public class AdminController {
         return new ResponseEntity<>(userPagedModel, HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Fetch Users by Roles (Admin Endpoint)",tags = { "ADMIN" })
+    @ApiOperation(value = "Fetch Users by Roles (Admin Endpoint)", tags = {"ADMIN"})
     //@ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/users/byrole/{roleId}")
     public ResponseEntity<?> getUsersByRole(@PathVariable int roleId) {
         return userService.getUsersByRole(roleId);

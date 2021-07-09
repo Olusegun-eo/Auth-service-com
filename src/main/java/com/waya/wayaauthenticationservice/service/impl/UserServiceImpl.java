@@ -122,6 +122,23 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	public ResponseEntity<?> getUserById(Long id) {
+		try {
+			Users user = usersRepo.findById(id).orElse(null);
+
+			UserProfileResponsePojo userDto = this.toModelDTO(user);
+			if (userDto == null) {
+				return new ResponseEntity<>(new ErrorResponse("Invalid id"), HttpStatus.BAD_REQUEST);
+			} else {
+				return new ResponseEntity<>(new SuccessResponse("User info fetched", userDto), HttpStatus.OK);
+			}
+		} catch (Exception e) {
+			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+		}
+	}
+
+
+	@Override
 	public ResponseEntity<?> getUsers() {
 //		Users user = authenticatedUserFacade.getUser();
 //		if (!validateAdmin(user)) {
@@ -237,22 +254,6 @@ public class UserServiceImpl implements UserService {
 		Users user = authenticatedUserFacade.getUser();
 		UserProfileResponsePojo userDto = this.toModelDTO(user);
 		return new ResponseEntity<>(new SuccessResponse("User info fetched", userDto), HttpStatus.OK);
-	}
-
-	@Override
-	public ResponseEntity<?> getUserById(Long id) {
-		try {
-			Users user = usersRepo.findById(id).orElse(null);
-
-			UserProfileResponsePojo userDto = this.toModelDTO(user);
-			if (userDto == null) {
-				return new ResponseEntity<>(new ErrorResponse("Invalid id"), HttpStatus.BAD_REQUEST);
-			} else {
-				return new ResponseEntity<>(new SuccessResponse("User info fetched", userDto), HttpStatus.OK);
-			}
-		} catch (Exception e) {
-			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
-		}
 	}
 
 	@Override
@@ -564,7 +565,7 @@ public class UserServiceImpl implements UserService {
 				++count;
 			}
 			String message = String.format("%s Private Accounts Created Successfully and Sub-account creation in process.", count);
-			return new ResponseEntity<>(new SuccessResponse(message), HttpStatus.CREATED);
+			return new ResponseEntity<>(new SuccessResponse(message), HttpStatus.OK);
 		} catch (Exception e) {
 			log.error("Error in Creating Bulk Account:: {}", e.getMessage());
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
