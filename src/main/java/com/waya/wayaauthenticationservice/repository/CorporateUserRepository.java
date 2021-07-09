@@ -5,10 +5,10 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.waya.wayaauthenticationservice.entity.CooperateUser;
+import com.waya.wayaauthenticationservice.entity.CorporateUser;
 
 @Repository
-public interface CooperateUserRepository extends JpaRepository<CooperateUser, Long>{
+public interface CorporateUserRepository extends JpaRepository<CorporateUser, Long>{
 
-	Optional<CooperateUser> findByUserId(Long userId);
+	Optional<CorporateUser> findByUserId(Long userId);
 }

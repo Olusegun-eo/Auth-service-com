@@ -17,7 +17,13 @@ public class Constant {
     public static final String CHAT_TOPIC = "wayagram-chat";
     public static final String WAYAPAY = "Wayapay";
     public static final String CHARACTERS = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPZMXNCBVALSKDJFHG1234509687";
-
+    public static final String TOKEN_PREFIX = "serial ";
+    public static final String HEADER_STRING = "Authorization";
+    public static final String AUTHORITIES_KEY = "scopes";
+    public static final String USERNAME = "username";
+    public static final String ROLE = "role";
+    public static final String TOKEN = "token";
+    public static final String ID_IS_INVALID = "Invalid Id provided";
     public static final String MESSAGE = "your OTP is ";
 
     public static final String MESSAGE_2 = ". Thanks for choosing wayapaychat";
@@ -59,6 +65,13 @@ public class Constant {
     public static final String COULD_NOT_PROCESS_REQUEST = "could not process request";
 
     public static final String DUPLICATE_KEY = "duplicate key exception, user id or email might already exist";
+
+    public static final String ID_IS_REQUIRED = "Id is required";
+
+    public static final String ID_IS_UNKNOWN = "Id is unknown";
+
+
+    public static final String PHONE_NUMBER_REQUIRED = "Phone number is required";
 
     public static final int LIMIT = 10;
 }

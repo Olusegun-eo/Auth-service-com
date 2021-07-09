@@ -1,8 +1,9 @@
-package com.waya.wayaauthenticationservice.proxy;
+package com.waya.wayaauthenticationservice.service;
+
 
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.response.ProfileImageResponse;
-import com.waya.wayaauthenticationservice.util.ApiResponse;
+import com.waya.wayaauthenticationservice.util.profile.ApiResponse;
 import org.slf4j.Logger;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.HttpStatus;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
-@FeignClient(name = "file-resource-service", url = "http://46.101.41.187:9098/file-resource/api")
+@FeignClient(name = "file-resource-service", url = "${app.config.file.resource.base-ur}")
 public interface FileResourceServiceFeignClient {
 
     @PostMapping(value = "/upload/profile-picture/{userId}",

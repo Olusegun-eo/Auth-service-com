@@ -1,4 +1,6 @@
-package com.waya.wayaauthenticationservice.util;
+package com.waya.wayaauthenticationservice.util.profile;
+
+import com.waya.wayaauthenticationservice.util.Constant;
 
 import java.security.SecureRandom;
 

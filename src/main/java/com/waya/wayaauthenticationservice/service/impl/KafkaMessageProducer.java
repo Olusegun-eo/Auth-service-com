@@ -1,53 +1,27 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.waya.wayaauthenticationservice.config.AppConfig;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.CreateWayagram;
-import com.waya.wayaauthenticationservice.pojo.LoginDetailsPojo;
-import com.waya.wayaauthenticationservice.pojo.ProfilePojo2;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
-
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-
-import java.net.URISyntaxException;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.kafka.core.KafkaProducerException;
-import org.springframework.kafka.core.KafkaSendCallback;
+//import org.springframework.kafka.core.KafkaProducerException;
+//import org.springframework.kafka.core.KafkaSendCallback;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import org.springframework.util.concurrent.ListenableFuture;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.util.concurrent.ListenableFutureCallback;
 
-import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.HttpStatus.OK;
+import com.google.gson.Gson;
+import com.waya.wayaauthenticationservice.pojo.ProfilePojo2;
+import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
 
 @Service
-@Slf4j
 public class KafkaMessageProducer implements MessageQueueProducer {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final KafkaTemplate<String, Object> template;
     private final Gson gson;
-    @Autowired
-    private UserRepository userRepo;
+    
 
 //
 //    @Autowired
@@ -74,20 +48,21 @@ public class KafkaMessageProducer implements MessageQueueProducer {
      * @param topic
      * @param data
      */
-    @Override
+    @SuppressWarnings("unused")
+	@Override
     public void send(String topic, Object data) {
     	ProfilePojo2 creds = null;
-		try {
-			creds = new ObjectMapper().readValue(gson.toJson(data), ProfilePojo2.class);
-		} catch (JsonMappingException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (JsonProcessingException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+    	logger.info(String.format("#### -> Producing message -> %s", data.toString()));
+		/*
+		 * try { creds = new ObjectMapper().readValue(gson.toJson(data),
+		 * ProfilePojo2.class); } catch (JsonMappingException e1) {
+		 * log.error("An error has occured {}", e1.getMessage()); } catch
+		 * (JsonProcessingException e1) { log.error("An error has occured {}",
+		 * e1.getMessage()); }
+		 */
         ListenableFuture<SendResult<String, Object>> future = template.send(topic, gson.toJson(data));
-        future.addCallback(new KafkaSendCallback<>() {
+        //future.addCallback(new KafkaSendCallback<>() {
+        future.addCallback(new ListenableFutureCallback<SendResult<String, Object>>() {
 
             /**
              * Called when the {@link ListenableFuture} completes with success.
@@ -98,6 +73,8 @@ public class KafkaMessageProducer implements MessageQueueProducer {
             @Override
             public void onSuccess(SendResult<String, Object> result) {
                 //persist in app event as a successful event
+            	logger.info("Sent message=[" + data.toString() + 
+                        "] with offset=[" + result.getRecordMetadata().offset() + "]");
                 logger.info("notification sent to the event queue");
             }
 
@@ -106,11 +83,23 @@ public class KafkaMessageProducer implements MessageQueueProducer {
              *
              * @param ex the exception.
              */
-            @Override
+            /*@Override
             public void onFailure(KafkaProducerException ex) {
                 //persist in app event as a failed even
+            	logger.error("Unable to send message=[" 
+                        + data + "] due to : " + ex.getMessage());
                 logger.error("failed to send notification", ex);
-            }
+            }*/
+
+			@Override
+			public void onFailure(Throwable ex) {
+				//persist in app event as a failed even
+            	logger.error("Unable to send message=[" 
+                        + data + "] due to : " + ex.getMessage());
+                logger.error("failed to send notification", ex.getMessage());
+                logger.error("Full Error", ex);
+				
+			}
         });
 //        Optional<Users> foundUser = userRepo.findByEmail(creds.getEmail());
 //

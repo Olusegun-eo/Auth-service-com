@@ -1,0 +1,5 @@
+spring:
+  datasource:    url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaPayChatAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+    username: WayaPayChat2020
+    password: gh9shfit2m53g4xz
+    driver-class-name: org.postgresql.Driver

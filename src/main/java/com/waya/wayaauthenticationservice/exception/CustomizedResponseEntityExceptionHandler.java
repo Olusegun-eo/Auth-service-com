@@ -1,11 +1,22 @@
 package com.waya.wayaauthenticationservice.exception;
 
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+
 import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -13,20 +24,31 @@ import org.springframework.web.bind.MissingPathVariableException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import java.time.ZonedDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 @ControllerAdvice
+@RestController
+@Slf4j
 public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
+
+    @ExceptionHandler(Exception.class)
+    public final ResponseEntity<Object> handleAllExceptions(Exception ex) {
+        String message = ex.getLocalizedMessage();
+        log.error(ex.getMessage());
+        return buildResponseEntity(message, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public final ResponseEntity<Object> handleBadCredentialsException(BadCredentialsException ex) {
+        String message = ex.getLocalizedMessage();
+        log.error(ex.getMessage());
+        return buildResponseEntity(message, HttpStatus.UNAUTHORIZED);
+    }
     /**
      * Handle MethodArgumentNotValidException. Triggered when an object fails @Valid validation.
      *
@@ -39,13 +61,18 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
-        return buildResponseEntity(getValidationErrors(ex.getBindingResult().getFieldErrors()), HttpStatus.BAD_REQUEST);
+        return buildResponseEntity(getBodyValidationErrors(ex.getBindingResult().getFieldErrors()), HttpStatus.BAD_REQUEST);
     }
 
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Object> handleConstraintViolationException(ConstraintViolationException cve) {
         return buildResponseEntity(getValidationErrors(cve.getConstraintViolations()), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Object> handleResourceNotFoundException(ResourceNotFoundException re) {
+        return buildResponseEntity(re.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     /**
@@ -141,7 +168,7 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
     }
 
     private ResponseEntity<Object> buildResponseEntity(Object apiResponse, HttpStatus status) {
-        return new ResponseEntity<>(apiResponse, status);
+        return new ResponseEntity<>(getError("Validation Errors", apiResponse), status);
     }
 
     private Map<String, String> getValidationErrors(Set<ConstraintViolation<?>> constraintViolations) {
@@ -152,10 +179,15 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
         return errors;
     }
 
-    private Map<String, String> getValidationErrors(List<FieldError> fieldErrors) {
-        Map<String, String> errors = new HashMap<>();
-        fieldErrors.forEach(e -> errors.put(e.getField(), e.getDefaultMessage()));
+//    private Map<String, String> getValidationErrors(List<FieldError> fieldErrors) {
+//        Map<String, String> errors = new HashMap<>();
+//        fieldErrors.forEach(e -> errors.put(e.getField(), e.getDefaultMessage()));
+//        return errors;
+//    }
 
+    private List<String> getBodyValidationErrors(List<FieldError> fieldErrors) {
+        List<String> errors = new ArrayList<>();
+        fieldErrors.forEach(e -> errors.add(e.getDefaultMessage()));
         return errors;
     }
 
@@ -165,8 +197,6 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
         response.put("status", false);
         response.put("timeStamp", ZonedDateTime.now());
         response.put("data", null);
-
-
         return response;
     }
 
@@ -176,6 +206,16 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
         response.put("status", false);
         response.put("timeStamp", ZonedDateTime.now());
         response.put("data", null);
+
+        return response;
+    }
+
+    private Map<String, Object> getError(String message, Object data) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", message);
+        response.put("status", false);
+        response.put("timeStamp", ZonedDateTime.now());
+        response.put("data", data);
 
         return response;
     }

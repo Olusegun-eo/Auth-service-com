@@ -13,19 +13,23 @@ import com.waya.wayaauthenticationservice.config.AuthClientConfiguration;
 import com.waya.wayaauthenticationservice.pojo.CreateAccountPojo;
 import com.waya.wayaauthenticationservice.pojo.CreateAccountResponse;
 import com.waya.wayaauthenticationservice.pojo.MainWalletResponse;
+import com.waya.wayaauthenticationservice.pojo.WalletAccount;
 import com.waya.wayaauthenticationservice.util.ApiResponse;
 
 
-@FeignClient(name = "TEMPORAL-WALLET-SERVICE", url = "http://157.230.223.54:9009", configuration = AuthClientConfiguration.class)
+@FeignClient(name = "TEMPORAL-WALLET-SERVICE", url = "http://157.230.223.54:9009/wallet", configuration = AuthClientConfiguration.class)
 public interface WalletProxy {
 
-	@GetMapping("/wallet/find/by/userId/{userId}")
-	public List<MainWalletResponse> getWalletById(@PathVariable("userId") Long userId, @RequestHeader("Authorization") String token);
+	@GetMapping("/find/by/userId/{userId}")
+	List<MainWalletResponse> getWalletById(@PathVariable("userId") Long userId, @RequestHeader("Authorization") String token);
 	
-	@GetMapping("/wallet/get/default/wallet")
+	@GetMapping("/get/default/wallet")
     ApiResponse<MainWalletResponse> getDefaultWallet(@RequestHeader("Authorization") String token);
 	
-	@PostMapping("/wallet/create/cooperate/user")
-	ApiResponse<CreateAccountResponse> createCooperateAccouont(@RequestBody CreateAccountPojo createAccountPojo);
+	@PostMapping("/create/cooperate/user")
+	ApiResponse<CreateAccountResponse> createCorporateAccount(@RequestBody CreateAccountPojo createAccountPojo);
+
+	@GetMapping("/accounts/{user_id}")
+	ApiResponse<List<WalletAccount>> getUsersWallet(@PathVariable("user_id") Long id);
 
 }

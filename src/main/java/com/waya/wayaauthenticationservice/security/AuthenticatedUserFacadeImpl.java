@@ -1,17 +1,13 @@
 package com.waya.wayaauthenticationservice.security;
 
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-@Component
-public class AuthenticatedUserFacadeImpl implements AuthenticatedUserFacade {
+import com.waya.wayaauthenticationservice.entity.Users;
 
-    @Autowired
-    private UserRepository userRepo;
+@Component("authenticatedUserFacade")
+public class AuthenticatedUserFacadeImpl implements AuthenticatedUserFacade {
 
     @Override
     public Authentication getAuthentication() {
@@ -25,6 +21,10 @@ public class AuthenticatedUserFacadeImpl implements AuthenticatedUserFacade {
 
     @Override
     public Users getUser() {
-        return this.getName() != null ? userRepo.findByEmail(this.getName()).orElse(null) : null;
+        UserPrincipal userPrincipal = (UserPrincipal) this.getAuthentication().getPrincipal();
+        if(userPrincipal != null){
+            return userPrincipal.getUser().orElse(null);
+        }
+        return null;
     }
 }

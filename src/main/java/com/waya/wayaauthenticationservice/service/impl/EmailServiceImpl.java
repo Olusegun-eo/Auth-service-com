@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static com.waya.wayaauthenticationservice.util.Constant.*;
-import static com.waya.wayaauthenticationservice.util.ProfileServiceUtil.generateCode;
+import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateCode;
 
 @Service
 public class EmailServiceImpl implements EmailService {

@@ -1,25 +1,38 @@
 package com.waya.wayaauthenticationservice.security;
 
-
-import com.waya.wayaauthenticationservice.util.SecurityConstants;
-import io.jsonwebtoken.Jwts;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.ArrayList;
+
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+
+import com.waya.wayaauthenticationservice.SpringApplicationContext;
+import com.waya.wayaauthenticationservice.entity.Roles;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.util.SecurityConstants;
+
+import io.jsonwebtoken.Jwts;
+
 
 public class AuthorizationFilter extends BasicAuthenticationFilter {
 
-    private static final Logger LOGGER= LoggerFactory.getLogger(AuthorizationFilter.class);
+    //private static final Logger LOGGER= LoggerFactory.getLogger(AuthorizationFilter.class);
+    
     public AuthorizationFilter(AuthenticationManager authManager) {
         super(authManager);
     }
@@ -32,12 +45,10 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
         String header = req.getHeader(SecurityConstants.HEADER_STRING);
 
         System.out.println("::::::::::auth::::::::");
-        System.out.println(":::::Header:::::"+header);
         if (header == null || !header.startsWith(SecurityConstants.TOKEN_PREFIX)) {
             chain.doFilter(req, res);
             return;
         }
-
         UsernamePasswordAuthenticationToken authentication = getAuthentication(req);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         chain.doFilter(req, res);
@@ -46,23 +57,43 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
     	System.out.println(":::::::Authorization filter:::::");
         String token = request.getHeader(SecurityConstants.HEADER_STRING);
-        String user = null;
+        String userToken = null;
+        Collection<GrantedAuthority> grantedAuthorities = null;
         if (token != null) {
-
             token = token.replace(SecurityConstants.TOKEN_PREFIX, "");
 
-            System.out.println("::::config Token::::"+token);
-            user = Jwts.parser().setSigningKey(SecurityConstants.getSecret()).parseClaimsJws(token).getBody()
+            userToken = Jwts.parser().setSigningKey(SecurityConstants.getSecret()).parseClaimsJws(token).getBody()
                     .getSubject();
+            UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
 
+            Users user = userLoginRepo.findByEmailOrPhoneNumber(userToken).orElse(null);
+                        // .orElseThrow(() -> new BadCredentialsException("User Does not exist"));
             if (user != null) {
-                return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
-            }
+                List<Roles> roles = new ArrayList<>(user.getRolesList());
+                grantedAuthorities = roles.stream().map(r -> new SimpleGrantedAuthority(r.getName())).collect(Collectors.toSet());
+                grantedAuthorities.addAll(getGrantedAuthorities(getPrivileges(roles)));
 
+                UserPrincipal userPrincipal = new UserPrincipal(user);
+                return new UsernamePasswordAuthenticationToken(userPrincipal, null, grantedAuthorities);
+            }
             return null;
         }
+        return new UsernamePasswordAuthenticationToken(null, null,null);
+    }
 
-        return new UsernamePasswordAuthenticationToken(user, null,null);
+    private final Set<String> getPrivileges(final Collection<Roles> roles) {
+        Set<String> privileges = new HashSet<String>();
+        for (Roles role : roles) {
+            privileges.addAll(role.getPermissions().stream().map(p -> p.getName()).collect(Collectors.toSet()));
+        }
+        return privileges;
+    }
 
+    private List<GrantedAuthority> getGrantedAuthorities(Set<String> privileges) {
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        for (String privilege : privileges) {
+            authorities.add(new SimpleGrantedAuthority(privilege));
+        }
+        return authorities;
     }
 }

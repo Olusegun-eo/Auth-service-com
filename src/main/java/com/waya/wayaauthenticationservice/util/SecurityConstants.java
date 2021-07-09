@@ -16,7 +16,8 @@ public class SecurityConstants {
 
     private static final Key secret = MacProvider.generateKey(SignatureAlgorithm.HS256);
     private static final byte[] secretBytes = secret.getEncoded();
-    private static final String base64SecretBytes = Base64.getEncoder().encodeToString(secretBytes);
+    @SuppressWarnings("unused")
+	private static final String base64SecretBytes = Base64.getEncoder().encodeToString(secretBytes);
 
     public static String getSecret() {
         return "wayas3cr3t";
