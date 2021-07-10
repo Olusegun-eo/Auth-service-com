@@ -269,6 +269,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 		CorporateUser coopUser = mapper.map(mUser, CorporateUser.class);
 		coopUser.setBusinessType(mUser.getBusinessType());
+		coopUser.setPassword(passwordEncoder.encode(mUser.getPassword()));
 		coopUser.setUserId(userId);
 		coopUser = corporateUserRepository.save(coopUser);
 

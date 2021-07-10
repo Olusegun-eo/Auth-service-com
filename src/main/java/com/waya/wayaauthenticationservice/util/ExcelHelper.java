@@ -8,6 +8,7 @@ import com.waya.wayaauthenticationservice.pojo.CorporateUserPojo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -94,17 +95,18 @@ public class ExcelHelper {
                 int cellIdx = 0;
                 while (cellsInRow.hasNext()){
                     Cell cell = cellsInRow.next();
-                    switch (cellIdx) {
-                        case 0:
+                    String colName = CellReference.convertNumToColString(cell.getColumnIndex()).toUpperCase();
+                    switch (colName) {
+                        case "A":
                             pojo.setFirstName(validateAndPassStringValue(cell, cellIdx, rowNumber));
                             break;
-                        case 1:
+                        case "B":
                             pojo.setSurname(validateAndPassStringValue(cell, cellIdx, rowNumber));
                             break;
-                        case 2:
+                        case "C":
                             pojo.setPhoneNumber(validateStringNumericOnly(cell, cellIdx, rowNumber));
                             break;
-                        case 3:
+                        case "D":
                             pojo.setEmail(validateStringIsEmail(cell, cellIdx, rowNumber));
                             break;
                         default:
@@ -168,41 +170,42 @@ public class ExcelHelper {
                 int cellIdx = 0;
                 while (cellsInRow.hasNext()){
                     Cell cell = cellsInRow.next();
-                    switch (cellIdx) {
-                        case 0:
+                    String colName = CellReference.convertNumToColString(cell.getColumnIndex()).toUpperCase();
+                    switch (colName) {
+                        case "A":
                             pojo.setFirstName(validateAndPassStringValue(cell, cellIdx, rowNumber));
                             break;
-                        case 1:
+                        case "B":
                             pojo.setSurname(validateAndPassStringValue(cell, cellIdx, rowNumber));
                             break;
-                        case 2:
+                        case "C":
                             pojo.setPhoneNumber(validateStringNumericOnly(cell, cellIdx, rowNumber));
                             break;
-                        case 3:
+                        case "D":
                             pojo.setEmail(validateStringIsEmail(cell, cellIdx, rowNumber));
                             break;
-                        case 4:
+                        case "E":
                             pojo.setOfficeAddress(defaultStringCell(cell));
                             break;
-                        case 5:
+                        case "F":
                             pojo.setCity(defaultStringCell(cell));
                             break;
-                        case 6:
+                        case "G":
                             pojo.setState(defaultStringCell(cell));
                             break;
-                        case 7:
+                        case "H":
                             pojo.setOrgName(defaultStringCell(cell));
                             break;
-                        case 8:
+                        case "I":
                             pojo.setOrgEmail(defaultStringCell(cell));
                             break;
-                        case 9:
+                        case "J":
                             pojo.setOrgPhone(defaultStringCell(cell));
                             break;
-                        case 10:
-                           pojo.setOrgType(defaultStringCell(cell));
+                        case "K":
+                            pojo.setOrgType(defaultStringCell(cell));
                             break;
-                        case 11:
+                        case "L":
                             pojo.setBusinessType(validateAndPassStringValue(cell, cellIdx, rowNumber));
                             break;
                         default:
