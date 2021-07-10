@@ -50,7 +50,7 @@ public class EmailServiceImpl implements EmailService {
      * @param fullName name
      */
     @Override
-    public void sendEmailToken(String email, String fullName) {
+    public boolean sendEmailToken(String email, String fullName) {
         try {
             //generate the token
             OTPBase otp = generateEmailToken(email);
@@ -69,9 +69,12 @@ public class EmailServiceImpl implements EmailService {
             CompletableFuture.runAsync(() -> messageQueueProducer.send(EMAIL_TOPIC, post));
             log.info("TOKEN sent to kafka message queue::: {}", post);
 
+            return true;
+
         } catch (Exception exception) {
             log.error("could not process data ", exception);
         }
+        return false;
     }
 
     /**

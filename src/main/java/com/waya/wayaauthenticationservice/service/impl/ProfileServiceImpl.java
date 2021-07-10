@@ -212,7 +212,9 @@ public class ProfileServiceImpl implements ProfileService {
             if (validationCheck.getStatus()) {
                 Profile newCorporateProfile = saveCorporateProfile(profileRequest);
                 //save the referral code
+                // make request to the referral service
                 saveReferralCode(newCorporateProfile, profileRequest.getUserId());
+
                 //send otp
                 CompletableFuture.runAsync(() -> smsTokenService.sendSMSOTP(
                         newCorporateProfile.getPhoneNumber(), newCorporateProfile.getEmail()));

@@ -37,10 +37,10 @@ public class OTPController {
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
     })
     @GetMapping(path = "otp/{phoneNumber}/{email}")
-    public ResponseEntity<ApiResponse<Object>> getOTP(@PathVariable @Valid String phoneNumber,
+    public ResponseEntity<ApiResponse<Boolean>> getOTP(@PathVariable @Valid String phoneNumber,
                                                       @PathVariable @Valid String email) {
-        smsTokenService.sendSMSOTP(phoneNumber, email);
-        return new ResponseEntity<>(new ApiResponse<>(null, "your otp has been sent to your phone",
+       boolean status = smsTokenService.sendSMSOTP(phoneNumber, email);
+        return new ResponseEntity<>(new ApiResponse<>(status, "your otp has been sent to your phone",
                 true), HttpStatus.ACCEPTED);
     }
 

@@ -6,7 +6,7 @@ import com.waya.wayaauthenticationservice.util.profile.ApiResponse;
 
 public interface SMSTokenService {
 
-    void sendSMSOTP(String phoneNumber, String keycloakId);
+    boolean sendSMSOTP(String phoneNumber, String keycloakId);
 
     ApiResponse<OTPVerificationResponse> verifySMSOTP(String number, Integer otp);
 }

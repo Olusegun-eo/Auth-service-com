@@ -82,7 +82,7 @@ public class SMSTokenServiceImpl implements SMSTokenService {
      * @param email       user email
      */
     @Override
-    public void sendSMSOTP(String phoneNumber, String email) {
+    public boolean sendSMSOTP(String phoneNumber, String email) {
         try {
             OTPBase otp = generateSMSOTP(phoneNumber, email);
 
@@ -100,10 +100,12 @@ public class SMSTokenServiceImpl implements SMSTokenService {
 
             messageQueueProducer.send(SMS_TOPIC, post);
             log.info("otp sent to kafka message queue::: {}", post);
+            return true;
 
         } catch (Exception exception) {
             log.error("could not process data ", exception);
         }
+        return false;
     }
 
     /**
