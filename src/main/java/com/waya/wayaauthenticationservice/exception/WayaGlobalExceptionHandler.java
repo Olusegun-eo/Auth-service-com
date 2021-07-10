@@ -18,6 +18,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.util.WebUtils;
 
@@ -49,6 +50,12 @@ public class WayaGlobalExceptionHandler {
         String message = ex.getLocalizedMessage();
         log.error(ex.getMessage());
         return buildResponseEntity(message, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Object> handleMaxSizeException(MaxUploadSizeExceededException exc) {
+        String message = "File too Large for Upload. Maximum file Size: " + exc.getMaxUploadSize();
+        return buildResponseEntity(message, HttpStatus.EXPECTATION_FAILED);
     }
 
     /**

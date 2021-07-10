@@ -32,7 +32,11 @@ spring:
     consumer:
       group-id: waya
       auto-offset-reset: earliest
-        
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
+
   security:
     oauth2:
       client:

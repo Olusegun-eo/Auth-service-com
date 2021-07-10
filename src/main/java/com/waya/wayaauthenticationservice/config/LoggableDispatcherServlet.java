@@ -1,9 +1,12 @@
 package com.waya.wayaauthenticationservice.config;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.util.ReqIPUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +21,7 @@ import org.springframework.web.util.WebUtils;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
 @Slf4j
@@ -41,11 +45,25 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
         try {
             handler = getHandler(request);
             super.doDispatch(request, response);
+
         } catch (HttpMediaTypeNotSupportedException ex) {
-            throw ex;
+            ErrorResponse errorResponse = new ErrorResponse(ex.getMessage());
+            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            String str = convertObjectToJson(errorResponse);
+            PrintWriter pr = response.getWriter();
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            pr.write(str);
         } catch (Exception ex) {
-            throw new CustomException(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
-        } finally {
+            ErrorResponse errorResponse = new ErrorResponse(ex.getMessage());
+            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            response.getWriter().write(convertObjectToJson(errorResponse));
+            String str = convertObjectToJson(errorResponse);
+            PrintWriter pr = response.getWriter();
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            pr.write(str);
+        } finally{
             log(request, response, handler, System.currentTimeMillis() - startTime);
             updateResponse(response);
         }
@@ -79,7 +97,6 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
         }
         String json = gson.toJson(jsonObject);
         log.info(json);
-
     }
 
     private String getResponsePayload(HttpServletResponse response) {
@@ -118,5 +135,13 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
                 ContentCachingResponseWrapper.class);
         assert responseWrapper != null;
         responseWrapper.copyBodyToResponse();
+    }
+
+    public String convertObjectToJson(Object object) throws JsonProcessingException {
+        if (object == null) {
+            return null;
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(object);
     }
 }
