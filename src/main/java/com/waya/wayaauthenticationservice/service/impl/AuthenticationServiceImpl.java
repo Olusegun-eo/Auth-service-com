@@ -18,6 +18,12 @@ import java.util.concurrent.CompletableFuture;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.waya.wayaauthenticationservice.pojo.*;
+import com.waya.wayaauthenticationservice.response.*;
+import com.waya.wayaauthenticationservice.service.EmailService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.service.SMSTokenService;
+import com.waya.wayaauthenticationservice.util.profile.ApiResponse;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,32 +52,12 @@ import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
-import com.waya.wayaauthenticationservice.pojo.BaseUserPojo;
-import com.waya.wayaauthenticationservice.pojo.CorporateUserPojo;
-import com.waya.wayaauthenticationservice.pojo.CreateAccountPojo;
-import com.waya.wayaauthenticationservice.pojo.DevicePojo;
-import com.waya.wayaauthenticationservice.pojo.EmailPojo;
-import com.waya.wayaauthenticationservice.pojo.OTPPojo;
-import com.waya.wayaauthenticationservice.pojo.PasswordPojo;
-import com.waya.wayaauthenticationservice.pojo.PasswordPojo2;
-import com.waya.wayaauthenticationservice.pojo.PinPojo;
-import com.waya.wayaauthenticationservice.pojo.PinPojo2;
-import com.waya.wayaauthenticationservice.pojo.ProfilePojo;
-import com.waya.wayaauthenticationservice.pojo.ProfilePojo2;
-import com.waya.wayaauthenticationservice.pojo.ValidateUserPojo;
-import com.waya.wayaauthenticationservice.pojo.VirtualAccountPojo;
-import com.waya.wayaauthenticationservice.pojo.WalletPojo;
-import com.waya.wayaauthenticationservice.pojo.WayagramPojo;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.repository.CorporateUserRepository;
 import com.waya.wayaauthenticationservice.repository.RedisUserDao;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.response.ErrorResponse;
-import com.waya.wayaauthenticationservice.response.GeneralResponse;
-import com.waya.wayaauthenticationservice.response.ProfileResponse;
-import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
 import com.waya.wayaauthenticationservice.util.ReqIPUtils;
@@ -122,6 +108,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Autowired
 	private ModelMapper mapper;
+
+	@Autowired
+	private ProfileService profileService;
+
+	@Autowired
+	private SMSTokenService smsTokenService;
+
+	@Autowired
+	private EmailService emailService;
 
 	public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
 	private static final String SECRET_TOKEN = "wayas3cr3t";
@@ -282,18 +277,31 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		createAccount.setSavingsProductId(1);
 		walletProxy.createCorporateAccount(createAccount);
 
-		ProfilePojo2 profilePojo = new ProfilePojo2();
-		profilePojo.setBusinessType(coopUser.getBusinessType());
-		profilePojo.setOrganisationEmail(coopUser.getOrgEmail());
-		profilePojo.setOrganisationName(coopUser.getOrgName());
-		profilePojo.setOrganisationType(coopUser.getOrgType());
-		profilePojo.setReferralCode(coopUser.getReferenceCode());
-		profilePojo.setEmail(coopUser.getEmail());
-		profilePojo.setSurname(coopUser.getSurname());
-		profilePojo.setUserId(String.valueOf(userId));
-		profilePojo.setPhoneNumber(coopUser.getPhoneNumber());
-		profilePojo.setFirstName(coopUser.getFirstName());
-		profilePojo.setCorporate(true);
+//		ProfilePojo2 profilePojo = new ProfilePojo2();
+//		profilePojo.setBusinessType(coopUser.getBusinessType());
+//		profilePojo.setOrganisationEmail(coopUser.getOrgEmail());
+//		profilePojo.setOrganisationName(coopUser.getOrgName());
+//		profilePojo.setOrganisationType(coopUser.getOrgType());
+//		profilePojo.setReferralCode(coopUser.getReferenceCode());
+//		profilePojo.setEmail(coopUser.getEmail());
+//		profilePojo.setSurname(coopUser.getSurname());
+//		profilePojo.setUserId(String.valueOf(userId));
+//		profilePojo.setPhoneNumber(coopUser.getPhoneNumber());
+//		profilePojo.setFirstName(coopUser.getFirstName());
+//		profilePojo.setCorporate(true);
+
+		// Implementation for internal calls begin here
+		CorporateProfileRequest corporateProfileRequest = new CorporateProfileRequest();
+		corporateProfileRequest.setBusinessType(coopUser.getBusinessType());
+		corporateProfileRequest.setOrganisationEmail(coopUser.getOrgEmail());
+		corporateProfileRequest.setOrganisationName(coopUser.getOrgName());
+		corporateProfileRequest.setOrganisationType(coopUser.getOrgType());
+		corporateProfileRequest.setReferralCode(coopUser.getReferenceCode());
+		corporateProfileRequest.setEmail(coopUser.getEmail());
+		corporateProfileRequest.setSurname(coopUser.getSurname());
+		corporateProfileRequest.setUserId(String.valueOf(userId));
+		corporateProfileRequest.setPhoneNumber(coopUser.getPhoneNumber());
+		corporateProfileRequest.setFirstName(coopUser.getFirstName());
 
 		VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
 		virtualAccountPojo.setAccountName(coopUser.getFirstName() + " " + coopUser.getSurname());
@@ -302,18 +310,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		ResponseEntity<String> response = virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token);
 		log.info("Response: {}", response.getBody());
 
-		kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC, profilePojo);
-		try {
-			// Intentional delay
-			Thread.sleep(3000);
-		} catch (InterruptedException e) {
-			log.error(e.getMessage());
-		} 
-		Integer profileCount = profileServiceDAO.getProfileCount(String.valueOf(userId), coopUser.getPhoneNumber());
-		if (profileCount == 0) {
-			log.info("Profile does not exist: use an async");
-			postProfile(profilePojo);
-		}
+		// Implementation for internal call
+		log.info("CorporateProfile account creation starts: " + corporateProfileRequest);
+		ApiResponse<String> corporateResponse = profileService.createProfile(corporateProfileRequest);
+		log.info("CorporateProfile account creation ends: " + corporateResponse);
+
+//		kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC, profilePojo);
+//		try {
+//			// Intentional delay
+//			Thread.sleep(3000);
+//		} catch (InterruptedException e) {
+//			log.error(e.getMessage());
+//		}
+//		Integer profileCount = profileServiceDAO.getProfileCount(String.valueOf(userId), coopUser.getPhoneNumber());
+//		if (profileCount == 0) {
+//			log.info("Profile does not exist: use an async");
+//			postProfile(profilePojo);
+//		}
+
 	}
 	
 	public void createPrivateUser(Users user) {
@@ -328,22 +342,35 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 		log.info("Response: {}", response.getBody());
 		// TODO: Confirm that the Number is important for Profile Service Call to Fly
-		ProfilePojo profilePojo = new ProfilePojo(user.getEmail(), user.getFirstName(), user.getPhoneNumber(),
-				user.getSurname(), id, false);
+//		ProfilePojo profilePojo = new ProfilePojo(user.getEmail(), user.getFirstName(), user.getPhoneNumber(),
+//				user.getSurname(), id, false);
+
+		// Implementation for internal calls begin here
+		PersonalProfileRequest personalProfileRequest = new PersonalProfileRequest();
+		personalProfileRequest.setEmail(user.getEmail());
+		personalProfileRequest.setFirstName(user.getFirstName());
+		personalProfileRequest.setPhoneNumber(user.getPhoneNumber());
+		personalProfileRequest.setSurname(user.getSurname());
+		personalProfileRequest.setUserId(id);
+
+		log.info("PersonalProfile account creation starts: " + personalProfileRequest);
+		ApiResponse<String> personalResponse  = profileService.createProfile(personalProfileRequest);
+		log.info("PersonalProfile account creation ends: " + personalResponse);
+		// Implementation for internal calls ends here
 
 		// TODO: Confirm and refactor the Kafka Call
-		kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC, profilePojo);
-		try {
-			// Intentional delay
-			Thread.sleep(3000);
-		} catch (InterruptedException e) {
-			log.error(e.getMessage());
-		} 
-		Integer checkCount = profileServiceDAO.getProfileCount(id, user.getPhoneNumber());
-		if (checkCount == 0) {
-			log.info("Profile does not exist: use an async");
-			postProfile(profilePojo);
-		}
+//		kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC, profilePojo);
+//		try {
+//			// Intentional delay
+//			Thread.sleep(3000);
+//		} catch (InterruptedException e) {
+//			log.error(e.getMessage());
+//		}
+//		Integer checkCount = profileServiceDAO.getProfileCount(id, user.getPhoneNumber());
+//		if (checkCount == 0) {
+//			log.info("Profile does not exist: use an async");
+//			postProfile(profilePojo);
+//		}
 	}
 
 	public String generateToken(Users userResponse) {
@@ -388,11 +415,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Override
 	public ResponseEntity<?> verifyAccountCreation(OTPPojo otpPojo) {
-		String url = PROFILE_SERVICE + "profile-service/otp-verify/" + otpPojo.getPhoneOrEmail() + "/"
-				+ otpPojo.getOtp();
-		ProfileResponse profileResponse = restTemplate.getForObject(url, ProfileResponse.class);
-		log.info("Error::: {}, {} and {}", new Gson().toJson(profileResponse));
-		if (profileResponse.isStatus()) {
+		// Implementation for internal call
+		log.info("Verify Account Creation starts {}", otpPojo);
+		ApiResponse<OTPVerificationResponse> profileResponse = verifyOTP(otpPojo.getPhoneOrEmail(),Integer.parseInt(otpPojo.getOtp()));
+		log.info("Verify Account Creation ends ::::: {}", profileResponse.getData());
+
+		//		String url = PROFILE_SERVICE + "profile-service/otp-verify/" + otpPojo.getPhoneOrEmail() + "/"
+//				+ otpPojo.getOtp();
+//		ProfileResponse profileResponse = restTemplate.getForObject(url, ProfileResponse.class);
+//		log.info("Error::: {}, {} and {}", new Gson().toJson(profileResponse));
+		if (profileResponse.getData().isValid()) {
 			Users user = userRepo.findByEmailOrPhoneNumber(otpPojo.getPhoneOrEmail()).orElse(null);
 			if (user == null)
 				return new ResponseEntity<>(new ErrorResponse(
@@ -410,17 +442,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
 			}
 		} else {
-			return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(new ErrorResponse(profileResponse.getData().getMessage()), HttpStatus.BAD_REQUEST);
 		}
 	}
 
+
 	@Override
 	public ResponseEntity<?> verifyPhoneUsingOTP(OTPPojo otpPojo) {
-		String url = PROFILE_SERVICE + "profile-service/otp-verify/" + otpPojo.getPhoneOrEmail() + "/"
-				+ otpPojo.getOtp();
-		ProfileResponse profileResponse = restTemplate.getForObject(url, ProfileResponse.class);
-		log.info("Error::: {}, {} and {}", new Gson().toJson(profileResponse));
-		if (profileResponse.isStatus()) {
+		// Implementation for internal call
+		log.info("Verify Phone UsingOTP starts {}", otpPojo);
+		ApiResponse<OTPVerificationResponse> profileResponse = verifyOTP(otpPojo.getPhoneOrEmail(),Integer.parseInt(otpPojo.getOtp()));
+		log.info("Verify Phone UsingOTP ends {}", profileResponse.getData());
+
+ //		String url = PROFILE_SERVICE + "profile-service/otp-verify/" + otpPojo.getPhoneOrEmail() + "/"
+//				+ otpPojo.getOtp();
+//		ProfileResponse profileResponse = restTemplate.getForObject(url, ProfileResponse.class);
+//		log.info("Error::: {}, {} and {}", new Gson().toJson(profileResponse));
+
+		if (profileResponse.getData().isValid()) {
 			Users user = userRepo.findByPhoneNumber(otpPojo.getPhoneOrEmail()).orElse(null);
 			user.setPhoneVerified(true);
 			// user.setActive(true);
@@ -434,16 +473,48 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
 			}
 		} else {
-			return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(new ErrorResponse(profileResponse.getData().getMessage()), HttpStatus.BAD_REQUEST);
 		}
 	}
 
+	public ApiResponse<OTPVerificationResponse> verifyOTP(String phoneNumber, Integer otp){
+		ApiResponse<OTPVerificationResponse> verify = smsTokenService.verifySMSOTP(phoneNumber,otp);
+		return verify;
+	}
+
+	public EmailVerificationResponse verifyEMAIL(String email, Integer token){
+		EmailVerificationResponse verifyEmail = emailService.verifyEmailToken(email,token);
+		return verifyEmail;
+	}
+	public boolean sendOTP(String phoneNumber, String email){
+		if (smsTokenService.sendSMSOTP(phoneNumber, email)){
+			return true;
+		}
+		return false;
+	}
+
+	public boolean pushEMailToken(String email, String fullName){
+
+		 if (emailService.sendEmailToken(email, fullName)){
+		 	return true;
+		 }
+		 return false;
+	}
+
+
+
 	@Override
 	public ResponseEntity<?> verifyEmail(EmailPojo emailPojo) {
-		String url = PROFILE_SERVICE + "profile-service/email-verify/" + emailPojo.getEmail() + "/"
-				+ emailPojo.getToken();
-		GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
-		if (generalResponse.isStatus()) {
+		// Implementation for internal call
+		log.info("Verify Email starts {}", emailPojo);
+		EmailVerificationResponse generalResponse = verifyEMAIL(emailPojo.getEmail(), Integer.parseInt(emailPojo.getToken()));
+		log.info("Verify Email starts {}", emailPojo);
+
+//		String url = PROFILE_SERVICE + "profile-service/email-verify/" + emailPojo.getEmail() + "/"
+//				+ emailPojo.getToken();
+//		GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
+
+		if (generalResponse.isValid()) {
 			Users user = userRepo.findByEmailIgnoreCase(emailPojo.getEmail()).orElse(null);
 			if (user == null) {
 				return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
@@ -543,12 +614,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
 					HttpStatus.NOT_FOUND);
 
-		String url = PROFILE_SERVICE + "profile-service/otp/" + phoneNumber + "/" + user.getEmail();
-		GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
-		if (generalResponse.isStatus()) {
+		// Implementation for internal call
+		log.info("Resend OTPPhone starts {}", phoneNumber);
+		boolean generalResponse = sendOTP(phoneNumber,user.getEmail());
+		log.info("Response From OTPPhone for {}", generalResponse);
+
+//		String url = PROFILE_SERVICE + "profile-service/otp/" + phoneNumber + "/" + user.getEmail();
+//		GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
+
+		if (generalResponse) {
 			return new ResponseEntity<>(new SuccessResponse("OTP sent successfully.", null), HttpStatus.OK);
 		} else {
-			return new ResponseEntity<>(new ErrorResponse(generalResponse.getMessage()), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(new ErrorResponse("Error"), HttpStatus.BAD_REQUEST);
 		}
 	}
 
@@ -559,13 +636,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
 					HttpStatus.NOT_FOUND);
 
-		String url = PROFILE_SERVICE + "profile-service/email-token/" + email + "/" + user.getId();
-		GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
-		if (generalResponse.isStatus()) {
+		// Implementation for internal call
+		log.info("Resend Verification Mail starts for {}", email);
+		boolean check = pushEMailToken(email,user.getId().toString());
+		log.info("Response From Verification Mail {}", check);
+
+//		String url = PROFILE_SERVICE + "profile-service/email-token/" + email + "/" + user.getId();
+//		GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
+//		;
+
+		if (check) {
 			return new ResponseEntity<>(new SuccessResponse("Verification email sent successfully.", null),
 					HttpStatus.OK);
 		} else {
-			return new ResponseEntity<>(new ErrorResponse(generalResponse.getMessage()), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(new ErrorResponse("Error"), HttpStatus.BAD_REQUEST);
 		}
 	}
 

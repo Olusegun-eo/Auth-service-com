@@ -1,3 +1,131 @@
+<<<<<<< HEAD
+spring:
+#  profiles:
+#    active:
+#    - dev
+  application:
+    name: auth-service
+  datasource:
+    #    url: jdbc:postgresql://127.0.0.1:5432/app_dev
+    #    username: app_dev
+    #    password: e1bc9e7f864d
+    url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaPayChatAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+    username: WayaPayChat2020
+    password: gh9shfit2m53g4xz
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        show-sql: true
+        jdbc:
+          time_zone: UTC
+
+  jackson:
+    serialization:
+      fail-on-empty-beans: false     
+  session:
+    store-type: jdbc
+  kafka:
+    bootstrapServers: 209.97.178.170:9092
+    consumer:
+      group-id: waya
+      auto-offset-reset: earliest
+        
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            clientId: 120295942246-mf4abvh2gpnvsbcs2u5ffbmrq3a06qu9.apps.googleusercontent.com
+            clientSecret: zyVoMw6DAFW1TUWlstyG4_QM
+            redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
+            scope:
+              - email
+              - profile
+          facebook:
+            clientId: 160272946020602
+            clientSecret: d684f1d33157445aa1d15dad401206bd
+            redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
+            scope:
+              - email
+              - public_profile
+          github:
+            clientId: 32f01a4bdb2d9ab43954
+            clientSecret: 04be0187fcf95e4b40e7c9d05a7220c5099084af
+            redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
+            scope:
+              - user:email
+              - read:user
+        provider:
+          facebook:
+            authorizationUri: https://www.facebook.com/v3.0/dialog/oauth
+            tokenUri: https://graph.facebook.com/v3.0/oauth/access_token
+            userInfoUri: https://graph.facebook.com/v3.0/me?fields=id,first_name,middle_name,last_name,name,email,verified,is_verified,picture.width(250).height(250)
+
+server:
+  port: 8059 
+  servlet:
+    context-path: /
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://46.101.41.187:8761/eureka
+    service-url:
+      default-zone: http://46.101.41.187:8761/eureka
+  instance:
+    preferIpAddress: true
+
+jwt:
+  secret: mysecret
+deleteprofile:
+  delete-profile-url: http://46.101.41.187:8080/profile-service/delete-restore
+  validate-user: http://46.101.41.187:8080/profile-service/delete-restore
+  deleteWallet: http://46.101.41.187:1000/main/profile/delete-profile-by-id
+  deleteWayagram: http://46.101.41.187:1000/main/profile/delete-profile-by-id
+
+app:
+  config:
+    referral:
+      base-url: http://46.101.41.187:8282/referral
+    auto:
+      follow:
+        base-url: http://157.245.84.14:1000/graph/friend/waya-auto-follow
+    main:
+      profile:
+        base-url: http://157.245.84.14:1000/main/profile/create
+    file:
+      resource:
+        base-url: http://46.101.41.187:9098/file-resource/api
+  auth:
+    tokenSecret: 926D96C90030DD58429D2751AC1BDBBC
+    tokenExpirationMsec: 864000000
+  oauth2:
+    # After successfully authenticating with the OAuth2 Provider,
+    # we'll be generating an auth token for the user and sending the token to the
+    # redirectUri mentioned by the client in the /oauth2/authorize request.
+    # We're not using cookies because they won't work well in mobile clients.
+    authorizedRedirectUris:
+      - http://localhost:3000/oauth2/redirect
+      - myandroidapp://oauth2/redirect
+      - myiosapp://oauth2/redirect
+wallet:
+  profile:
+    url: http://46.101.41.187:8080/profile-service/personal-profile
+
+=======
 spring:
 #  profiles:
 #    active:
@@ -118,3 +246,4 @@ app:
 wallet:
   profile:
     url: http://46.101.41.187:8080/profile-service/personal-profile
+>>>>>>> fa9dae23a8dc0e50ac66862f695f1f9a7f5a839f

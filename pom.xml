@@ -177,6 +177,15 @@
 			<artifactId>spring-mobile-device</artifactId>
 			<version>2.0.0.M3</version>
 		</dependency>
+<<<<<<< HEAD
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka-test</artifactId>
+            <version>2.5.5.RELEASE</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+=======
 
 		<!--Read and Write to Excel Files-->
 		<dependency>
@@ -191,6 +200,7 @@
 		</dependency>
 
 	</dependencies>
+>>>>>>> 9cef7940ebbb0384f3949576004ce169feb80804
 
 	<dependencyManagement>
 		<dependencies>
