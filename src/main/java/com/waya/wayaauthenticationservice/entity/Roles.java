@@ -26,7 +26,7 @@ public class Roles implements Serializable {
 	@Id
 	@Basic(optional = false)
 	@Column(name = "id")
-	private Integer id;
+	private Long id;
 
 	@Size(max = 50)
 	@Column(name = "name", unique = true)
@@ -44,12 +44,12 @@ public class Roles implements Serializable {
 	public Roles() {
 	}
 
-	public Roles(Integer id, String name) {
+	public Roles(Long id, String name) {
 		this.id = id;
 		this.name = name;
 	}
 
-	public Roles(Integer id) {
+	public Roles(Long id) {
 		this.id = id;
 
 	}

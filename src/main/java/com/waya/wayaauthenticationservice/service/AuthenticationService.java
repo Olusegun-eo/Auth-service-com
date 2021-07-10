@@ -25,7 +25,7 @@ import com.waya.wayaauthenticationservice.pojo.WayagramPojo;
 
 public interface AuthenticationService {
 
-	ResponseEntity<?> createUser(BaseUserPojo userPojo, HttpServletRequest request, Device device);
+	ResponseEntity<?> createUser(BaseUserPojo userPojo, HttpServletRequest request, Device device, boolean adminAction);
 
 	ResponseEntity<?> createCorporateUser(CorporateUserPojo corporateUserPojo, HttpServletRequest request,
 			Device device);

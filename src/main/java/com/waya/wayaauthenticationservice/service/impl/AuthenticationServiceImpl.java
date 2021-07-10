@@ -127,7 +127,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Override
 	@Transactional
-	public ResponseEntity<?> createUser(BaseUserPojo mUser, HttpServletRequest request, Device device) {
+	public ResponseEntity<?> createUser(BaseUserPojo mUser, HttpServletRequest request, Device device, boolean adminAction) {
 		try {
 			// Check if email exists
 			Users existingEmail = userRepo.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
@@ -171,8 +171,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			user.setName(fullName);
 			user.setRegDevicePlatform(dev.getPlatform());
 			user.setRegDeviceType(dev.getDeviceType());
-			user.setDateOfActivation(LocalDateTime.now());
-			user.setActive(true);
+			if(adminAction) user.setActive(true);
 			user.setPassword(passwordEncoder.encode(mUser.getPassword()));
 			user.setRolesList(roleList);
 
@@ -232,7 +231,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			user.setRegDevicePlatform(dev.getPlatform());
 			user.setRegDeviceType(dev.getDeviceType());
 			user.setPassword(passwordEncoder.encode(mUser.getPassword()));
-			user.setDateOfActivation(LocalDateTime.now());
 			user.setRolesList(roleList);
 			user.setEmail(mUser.getEmail().trim());
 			user.setEmailVerified(false);
@@ -256,7 +254,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			return new ResponseEntity<>(new SuccessResponse(
 					"Corporate Account Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
 					HttpStatus.CREATED);
-			
 		} catch (Exception e) {
 			log.error("Error::: {}, {} and {}", e.getMessage(), 2, 3);
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
@@ -266,6 +263,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	public void createCorporateUser(CorporateUserPojo mUser, Long userId, String token) {
 
 		CorporateUser coopUser = mapper.map(mUser, CorporateUser.class);
+		coopUser.setBusinessType(mUser.getBusinessType());
 		coopUser.setUserId(userId);
 		coopUser = corporateUserRepository.save(coopUser);
 
@@ -339,11 +337,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		virtualAccountPojo.setUserId(id);
 
 		String token = generateToken(user);
-
 		ResponseEntity<String> response = virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token);
 
 		log.info("Response: {}", response.getBody());
-
 		// TODO: Confirm that the Number is important for Profile Service Call to Fly
 //		ProfilePojo profilePojo = new ProfilePojo(user.getEmail(), user.getFirstName(), user.getPhoneNumber(),
 //				user.getSurname(), id, false);
@@ -397,9 +393,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			Users existingEmail = userRepo.findById(pinPojo.getUserId()).orElse(null);
 
 			if (existingEmail != null) {
-//				String token = generateToken(existingEmail);
-//				System.out.println("::::::mtoken::::" + token);
-//              Users user = authenticatedUserFacade.getUser();
 				if (!pinIs4Digit(pinPojo.getPin())) {
 					return new ResponseEntity<>(new ErrorResponse("Transaction pin should be exactly 4 Digits"),
 							HttpStatus.BAD_REQUEST);
@@ -437,6 +430,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + "For User with " + otpPojo.getPhoneOrEmail()),
 						HttpStatus.BAD_REQUEST);
 			user.setActive(true);
+			user.setDateOfActivation(LocalDateTime.now());
 			try {
 				userRepo.save(user);
 				return new ResponseEntity<>(new SuccessResponse("OTP verified successfully. Please login.", null),

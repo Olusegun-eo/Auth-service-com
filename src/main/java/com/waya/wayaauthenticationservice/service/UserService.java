@@ -21,7 +21,7 @@ public interface UserService {
 
 	ResponseEntity<?> getUsers();
 
-	ResponseEntity<?> getUsersByRole(int roleId);
+	ResponseEntity<?> getUsersByRole(long roleId);
 
 	ResponseEntity<?> getUserByEmail(String email);
 

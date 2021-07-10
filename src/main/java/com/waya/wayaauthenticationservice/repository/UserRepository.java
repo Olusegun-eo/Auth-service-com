@@ -1,7 +1,13 @@
 package com.waya.wayaauthenticationservice.repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
+import com.waya.wayaauthenticationservice.entity.Roles;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -28,4 +34,8 @@ public interface UserRepository extends JpaRepository<Users, Long> {
             "AND _user.isDeleted = false"
     )
     Optional<Users> findByEmailOrPhoneNumber(@Param("value") String value);
+
+    Page<Users> findByRolesListIn(Collection<Roles> roles, Pageable pageable);
+
+    Page<Users> findUserByIsCorporate(boolean value, Pageable pageable);
 }

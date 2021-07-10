@@ -17,6 +17,7 @@ import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.servlet.DispatcherServlet;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
@@ -78,6 +79,13 @@ public class WayaAuthenticationServiceApplication {
 				.setFieldAccessLevel(AccessLevel.PRIVATE)
 				.setSourceNamingConvention(NamingConventions.JAVABEANS_MUTATOR);
 		return modelMapper;
+	}
+
+	@Bean(name = "multipartResolver")
+	public CommonsMultipartResolver createMultipartResolver() {
+		CommonsMultipartResolver resolver=new CommonsMultipartResolver();
+		resolver.setDefaultEncoding("utf-8");
+		return resolver;
 	}
 
 }
