@@ -61,7 +61,7 @@ public class UserController {
 	@GetMapping("/{id}")
 	//    @Cacheable(key = "#id",value = "User")
 	@PreAuthorize(value = "@userSecurity.useHierarchy(#id, authentication)")
-	public ResponseEntity<?> findUser(@PathVariable String id) {
+	public ResponseEntity<?> findUser(@PathVariable Long id) {
 		return userService.getUserById(id);
 	}
 
@@ -98,7 +98,7 @@ public class UserController {
 	@ApiOperation(value = "Get User and Wallet Details by UserId (In-app use only)", tags = { "USER SERVICE" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("walletByUserId")
-	public ResponseEntity<?> getUserAndWalletById(@RequestParam("id") String userId) {
+	public ResponseEntity<?> getUserAndWalletById(@RequestParam("id") Long userId) {
 		return userService.getUserAndWalletByUserId(userId);
 	}
 	
@@ -126,7 +126,7 @@ public class UserController {
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@DeleteMapping("/delete/{id}")
 	@PreAuthorize(value = "hasRole('ADMIN')")
-	public ResponseEntity<?> remove(@PathVariable String id) {
+	public ResponseEntity<?> remove(@PathVariable Long id) {
 		return userService.deleteUser(id);
 	}
 

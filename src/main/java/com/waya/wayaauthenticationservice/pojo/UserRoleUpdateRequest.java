@@ -13,6 +13,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UserRoleUpdateRequest {
 
-	private String userId;
+	private Long userId;
 	private List<Integer> rolesList;
 }

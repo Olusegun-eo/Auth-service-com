@@ -134,7 +134,7 @@ public class AuthenticationController {
     @ApiOperation(value = "PIN verification (Service consumption only. Do not Use)", notes = "This endpoint help validate user by Pin and is meant for service consumption only", tags = {
             "AUTH"})
     @GetMapping("/validate-pin/{userId}/{pin}")
-    public ResponseEntity<?> validateUserByPin(@PathVariable String userId, @PathVariable int pin) {
+    public ResponseEntity<?> validateUserByPin(@PathVariable Long userId, @PathVariable int pin) {
         return authenticationServiceImpl.validatePin(userId, pin);
     }
 
@@ -150,7 +150,7 @@ public class AuthenticationController {
     @ApiOperation(value = "Resend OTP to Phone", tags = {"AUTH"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/resend-otp/{phoneNumber}")
-    public ResponseEntity<?> resendOTPPhone(@PathVariable() String phoneNumber) {
+    public ResponseEntity<?> resendOTPPhone(@PathVariable("phoneNumber") String phoneNumber) {
         return authenticationServiceImpl.resendOTPPhone(phoneNumber);
     }
 
@@ -164,7 +164,7 @@ public class AuthenticationController {
     @ApiOperation(value = "Check if user is an admin: (Internal Consumption only)", tags = {"AUTH"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/is-user-admin/{userId}")
-    public ResponseEntity<?> isUserAdmin(@PathVariable String userId) {
+    public ResponseEntity<?> isUserAdmin(@PathVariable Long userId) {
         return userService.isUserAdmin(userId);
     }
 

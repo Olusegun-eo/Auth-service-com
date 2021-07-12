@@ -29,7 +29,7 @@ public class UserAssembler extends RepresentationModelAssemblerSupport<Users, Us
 	@Override
 	public UserProfileResponsePojo toModel(Users entity) {
 		UserProfileResponsePojo userDTO = this.userService.toModelDTO(entity);
-		userDTO.add(linkTo(methodOn(UserController.class).findUser(entity.getUserId())).withSelfRel());
+		userDTO.add(linkTo(methodOn(UserController.class).findUser(entity.getId())).withSelfRel());
 		return userDTO;
 	}
 	

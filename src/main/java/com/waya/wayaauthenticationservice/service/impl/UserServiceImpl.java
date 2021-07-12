@@ -78,9 +78,9 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public ResponseEntity<?> getUserById(String id) {
+    public ResponseEntity<?> getUserById(Long id) {
         try {
-            Users user = usersRepo.findByUserId(id).orElse(null);
+            Users user = usersRepo.findById(id).orElse(null);
 
             UserProfileResponsePojo userDto = this.toModelDTO(user);
             if (userDto == null) {
@@ -178,8 +178,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<?> getUserAndWalletByUserId(String id) {
-        Users user = usersRepo.findByUserId(id).orElse(null);
+    public ResponseEntity<?> getUserAndWalletByUserId(Long id) {
+        Users user = usersRepo.findById(id).orElse(null);
         if (user == null)
             return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.NOT_FOUND);
         UserProfileResponsePojo userDtO = toModelDTO(user);
@@ -212,17 +212,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<?> deleteUser(String id) {
+    public ResponseEntity<?> deleteUser(Long id) {
         try {
             //if (validateUser(token)) {
-            Users user = usersRepo.findByUserId(id)
+            Users user = usersRepo.findById(id)
                     .orElseThrow(() -> new CustomException("User with id  not found", HttpStatus.NOT_FOUND));
             user.setActive(false);
             user.setDeleted(true);
             user.setDateOfActivation(LocalDateTime.now());
-            usersRepo.saveAndFlush(user);
+            Users finalUser = usersRepo.saveAndFlush(user);
 
-            CompletableFuture.runAsync(() -> disableUserProfile(user.getUserId()));
+            CompletableFuture.runAsync(() -> disableUserProfile(String.valueOf(finalUser.getId())));
+
             return new ResponseEntity<>(new CustomException("Account deleted", OK), OK);
 //            } else {
 //                return new ResponseEntity<>(new ErrorResponse("Invalid Token"), HttpStatus.BAD_REQUEST);
@@ -232,8 +233,8 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    public ResponseEntity<?> isUserAdmin(String userId) {
-        Users user = usersRepo.findByUserId(userId)
+    public ResponseEntity<?> isUserAdmin(Long userId) {
+        Users user = usersRepo.findById(userId)
                 .orElseThrow(() -> new CustomException("User with id  not found", HttpStatus.BAD_REQUEST));
         return new ResponseEntity<>(new SuccessResponse("IsUserAdmin", user.isAdmin()), HttpStatus.OK);
     }
@@ -262,7 +263,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserRoleUpdateRequest UpdateUser(UserRoleUpdateRequest user) {
         try {
-            return usersRepo.findByUserId(user.getUserId()).map(mUser -> {
+            return usersRepo.findById(user.getUserId()).map(mUser -> {
                 for (Integer i : user.getRolesList()) {
                     Optional<Roles> mRole = rolesRepo.findById(Long.parseLong(String.valueOf(i)));
                     if (mRole.isPresent()) {
@@ -370,7 +371,7 @@ public class UserServiceImpl implements UserService {
         });
 
         UserProfileResponsePojo userDto = UserProfileResponsePojo.builder().email(user.getEmail())
-                .userId(user.getUserId())
+                .id(user.getId())
                 .isEmailVerified(user.isEmailVerified()).phoneNumber(user.getPhoneNumber())
                 .firstName(user.getFirstName()).lastName(user.getSurname()).isAdmin(user.isAdmin())
                 .isPhoneVerified(user.isPhoneVerified()).isAccountDeleted(user.isDeleted())
@@ -378,7 +379,7 @@ public class UserServiceImpl implements UserService {
                 .isActive(user.isActive()).isAccountLocked(!user.isAccountNonLocked()).roles(roles).permits(permits)
                 .pinCreated(user.isPinCreated()).isCorporate(user.isCorporate()).build();
 
-        userDto.add(linkTo(methodOn(UserController.class).findUser(user.getUserId())).withSelfRel());
+        userDto.add(linkTo(methodOn(UserController.class).findUser(user.getId())).withSelfRel());
 
         return userDto;
     }
@@ -437,11 +438,11 @@ public class UserServiceImpl implements UserService {
 
                 Users user = new Users();
                 user.setId(0L);
-                String publicUserId = HelperUtils.generateRandomPassword();
-                while (usersRepo.existsByUserId(publicUserId)) {
-                    publicUserId = HelperUtils.generateRandomPassword();
-                }
-                user.setUserId(publicUserId);
+//                String publicUserId = HelperUtils.generateRandomPassword();
+//                while (usersRepo.existsByUserId(publicUserId)) {
+//                    publicUserId = HelperUtils.generateRandomPassword();
+//                }
+//                user.setUserId(publicUserId);
                 user.setCorporate(true);
                 user.setDateCreated(LocalDateTime.now());
                 user.setRegDeviceIP(ip);
@@ -467,7 +468,7 @@ public class UserServiceImpl implements UserService {
 
                 String token = this.authService.generateToken(regUser);
 
-                this.authService.createCorporateUser(mUser, regUser.getUserId(), token);
+                this.authService.createCorporateUser(mUser, regUser.getId(), token);
 
                 ++count;
             }
@@ -519,11 +520,11 @@ public class UserServiceImpl implements UserService {
 
                 Users user = new Users();
                 user.setId(0L);
-                String publicUserId = HelperUtils.generateRandomPassword();
-                while (usersRepo.existsByUserId(publicUserId)) {
-                    publicUserId = HelperUtils.generateRandomPassword();
-                }
-                user.setUserId(publicUserId);
+//                String publicUserId = HelperUtils.generateRandomPassword();
+//                while (usersRepo.existsByUserId(publicUserId)) {
+//                    publicUserId = HelperUtils.generateRandomPassword();
+//                }
+//                user.setUserId(publicUserId);
                 user.setAdmin(mUser.isAdmin());
                 user.setEmail(mUser.getEmail().trim());
                 user.setFirstName(mUser.getFirstName());

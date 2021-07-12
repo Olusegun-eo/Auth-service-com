@@ -25,9 +25,9 @@ public interface UserService {
 
 	ResponseEntity<?> getUserByPhone(String phone);
 
-	ResponseEntity<?> getUserById(String id);
+	ResponseEntity<?> getUserById(Long id);
 
-	ResponseEntity<?> deleteUser(String id);
+	ResponseEntity<?> deleteUser(Long id);
 
 	ResponseEntity<?> wayaContactCheck(ContactPojoReq contacts);
 
@@ -40,7 +40,7 @@ public interface UserService {
 	// Get user details for Roles service
 	UserEditPojo getUserForRole(Long id);
 
-	ResponseEntity<?> isUserAdmin(String userId);
+	ResponseEntity<?> isUserAdmin(Long userId);
 
 	UserProfileResponsePojo toModelDTO(Users user);
 
@@ -48,7 +48,7 @@ public interface UserService {
 
 	ResponseEntity<?> getUserAndWalletByPhoneOrEmail(String phone);
 
-	ResponseEntity<?> getUserAndWalletByUserId(String id);
+	ResponseEntity<?> getUserAndWalletByUserId(Long id);
 
 	ResponseEntity<?> createUsers(@Valid BulkCorporateUserCreationDTO userList, HttpServletRequest request, Device device);
 

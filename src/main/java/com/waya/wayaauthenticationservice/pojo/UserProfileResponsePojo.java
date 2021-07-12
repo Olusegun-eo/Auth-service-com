@@ -28,7 +28,7 @@ import lombok.Setter;
 public class UserProfileResponsePojo extends RepresentationModel<UserProfileResponsePojo> {
 	
 	@JsonProperty("userId")
-    private String userId;
+    private Long id;
     
     private String email;
     

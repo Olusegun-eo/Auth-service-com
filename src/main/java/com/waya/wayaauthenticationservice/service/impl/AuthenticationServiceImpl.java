@@ -114,11 +114,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             DevicePojo dev = this.reqUtil.GetDevice(device);
 
             Users user = new Users();
-            String publicUserId = HelperUtils.generateRandomPassword();
-            while (userRepo.existsByUserId(publicUserId)) {
-                publicUserId = HelperUtils.generateRandomPassword();
-            }
-            user.setUserId(publicUserId);
+            //String publicUserId = HelperUtils.generateRandomPassword();
+            //while (userRepo.existsByUserId(publicUserId)) {
+            //    publicUserId = HelperUtils.generateRandomPassword();
+            //}
+            //user.setUserId(publicUserId);
             user.setId(0L);
             user.setAdmin(mUser.isAdmin());
             user.setEmail(mUser.getEmail().trim());
@@ -179,11 +179,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             DevicePojo dev = reqUtil.GetDevice(device);
 
             Users user = new Users();
-            String publicUserId = HelperUtils.generateRandomPassword();
-            while (userRepo.existsByUserId(publicUserId)) {
-                publicUserId = HelperUtils.generateRandomPassword();
-            }
-            user.setUserId(publicUserId);
+            //String publicUserId = HelperUtils.generateRandomPassword();
+            //while (userRepo.existsByUserId(publicUserId)) {
+            //    publicUserId = HelperUtils.generateRandomPassword();
+            //}
+            //user.setUserId(publicUserId);
             user.setAdmin(mUser.isAdmin());
             user.setId(0L);
             user.setCorporate(true);
@@ -207,7 +207,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             Users regUser = userRepo.saveAndFlush(user);
 
             String token = generateToken(regUser);
-            createCorporateUser(mUser, regUser.getUserId(), token);
+            createCorporateUser(mUser, regUser.getId(), token);
 
             return new ResponseEntity<>(new SuccessResponse(
                     "Corporate Account Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
@@ -218,17 +218,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
-    public void createCorporateUser(CorporateUserPojo mUser, String userId, String token) {
+    public void createCorporateUser(CorporateUserPojo mUser, Long userId, String token) {
+        String Id = String.valueOf(userId);
 
         CorporateUser coopUser = mapper.map(mUser, CorporateUser.class);
         coopUser.setBusinessType(mUser.getBusinessType());
         coopUser.setPassword(passwordEncoder.encode(mUser.getPassword()));
-        coopUser.setUserId(userId);
+        coopUser.setUserId(Id);
         coopUser = corporateUserRepository.save(coopUser);
 
         CreateAccountPojo createAccount = new CreateAccountPojo();
         createAccount.setEmailAddress(coopUser.getEmail());
-        createAccount.setExternalId(userId);
+        createAccount.setExternalId(Id);
         createAccount.setFirstName(coopUser.getFirstName());
         createAccount.setLastName(coopUser.getSurname());
         createAccount.setMobileNo(coopUser.getPhoneNumber());
@@ -244,7 +245,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         corporateProfileRequest.setReferralCode(coopUser.getReferenceCode());
         corporateProfileRequest.setEmail(coopUser.getEmail());
         corporateProfileRequest.setSurname(coopUser.getSurname());
-        corporateProfileRequest.setUserId(String.valueOf(userId));
+        corporateProfileRequest.setUserId(Id);
         corporateProfileRequest.setPhoneNumber(coopUser.getPhoneNumber());
         corporateProfileRequest.setFirstName(coopUser.getFirstName());
 
@@ -262,10 +263,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     public void createPrivateUser(Users user) {
+        String id = String.valueOf(user.getId());
 
         VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
         virtualAccountPojo.setAccountName(user.getFirstName() + " " + user.getSurname());
-        virtualAccountPojo.setUserId(user.getUserId());
+        virtualAccountPojo.setUserId(id);
 
         String token = generateToken(user);
         ResponseEntity<String> response = virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token);
@@ -277,7 +279,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         personalProfileRequest.setFirstName(user.getFirstName());
         personalProfileRequest.setPhoneNumber(user.getPhoneNumber());
         personalProfileRequest.setSurname(user.getSurname());
-        personalProfileRequest.setUserId(user.getUserId());
+        personalProfileRequest.setUserId(id);
 
         log.info("PersonalProfile account creation starts: " + personalProfileRequest);
         ApiResponse<String> personalResponse = profileService.createProfile(personalProfileRequest);
@@ -302,7 +304,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public ResponseEntity<?> createPin(PinPojo pinPojo) {
         try {
             // Check if email exists
-            Users existingEmail = userRepo.findByUserId(pinPojo.getUserId()).orElse(null);
+            Users existingEmail = userRepo.findById(pinPojo.getUserId()).orElse(null);
 
             if (existingEmail != null) {
                 if (!pinIs4Digit(pinPojo.getPin())) {
@@ -577,8 +579,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ResponseEntity<?> validatePin(String userId, int pin) {
-        Users users = userRepo.findByUserId(userId).orElse(null);
+    public ResponseEntity<?> validatePin(Long userId, int pin) {
+        Users users = userRepo.findById(userId).orElse(null);
         if (users == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.BAD_REQUEST);
         }

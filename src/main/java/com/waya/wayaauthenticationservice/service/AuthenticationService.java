@@ -37,7 +37,7 @@ public interface AuthenticationService {
 
 	ResponseEntity<?> validateUser();
 
-	ResponseEntity<?> validatePin(String userId, int pin);
+	ResponseEntity<?> validatePin(Long userId, int pin);
 
 	ResponseEntity<?> validatePinFromUser(int pin);
 
@@ -57,7 +57,7 @@ public interface AuthenticationService {
 	
 	//CompletableFuture<HttpEntity<String>> postProfile(ProfilePojo profilePojo);
 
-	void createCorporateUser(CorporateUserPojo mUser, String id, String token);
+	void createCorporateUser(CorporateUserPojo mUser, Long id, String token);
 
 	void createPrivateUser(Users regUser);
 
