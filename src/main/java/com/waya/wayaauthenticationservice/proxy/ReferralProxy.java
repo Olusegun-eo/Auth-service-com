@@ -5,10 +5,7 @@ import com.waya.wayaauthenticationservice.pojo.MainWalletResponse;
 import com.waya.wayaauthenticationservice.pojo.ReferralCodePojo;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,7 +20,6 @@ public interface ReferralProxy {
     ReferralCodePojo getUserByReferralCode(@PathVariable("userId") String userId, @RequestHeader("Authorization") String token);
 
     @PostMapping("/save-referral-code")
-    ResponseEntity<String> saveReferralCode(Profile newProfile, String userId);
-    //
+    ResponseEntity<String> saveReferralCode(@RequestBody Profile newProfile, @RequestParam("userId") String userId);
 
 }

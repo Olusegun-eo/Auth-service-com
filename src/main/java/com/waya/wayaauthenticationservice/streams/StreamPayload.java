@@ -9,6 +9,7 @@ import lombok.ToString;
 @Setter
 @ToString
 public class StreamPayload<T> {
+
     private T data;
 
     private String initiator;

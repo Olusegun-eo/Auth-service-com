@@ -1,12 +1,11 @@
 package com.waya.wayaauthenticationservice.service;
 
-import com.waya.wayaauthenticationservice.response.OTPResponse;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
-import com.waya.wayaauthenticationservice.util.profile.ApiResponse;
+import com.waya.wayaauthenticationservice.response.ApiResponse;
 
 public interface SMSTokenService {
 
-    boolean sendSMSOTP(String phoneNumber, String keycloakId);
+    boolean sendSMSOTP(String phoneNumber, String fullName);
 
-    ApiResponse<OTPVerificationResponse> verifySMSOTP(String number, Integer otp);
+    ApiResponse<OTPVerificationResponse> verifySMSOTP(String phoneNumber, Integer otp);
 }

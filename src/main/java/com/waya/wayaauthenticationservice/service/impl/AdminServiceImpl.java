@@ -25,7 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.ByteArrayInputStream;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -47,8 +47,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public Page<Users> getCorporateUsers(boolean isCorporate, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<Users> usersSet = userRepository.findUserByIsCorporate(isCorporate, pageable);
-        return usersSet;
+        return userRepository.findUserByIsCorporate(isCorporate, pageable);
     }
 
     @Override
@@ -57,8 +56,7 @@ public class AdminServiceImpl implements AdminService {
         if (role == null) throw new
                 CustomException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage(), HttpStatus.BAD_REQUEST);
         Pageable pageable = PageRequest.of(page, size);
-        Page<Users> usersPage = userRepository.findByRolesListIn(Arrays.asList(role), pageable);
-        return usersPage;
+        return userRepository.findByRolesListIn(Collections.singletonList(role), pageable);
     }
 
     @Override
@@ -68,8 +66,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<?> createBulkUser(MultipartFile file, boolean isCorporate, HttpServletRequest request, Device device) {
-        String message = "";
-
+        String message;
         if (ExcelHelper.hasExcelFormat(file)) {
             ResponseEntity<?> responseEntity;
             try {
@@ -92,9 +89,7 @@ public class AdminServiceImpl implements AdminService {
     public ByteArrayInputStream createExcelSheet(boolean isCorporate) {
         List<String> HEADERS = isCorporate ? ExcelHelper.CORPORATE_USER_HEADERS :
                 ExcelHelper.PRIVATE_USER_HEADERS;
-        ByteArrayInputStream in = ExcelHelper.createExcelSheet(HEADERS);
-        return in;
+        return ExcelHelper.createExcelSheet(HEADERS);
     }
-
 
 }

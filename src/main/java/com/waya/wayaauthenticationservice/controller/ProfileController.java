@@ -3,8 +3,7 @@ package com.waya.wayaauthenticationservice.controller;
 import com.waya.wayaauthenticationservice.pojo.*;
 import com.waya.wayaauthenticationservice.response.*;
 import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.service.impl.ProfileServiceImpl;
-import com.waya.wayaauthenticationservice.util.profile.ApiResponse;
+import com.waya.wayaauthenticationservice.response.ApiResponse;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,7 +27,7 @@ import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_422;
 })
 @CrossOrigin
 @RestController
-@RequestMapping("/profile")
+@RequestMapping("/api/v1/profile")
 public class ProfileController {
 
     private final ProfileService profileService;
@@ -51,14 +50,13 @@ public class ProfileController {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
     })
-    @GetMapping("/profile/{userId}")
+    @GetMapping("/{userId}")
     ResponseEntity<ApiResponse<UserProfileResponse>> getUsersProfile(@PathVariable String userId,
                                                                      HttpServletRequest request) {
         UserProfileResponse profileResponse = profileService.getUserProfile(userId, request);
         return new ResponseEntity<>(new ApiResponse<>(profileResponse,
                 "retrieved successfully", true), HttpStatus.OK);
     }
-
 
     /**
      * endpoint to create personal profile
@@ -215,8 +213,6 @@ public class ProfileController {
         return profileService.toggleDelete(deleteRequest);
     }
 
-
-
     @ApiOperation(
             value = "SMS Alert",
             notes = "SMS Alert: user can enable or disable sms alert")
@@ -231,8 +227,6 @@ public class ProfileController {
         ApiResponse<ToggleSMSResponse> response = new ApiResponse<>(toggleSMSResponse, "Data retrieved successfully", true);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
-
 
     @ApiOperation(
             value = "Config SMS Charge Fee",

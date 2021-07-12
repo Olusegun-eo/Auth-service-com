@@ -17,24 +17,24 @@ import java.util.UUID;
 @Setter
 @Entity
 @ToString
+@Table(name = "m_user_profile")
 public class Profile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @NotBlank(message = "please enter a valid email")
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     @Email(message = "please enter a valid email")
     private String email;
 
-    @NotNull(message = "please enter your firstName")
+    @Column(nullable = false)
     private String firstName;
 
-    @NotNull(message = "please enter your surname")
+    @Column(nullable = false)
     private String surname;
 
-    @NotNull(message = "please enter your phone number")
+    @Column(nullable = false)
     private String phoneNumber;
 
     private String organisationName;
@@ -73,6 +73,6 @@ public class Profile {
     private boolean corporate;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "otherdetails_id", referencedColumnName = "id")
+    @JoinColumn(name = "otherDetails_id", referencedColumnName = "id")
     private OtherDetails otherDetails;
 }

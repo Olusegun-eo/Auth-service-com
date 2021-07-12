@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.entity.OTPBase;
 import com.waya.wayaauthenticationservice.enums.StreamsEventType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.repository.OTPRepository;
 import com.waya.wayaauthenticationservice.response.EmailVerificationResponse;
 import com.waya.wayaauthenticationservice.service.EmailService;
@@ -68,9 +69,7 @@ public class EmailServiceImpl implements EmailService {
             //send event to email topic in kafka
             CompletableFuture.runAsync(() -> messageQueueProducer.send(EMAIL_TOPIC, post));
             log.info("TOKEN sent to kafka message queue::: {}", post);
-
             return true;
-
         } catch (Exception exception) {
             log.error("could not process data ", exception);
         }
@@ -88,21 +87,18 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public EmailVerificationResponse verifyEmailToken(String email, Integer otp) {
         try {
-            Optional<OTPBase> otpBase = otpRepository.getEmailTokenDetails(email, otp);
-
+            Optional<OTPBase> otpBase = otpRepository.getOtpDetailsViaEmail(email, otp);
             if (otpBase.isPresent()) {
                 OTPBase token = otpBase.get();
-                LocalDateTime newTokenExpiryDate = token.getExpiryDate().minusHours(2);
-
                 if (token.isValid()) {
+                    LocalDateTime newTokenExpiryDate = token.getExpiryDate().minusHours(2);
                     otpRepository.updateTokenForEmail(email, token.getId(), newTokenExpiryDate, false);
                     return new EmailVerificationResponse(true, EMAIL_VERIFICATION_MSG);
                 } else {
                     return new EmailVerificationResponse(false, EMAIL_VERIFICATION_MSG_ERROR);
                 }
-
             }
-            throw new CustomException("Invalid Token", HttpStatus.UNPROCESSABLE_ENTITY);
+            return new EmailVerificationResponse(false, ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
 
         } catch (Exception exception) {
             log.error("could not process data ", exception);
@@ -122,7 +118,6 @@ public class EmailServiceImpl implements EmailService {
         otp.setCode(generateCode());
         otp.setEmail(email);
         otp.setExpiryDate(120);
-        otp.setValid(otp.isValid());
 
         //update previous otp expiry dates and isValid fields
         LocalDateTime newExpiryDate = LocalDateTime.now().minusHours(12);

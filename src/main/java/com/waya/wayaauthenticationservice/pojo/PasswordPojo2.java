@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PasswordPojo2 {
-    private Long userId;
+    private String userId;
     private String newPassword;
     private String email;
 }

@@ -1,8 +1,13 @@
 package com.waya.wayaauthenticationservice.util;
 
 import java.security.SecureRandom;
+import java.util.regex.Pattern;
 
 public class HelperUtils {
+
+    public static Pattern numericPattern = Pattern.compile("^[0-9]*$");
+    public static Pattern emailPattern = Pattern.compile("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\." + "[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@"
+            + "(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?");
 
     public static String generateRandomPassword() {
 

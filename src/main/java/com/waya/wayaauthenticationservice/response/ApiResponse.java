@@ -1,15 +1,18 @@
-package com.waya.wayaauthenticationservice.util.profile;
+package com.waya.wayaauthenticationservice.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.http.HttpStatus;
 
 import java.time.ZonedDateTime;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
+
     private ZonedDateTime timestamp;
     private  String message;
     private  boolean status;
     private HttpStatus httpStatus;
-    private  T data;
+    private T data;
 
     public ApiResponse() {
     }

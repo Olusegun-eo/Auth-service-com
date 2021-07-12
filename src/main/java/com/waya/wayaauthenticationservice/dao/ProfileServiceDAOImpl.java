@@ -17,7 +17,7 @@ public class ProfileServiceDAOImpl implements ProfileServiceDAO {
 
 	@Override
 	public Integer getProfileCount(String user_id, String phone) {
-		String sql = "SELECT count(*) FROM profile  ";
+		String sql = "SELECT count(*) FROM m_user_profile  ";
 		sql = sql + "WHERE user_id = ? AND phone_number = ? ";
 		int count = 0;
 		try {

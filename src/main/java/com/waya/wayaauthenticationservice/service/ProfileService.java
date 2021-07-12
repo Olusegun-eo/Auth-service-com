@@ -2,7 +2,7 @@ package com.waya.wayaauthenticationservice.service;
 
 import com.waya.wayaauthenticationservice.pojo.*;
 import com.waya.wayaauthenticationservice.response.*;
-import com.waya.wayaauthenticationservice.util.profile.ApiResponse;
+import com.waya.wayaauthenticationservice.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -103,7 +103,7 @@ public interface ProfileService {
      * @param deleteRequest deleteRequest
      * @return DeleteResponse
      */
-    public ResponseEntity<DeleteResponse> toggleDelete(DeleteRequest deleteRequest);
+    ResponseEntity<DeleteResponse> toggleDelete(DeleteRequest deleteRequest);
 
 
     ToggleSMSResponse toggleSMSAlert(ToggleSMSRequest toggleSMSRequest);
@@ -117,4 +117,5 @@ public interface ProfileService {
     SMSChargeResponse getActiveSMSCharge();
 
 
+    void sendWelcomeEmail(String email);
 }

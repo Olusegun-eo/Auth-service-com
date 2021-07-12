@@ -38,4 +38,10 @@ public interface UserRepository extends JpaRepository<Users, Long> {
     Page<Users> findByRolesListIn(Collection<Roles> roles, Pageable pageable);
 
     Page<Users> findUserByIsCorporate(boolean value, Pageable pageable);
+
+    boolean existsByUserId(String userId);
+
+    @Query("SELECT u FROM Users u WHERE UPPER(u.userId) = UPPER(:userId)" +
+            " AND u.isDeleted = false")
+    Optional<Users> findByUserId(@Param("userId") String userId);
 }

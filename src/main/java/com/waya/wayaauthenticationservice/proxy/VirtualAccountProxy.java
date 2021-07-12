@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import com.waya.wayaauthenticationservice.config.AuthClientConfiguration;
 import com.waya.wayaauthenticationservice.pojo.VirtualAccountPojo;
 
-@FeignClient(name = "ACCOUNT-CREATION-SERVICE", url = "http://46.101.41.187:7090/account-creation-service/api", configuration = AuthClientConfiguration.class)
+@FeignClient(name = "ACCOUNT-CREATION-SERVICE", url = "${app.config.virtual-account.base-url}", configuration = AuthClientConfiguration.class)
 public interface VirtualAccountProxy {
 	
 	@PostMapping("/account/createVirtualAccount")

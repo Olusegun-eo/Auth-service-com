@@ -17,8 +17,6 @@ import com.waya.wayaauthenticationservice.pojo.UserRoleUpdateRequest;
 
 public interface UserService {
 
-	ResponseEntity<?> getUser(Long userId);
-
 	ResponseEntity<?> getUsers();
 
 	ResponseEntity<?> getUsersByRole(long roleId);
@@ -27,9 +25,9 @@ public interface UserService {
 
 	ResponseEntity<?> getUserByPhone(String phone);
 
-	ResponseEntity<?> getUserById(Long id);
+	ResponseEntity<?> getUserById(String id);
 
-	ResponseEntity<?> deleteUser(Long id, String token);
+	ResponseEntity<?> deleteUser(String id);
 
 	ResponseEntity<?> wayaContactCheck(ContactPojoReq contacts);
 
@@ -42,7 +40,7 @@ public interface UserService {
 	// Get user details for Roles service
 	UserEditPojo getUserForRole(Long id);
 
-	public ResponseEntity<?> isUserAdmin(long userId);
+	ResponseEntity<?> isUserAdmin(String userId);
 
 	UserProfileResponsePojo toModelDTO(Users user);
 
@@ -50,7 +48,7 @@ public interface UserService {
 
 	ResponseEntity<?> getUserAndWalletByPhoneOrEmail(String phone);
 
-	ResponseEntity<?> getUserAndWalletByUserId(Long id);
+	ResponseEntity<?> getUserAndWalletByUserId(String id);
 
 	ResponseEntity<?> createUsers(@Valid BulkCorporateUserCreationDTO userList, HttpServletRequest request, Device device);
 

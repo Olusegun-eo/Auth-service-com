@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class RecipientsSMSTest {
+
     @Test
     void recipientSms() {
         final RecipientsSMS recipientsSMS = new RecipientsSMS("joe", "092");

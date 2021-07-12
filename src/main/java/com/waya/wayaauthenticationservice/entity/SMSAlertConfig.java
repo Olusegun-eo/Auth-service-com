@@ -17,7 +17,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@Table(name = "m_sms_alert_config")
 public class SMSAlertConfig {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
