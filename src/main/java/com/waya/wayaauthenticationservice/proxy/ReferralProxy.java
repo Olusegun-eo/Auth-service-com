@@ -17,10 +17,10 @@ public interface ReferralProxy {
 
     // make a call to save referral code
     @GetMapping("/find/by/userId/{userId}")
-    ReferralCodePojo getReferralCodeByUserId(@PathVariable("userId") String userId, @RequestHeader("Authorization") String token);
+    ReferralCodePojo getReferralCodeByUserId(@PathVariable("userId") String userId);
 
     @GetMapping("/get-user-by-referral-code/{userId}")
-    ReferralCodePojo getUserByReferralCode(@PathVariable("userId") String userId, @RequestHeader("Authorization") String token);
+    ReferralCodePojo getUserByReferralCode(@PathVariable("userId") String userId);
 
     @PostMapping("/save-referral-code")
     ResponseEntity<String> saveReferralCode(Profile newProfile, String userId);
