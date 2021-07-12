@@ -76,7 +76,6 @@ public class ProfileController {
     public ApiResponse<String> createPersonalProfile(
             @Valid @RequestBody PersonalProfileRequest personalProfileRequest
     ) {
-
         return profileService.createProfile(personalProfileRequest);
     }
     /**
