@@ -21,7 +21,7 @@ spring:
 
   jackson:
     serialization:
-      fail-on-empty-beans: false     
+      fail-on-empty-beans: false
   session:
     store-type: jdbc
   kafka:
@@ -67,7 +67,7 @@ spring:
             userInfoUri: https://graph.facebook.com/v3.0/me?fields=id,first_name,middle_name,last_name,name,email,verified,is_verified,picture.width(250).height(250)
 
 server:
-  port: 8059 
+  port: 8059
   servlet:
     context-path: /
 
@@ -131,8 +131,7 @@ app:
       - http://localhost:3000/oauth2/redirect
       - myandroidapp://oauth2/redirect
       - myiosapp://oauth2/redirect
-#wallet:
-#  profile:
-#    url: http://46.101.41.187:8080/profile-service/personal-profile
+
 welcome-email:
   message: Welcome xxxx, we at WAYA PayChat hope you enjoy it here
+

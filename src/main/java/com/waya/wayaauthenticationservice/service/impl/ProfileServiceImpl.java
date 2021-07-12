@@ -131,7 +131,7 @@ public class ProfileServiceImpl implements ProfileService {
             if (parsePageNumber > 0) parsePageNumber--;
 
             // make a call to the profile service to get getReferralCodeByUserId
-            ReferralCodePojo referralCodePojo = referralProxy.getReferralCodeByUserId(userId, Constant.TOKEN);
+            ReferralCodePojo referralCodePojo = referralProxy.getReferralCodeByUserId(userId);
 
             // ReferralCode referrals = referralCodeRepository.getReferralCodeByUserId(userId);
 
@@ -159,7 +159,8 @@ public class ProfileServiceImpl implements ProfileService {
                     false, request.getEmail().trim());
             //check if the user exist in the referral table
             ///get-user-by-referral-code/{userId}
-            ReferralCodePojo referralCodePojo = referralProxy.getUserByReferralCode(request.getUserId(), Constant.TOKEN);
+
+            ReferralCodePojo referralCodePojo = referralProxy.getUserByReferralCode(request.getUserId());
 
 //            Optional<ReferralCode> referralCode = referralCodeRepository
 //                    .findByUserId(request.getUserId());
@@ -225,7 +226,8 @@ public class ProfileServiceImpl implements ProfileService {
                     false, profileRequest.getEmail().trim());
             //check if the user exist in the referral table
             // now this check will extend to the referral service
-            ReferralCodePojo referralCodePojo = referralProxy.getUserByReferralCode(profileRequest.getUserId(), Constant.TOKEN);
+
+            ReferralCodePojo referralCodePojo = referralProxy.getUserByReferralCode(profileRequest.getUserId());
 
 //            Optional<ReferralCode> referralCode = referralCodeRepository
 //                    .findByUserId(profileRequest.getUserId());
@@ -753,7 +755,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     public ToggleSMSResponse getSMSAlertStatus(String phoneNumber) {
         ToggleSMSResponse toggleSMSResponse = null;
-        if (Objects.isNull(phoneNumber) || phoneNumber.isBlank()) {
+        if (Objects.isNull(phoneNumber) || phoneNumber.isEmpty()) {
             throw new CustomException(PHONE_NUMBER_REQUIRED, HttpStatus.BAD_REQUEST);
         }
         Optional<SMSAlertConfig> smsCharges = smsAlertConfigRepository.findByPhoneNumber(phoneNumber);
@@ -825,22 +827,22 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public void sendWelcomeEmail(String email) {
-        var userProfile = profileRepository.findByEmail(false, email)
-                .orElseThrow(() -> new CustomException("profile does not exist", HttpStatus.NOT_FOUND));
+//        var userProfile = profileRepository.findByEmail(false, email)
+//                .orElseThrow(() -> new CustomException("profile does not exist", HttpStatus.NOT_FOUND));
+//
+//        StreamPayload<StreamDataEmail> post = new StreamPayload<>();
+//        post.setEventType(StreamsEventType.EMAIL.toString());
+//        post.setInitiator(WAYAPAY);
+//        post.setToken(null);
+//        post.setKey(TWILIO_PROVIDER);
+//
+//        var data = new StreamDataEmail();
+//        data.setMessage(welcomeMessage.replace("xxxx", userProfile.getFirstName()));
+//        data.setNames(Collections.singletonList(new RecipientsEmail(email, userProfile.getFirstName())));
+//
+//        post.setData(data);
 
-        StreamPayload<StreamDataEmail> post = new StreamPayload<>();
-        post.setEventType(StreamsEventType.EMAIL.toString());
-        post.setInitiator(WAYAPAY);
-        post.setToken(null);
-        post.setKey(TWILIO_PROVIDER);
-
-        var data = new StreamDataEmail();
-        data.setMessage(welcomeMessage.replace("xxxx", userProfile.getFirstName()));
-        data.setNames(Collections.singletonList(new RecipientsEmail(email, userProfile.getFirstName())));
-
-        post.setData(data);
-
-        messageQueueProducer.send(EMAIL_TOPIC, post);
+//        messageQueueProducer.send(EMAIL_TOPIC, post);
         log.info("sending welcome message kafka message queue::: {}", "post");
     }
 }

@@ -376,14 +376,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             boolean isEmail = matcher.matches();
             String message;
             boolean success;
+            ApiResponse<OTPVerificationResponse> profileResponse;
+            EmailVerificationResponse emailVerificationResponse;
             if (isEmail) {
-                var val = verifyEmail(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
-                success = val.isValid();
-                message = val.getMessage();
+                emailVerificationResponse = verifyEmail(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
+                success = emailVerificationResponse.isValid();
+                message = emailVerificationResponse.getMessage();
             } else {
-                var val = verifyOTP(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
-                success = val.getData().isValid();
-                message = val.getData().getMessage();
+                profileResponse = verifyOTP(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
+                success = profileResponse.getData().isValid();
+                message = profileResponse.getData().getMessage();
             }
             if (success) {
                 user.setActive(true);
@@ -465,7 +467,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         log.info("Verify Email starts {}", emailPojo);
         EmailVerificationResponse generalResponse = verifyEmail(emailPojo.getEmail(), Integer.parseInt(emailPojo.getToken()));
-        log.info("Verify Email starts {}", emailPojo);
+        log.info("Verify Email ends {}", emailPojo);
         if (generalResponse.isValid()) {
             user.setEmailVerified(true);
             user.setActive(true);
