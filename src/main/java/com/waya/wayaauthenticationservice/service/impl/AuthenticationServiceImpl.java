@@ -388,7 +388,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
 			return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
 		}
-
 	}
 
 	@Override
