@@ -15,6 +15,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -126,6 +128,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
 	private static final String SECRET_TOKEN = "wayas3cr3t";
 	public static final String TOKEN_PREFIX = "serial ";
+
+	public static Pattern emailPattern = Pattern.compile("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\." + "[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@"
+			+ "(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?");
 
 	@Value("${wallet.profile.url}")
 	private String profileURL;
@@ -388,16 +393,28 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Override
 	public ResponseEntity<?> verifyAccountCreation(OTPPojo otpPojo) {
-		String url = PROFILE_SERVICE + "profile-service/otp-verify/" + otpPojo.getPhoneOrEmail() + "/"
-				+ otpPojo.getOtp();
-		ProfileResponse profileResponse = restTemplate.getForObject(url, ProfileResponse.class);
+		Users user = userRepo.findByEmailOrPhoneNumber(otpPojo.getPhoneOrEmail()).orElse(null);
+		if (user == null)
+			return new ResponseEntity<>(new ErrorResponse(
+					ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + "For User with " + otpPojo.getPhoneOrEmail()),
+					HttpStatus.BAD_REQUEST);
+
+		Matcher matcher = emailPattern.matcher(otpPojo.getPhoneOrEmail());
+		boolean isEmail = matcher.matches();
+		ProfileResponse profileResponse;
+		String url;
+		if (isEmail) {
+			url = PROFILE_SERVICE + "profile-service/email-verify/" + otpPojo.getPhoneOrEmail() + "/"
+					+ user.getName();
+		} else {
+			url = PROFILE_SERVICE + "profile-service/otp-verify/" + otpPojo.getPhoneOrEmail() + "/"
+					+ user.getName();
+		}
+		profileResponse = restTemplate.getForObject(url, ProfileResponse.class);
+		boolean success = profileResponse.isStatus();
+		String message = profileResponse.getMessage();
 		log.info("Error::: {}, {} and {}", new Gson().toJson(profileResponse));
 		if (profileResponse.isStatus()) {
-			Users user = userRepo.findByEmailOrPhoneNumber(otpPojo.getPhoneOrEmail()).orElse(null);
-			if (user == null)
-				return new ResponseEntity<>(new ErrorResponse(
-						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + "For User with " + otpPojo.getPhoneOrEmail()),
-						HttpStatus.BAD_REQUEST);
 			user.setActive(true);
 			user.setDateOfActivation(LocalDateTime.now());
 			try {
