@@ -1,27 +1,12 @@
 package com.waya.wayaauthenticationservice.service;
 
-import java.util.concurrent.CompletableFuture;
-
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.http.HttpEntity;
+import com.waya.wayaauthenticationservice.pojo.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 
 import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.BaseUserPojo;
-import com.waya.wayaauthenticationservice.pojo.CorporateUserPojo;
-import com.waya.wayaauthenticationservice.pojo.EmailPojo;
-import com.waya.wayaauthenticationservice.pojo.OTPPojo;
-import com.waya.wayaauthenticationservice.pojo.PasswordPojo;
-import com.waya.wayaauthenticationservice.pojo.PasswordPojo2;
-import com.waya.wayaauthenticationservice.pojo.PinPojo;
-import com.waya.wayaauthenticationservice.pojo.PinPojo2;
-import com.waya.wayaauthenticationservice.pojo.ProfilePojo;
-import com.waya.wayaauthenticationservice.pojo.ProfilePojo2;
-import com.waya.wayaauthenticationservice.pojo.VirtualAccountPojo;
-import com.waya.wayaauthenticationservice.pojo.WalletPojo;
-import com.waya.wayaauthenticationservice.pojo.WayagramPojo;
 
 public interface AuthenticationService {
 
@@ -52,7 +37,7 @@ public interface AuthenticationService {
 
 	ResponseEntity<?> validateUser();
 
-	ResponseEntity<?> validatePin(Long userId, int pin);
+	ResponseEntity<?> validatePin(String userId, int pin);
 
 	ResponseEntity<?> validatePinFromUser(int pin);
 
@@ -64,15 +49,15 @@ public interface AuthenticationService {
 
 	ResponseEntity<?> createWayagramAccount(WayagramPojo wayagramPojo);
 
-	ResponseEntity<?> createProfileAccount(ProfilePojo profilePojo);
+	ResponseEntity<?> createProfileAccount(PersonalProfileRequest profilePojo);
 
-	ResponseEntity<?> createCorporateProfileAccount(ProfilePojo2 profilePojo2);
+	ResponseEntity<?> createCorporateProfileAccount(CorporateProfileRequest profilePojo);
 
 	String generateToken(Users regUser);
 	
-	CompletableFuture<HttpEntity<String>> postProfile(ProfilePojo profilePojo);
+	//CompletableFuture<HttpEntity<String>> postProfile(ProfilePojo profilePojo);
 
-	void createCorporateUser(CorporateUserPojo mUser, Long id, String token);
+	void createCorporateUser(CorporateUserPojo mUser, String id, String token);
 
 	void createPrivateUser(Users regUser);
 

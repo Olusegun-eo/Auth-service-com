@@ -3,16 +3,14 @@ package com.waya.wayaauthenticationservice.entity;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @Entity
+@Table(name = "m_otp_base")
 public class OTPBase implements Serializable {
 
     @Id
@@ -23,7 +21,7 @@ public class OTPBase implements Serializable {
 
     private String email;
 
-    private boolean valid;
+    private boolean valid = true;
 
     private String phoneNumber;
 

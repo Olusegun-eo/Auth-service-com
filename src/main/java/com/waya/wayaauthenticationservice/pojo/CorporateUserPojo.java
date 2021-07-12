@@ -12,12 +12,25 @@ import lombok.Setter;
 @Setter
 public class CorporateUserPojo extends BaseUserPojo {
 
+	@NotBlank(message = "please enter your organisation City")
 	private String city;
+
+	@NotBlank(message = "please enter your organisation Address")
 	private String officeAddress;
+
+	@NotBlank(message = "please enter your organisation State")
 	private String state;
+
+	@NotBlank(message = "please enter your organisation name")
 	private String orgName;
+
+	@NotBlank(message = "please enter your organisation Email")
 	private String orgEmail;
+
+	@NotBlank(message = "please enter your organisation Phone Number")
 	private String orgPhone;
+
+	@NotBlank(message = "please enter your organisation type")
 	private String orgType;
 
 	@Size(min = 5, message = "Business Type should be at least 5 characters long")

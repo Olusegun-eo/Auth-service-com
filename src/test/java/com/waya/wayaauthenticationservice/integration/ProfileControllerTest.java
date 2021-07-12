@@ -7,11 +7,11 @@ import com.waya.wayaauthenticationservice.pojo.*;
 import com.waya.wayaauthenticationservice.repository.OtherDetailsRepository;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.response.ProfileImageResponse;
-import com.waya.wayaauthenticationservice.service.FileResourceServiceFeignClient;
+import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
 import static com.waya.wayaauthenticationservice.util.JsonString.asJsonString;
 
 import com.waya.wayaauthenticationservice.util.Constant;
-import com.waya.wayaauthenticationservice.util.profile.ApiResponse;
+import com.waya.wayaauthenticationservice.response.ApiResponse;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -54,7 +54,6 @@ class ProfileControllerTest {
 
     @Autowired
     private OtherDetailsRepository otherDetailsRepository;
-
 
     @MockBean
     private FileResourceServiceFeignClient fileResourceServiceFeignClient;
@@ -118,7 +117,7 @@ class ProfileControllerTest {
         final CorporateProfileRequest corporateProfileRequest = setCorporateProfileData(
                 "rt@app.com", "5432");
 
-        createAndVerfyCorporateProfile(corporateProfileRequest, "$.message",
+        createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
                 "profile created. An OTP has been sent to your phone",
                 "$.httpStatus", "OK");
     }
@@ -129,7 +128,7 @@ class ProfileControllerTest {
         final CorporateProfileRequest corporateProfileRequest = setCorporateProfileData(
                 "app@app.com", "5432");
 
-        createAndVerfyCorporateProfile(corporateProfileRequest, "$.message",
+        createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
                 Constant.DUPLICATE_KEY,
                 "$.httpStatus", "UNPROCESSABLE_ENTITY");
     }
@@ -140,7 +139,7 @@ class ProfileControllerTest {
         final CorporateProfileRequest corporateProfileRequest = setCorporateProfileData(
                 "app@app.com", "123");
 
-        createAndVerfyCorporateProfile(corporateProfileRequest, "$.message",
+        createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
                 Constant.DUPLICATE_KEY,
                 "$.httpStatus", "UNPROCESSABLE_ENTITY");
     }
@@ -277,8 +276,6 @@ class ProfileControllerTest {
     @DisplayName("delete personal profile error 💯")
     void deleteProfileError() throws Exception {
 
-
-
         DeleteRequest deleteRequest = DeleteRequest.builder()
                 .deleteType(DeleteType.DELETE).userId("10").build();
 
@@ -304,13 +301,10 @@ class ProfileControllerTest {
             final PersonalProfileRequest personalProfileRequest,
             final String jsonPath0, final String jsonPathMessage0,
             final String jsonPath1, final String jsonPathMessage1
-
     ) throws Exception {
-
-        mockMvc.perform(post("/personal-profile")
+        mockMvc.perform(post("/api/v1/profile/personal-profile")
                 .contentType(APPLICATION_JSON)
                 .content(asJsonString(personalProfileRequest)))
-
                 .andExpect(jsonPath(jsonPath0, Is.is(jsonPathMessage0)))
                 .andExpect(jsonPath(jsonPath1, Is.is(jsonPathMessage1)));
     }
@@ -322,7 +316,7 @@ class ProfileControllerTest {
 
     ) throws Exception {
 
-        mockMvc.perform(put("/delete-restore")
+        mockMvc.perform(put("/api/v1/profile/delete-restore")
                 .contentType(APPLICATION_JSON)
                 .content(asJsonString(deleteRequest)))
                 .andExpect(status().isOk())
@@ -330,12 +324,12 @@ class ProfileControllerTest {
                 .andExpect(jsonPath(jsonPath1, Is.is(jsonPathMessage1)));
     }
 
-    private void createAndVerfyCorporateProfile(
+    private void createAndVerifyCorporateProfile(
             final CorporateProfileRequest corporateProfileRequest,
             final String jsonPath0, final String jsonPathMessage0,
             final String jsonPath1, final String jsonPathMessage1
     ) throws Exception {
-        mockMvc.perform(post("/corporate-profile")
+        mockMvc.perform(post("/api/v1/profile/corporate-profile")
                 .contentType(APPLICATION_JSON)
                 .content(asJsonString(corporateProfileRequest)))
                 .andExpect(jsonPath(jsonPath0, Is.is(jsonPathMessage0))).andDo(print())
@@ -347,7 +341,7 @@ class ProfileControllerTest {
             final String jsonPathMessage,
             ResultMatcher expectedStatus
     ) throws Exception {
-        mockMvc.perform(get("/profile/" + userId)
+        mockMvc.perform(get("/api/v1/profile/" + userId)
                 .contentType(APPLICATION_JSON))
                 .andExpect(expectedStatus)
                 .andExpect(jsonPath(jsonPath, Is.is(jsonPathMessage)))
@@ -359,8 +353,7 @@ class ProfileControllerTest {
             final String userId, final String jsonPath,
             final String jsonPathMessage, ResultMatcher expectedStatus
     ) throws Exception {
-
-        mockMvc.perform(put("/update-personal-profile/" + userId)
+        mockMvc.perform(put("/api/v1/profile/update-personal-profile/" + userId)
                 .contentType(APPLICATION_JSON)
                 .content(asJsonString(profileRequest)))
                 .andExpect(expectedStatus)
@@ -372,7 +365,7 @@ class ProfileControllerTest {
             final String userId, final String jsonPath,
             final String jsonPathMessage, ResultMatcher expectedStatus
     ) throws Exception {
-        mockMvc.perform(put("/update-corporate-profile/" + userId)
+        mockMvc.perform(put("/api/v1/profile/update-corporate-profile/" + userId)
                 .contentType(APPLICATION_JSON)
                 .content(asJsonString(corporateProfileRequest)))
                 .andExpect(expectedStatus)
@@ -382,7 +375,7 @@ class ProfileControllerTest {
     private void getAndVerifyAllUsersReferrals(
             final String userId, ResultMatcher expectedStatus
     ) throws Exception {
-        mockMvc.perform(get("/user-referrals/" + userId)
+        mockMvc.perform(get("/api/v1/profile/user-referrals/" + userId)
                 .contentType(APPLICATION_JSON))
                 .andExpect(expectedStatus);
     }
@@ -390,7 +383,6 @@ class ProfileControllerTest {
     private PersonalProfileRequest setPersonalProfileData(
             final String email, String userId
     ) {
-
         final PersonalProfileRequest personalProfileRequest
                 = new PersonalProfileRequest();
         personalProfileRequest.setFirstName("Omar");
@@ -413,6 +405,7 @@ class ProfileControllerTest {
         corporateProfileRequest.setBusinessType("businessType");
         corporateProfileRequest.setOrganisationType("organisationType");
         corporateProfileRequest.setEmail(email);
+        corporateProfileRequest.setOrganisationEmail("app20@app.com");
         corporateProfileRequest.setOrganisationName("organisation name");
         corporateProfileRequest.setPhoneNumber("092834");
         corporateProfileRequest.setUserId(userId);

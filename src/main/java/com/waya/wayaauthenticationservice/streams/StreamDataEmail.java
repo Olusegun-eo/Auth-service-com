@@ -10,6 +10,7 @@ import java.util.List;
 @Setter
 @ToString
 public class StreamDataEmail {
+
     private List<RecipientsEmail> names;
 
     private String message;

@@ -8,5 +8,5 @@ import lombok.Setter;
 public class EmailPojo {
     private String token;
     private String email;
-    private long id;
+    private String userId;
 }

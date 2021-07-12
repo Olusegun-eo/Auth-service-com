@@ -11,6 +11,7 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
+@Table(name = "m_profile_other_details")
 public class OtherDetails {
 
     @Id

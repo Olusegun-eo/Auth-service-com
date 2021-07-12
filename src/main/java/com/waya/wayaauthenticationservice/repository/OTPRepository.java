@@ -24,11 +24,10 @@ public interface OTPRepository extends JpaRepository<OTPBase, Long> {
     void invalidatePreviousRecordsViaEmail(@Param("email") String email, @Param("newExpiryDate") LocalDateTime newExpiryDate, @Param("isValid") Boolean isValid);
 
     @Query(value = "select * from otpbase where email =:email and code= :otp", nativeQuery = true)
-    Optional<OTPBase> getEmailTokenDetails(String email, Integer otp);
-
+    Optional<OTPBase> getOtpDetailsViaEmail(String email, Integer otp);
 
     @Query(value = "select * from otpbase where phone_number =:phoneNumber and code= :otp", nativeQuery = true)
-    Optional<OTPBase> getOtpDetails(String phoneNumber, Integer otp);
+    Optional<OTPBase> getOtpDetailsViaPhoneNumber(String phoneNumber, Integer otp);
 
     @Transactional
     @Modifying

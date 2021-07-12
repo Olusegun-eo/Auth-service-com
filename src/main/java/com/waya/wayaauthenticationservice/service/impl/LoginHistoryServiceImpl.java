@@ -1,13 +1,5 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import java.util.List;
-
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-
 import com.waya.wayaauthenticationservice.entity.LoginHistory;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.LoginHistoryPojo;
@@ -17,6 +9,13 @@ import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.service.LoginHistoryService;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 
 @Service
@@ -34,7 +33,7 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
     @Override
     public ResponseEntity<?> saveHistory(LoginHistoryPojo loginHistoryPojo) {
         Users user = userRepository.findById(loginHistoryPojo.getUserId()).orElse(null);
-        if (user == null){
+        if (user == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid User"), HttpStatus.BAD_REQUEST);
         }
         LoginHistory loginHistory = new ModelMapper().map(loginHistoryPojo, LoginHistory.class);
@@ -47,7 +46,7 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
     @Override
     public ResponseEntity<?> getHistoryByUserId(long userId) {
         Users user = userRepository.findById(userId).orElse(null);
-        if (user == null){
+        if (user == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid User"), HttpStatus.BAD_REQUEST);
         }
         List<LoginHistory> loginHistory = loginHistoryRepository.findByUser(user);
@@ -57,7 +56,7 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
     @Override
     public ResponseEntity<?> getHistoryByUser() {
         Users user = authenticatedUserFacade.getUser();
-        if (user == null){
+        if (user == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid User"), HttpStatus.BAD_REQUEST);
         }
         List<LoginHistory> loginHistory = loginHistoryRepository.findByUser(user);
@@ -68,7 +67,7 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
     @Override
     public ResponseEntity<?> getLastHistoryByUserId(long userId) {
         Users user = userRepository.findById(userId).orElse(null);
-        if (user == null){
+        if (user == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid User"), HttpStatus.BAD_REQUEST);
         }
         LoginHistory loginHistory = loginHistoryRepository.findTop1ByUserOrderByLoginDateDesc(user);
@@ -79,7 +78,7 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
     @Override
     public ResponseEntity<?> getMYLastHistory() {
         Users user = authenticatedUserFacade.getUser();
-        if (user == null){
+        if (user == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid User"), HttpStatus.BAD_REQUEST);
         }
         LoginHistory loginHistory = loginHistoryRepository.findTop1ByUserOrderByLoginDateDesc(user);
@@ -92,7 +91,6 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
         return new ResponseEntity<>(new SuccessResponse("Result Fetched", loginHistory), HttpStatus.OK);
 
     }
-
 
 
 }

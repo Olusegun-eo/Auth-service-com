@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Collections;
 
 public class StreamPayloadTest {
+
     @Test
     void streamPayload() {
 

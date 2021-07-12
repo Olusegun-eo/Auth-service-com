@@ -129,5 +129,7 @@ app:
       - http://localhost:3000/oauth2/redirect
       - myandroidapp://oauth2/redirect
       - myiosapp://oauth2/redirect
+
 welcome-email:
   message: Welcome xxxx, we at WAYA PayChat hope you enjoy it here
+

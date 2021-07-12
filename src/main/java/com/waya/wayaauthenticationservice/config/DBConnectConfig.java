@@ -31,16 +31,15 @@ public class DBConnectConfig {
 		final DriverManagerDataSource datasource = new DriverManagerDataSource();
 		try {
 			
-			String jdbcUrl = hostURL.replace("WayaPayChatAuthDB", "WayaPayChatProfileDB");
+			//String jdbcUrl = hostURL.replace("WayaPayChatAuthDB", "WayaPayChatProfileDB");
 			datasource.setDriverClassName(hostDriver);
-			datasource.setUrl(jdbcUrl);
+			datasource.setUrl(hostURL);
 			datasource.setUsername(hostUsername);
 			datasource.setPassword(hostPassword);
 
 			log.info("JDBC Database Connection: {} ",datasource.getConnection().getSchema());
 		} catch (SQLException e) {
 			log.error("Unable to connect: {} ",e.getMessage());
-			e.printStackTrace();
 		}
 		return new JdbcTemplate(datasource);
 	}

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class EmailTokenRequestTest {
+
     @Test
     void emailTokenRequest() {
         final EmailTokenRequest emailTokenRequest = new EmailTokenRequest();

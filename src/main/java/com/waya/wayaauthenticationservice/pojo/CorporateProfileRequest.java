@@ -17,7 +17,6 @@ public class CorporateProfileRequest {
     @NotBlank(message = "please enter your organisation type")
     private String organisationType;
 
-    @NotBlank(message = "please enter your organisation type")
     private String organisationEmail;
 
     @NotBlank(message = "please enter your business type")

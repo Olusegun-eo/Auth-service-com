@@ -61,7 +61,7 @@ public class UserController {
 	@GetMapping("/{id}")
 	//    @Cacheable(key = "#id",value = "User")
 	@PreAuthorize(value = "@userSecurity.useHierarchy(#id, authentication)")
-	public ResponseEntity<?> findUser(@PathVariable Long id) {
+	public ResponseEntity<?> findUser(@PathVariable String id) {
 		return userService.getUserById(id);
 	}
 
@@ -98,8 +98,8 @@ public class UserController {
 	@ApiOperation(value = "Get User and Wallet Details by UserId (In-app use only)", tags = { "USER SERVICE" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("walletByUserId")
-	public ResponseEntity<?> getUserAndWalletById(@RequestParam("id") Long id) {
-		return userService.getUserAndWalletByUserId(id);
+	public ResponseEntity<?> getUserAndWalletById(@RequestParam("id") String userId) {
+		return userService.getUserAndWalletByUserId(userId);
 	}
 	
 	@ApiOperation(value = "Phone Contact check  (Service consumption only. Do not Use)", tags = { "USER SERVICE" })
@@ -125,8 +125,19 @@ public class UserController {
 			@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@DeleteMapping("/delete/{id}")
-	public ResponseEntity<?> remove(@PathVariable Long id, @RequestHeader("Authorization") String authorization) {
-		return userService.deleteUser(id, authorization);
+	@PreAuthorize(value = "hasRole('ADMIN')")
+	public ResponseEntity<?> remove(@PathVariable String id) {
+		return userService.deleteUser(id);
+	}
+
+	@ApiOperation(value = "Edit User Details", notes = "This endpointis used update user details", tags = {
+			"USER SERVICE" })
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@PutMapping("/role/update")
+	public ResponseEntity<UserRoleUpdateRequest> updateUser(@RequestBody UserRoleUpdateRequest user) {
+		return ResponseEntity.ok(userService.UpdateUser(user));
 	}
 
 	@ApiOperation(value = "Get Users By role name count", notes = "This endpointis used to get all users by role name, it returns an integer of count", tags = {
@@ -139,16 +150,6 @@ public class UserController {
 		return ResponseEntity.ok(userService.getUsersCount(role));
 	}
 
-	@ApiOperation(value = "Edit User Details", notes = "This endpointis used update user details", tags = {
-			"USER SERVICE" })
-	@ApiImplicitParams({
-			@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
-	@PutMapping("/update")
-	public ResponseEntity<UserRoleUpdateRequest> updateUser(@RequestBody UserRoleUpdateRequest user) {
-		return ResponseEntity.ok(userService.UpdateUser(user));
-	}
-
 	@ApiOperation(value = "Get user details for role service consumption", notes = "This endpointis used to get user details for Role Service", tags = {
 			"USER SERVICE" })
 	@ApiImplicitParams({
@@ -158,5 +159,6 @@ public class UserController {
 	public ResponseEntity<UserEditPojo> getUserForRole(@PathVariable("id") Long id) {
 		return ResponseEntity.ok(userService.getUserForRole(id));
 	}
+
 
 }

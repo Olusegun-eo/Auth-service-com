@@ -47,7 +47,6 @@ public final class ProfileServiceUtil {
          * @return Integer
          */
         public static int generateCode() {
-
             SecureRandom secureRandom = new SecureRandom();
             return secureRandom.nextInt(900000) + 100000;
         }
@@ -60,14 +59,14 @@ public final class ProfileServiceUtil {
          */
         public static String generateReferralCode(int length) {
             String characters = Constant.CHARACTERS;
-            int characterlength = characters.length();
+            int characterLength = characters.length();
 
             StringBuilder stringBuilder = new StringBuilder();
 
             SecureRandom random = new SecureRandom();
 
             for (int i = 0; i < length; i++) {
-                char chars = characters.charAt(random.nextInt(characterlength));
+                char chars = characters.charAt(random.nextInt(characterLength));
                 stringBuilder.append(chars);
             }
             return stringBuilder.toString();

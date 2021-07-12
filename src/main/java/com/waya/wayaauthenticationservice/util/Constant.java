@@ -48,7 +48,7 @@ public class Constant {
 
     public static final String EMAIL_VERIFICATION_MSG = "Email verified successfully";
 
-    public static final String EMAIL_VERIFICATION_MSG_ERROR = "Token has expired";
+    public static final String EMAIL_VERIFICATION_MSG_ERROR = "Token has either expired or is invalid";
 
     public static final String TWILIO_PROVIDER = "twilio";
 
@@ -58,18 +58,17 @@ public class Constant {
 
     public static final String PROFILE_NOT_EXIST = "profile does not exist";
 
-    public static final String RETRIEVE_DATA_SUCCESS_MSG = "retrieve data successfully";
+    public static final String RETRIEVE_DATA_SUCCESS_MSG = "retrieve data successfully ";
 
-    public static final String CATCH_EXCEPTION_MSG = "caught an exception :::";
+    public static final String CATCH_EXCEPTION_MSG = "caught an exception ::: {}";
 
-    public static final String COULD_NOT_PROCESS_REQUEST = "could not process request";
+    public static final String COULD_NOT_PROCESS_REQUEST = "could not process request {}";
 
-    public static final String DUPLICATE_KEY = "duplicate key exception, user id or email might already exist";
+    public static final String DUPLICATE_KEY = "duplicate key exception, user id or email might already exist ";
 
     public static final String ID_IS_REQUIRED = "Id is required";
 
     public static final String ID_IS_UNKNOWN = "Id is unknown";
-
 
     public static final String PHONE_NUMBER_REQUIRED = "Phone number is required";
 

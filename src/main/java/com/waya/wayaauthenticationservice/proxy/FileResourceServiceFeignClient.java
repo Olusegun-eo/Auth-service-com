@@ -1,9 +1,9 @@
-package com.waya.wayaauthenticationservice.service;
+package com.waya.wayaauthenticationservice.proxy;
 
 
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.response.ProfileImageResponse;
-import com.waya.wayaauthenticationservice.util.profile.ApiResponse;
+import com.waya.wayaauthenticationservice.response.ApiResponse;
 import org.slf4j.Logger;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.HttpStatus;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
-@FeignClient(name = "file-resource-service", url = "${app.config.file.resource.base-ur}")
+@FeignClient(name = "file-resource-service", url = "${app.config.file-resource.base-url}")
 public interface FileResourceServiceFeignClient {
 
     @PostMapping(value = "/upload/profile-picture/{userId}",
@@ -36,8 +36,7 @@ public interface FileResourceServiceFeignClient {
                 return apiResponse;
             }
             error = apiResponse.getMessage();
-            throw new CustomException("", HttpStatus.UNPROCESSABLE_ENTITY);
-
+            throw new CustomException(error, HttpStatus.UNPROCESSABLE_ENTITY);
         } catch (Exception exception) {
             log.error(error, exception);
             throw new CustomException("encountered and error while trying to upload image", HttpStatus.UNPROCESSABLE_ENTITY);

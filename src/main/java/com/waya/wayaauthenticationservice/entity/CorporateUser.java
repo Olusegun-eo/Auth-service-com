@@ -25,7 +25,7 @@ public class CorporateUser {
 	private Long id;
 
 	@Column(nullable = false, unique = true)
-	private Long userId;
+	private String userId;
 
 	@Column(nullable = false)
 	private String businessType;

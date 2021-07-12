@@ -16,7 +16,7 @@ import java.util.Objects;
 @Data
 @Entity
 @Table(name = "m_users", uniqueConstraints = {
-        @UniqueConstraint(name = "UniqueEmailAndPhoneNumberAndDelFlg", columnNames = {"id", "phone_number", "email", "is_deleted"})})
+        @UniqueConstraint(name = "UniqueEmailAndPhoneNumberAndDelFlg", columnNames = {"phone_number", "email", "is_deleted"})})
 public class Users implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -26,10 +26,13 @@ public class Users implements Serializable {
     @Column(name = "id", unique = true, nullable = false)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "user_id", unique = true, nullable = false)
+    private String userId;
+
+    @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false, name = "phone_number")
+    @Column(nullable = false, name = "phone_number", unique = true)
     private String phoneNumber;
 
     private String referenceCode;
@@ -102,10 +105,10 @@ public class Users implements Serializable {
     private boolean isActive = false;
 
     @Column(name = "first_time_login_remaining", nullable = false)
-    private boolean firstTimeloginRemaining;
+    private boolean firstTimeLoginRemaining;
 
     @Column(name = "first_time_login_date")
-    private LocalDateTime firstTimeloginDate;
+    private LocalDateTime firstTimeLoginDate;
 
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
