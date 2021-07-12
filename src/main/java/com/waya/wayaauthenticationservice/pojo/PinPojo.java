@@ -10,7 +10,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class PinPojo {
-    private String userId;
+
+    @NotNull(message = "UserId cannot be null")
+    private Long userId;
     
     @Min(value = 1000, message = "Pin should not be less than 1000")
     @Max(value = 9999, message = "Pin should not be greater than 9999")
