@@ -9,8 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 
 import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.BaseUserPojo;
-import com.waya.wayaauthenticationservice.pojo.CorporateUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.pojo.EmailPojo;
 import com.waya.wayaauthenticationservice.pojo.OTPPojo;
 import com.waya.wayaauthenticationservice.pojo.PasswordPojo;

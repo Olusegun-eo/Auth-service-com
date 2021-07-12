@@ -103,6 +103,12 @@ deleteprofile:
   deleteWayagram: http://46.101.41.187:1000/main/profile/delete-profile-by-id
 
 app:
+  config:
+    notification-service:
+      base-url: http://68.183.60.114:8085/notification-service
+  wallet:
+    profile:
+      url: http://46.101.41.187:8080/profile-service/personal-profile
   auth:
     tokenSecret: 926D96C90030DD58429D2751AC1BDBBC
     tokenExpirationMsec: 864000000
@@ -115,6 +121,3 @@ app:
       - http://localhost:3000/oauth2/redirect
       - myandroidapp://oauth2/redirect
       - myiosapp://oauth2/redirect
-wallet:
-  profile:
-    url: http://46.101.41.187:8080/profile-service/personal-profile

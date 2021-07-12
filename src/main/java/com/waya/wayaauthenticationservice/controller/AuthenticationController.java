@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.waya.wayaauthenticationservice.pojo.BaseUserPojo;
-import com.waya.wayaauthenticationservice.pojo.CorporateUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.pojo.EmailPojo;
 import com.waya.wayaauthenticationservice.pojo.LoginDetailsPojo;
 import com.waya.wayaauthenticationservice.pojo.OTPPojo;

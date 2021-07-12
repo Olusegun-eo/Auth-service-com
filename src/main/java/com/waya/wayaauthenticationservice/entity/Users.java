@@ -80,6 +80,9 @@ public class Users implements Serializable {
 
     private String imageUrl;
 
+    @Column(name = "account_status")
+    private int accountStatus;
+
     @Column(name = "account_non_expired", nullable = false)
     private boolean accountNonExpired;
 
@@ -87,7 +90,7 @@ public class Users implements Serializable {
     private LocalDateTime accountExpiredDate;
 
     @Column(name = "account_non_locked", nullable = false)
-    private boolean accountNonLocked = false;
+    private boolean accountNonLocked;
 
     @Column(name = "account_lock_date")
     private LocalDateTime accountLockDate;
@@ -102,10 +105,10 @@ public class Users implements Serializable {
     private boolean isActive = false;
 
     @Column(name = "first_time_login_remaining", nullable = false)
-    private boolean firstTimeloginRemaining;
+    private boolean firstTimeLoginRemaining;
 
     @Column(name = "first_time_login_date")
-    private LocalDateTime firstTimeloginDate;
+    private LocalDateTime firstTimeLoginDate;
 
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;

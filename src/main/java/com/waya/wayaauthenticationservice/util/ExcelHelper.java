@@ -1,16 +1,14 @@
 package com.waya.wayaauthenticationservice.util;
 
 import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.pojo.BaseUserPojo;
-import com.waya.wayaauthenticationservice.pojo.BulkCorporateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.BulkPrivateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.CorporateUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellReference;
-import org.apache.poi.xssf.usermodel.XSSFColor;
-import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,10 +27,10 @@ public class ExcelHelper {
     private static DataFormatter dataFormatter = new DataFormatter();
 
     public static String[] TYPE = {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel"};
-    public static List<String> PRIVATE_USER_HEADERS = Arrays.asList("FIRSTNAME", "SURNAME", "PHONE_NUMBER", "EMAIL" );
+    public static List<String> PRIVATE_USER_HEADERS = Arrays.asList("FIRSTNAME", "SURNAME", "PHONE_NUMBER", "EMAIL", "REFERENCE_CODE" );
     public static List<String> CORPORATE_USER_HEADERS = Arrays.asList("FIRSTNAME", "SURNAME", "PHONE_NUMBER", "EMAIL",
             "OFFICE_ADDRESS", "CITY", "STATE", "ORG_NAME", "ORG_EMAIL",
-            "ORG_PHONE", "ORG_TYPE", "BUSINESS_TYPE");
+            "ORG_PHONE", "ORG_TYPE", "BUSINESS_TYPE", "REFERENCE_CODE");
 
     static String SHEET = "Users";
     static Pattern alphabetsPattern = Pattern.compile("^[a-zA-Z]*$");
@@ -63,7 +61,7 @@ public class ExcelHelper {
             while (rows.hasNext()){
                 Row currentRow = rows.next();
                 Iterator<Cell> cellsInRow = currentRow.iterator();
-                CorporateUserPojo pojo = new CorporateUserPojo();
+                BaseUserPojo pojo = new BaseUserPojo();
 
                 // If First Cell is empty break from loop
                 if (currentRow == null || isCellEmpty(currentRow.getCell(0))) {
@@ -108,6 +106,9 @@ public class ExcelHelper {
                             break;
                         case "D":
                             pojo.setEmail(validateStringIsEmail(cell, cellIdx, rowNumber));
+                            break;
+                        case "E":
+                            pojo.setReferenceCode(defaultStringCell(cell));
                             break;
                         default:
                             break;
@@ -208,6 +209,9 @@ public class ExcelHelper {
                         case "L":
                             pojo.setBusinessType(validateAndPassStringValue(cell, cellIdx, rowNumber));
                             break;
+                        case "M":
+                            pojo.setReferenceCode(defaultStringCell(cell));
+                            break;
                         default:
                             break;
                     }
@@ -226,22 +230,10 @@ public class ExcelHelper {
     public static ByteArrayInputStream createExcelSheet(List<String> HEADERS){
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
             Sheet sheet = workbook.createSheet(SHEET);
-            // Create Header
-            CellStyle headerStyle = workbook.createCellStyle();
-            headerStyle.setFillPattern(FillPatternType.NO_FILL);
-
-            XSSFFont font = ((XSSFWorkbook) workbook).createFont();
-            font.setFontName("Arial");
-            font.setFontHeightInPoints((short) 13);
-            font.setBold(true);
-            headerStyle.setFont(font);
-
             Row headerRow = sheet.createRow(0);
             for (int col = 0; col < HEADERS.size(); col++) {
-                sheet.autoSizeColumn(col);
                 Cell cell = headerRow.createCell(col);
                 cell.setCellValue(HEADERS.get(col));
-                cell.setCellStyle(headerStyle);
             }
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());

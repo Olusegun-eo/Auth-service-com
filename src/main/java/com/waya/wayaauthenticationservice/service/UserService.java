@@ -8,11 +8,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 
 import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.BulkCorporateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.BulkPrivateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
 import com.waya.wayaauthenticationservice.pojo.UserEditPojo;
-import com.waya.wayaauthenticationservice.pojo.UserProfileResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.UserRoleUpdateRequest;
 
 public interface UserService {

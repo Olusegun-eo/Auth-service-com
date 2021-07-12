@@ -47,22 +47,22 @@ public class UserPrincipal implements OAuth2User, UserDetails {
 
 	@Override
 	public boolean isAccountNonExpired() {
-		return true;
+		return this.user.isAccountNonExpired();
 	}
 
 	@Override
 	public boolean isAccountNonLocked() {
-		return true;
+		return this.user.isAccountNonLocked();
 	}
 
 	@Override
 	public boolean isCredentialsNonExpired() {
-		return true;
+		return this.user.isCredentialsNonExpired();
 	}
 
 	@Override
 	public boolean isEnabled() {
-		return true;
+		return this.user.isActive();
 	}
 
 	@Override
@@ -70,9 +70,8 @@ public class UserPrincipal implements OAuth2User, UserDetails {
 
 		List<Roles> roles = new ArrayList<Roles>(this.user.getRolesList());
 
-		Collection<GrantedAuthority> grantedAuthorities = roles.stream().map(r -> {
-			return new SimpleGrantedAuthority(r.getName());
-		}).collect(Collectors.toSet());
+		Collection<GrantedAuthority> grantedAuthorities = roles.stream()
+				.map(r -> new SimpleGrantedAuthority(r.getName())).collect(Collectors.toSet());
 		grantedAuthorities.addAll(getGrantedAuthorities(getPrivileges(roles)));
 		
 		return grantedAuthorities;
@@ -115,7 +114,7 @@ public class UserPrincipal implements OAuth2User, UserDetails {
 	 */
 	@Override
 	public String getName() {
-		return this.user.getEmail();
+		return user.getEmail() != null ? this.user.getEmail() : this.user.getPhoneNumber();
 	}
 
 	/**
@@ -126,7 +125,7 @@ public class UserPrincipal implements OAuth2User, UserDetails {
 	 */
 	@Override
 	public String getUsername() {
-		return this.user.getEmail();
+		return user.getEmail() != null ? this.user.getEmail() : this.user.getPhoneNumber();
 	}
 
 }
