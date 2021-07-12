@@ -1,4 +1,4 @@
-FROM openjdk:11-alpine    
+FROM adoptopenjdk/openjdk16:x86_64-alpine-jdk-16.0.1_9    
 # RUN apk add --no-cache fontconfig
 # RUN ln -s /usr/lib/libfontconfig.so.1 /usr/lib/libfontconfig.so && \
 #     ln -s /lib/libuuid.so.1 /usr/lib/libuuid.so.1 && \
