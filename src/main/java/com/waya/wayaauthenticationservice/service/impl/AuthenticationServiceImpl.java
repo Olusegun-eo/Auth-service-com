@@ -411,7 +411,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private boolean pushEMailToken(String email, String fullName) {
-        return emailService.sendEmailToken(email, fullName);
+        String message = VERIFY_EMAIL_TOKEN_MESSAGE + "placeholder" + MESSAGE_2;
+        return emailService.sendEmailToken(email, fullName, message);
     }
 
     @Override

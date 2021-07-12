@@ -114,6 +114,8 @@ app:
       base-url: http://46.101.41.187:9098/file-resource/api
     virtual-account:
       base-url: http://46.101.41.187:7090/account-creation-service/api
+    notification-service:
+      base-url: http://68.183.60.114:8085/notification-service
     wallet-service:
       base-url: http://157.230.223.54:9009/wallet
 

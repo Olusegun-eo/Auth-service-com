@@ -2,6 +2,7 @@ package com.waya.wayaauthenticationservice.util;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -10,12 +11,14 @@ public class CustomValidatorImpl implements ConstraintValidator<CustomValidator,
     protected Type type;
     private int maxSize;
     private int minSize;
+    private String[] values;
 
     @Override
     public void initialize(CustomValidator constraintAnnotation) {
         this.type = constraintAnnotation.type();
         this.maxSize = constraintAnnotation.max();
         this.minSize = constraintAnnotation.min();
+        this.values = constraintAnnotation.values();
     }
 
     @Override
@@ -33,8 +36,18 @@ public class CustomValidatorImpl implements ConstraintValidator<CustomValidator,
                 return validateStringNumericOnly(value);
             case EMAIL:
                 return validateStringIsEmail(value);
+            case CONTAINS:
+                return validateContains(value);
         }
         return false;
+    }
+
+    private boolean validateContains(String value) {
+        for(String val : this.values){
+            if(!value.toLowerCase().contains(val.toLowerCase()))
+                return false;
+        }
+        return true;
     }
 
     private boolean validateStringIsEmail(String value) {

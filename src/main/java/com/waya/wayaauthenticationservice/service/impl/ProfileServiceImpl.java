@@ -179,13 +179,14 @@ public class ProfileServiceImpl implements ProfileService {
                 String fullName = String.format("%s %s", savedProfile.getFirstName(),
                         savedProfile.getSurname());
 
+                String message = VERIFY_EMAIL_TOKEN_MESSAGE + "placeholder" + MESSAGE_2;
                 //send otp
                 CompletableFuture.runAsync(() -> smsTokenService.sendSMSOTP(
                         savedProfile.getPhoneNumber(), fullName));
 
                 // send email otp
                 CompletableFuture.runAsync(() -> emailService.sendEmailToken(
-                        savedProfile.getEmail(), fullName));
+                        savedProfile.getEmail(), fullName, message));
 
                 //create waya gram profile
                 CompletableFuture.runAsync(() -> createWayagramProfile(savedProfile.getUserId(), savedProfile.getSurname()));
@@ -239,13 +240,14 @@ public class ProfileServiceImpl implements ProfileService {
 
                 String fullName = String.format("%s %s", newCorporateProfile.getFirstName(),
                         newCorporateProfile.getSurname());
+                String message = VERIFY_EMAIL_TOKEN_MESSAGE + "placeholder" + MESSAGE_2;
                 //send sms otp
                 CompletableFuture.runAsync(() -> smsTokenService.sendSMSOTP(
                         newCorporateProfile.getPhoneNumber(), fullName));
 
                 // send email otp
                 CompletableFuture.runAsync(() -> emailService.sendEmailToken(
-                        newCorporateProfile.getEmail(), fullName));
+                        newCorporateProfile.getEmail(), fullName, message));
 
                 return new ApiResponse<>(null,
                         CREATE_PROFILE_SUCCESS_MSG, true, OK);

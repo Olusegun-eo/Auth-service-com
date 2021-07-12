@@ -15,29 +15,29 @@ public interface OTPRepository extends JpaRepository<OTPBase, Long> {
 
     @Transactional
     @Modifying
-    @Query(value = "update otpbase set expiry_date =:newExpiryDate, valid =:isValid where phone_number =:phoneNumber ", nativeQuery = true)
+    @Query(value = "update m_otp_base set expiry_date =:newExpiryDate, valid =:isValid where phone_number =:phoneNumber ", nativeQuery = true)
     void invalidatePreviousRecords(@Param("phoneNumber") String phoneNumber, @Param("newExpiryDate") LocalDateTime newExpiryDate, @Param("isValid") Boolean isValid);
 
     @Transactional
     @Modifying
-    @Query(value = "update otpbase set expiry_date =:newExpiryDate, valid =:isValid where email =:email ", nativeQuery = true)
+    @Query(value = "update m_otp_base set expiry_date =:newExpiryDate, valid =:isValid where email =:email ", nativeQuery = true)
     void invalidatePreviousRecordsViaEmail(@Param("email") String email, @Param("newExpiryDate") LocalDateTime newExpiryDate, @Param("isValid") Boolean isValid);
 
-    @Query(value = "select * from otpbase where email =:email and code= :otp", nativeQuery = true)
+    @Query(value = "select * from m_otp_base where email =:email and code= :otp", nativeQuery = true)
     Optional<OTPBase> getOtpDetailsViaEmail(String email, Integer otp);
 
-    @Query(value = "select * from otpbase where phone_number =:phoneNumber and code= :otp", nativeQuery = true)
+    @Query(value = "select * from m_otp_base where phone_number =:phoneNumber and code= :otp", nativeQuery = true)
     Optional<OTPBase> getOtpDetailsViaPhoneNumber(String phoneNumber, Integer otp);
 
     @Transactional
     @Modifying
-    @Query(value = "update otpbase set expiry_date =:expiryDate, valid =:isValid where phone_number=:phoneNumber and id = :id", nativeQuery = true)
+    @Query(value = "update m_otp_base set expiry_date =:expiryDate, valid =:isValid where phone_number=:phoneNumber and id = :id", nativeQuery = true)
     void updateToken(@Param("phoneNumber") String phoneNumber, @Param("id") Long id, @Param("expiryDate") LocalDateTime expiryDate,
                      @Param("isValid") Boolean isValid);
 
     @Transactional
     @Modifying
-    @Query(value = "update otpbase set expiry_date =:expiryDate, valid =:isValid where email=:email and id = :id", nativeQuery = true)
+    @Query(value = "update m_otp_base set expiry_date =:expiryDate, valid =:isValid where email=:email and id = :id", nativeQuery = true)
     void updateTokenForEmail(@Param("email") String email, @Param("id") Long id, @Param("expiryDate") LocalDateTime expiryDate,
                              @Param("isValid") Boolean isValid);
 

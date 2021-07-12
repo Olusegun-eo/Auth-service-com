@@ -51,7 +51,7 @@ public class EmailServiceImpl implements EmailService {
      * @param fullName name
      */
     @Override
-    public boolean sendEmailToken(String email, String fullName) {
+    public boolean sendEmailToken(String email, String fullName, String message) {
         try {
             //generate the token
             OTPBase otp = generateEmailToken(email);
@@ -62,7 +62,9 @@ public class EmailServiceImpl implements EmailService {
             post.setToken(null);
 
             StreamDataEmail data = new StreamDataEmail();
-            data.setMessage(VERIFY_EMAIL_TOKEN_MESSAGE + otp.getCode() + MESSAGE_2);
+            //data.setMessage(VERIFY_EMAIL_TOKEN_MESSAGE + otp.getCode() + MESSAGE_2);
+            message = message.replace("placeholder", String.valueOf(otp.getCode()));
+            data.setMessage(message);
             data.setNames(Collections.singletonList(new RecipientsEmail(email, fullName)));
 
             post.setData(data);
@@ -113,7 +115,8 @@ public class EmailServiceImpl implements EmailService {
      * @param email user email
      * @return OTPBase
      */
-    private OTPBase generateEmailToken(String email) {
+    @Override
+    public OTPBase generateEmailToken(String email) {
         OTPBase otp = new OTPBase();
         otp.setCode(generateCode());
         otp.setEmail(email);

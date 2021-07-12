@@ -371,7 +371,7 @@ public class UserServiceImpl implements UserService {
         });
 
         UserProfileResponsePojo userDto = UserProfileResponsePojo.builder().email(user.getEmail())
-                .id(user.getId())
+                .id(user.getId()).referenceCode(user.getReferenceCode())
                 .isEmailVerified(user.isEmailVerified()).phoneNumber(user.getPhoneNumber())
                 .firstName(user.getFirstName()).lastName(user.getSurname()).isAdmin(user.isAdmin())
                 .isPhoneVerified(user.isPhoneVerified()).isAccountDeleted(user.isDeleted())
