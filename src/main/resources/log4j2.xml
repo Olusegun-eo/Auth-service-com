@@ -80,6 +80,11 @@
 			<AppenderRef ref="debugLog" />
 		</Logger>
 
+		<Logger name="org.springframework" additivity="false"
+				includeLocation="true">
+			<AppenderRef ref="Console" />
+		</Logger>
+
 		<Logger name="com.waya.wayaauthenticationservice.config"
 				additivity="false" includeLocation="true">
 			<AppenderRef ref="requestLog" />
@@ -93,7 +98,7 @@
 			<AppenderRef ref="Console" />
 		</Logger>
 
-		<Root level="all">
+		<Root level="TRACE">
 			<AppenderRef ref="Console" />
 		</Root>
 
