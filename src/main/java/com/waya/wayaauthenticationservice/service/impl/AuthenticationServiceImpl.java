@@ -1,8 +1,6 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonParser.Feature;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
@@ -92,9 +90,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private VirtualAccountProxy virtualAccountProxy;
     @Autowired
     private ReqIPUtils reqUtil;
+    
     @Autowired
     private ModelMapper mapper;
-    @Value("${wallet.profile.url}")
+    
+    @Value("${app.config.wallet.profile.url}")
     private String profileURL;
 
     @Override
@@ -187,8 +187,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             Roles userRole = rolesRepo.findByName("ROLE_USER")
                     .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
 
-            List<Roles> roleList = new ArrayList<>();
-            roleList.addAll(Arrays.asList(userRole, merchRole));
+            List<Roles> roleList = new ArrayList<>(Arrays.asList(userRole, merchRole));
 
             final String ip = reqUtil.getClientIP(request);
             log.info("Request IP: " + ip);
@@ -324,7 +323,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             System.out.println(":::::Token:::::");
             return TOKEN_PREFIX + token;
         } catch (Exception e) {
-            System.out.println(e.fillInStackTrace());
+            log.error("An error occurred:: {}", e.getMessage());
             throw new RuntimeException(e.fillInStackTrace());
         }
     }
@@ -380,7 +379,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         profileResponse = restTemplate.getForObject(url, ProfileResponse.class);
 
         log.info("Response::: {}", new Gson().toJson(profileResponse));
-        if (profileResponse.isStatus()) {
+        if (profileResponse != null && profileResponse.isStatus()) {
             user.setActive(true);
             user.setDateOfActivation(LocalDateTime.now());
             try {
@@ -393,7 +392,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
             }
         } else {
-            return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse("Error Occurred during Verification"), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -414,7 +413,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 + otpPojo.getOtp();
         ProfileResponse profileResponse = restTemplate.getForObject(url, ProfileResponse.class);
         log.info("Error::: {}, {} and {}", new Gson().toJson(profileResponse));
-        if (profileResponse.isStatus()) {
+        if (profileResponse!=null && profileResponse.isStatus()) {
             user.setPhoneVerified(true);
             //user.setActive(true);
             try {
@@ -427,7 +426,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
             }
         } else {
-            return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse("Error Occurred during Verification"), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -447,7 +446,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String url = PROFILE_SERVICE + "profile-service/email-verify/" + emailPojo.getEmail() + "/"
                 + emailPojo.getToken();
         GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
-        if (generalResponse.isStatus()) {
+        if (generalResponse!= null && generalResponse.isStatus()) {
             user.setEmailVerified(true);
             //user.setActive(true);
             try {
@@ -461,7 +460,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             }
 
         } else {
-            return new ResponseEntity<>(new ErrorResponse(generalResponse.getMessage()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse("Error Occurred during Verification"), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -569,10 +568,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         String url = PROFILE_SERVICE + "profile-service/otp/" + phoneNumber + "/" + user.getEmail();
         GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
-        if (generalResponse.isStatus()) {
+        if (generalResponse!= null && generalResponse.isStatus()) {
             return new ResponseEntity<>(new SuccessResponse("OTP sent successfully.", null), HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(new ErrorResponse(generalResponse.getMessage()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse("Error Occurred during OTP Resend"), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -585,11 +584,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         String url = PROFILE_SERVICE + "profile-service/email-token/" + email + "/" + user.getName();
         GeneralResponse generalResponse = restTemplate.getForObject(url, GeneralResponse.class);
-        if (generalResponse.isStatus()) {
+        log.info("API Response for Resend Verification Mail:: {}", new Gson().toJson(generalResponse));
+        if (generalResponse!= null && generalResponse.isStatus()) {
             return new ResponseEntity<>(new SuccessResponse("Verification email sent successfully.", null),
                     HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(new ErrorResponse(generalResponse.getMessage()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse("Error Occurred during OTP Resend"), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -688,17 +688,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
     }
 
-    public String startsWith234(String phoneNumber, int count) {
-        return phoneNumber.substring(0, count);
-    }
-
     public boolean pinIs4Digit(int pin) {
         String p = String.valueOf(pin);
-        if (p.length() == 4) {
-            return true;
-        } else {
-            return false;
-        }
+        return p.length() == 4;
     }
 
     @SuppressWarnings("unused")
@@ -708,7 +700,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         redisUser.setEmail(user.getEmail());
         redisUser.setPhoneNumber(user.getPhoneNumber());
         redisUser.setSurname(user.getSurname());
-        redisUser.setRoles(new ArrayList<Roles>(user.getRolesList()));
+        redisUser.setRoles(new ArrayList<>(user.getRolesList()));
 
         redisUserDao.save(redisUser);
     }
@@ -726,7 +718,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String jsonInString = null;
         HttpEntity<String> requestBody = null;
         HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         headers.add("user-agent",
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
         // Request to return JSON format
@@ -741,10 +733,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             jsonInString = mapper.writeValueAsString(obj);
             log.info("================== :" + jsonInString);
             requestBody = new HttpEntity<>(jsonInString, headers);
-        } catch (JsonGenerationException e) {
-            e.printStackTrace();
-        } catch (JsonMappingException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
