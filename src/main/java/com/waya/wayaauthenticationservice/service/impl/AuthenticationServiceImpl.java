@@ -404,15 +404,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		String url;
 		if (isEmail) {
 			url = PROFILE_SERVICE + "profile-service/email-verify/" + otpPojo.getPhoneOrEmail() + "/"
-					+ user.getName();
+					+ otpPojo.getOtp();
 		} else {
 			url = PROFILE_SERVICE + "profile-service/otp-verify/" + otpPojo.getPhoneOrEmail() + "/"
-					+ user.getName();
+					+ otpPojo.getOtp();
 		}
 		profileResponse = restTemplate.getForObject(url, ProfileResponse.class);
-		boolean success = profileResponse.isStatus();
-		String message = profileResponse.getMessage();
-		log.info("Error::: {}, {} and {}", new Gson().toJson(profileResponse));
+
+		log.info("Response::: {}", new Gson().toJson(profileResponse));
 		if (profileResponse.isStatus()) {
 			user.setActive(true);
 			user.setDateOfActivation(LocalDateTime.now());
