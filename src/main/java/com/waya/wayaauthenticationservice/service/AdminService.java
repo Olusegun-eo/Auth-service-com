@@ -3,16 +3,14 @@ package com.waya.wayaauthenticationservice.service;
 import javax.servlet.http.HttpServletRequest;
 
 import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 
-import com.waya.wayaauthenticationservice.pojo.UserPojo;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 
 public interface AdminService {
 

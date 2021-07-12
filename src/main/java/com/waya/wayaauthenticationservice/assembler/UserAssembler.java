@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 import com.waya.wayaauthenticationservice.controller.UserController;
 import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.UserProfileResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
 
 @Component
 public class UserAssembler extends RepresentationModelAssemblerSupport<Users, UserProfileResponsePojo>  {

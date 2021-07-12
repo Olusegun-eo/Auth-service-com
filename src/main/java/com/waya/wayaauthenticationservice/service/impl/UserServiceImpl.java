@@ -9,6 +9,11 @@ import com.waya.wayaauthenticationservice.enums.DeleteType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.*;
+import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
+import com.waya.wayaauthenticationservice.pojo.notification.NamesPojo;
+import com.waya.wayaauthenticationservice.pojo.notification.NotificationResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.*;
+import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
@@ -75,6 +80,8 @@ public class UserServiceImpl implements UserService {
     private BCryptPasswordEncoder passwordEncoder;
     @Autowired
     private AuthenticationService authService;
+    @Autowired
+    private NotificationProxy notificationProxy;
 
 
     @Override
@@ -444,6 +451,7 @@ public class UserServiceImpl implements UserService {
 //                }
 //                user.setUserId(publicUserId);
                 user.setCorporate(true);
+                user.setAccountStatus(-1);
                 user.setDateCreated(LocalDateTime.now());
                 user.setRegDeviceIP(ip);
                 user.setRegDevicePlatform(dev.getPlatform());
@@ -467,9 +475,8 @@ public class UserServiceImpl implements UserService {
                     continue;
 
                 String token = this.authService.generateToken(regUser);
-
                 this.authService.createCorporateUser(mUser, regUser.getId(), token);
-
+                sendEmailNewPassword(randomPassword, regUser.getEmail(), regUser.getFirstName());
                 ++count;
             }
             String message = String.format("%s  Corporate Account Created Successfully and Sub-account creation in process.", count);
@@ -526,6 +533,7 @@ public class UserServiceImpl implements UserService {
 //                }
 //                user.setUserId(publicUserId);
                 user.setAdmin(mUser.isAdmin());
+                user.setAccountStatus(-1);
                 user.setEmail(mUser.getEmail().trim());
                 user.setFirstName(mUser.getFirstName());
                 user.setPhoneNumber(mUser.getPhoneNumber());
@@ -545,9 +553,8 @@ public class UserServiceImpl implements UserService {
                 Users regUser = usersRepo.save(user);
                 if (regUser == null)
                     continue;
-
                 this.authService.createPrivateUser(regUser);
-
+                sendEmailNewPassword(randomPassword, regUser.getEmail(), regUser.getFirstName());
                 ++count;
             }
             String message = String.format("%s Private Accounts Created Successfully and Sub-account creation in process.", count);
@@ -556,6 +563,26 @@ public class UserServiceImpl implements UserService {
             log.error("Error in Creating Bulk Account:: {}", e.getMessage());
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         }
+    }
+
+    private void sendEmailNewPassword(String randomPassword, String email, String firstName){
+        //Email Sending of new Password Here
+        NotificationResponsePojo notification = new NotificationResponsePojo();
+        NamesPojo name = new NamesPojo();
+        name.setEmail(email);
+        name.setFullName(firstName);
+        List<NamesPojo> names = new ArrayList<>();
+        names.add(name);
+        DataPojo dataPojo = new DataPojo();
+        String message = String.format("<h3>Hello %s </h3><br> <p> Kindly Use the password below to login to the System, " +
+                        "ensure you change it.</p> <br> <h4 style=\"font-weight:bold\"> %s </h4>",
+                        firstName, randomPassword);
+        dataPojo.setMessage(message);
+        dataPojo.setNames(names);
+        notification.setData(dataPojo);
+        notification.setEventType("EMAIL");
+        notification.setInitiator(email);
+        CompletableFuture.runAsync(() -> notificationProxy.sendEmail(notification));
     }
 
 }

@@ -3,17 +3,20 @@ package com.waya.wayaauthenticationservice.service;
 import javax.servlet.http.HttpServletRequest;
 
 import com.waya.wayaauthenticationservice.pojo.*;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 
 import com.waya.wayaauthenticationservice.entity.Users;
+
 
 public interface AuthenticationService {
 
 	ResponseEntity<?> createUser(BaseUserPojo userPojo, HttpServletRequest request, Device device, boolean adminAction);
 
 	ResponseEntity<?> createCorporateUser(CorporateUserPojo corporateUserPojo, HttpServletRequest request,
-			Device device);
+										  Device device);
 
 	ResponseEntity<?> createPin(PinPojo pinPojo);
 

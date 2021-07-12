@@ -1,4 +1,4 @@
-package com.waya.wayaauthenticationservice.response.notification;
+package com.waya.wayaauthenticationservice.pojo.notification;
 
 import lombok.Getter;
 import lombok.Setter;

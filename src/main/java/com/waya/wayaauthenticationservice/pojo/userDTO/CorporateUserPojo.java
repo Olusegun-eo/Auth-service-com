@@ -1,4 +1,5 @@
-package com.waya.wayaauthenticationservice.pojo;
+package com.waya.wayaauthenticationservice.pojo.userDTO;
+
 
 import java.util.Objects;
 
@@ -62,6 +63,5 @@ public class CorporateUserPojo extends BaseUserPojo {
 		return Objects.equals(businessType, other.businessType) && Objects.equals(orgEmail, other.orgEmail)
 				&& Objects.equals(orgPhone, other.orgPhone);
 	}
-	
 	
 }

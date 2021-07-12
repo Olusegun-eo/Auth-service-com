@@ -4,6 +4,7 @@ package com.waya.wayaauthenticationservice.pojo;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

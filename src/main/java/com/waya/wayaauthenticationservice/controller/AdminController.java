@@ -2,7 +2,7 @@ package com.waya.wayaauthenticationservice.controller;
 
 import com.waya.wayaauthenticationservice.assembler.UserAssembler;
 import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.*;
+import com.waya.wayaauthenticationservice.pojo.userDTO.*;
 import com.waya.wayaauthenticationservice.repository.RedisUserDao;
 import com.waya.wayaauthenticationservice.service.AdminService;
 import com.waya.wayaauthenticationservice.service.UserService;

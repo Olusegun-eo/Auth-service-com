@@ -83,6 +83,9 @@ public class Users implements Serializable {
 
     private String imageUrl;
 
+    @Column(name = "account_status")
+    private int accountStatus;
+
     @Column(name = "account_non_expired", nullable = false)
     private boolean accountNonExpired;
 
@@ -90,7 +93,7 @@ public class Users implements Serializable {
     private LocalDateTime accountExpiredDate;
 
     @Column(name = "account_non_locked", nullable = false)
-    private boolean accountNonLocked = false;
+    private boolean accountNonLocked;
 
     @Column(name = "account_lock_date")
     private LocalDateTime accountLockDate;

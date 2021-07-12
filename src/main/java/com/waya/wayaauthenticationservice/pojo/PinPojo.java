@@ -1,5 +1,6 @@
 package com.waya.wayaauthenticationservice.pojo;
 
+import javax.validation.constraints.Email;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -18,6 +19,7 @@ public class PinPojo {
     @Max(value = 9999, message = "Pin should not be greater than 9999")
     private int pin;
     
-    @NotNull(message = "Loan Type cannot be null")
+    @NotNull(message = "Email cannot be null")
+    @Email
     private String email;
 }

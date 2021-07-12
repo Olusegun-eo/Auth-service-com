@@ -1,6 +1,8 @@
 package com.waya.wayaauthenticationservice.controller;
 
 import com.waya.wayaauthenticationservice.pojo.*;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
 import com.waya.wayaauthenticationservice.service.UserService;
 import io.swagger.annotations.*;
@@ -126,7 +128,7 @@ public class AuthenticationController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
     @RequestMapping(value = "/validate-user", method = RequestMethod.POST, consumes = {MediaType.APPLICATION_JSON_VALUE,
-			MediaType.MULTIPART_FORM_DATA_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
+            MediaType.MULTIPART_FORM_DATA_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<?> validateUser() {
         return authenticationServiceImpl.validateUser();
     }
