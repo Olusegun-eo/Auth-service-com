@@ -95,8 +95,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private SMSTokenService smsTokenService;
     @Autowired
     private EmailService emailService;
-    @Value("${wallet.profile.url}")
-    private String profileURL;
+    //@Value("${wallet.profile.url}")
+    //private String profileURL;
 
 
     @Override

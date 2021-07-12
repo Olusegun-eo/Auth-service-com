@@ -84,7 +84,7 @@ public class Users implements Serializable {
     private String imageUrl;
 
     @Column(name = "account_status")
-    private int accountStatus;
+    private int accountStatus = 1;
 
     @Column(name = "account_non_expired", nullable = false)
     private boolean accountNonExpired;
