@@ -282,6 +282,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserEditPojo UpdateUserDetails(UserEditPojo userEditPojo) {
+       Users user = usersRepo.findById(userEditPojo.getId()).orElseThrow(() -> new CustomException("", HttpStatus.UNPROCESSABLE_ENTITY));
+        user.setCorporate(userEditPojo.isCorporate());
+        user.setEmail(userEditPojo.getEmail());
+        user.setFirstName(userEditPojo.getFirstName());
+        user.setPhoneNumber(userEditPojo.getPhoneNumber());
+        user.setPhoneVerified(userEditPojo.isPhoneVerified());
+        user.setPinCreated(userEditPojo.isPinCreated());
+        user.setReferenceCode(userEditPojo.getReferenceCode());
+        user.setSurname(userEditPojo.getSurname());
+        user = usersRepo.save(user);
+        return new UserEditPojo(user.getId(), user.getEmail(), user.getPhoneNumber(), user.getReferenceCode(), user.getFirstName(), user.getSurname(), user.isPhoneVerified(), user.isEmailVerified(), user.isPinCreated(), user.isCorporate(), (List<Roles>) user.getRolesList());
+    }
+
+    @Override
     public UserEditPojo getUserForRole(Long id) {
         try {
             return usersRepo.findById(id).map(user -> {

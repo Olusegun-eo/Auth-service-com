@@ -825,22 +825,22 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public void sendWelcomeEmail(String email) {
-//        var userProfile = profileRepository.findByEmail(false, email)
-//                .orElseThrow(() -> new CustomException("profile does not exist", HttpStatus.NOT_FOUND));
-//
-//        StreamPayload<StreamDataEmail> post = new StreamPayload<>();
-//        post.setEventType(StreamsEventType.EMAIL.toString());
-//        post.setInitiator(WAYAPAY);
-//        post.setToken(null);
-//        post.setKey(TWILIO_PROVIDER);
-//
-//        var data = new StreamDataEmail();
-//        data.setMessage(welcomeMessage.replace("xxxx", userProfile.getFirstName()));
-//        data.setNames(Collections.singletonList(new RecipientsEmail(email, userProfile.getFirstName())));
-//
-//        post.setData(data);
+        var userProfile = profileRepository.findByEmail(false, email)
+                .orElseThrow(() -> new CustomException("profile does not exist", HttpStatus.NOT_FOUND));
 
-//        messageQueueProducer.send(EMAIL_TOPIC, post);
+        StreamPayload<StreamDataEmail> post = new StreamPayload<>();
+        post.setEventType(StreamsEventType.EMAIL.toString());
+        post.setInitiator(WAYAPAY);
+        post.setToken(null);
+        post.setKey(TWILIO_PROVIDER);
+
+        var data = new StreamDataEmail();
+        data.setMessage(welcomeMessage.replace("xxxx", userProfile.getFirstName()));
+        data.setNames(Collections.singletonList(new RecipientsEmail(email, userProfile.getFirstName())));
+
+        post.setData(data);
+
+        messageQueueProducer.send(EMAIL_TOPIC, post);
         log.info("sending welcome message kafka message queue::: {}", "post");
     }
 }

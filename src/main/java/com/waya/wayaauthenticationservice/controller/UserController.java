@@ -30,6 +30,8 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import javax.validation.Valid;
+
 @CrossOrigin
 @RestController
 @RequestMapping("/api/v1/user")
@@ -159,6 +161,18 @@ public class UserController {
 	public ResponseEntity<UserEditPojo> getUserForRole(@PathVariable("id") Long id) {
 		return ResponseEntity.ok(userService.getUserForRole(id));
 	}
+
+	@ApiOperation(value = "Admin Update User Details", notes = "This endpoint is used to Update user details", tags = {
+			"USER SERVICE" })
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@PutMapping("/user/update-user-details")
+	public ResponseEntity<UserEditPojo> UpdateUserDetails(@Valid @RequestBody UserEditPojo userEditPojo) {
+		return ResponseEntity.ok(userService.UpdateUserDetails(userEditPojo));
+	}
+
+
 
 
 }
