@@ -12,3 +12,4 @@ EXPOSE 8059
 ADD target/waya-authentication-service-0.0.1-SNAPSHOT.jar waya-authentication-service.jar
 ENTRYPOINT ["java", "–illegal-access=permit", "-Dspring.profiles.active=dev", "-jar", "/waya-authentication-service.jar"]
 
+

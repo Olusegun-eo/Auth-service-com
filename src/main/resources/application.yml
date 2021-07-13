@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 spring:
   application:
     name: auth-service
@@ -290,6 +291,3 @@ api:
         if the request passes all validation, it will return various search result for a user,
         # Error Response
         returns with a detailed response about the error.
-#
-#welcome-email:
-#  message:

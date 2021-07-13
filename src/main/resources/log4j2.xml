@@ -70,7 +70,6 @@
 			</Policies>
 			<DefaultRolloverStrategy max="10" />
 		</RollingFile>
-
 	</Appenders>
 
 	<Loggers>
@@ -93,7 +92,7 @@
 			<AppenderRef ref="Console" />
 		</Logger>
 
-		<Root level="info">
+		<Root level="DEBUG">
 			<AppenderRef ref="Console" />
 		</Root>
 

@@ -89,6 +89,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private VirtualAccountProxy virtualAccountProxy;
     @Autowired
     private ReqIPUtils reqUtil;
+    
     @Autowired
     private ModelMapper mapper;
     @Autowired
@@ -101,6 +102,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private String getBaseUrl(HttpServletRequest request) {
         return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
     }
+
 
     @Override
     @Transactional
@@ -342,7 +344,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             Users existingEmail = userRepo.findById(pinPojo.getUserId()).orElse(null);
 
             if (existingEmail != null) {
-                if (!pinIs4Digit(pinPojo.getPin())) {
+                if (String.valueOf(pinPojo.getPin()).length() != 4) {
                     return new ResponseEntity<>(new ErrorResponse("Transaction pin should be exactly 4 Digits"),
                             HttpStatus.BAD_REQUEST);
                 }
@@ -684,6 +686,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         ApiResponse<String> response = profileService.createProfile(profilePojo, baseUrl);
         //kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC, profilePojo2);
         return new ResponseEntity<>(new SuccessResponse(response.getData(), null), HttpStatus.OK);
+
     }
 
     public boolean pinIs4Digit(int pin) {
@@ -702,5 +705,4 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         redisUserDao.save(redisUser);
     }
-
 }

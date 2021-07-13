@@ -1,14 +1,12 @@
 package com.waya.wayaauthenticationservice.config;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.response.ErrorResponse;
-import com.waya.wayaauthenticationservice.util.ReqIPUtils;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -18,11 +16,15 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 import org.springframework.web.util.WebUtils;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.waya.wayaauthenticationservice.response.ErrorResponse;
+import com.waya.wayaauthenticationservice.util.ReqIPUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class LoggableDispatcherServlet extends DispatcherServlet {
