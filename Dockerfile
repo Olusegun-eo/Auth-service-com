@@ -10,5 +10,5 @@ FROM adoptopenjdk/openjdk16:x86_64-alpine-jdk-16.0.1_9
 # RUN apt-get install libfreetype6
 EXPOSE 8059
 ADD target/waya-authentication-service-0.0.1-SNAPSHOT.jar waya-authentication-service.jar
-ENTRYPOINT ["java", "--illegal-access=permit", "-Dspring.profiles.active=test", "-jar", "/waya-authentication-service.jar"]
+ENTRYPOINT ["java", "--illegal-access=permit", "-Dspring.profiles.active=dev", "-jar", "/waya-authentication-service.jar"]
 
