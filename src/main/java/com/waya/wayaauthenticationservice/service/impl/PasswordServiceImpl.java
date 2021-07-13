@@ -10,6 +10,8 @@ import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
 import com.waya.wayaauthenticationservice.pojo.notification.NamesPojo;
 import com.waya.wayaauthenticationservice.pojo.notification.NotificationResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.password.PasswordPojo;
+import com.waya.wayaauthenticationservice.pojo.password.PinPojo;
+import com.waya.wayaauthenticationservice.pojo.password.PinPojo2;
 import com.waya.wayaauthenticationservice.pojo.password.ResetPasswordPojo;
 import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
 import com.waya.wayaauthenticationservice.repository.OTPRepository;
@@ -20,6 +22,7 @@ import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.ResponsePojo;
 
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
+import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.service.EmailService;
 import com.waya.wayaauthenticationservice.service.MailService;
 import com.waya.wayaauthenticationservice.service.PasswordService;
@@ -46,15 +49,28 @@ public class PasswordServiceImpl implements PasswordService {
     private final ProfileRepository profileRepo;
     private final MailService mailService;
     private final BCryptPasswordEncoder passwordEncoder;
+    private AuthenticatedUserFacade authenticatedUserFacade;
 
     @Override
-    public ResponseEntity<?> setForgotPassword(PasswordPojo passwordPojo) {
+    public ResponseEntity<?> setForgotPassword(PasswordPojo passPojo) {
         try {
-
+            Users user = usersRepo.findByEmailIgnoreCase(passPojo.getEmail()).orElse(null);
+            if (user == null) {
+                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
+                        + " For User with email: " + passPojo.getEmail(), null), HttpStatus.BAD_REQUEST);
+            }
+            boolean isPasswordMatched = passwordEncoder.matches(passPojo.getOldPassword(), user.getPassword());
+            if (!isPasswordMatched) {
+                return new ResponseEntity<>(new ErrorResponse("Incorrect Old Password"), HttpStatus.BAD_REQUEST);
+            }
+            String newPassword = passwordEncoder.encode(passPojo.getNewPassword());
+            user.setPassword(newPassword);
+            user.setAccountStatus(1);
+            usersRepo.save(user);
+            return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);
         } catch (Exception ex) {
-
+            return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
-        return null;
     }
 
     @Override
@@ -105,19 +121,12 @@ public class PasswordServiceImpl implements PasswordService {
                         .replace("placeholder", "token: " + passPojo.getOtp())),
                         HttpStatus.BAD_REQUEST);
 
-            boolean isPasswordMatched = passwordEncoder.matches(passPojo.getOldPassword(), user.getPassword());
-            if (!isPasswordMatched) {
-                return new ResponseEntity<>(new ErrorResponse("Incorrect Old Password"), HttpStatus.BAD_REQUEST);
-            }
             String newPassword = passwordEncoder.encode(passPojo.getNewPassword());
             user.setPassword(newPassword);
             user.setAccountStatus(1);
-            try {
-                usersRepo.save(user);
-                return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);
-            } catch (Exception e) {
-                return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
-            }
+
+            usersRepo.save(user);
+            return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);
         } catch (Exception ex) {
             return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
@@ -134,7 +143,90 @@ public class PasswordServiceImpl implements PasswordService {
     }
 
     @Override
-    public ResponseEntity<?> verifyEmail(String email) {
-        return null;
+    public ResponseEntity<?> changePin(PinPojo2 pinPojo) {
+        Users user = usersRepo.findByEmailIgnoreCase(pinPojo.getEmail()).orElse(null);
+        if (user == null) {
+            return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
+        }
+        boolean isPinMatched = passwordEncoder.matches(String.valueOf(pinPojo.getOldPin()), user.getPinHash());
+        if (!isPinMatched) {
+            return new ResponseEntity<>(new ErrorResponse("Incorrect Old Pin"), HttpStatus.BAD_REQUEST);
+        }
+        user.setPinHash(passwordEncoder.encode(String.valueOf(pinPojo.getNewPin())));
+        try {
+            usersRepo.save(user);
+            return new ResponseEntity<>(new SuccessResponse("Pin Changed.", null), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+        }
     }
+
+    @Override
+    public ResponseEntity<?> forgotPin(PinPojo pinPojo) {
+        Users user = usersRepo.findByEmailIgnoreCase(pinPojo.getEmail()).orElse(null);
+        if (user == null) {
+            return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.NOT_FOUND);
+        }
+        user.setPinHash(passwordEncoder.encode(String.valueOf(pinPojo.getPin())));
+        try {
+            usersRepo.save(user);
+            return new ResponseEntity<>(new SuccessResponse("Pin Changed.", null), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> createPin(PinPojo pinPojo) {
+        try {
+            // Check if email exists
+            Users existingEmail = usersRepo.findById(pinPojo.getUserId()).orElse(null);
+
+            if (existingEmail != null) {
+                if (String.valueOf(pinPojo.getPin()).length() != 4) {
+                    return new ResponseEntity<>(new ErrorResponse("Transaction pin should be exactly 4 Digits"),
+                            HttpStatus.BAD_REQUEST);
+                }
+                existingEmail.setPinHash(passwordEncoder.encode(String.valueOf(pinPojo.getPin())));
+                existingEmail.setPinCreated(true);
+                usersRepo.save(existingEmail);
+                return new ResponseEntity<>(new SuccessResponse("Transaction pin created successfully.", null),
+                        HttpStatus.CREATED);
+            } else {
+                return new ResponseEntity<>(new ErrorResponse("This email does exists"), HttpStatus.BAD_REQUEST);
+            }
+        } catch (Exception e) {
+            log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+            return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> validatePin(Long userId, int pin) {
+        Users users = usersRepo.findById(userId).orElse(null);
+        if (users == null) {
+            return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.BAD_REQUEST);
+        }
+        boolean isPinMatched = passwordEncoder.matches(String.valueOf(pin), users.getPinHash());
+        if (isPinMatched) {
+            return new ResponseEntity<>(new SuccessResponse("Pin valid."), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> validatePinFromUser(int pin) {
+        Users users = authenticatedUserFacade.getUser();
+        if (users == null) {
+            return new ResponseEntity<>(new ErrorResponse("Invalid User."), HttpStatus.NOT_FOUND);
+        }
+        boolean isPinMatched = passwordEncoder.matches(String.valueOf(pin), users.getPinHash());
+        if (isPinMatched) {
+            return new ResponseEntity<>(new SuccessResponse("Pin valid."), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.BAD_REQUEST);
+        }
+    }
+
 }

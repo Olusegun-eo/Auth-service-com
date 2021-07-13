@@ -21,29 +21,17 @@ public interface AuthenticationService {
 	ResponseEntity<?> createCorporateUser(CorporateUserPojo corporateUserPojo, HttpServletRequest request,
 										  Device device);
 
-	ResponseEntity<?> createPin(PinPojo pinPojo);
+	ResponseEntity<?> resendOTPPhone(String phoneNumber);
+
+	ResponseEntity<?> resendVerificationMail(String email, String baseUrl);
 
 	ResponseEntity<?> verifyAccountCreation(OTPPojo otpPojo);
 
 	ResponseEntity<?> verifyPhoneUsingOTP(OTPPojo otpPojo);
 
-	ResponseEntity<?> verifyEmail(EmailPojo emailPojo);
-
-	ResponseEntity<?> forgotPassword(PasswordPojo2 passwordPojo);
-
-	ResponseEntity<?> changePin(PinPojo2 pinPojo);
-
-	ResponseEntity<?> forgotPin(PinPojo pinPojo);
-
-	ResponseEntity<?> resendOTPPhone(String phoneNumber);
-
-	ResponseEntity<?> resendVerificationMail(String email, String baseUrl);
-
 	ResponseEntity<?> validateUser();
 
-	ResponseEntity<?> validatePin(Long userId, int pin);
-
-	ResponseEntity<?> validatePinFromUser(int pin);
+	ResponseEntity<?> verifyEmail(EmailPojo emailPojo);
 
 	ResponseEntity<?> userByPhone(String phone);
 
@@ -59,8 +47,6 @@ public interface AuthenticationService {
 
 	String generateToken(Users regUser);
 	
-	//CompletableFuture<HttpEntity<String>> postProfile(ProfilePojo profilePojo);
-
 	void createCorporateUser(CorporateUserPojo mUser, Long id, String token, String baseUrl);
 
 	void createPrivateUser(Users regUser, String baseUrl);

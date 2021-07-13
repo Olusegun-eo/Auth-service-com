@@ -1,9 +1,8 @@
 package com.waya.wayaauthenticationservice.controller;
 
 import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
-import com.waya.wayaauthenticationservice.pojo.others.*;
-import com.waya.wayaauthenticationservice.pojo.password.PinPojo;
-import com.waya.wayaauthenticationservice.pojo.password.PinPojo2;
+import com.waya.wayaauthenticationservice.pojo.others.EmailPojo;
+import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
@@ -36,7 +35,7 @@ public class AuthenticationController {
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping(path = "/create", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {
             MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<?> create( @Valid @RequestBody BaseUserPojo user, HttpServletRequest request, Device device) {
+    public ResponseEntity<?> create(@Valid @RequestBody BaseUserPojo user, HttpServletRequest request, Device device) {
         return authenticationServiceImpl.createUser(user, request, device, false);
     }
 
@@ -70,38 +69,6 @@ public class AuthenticationController {
         return authenticationServiceImpl.verifyEmail(emailPojo);
     }
 
-//    @ApiOperation(value = "Password Change (Service consumption only. Do not Use)", notes = "This is meant for service consumption", tags = {
-//            "AUTH"})
-//    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
-//    @PostMapping("/password-change")
-//    public ResponseEntity<?> changePass(@RequestBody PasswordPojo passwordPojo) {
-//        return authenticationServiceImpl.changePassword(passwordPojo);
-//    }
-
-    @ApiOperation(value = "Forgot Password (Service consumption only. Do not Use)", notes = "This is meant for service consumption", tags = {
-            "AUTH"})
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
-    @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPass(@RequestBody PasswordPojo2 passwordPojo) {
-        return authenticationServiceImpl.forgotPassword(passwordPojo);
-    }
-
-    @ApiOperation(value = "Pin Change (Service consumption only. Do not Use)", notes = "This is meant for service consumption", tags = {
-            "AUTH"})
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
-    @PostMapping("/pin-change")
-    public ResponseEntity<?> changePin(@RequestBody PinPojo2 pinPojo) {
-        return authenticationServiceImpl.changePin(pinPojo);
-    }
-
-    @ApiOperation(value = "Forgot Pin (Service consumption only. Do not Use)", notes = "This is meant for service consumption", tags = {
-            "AUTH"})
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
-    @PostMapping("/forgot-pin")
-    public ResponseEntity<?> forgotPin(@RequestBody PinPojo pinPojo) {
-        return authenticationServiceImpl.forgotPin(pinPojo);
-    }
-
     @ApiOperation(value = "User login", tags = {"AUTH"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping("/login")
@@ -118,14 +85,6 @@ public class AuthenticationController {
         return "<a href=\"http://localhost:8080/oauth2/authorize/google\"> Log in with Google</a><br><br><a href=\"http://localhost:8080/oauth2/authorize/facebook\">Log in with Facebook</a><br><br><a href=\"http://localhost:8080/oauth2/authorize/github\">Log in with Github</a>";
     }
 
-    @ApiOperation(value = "Pin Creation", notes = "This endpoint help user create transaction PIN", tags = {"AUTH"})
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
-    @PostMapping("/create-pin")
-    public ResponseEntity<?> createPin(@RequestBody PinPojo pinPojo) {
-        return authenticationServiceImpl.createPin(pinPojo);
-    }
-
     @ApiOperation(value = "User Validation (Service consumption only. Do not Use)", notes = "This endpoint help validate user and is meant for service consumption only", tags = {
             "AUTH"})
     @ApiImplicitParams({
@@ -134,22 +93,6 @@ public class AuthenticationController {
             MediaType.MULTIPART_FORM_DATA_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<?> validateUser() {
         return authenticationServiceImpl.validateUser();
-    }
-
-    @ApiOperation(value = "PIN verification (Service consumption only. Do not Use)", notes = "This endpoint help validate user by Pin and is meant for service consumption only", tags = {
-            "AUTH"})
-    @GetMapping("/validate-pin/{userId}/{pin}")
-    public ResponseEntity<?> validateUserByPin(@PathVariable Long userId, @PathVariable int pin) {
-        return authenticationServiceImpl.validatePin(userId, pin);
-    }
-
-    @ApiOperation(value = "PIN verification for user consumption", notes = "This endpoint help validate user by Pin by Authorisation token", tags = {
-            "AUTH"})
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
-    @GetMapping("/validate-pin/{pin}")
-    public ResponseEntity<?> validateUserByPin(@PathVariable int pin) {
-        return authenticationServiceImpl.validatePinFromUser(pin);
     }
 
     @ApiOperation(value = "Resend OTP to Phone", tags = {"AUTH"})

@@ -16,9 +16,6 @@ public class ResetPasswordPojo {
     @NotNull
     private int otp;
 
-    @NotBlank(message = "OldPassword cannot be blank")
-    private String oldPassword;
-
     @NotBlank(message = "NewPassword cannot be blank")
     private String newPassword;
 
