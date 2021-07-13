@@ -3,16 +3,17 @@ package com.waya.wayaauthenticationservice.service;
 import com.waya.wayaauthenticationservice.pojo.password.PasswordPojo;
 import com.waya.wayaauthenticationservice.pojo.password.ResetPasswordPojo;
 import com.waya.wayaauthenticationservice.response.ResponsePojo;
+import org.springframework.http.ResponseEntity;
 
 public interface PasswordService {
 
-    ResponsePojo setForgotPassword(PasswordPojo passwordPojo);
+    ResponseEntity<?> setForgotPassword(PasswordPojo passwordPojo);
 
-    ResponsePojo sendOtp(String email);
+    ResponseEntity<?> sendPasswordResetOTP(String email, String baseUrl);
 
-    ResponsePojo resetPassword(ResetPasswordPojo resetPasswordPojo);
+    ResponseEntity<?> resetPassword(ResetPasswordPojo resetPasswordPojo);
 
-    ResponsePojo forgotPin(String email);
+    ResponseEntity<?> forgotPin(String email);
 
-    ResponsePojo verifyEmail(String email);
+    ResponseEntity<?> verifyEmail(String email);
 }

@@ -2,7 +2,7 @@ package com.waya.wayaauthenticationservice.service.impl;
 
 import com.waya.wayaauthenticationservice.entity.LoginHistory;
 import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.LoginHistoryPojo;
+import com.waya.wayaauthenticationservice.pojo.others.LoginHistoryPojo;
 import com.waya.wayaauthenticationservice.repository.LoginHistoryRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;

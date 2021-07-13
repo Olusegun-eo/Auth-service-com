@@ -8,10 +8,13 @@ import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
-import com.waya.wayaauthenticationservice.pojo.*;
 import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
 import com.waya.wayaauthenticationservice.pojo.notification.NamesPojo;
 import com.waya.wayaauthenticationservice.pojo.notification.NotificationResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
+import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.pojo.password.PinPojo;
+import com.waya.wayaauthenticationservice.pojo.password.PinPojo2;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
@@ -34,7 +37,6 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
@@ -95,9 +97,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private SMSTokenService smsTokenService;
     @Autowired
     private EmailService emailService;
-    //@Value("${wallet.profile.url}")
-    //private String profileURL;
 
+    private String getBaseUrl(HttpServletRequest request) {
+        return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+    }
 
     @Override
     @Transactional
@@ -161,7 +164,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 return new ResponseEntity<>(new ErrorResponse(ErrorMessages.COULD_NOT_INSERT_RECORD.getErrorMessage()),
                         HttpStatus.INTERNAL_SERVER_ERROR);
 
-            createPrivateUser(regUser);
+            createPrivateUser(regUser, getBaseUrl(request));
 
             return new ResponseEntity<>(new SuccessResponse(
                     "User Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
@@ -237,7 +240,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         HttpStatus.INTERNAL_SERVER_ERROR);
 
             String token = generateToken(regUser);
-            createCorporateUser(mUser, regUser.getId(), token);
+            createCorporateUser(mUser, regUser.getId(), token, getBaseUrl(request));
 
             return new ResponseEntity<>(new SuccessResponse(
                     "Corporate Account Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
@@ -248,7 +251,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
-    public void createCorporateUser(CorporateUserPojo mUser, Long userId, String token) {
+    public void createCorporateUser(CorporateUserPojo mUser, Long userId, String token, String baseUrl) {
 
         String Id = String.valueOf(userId);
 
@@ -283,7 +286,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         // Implementation for internal call
         log.info("CorporateProfile account creation starts: " + corporateProfileRequest);
-        ApiResponse<String> corporateResponse = profileService.createProfile(corporateProfileRequest);
+        ApiResponse<String> corporateResponse = profileService.createProfile(corporateProfileRequest, baseUrl);
         log.info("CorporateProfile account creation ends: " + corporateResponse);
 
         VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
@@ -294,7 +297,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("Response: {}", response.getBody());
     }
 
-    public void createPrivateUser(Users user) {
+    public void createPrivateUser(Users user, String baseUrl) {
         String id = String.valueOf(user.getId());
 
         VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
@@ -314,7 +317,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         personalProfileRequest.setUserId(id);
 
         log.info("PersonalProfile account creation starts: " + personalProfileRequest);
-        ApiResponse<String> personalResponse = profileService.createProfile(personalProfileRequest);
+        ApiResponse<String> personalResponse = profileService.createProfile(personalProfileRequest, baseUrl);
         log.info("PersonalProfile account creation ends: " + personalResponse);
     }
 
@@ -391,6 +394,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user.setActive(true);
                 user.setDateOfActivation(LocalDateTime.now());
                 userRepo.save(user);
+
                 //send a welcome email
                 CompletableFuture.runAsync(() -> this.profileService.sendWelcomeEmail(user.getEmail()));
 
@@ -449,9 +453,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return smsTokenService.sendSMSOTP(phoneNumber, fullName);
     }
 
-    private boolean pushEMailToken(String email, String fullName) {
-        String message = VERIFY_EMAIL_TOKEN_MESSAGE + "placeholder" + MESSAGE_2;
-        return emailService.sendEmailToken(email, fullName, message);
+    private boolean pushEMailToken(String baseUrl, String email) {
+        return emailService.sendAcctVerificationEmailToken(baseUrl, email);
     }
 
     @Override
@@ -466,36 +469,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     HttpStatus.CREATED);
 
         log.info("Verify Email starts {}", emailPojo);
-        EmailVerificationResponse generalResponse = verifyEmail(emailPojo.getEmail(), Integer.parseInt(emailPojo.getToken()));
+        EmailVerificationResponse emailResponse = verifyEmail(emailPojo.getEmail(), Integer.parseInt(emailPojo.getToken()));
         log.info("Verify Email ends {}", emailPojo);
-        if (generalResponse.isValid()) {
+        if (emailResponse == null && emailResponse.isValid()) {
             user.setEmailVerified(true);
             user.setActive(true);
-            return new ResponseEntity<>(new SuccessResponse(generalResponse.getMessage()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new SuccessResponse(emailResponse.getMessage()), HttpStatus.BAD_REQUEST);
         } else {
-            return new ResponseEntity<>(new ErrorResponse(generalResponse.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @Override
-    public ResponseEntity<?> changePassword(PasswordPojo passwordPojo) {
-        Users user = userRepo.findByEmailIgnoreCase(passwordPojo.getEmail()).orElse(null);
-        if (user == null) {
-            return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
-        }
-        boolean isPasswordMatched = passwordEncoder.matches(passwordPojo.getOldPassword(), user.getPassword());
-        if (!isPasswordMatched) {
-            return new ResponseEntity<>(new ErrorResponse("Incorrect Old Password"), HttpStatus.BAD_REQUEST);
-        }
-        String newPassword = passwordEncoder.encode(passwordPojo.getNewPassword());
-        user.setPassword(newPassword);
-        user.setAccountStatus(1);
-        try {
-            userRepo.save(user);
-            return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);
-
-        } catch (Exception e) {
-            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse(emailResponse.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -590,7 +571,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ResponseEntity<?> resendVerificationMail(String email) {
+    public ResponseEntity<?> resendVerificationMail(String email, String baseUrl) {
         Users user = userRepo.findByEmailIgnoreCase(email).orElse(null);
         if (user == null)
             return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
@@ -598,7 +579,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         // Implementation for internal call
         log.info("Resend Verification Mail starts for {}", email);
-        boolean check = pushEMailToken(email, user.getName());
+        boolean check = pushEMailToken(baseUrl, email);
         log.info("Response From Verification Mail {}", check);
 
         if (check) {
@@ -692,15 +673,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ResponseEntity<?> createProfileAccount(PersonalProfileRequest profilePojo) {
-        ApiResponse<String> response = profileService.createProfile(profilePojo);
+    public ResponseEntity<?> createProfileAccount(PersonalProfileRequest profilePojo, String baseUrl) {
+        ApiResponse<String> response = profileService.createProfile(profilePojo, baseUrl);
         //kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC, profilePojo);
         return new ResponseEntity<>(new SuccessResponse(response.getData(), null), HttpStatus.OK);
     }
 
     @Override
-    public ResponseEntity<?> createCorporateProfileAccount(CorporateProfileRequest profilePojo) {
-        ApiResponse<String> response = profileService.createProfile(profilePojo);
+    public ResponseEntity<?> createCorporateProfileAccount(CorporateProfileRequest profilePojo, String baseUrl) {
+        ApiResponse<String> response = profileService.createProfile(profilePojo, baseUrl);
         //kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC, profilePojo2);
         return new ResponseEntity<>(new SuccessResponse(response.getData(), null), HttpStatus.OK);
     }

@@ -6,9 +6,11 @@ spring:
     #    username: app_dev
     #    password: e1bc9e7f864d
     url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaPayChatAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
-    username: WayaPayChat2020
-    password: gh9shfit2m53g4xz
+    username: ${POSTGRES_USERNAME:WayaPayChat2020}
+    password: ${POSTGRES_PASSWORD:gh9shfit2m53g4xz}
+    initialization-mode: always
     driver-class-name: org.postgresql.Driver
+    continue-on-error: true
   jpa:
     hibernate:
       ddl-auto: update
@@ -18,6 +20,22 @@ spring:
         show-sql: true
         jdbc:
           time_zone: UTC
+    open-in-view: false #this config disables database queries which  may be performed during view rendering
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 2400000
+      cache-null-values: false
+      use-key-prefix: true
+      key-prefix: tokens
+  redis:
+    host: ${REDIS_HOST:waya-redis-staging-env.tk8m9t.0001.euw1.cache.amazonaws.com}
+    port: ${REDIS_PORT:6379}
+    timeout: 10000
+    password: ${REDIS_PASSWORD:wIYretruTPWPmAyLgq6HNQMa0wjRG3q8}
+    ttl: 86400000
+    connect-timeout: 10000
 
   jackson:
     serialization:
@@ -25,7 +43,8 @@ spring:
   session:
     store-type: jdbc
   kafka:
-    bootstrapServers: 209.97.178.170:9092
+    bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:http://209.97.178.170:9092}
+    groupId: ${KAFKA_GROUP_ID:waya}
     consumer:
       group-id: waya
       auto-offset-reset: earliest
@@ -68,6 +87,8 @@ spring:
 
 server:
   port: 8059
+  error:
+    include-message: always
   servlet:
     context-path: /
 
@@ -80,12 +101,13 @@ logging:
           descriptor:
             sql:
               BasicBinder: TRACE
+
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://46.101.41.187:8761/eureka
+      defaultZone: ${EUREKA_SERVER_URL:http://46.101.41.187:8761/eureka} #http://46.101.41.187:8761/eureka
     service-url:
-      default-zone: http://46.101.41.187:8761/eureka
+      default-zone: ${EUREKA_SERVER_URL:http://46.101.41.187:8761/eureka} #http://46.101.41.187:8761/eureka
   instance:
     preferIpAddress: true
 
@@ -131,7 +153,143 @@ app:
       - http://localhost:3000/oauth2/redirect
       - myandroidapp://oauth2/redirect
       - myiosapp://oauth2/redirect
+api:
+  otp:
+    send-otp:
+      description: Send otp to user
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will send an OTP to the user,
+        # Error Response
+        returns with a detailed response about the error.
+    verify-otp:
+      description: Verify otp
+      notes: |
+        # Normal Response
+        Verifies an Otp.
+        # Error Response
+        returns with a detailed response about the error.
 
-welcome-email:
-  message: Welcome xxxx, we at WAYA PayChat hope you enjoy it here
+  email:
+    email-token:
+      description: Get a token
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will send a token to your email
+        # Error Response
+        returns with a detailed response about the error.
+    email-verify:
+      description: Verify your email
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will verify your email successfully
+        # Error Response
+        returns with a detailed response about the error.
 
+  corporate-profile:
+    create-corporate-profile:
+      description: Create a new Corporate Profile (Backend Service to Service use only).
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will create the profile successfully, as well as send an OTP to the user
+        # Error Response
+        returns with a detailed response about the error.
+
+    update-corporate-profile:
+      description: Update a Corporate Profile
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will update the profile successfully.
+        # Error Response
+        returns with a detailed response about the error.
+
+    update-profile-pic:
+      description: Update a Corporate Profile Picture
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will update the profile successfully.
+        # Error Response
+        returns with a detailed response about the error.
+
+    get-corporate-profile:
+      description: Get a Corporate Profile
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will update the profile successfully.
+        # Error Response
+        returns with a detailed response about the error.
+
+  profile:
+    referals:
+      description: get all users referrals
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will get the referals successfully, as well as send an OTP to the user
+        # Error Response
+        returns with a detailed response about the error.
+
+    create-personal-profile:
+      description: Create a new Personal Profile (Backend Service to Service use only).
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will create the profile successfully, as well as send an OTP to the user
+        # Error Response
+        returns with a detailed response about the error.
+
+    get-user-profile:
+      description: Get a users profile
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will return with a data, containing the users profile.
+        # Error Response
+        returns with a detailed response about the error.
+    update-user-profile:
+      description: updates a users profile
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will update a users profile successfully,
+        # Error Response
+        returns with a detailed response about the error.
+
+    update-user-profile-image:
+      description: updates a users profile image
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will update a users profile image successfully,
+        # Error Response
+        returns with a detailed response about the error.
+
+    search-name:
+      description: search for a user by name
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will return various search result for a user,
+        # Error Response
+        returns with a detailed response about the error.
+
+    search-phone:
+      description: search for a user by phone number
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will return various search result for a user,
+        # Error Response
+        returns with a detailed response about the error.
+
+    search-email:
+      description: search for a user by email
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will return various search result for a user,
+        # Error Response
+        returns with a detailed response about the error.
+
+    search-organization:
+      description: search for a user by organisation name
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will return various search result for a user,
+        # Error Response
+        returns with a detailed response about the error.
+#
+#welcome-email:
+#  message:

@@ -10,7 +10,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import com.waya.wayaauthenticationservice.pojo.DevicePojo;
+import com.waya.wayaauthenticationservice.pojo.others.DevicePojo;
 
 @Service
 public class ReqIPUtils {

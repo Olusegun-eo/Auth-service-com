@@ -30,7 +30,7 @@ import com.waya.wayaauthenticationservice.security.oauth2.HttpCookieOAuth2Author
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @EnableWebSecurity
-@Profile(value = {"development", "production"})
+//@Profile(value = {"development", "production"})
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Autowired
@@ -73,8 +73,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
-		web.ignoring().antMatchers("/v2/api-docs", "/configuration/ui", "/swagger-resources/**",
-				"/configuration/security", "/swagger-ui/index.html", "/webjars/**");
+		web.ignoring().antMatchers(
+				"/v2/api-docs", "/configuration/ui",
+				"/swagger-resources/**","/configuration/security",
+				"/swagger-ui/index.html", "/webjars/**");
 	}
 
 	protected AuthenticationFilter getAuthenticationFilter() throws Exception {

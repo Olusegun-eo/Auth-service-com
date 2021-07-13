@@ -1,6 +1,6 @@
 package com.waya.wayaauthenticationservice.controller;
 
-import com.waya.wayaauthenticationservice.pojo.*;
+import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.response.*;
 import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.response.ApiResponse;
@@ -73,10 +73,10 @@ public class ProfileController {
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
     })
     @PostMapping("personal-profile")
-    public ApiResponse<String> createPersonalProfile(
+    public ApiResponse<String> createPersonalProfile(final HttpServletRequest request,
             @Valid @RequestBody PersonalProfileRequest personalProfileRequest
     ) {
-        return profileService.createProfile(personalProfileRequest);
+        return profileService.createProfile(personalProfileRequest, getBaseUrl(request));
     }
     /**
      * endpoint to create a corporate profile.
@@ -93,11 +93,10 @@ public class ProfileController {
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
     })
     @PostMapping("corporate-profile")
-    ApiResponse<String> createCorporateProfile(
+    ApiResponse<String> createCorporateProfile(final HttpServletRequest request,
             @Valid @RequestBody CorporateProfileRequest corporateProfileRequest){
 
-
-        return profileService.createProfile(corporateProfileRequest);
+        return profileService.createProfile(corporateProfileRequest, getBaseUrl(request));
     }
 
 
@@ -292,7 +291,9 @@ public class ProfileController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-
+    private String getBaseUrl(HttpServletRequest request) {
+        return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+    }
 
 
 

@@ -8,10 +8,10 @@ import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
-import com.waya.wayaauthenticationservice.pojo.*;
 import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
 import com.waya.wayaauthenticationservice.pojo.notification.NamesPojo;
 import com.waya.wayaauthenticationservice.pojo.notification.NotificationResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.pojo.userDTO.*;
 import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
@@ -83,6 +83,9 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private NotificationProxy notificationProxy;
 
+    private String getBaseUrl(HttpServletRequest request) {
+        return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+    }
 
     @Override
     public ResponseEntity<?> getUserById(Long id) {
@@ -475,7 +478,7 @@ public class UserServiceImpl implements UserService {
                     continue;
 
                 String token = this.authService.generateToken(regUser);
-                this.authService.createCorporateUser(mUser, regUser.getId(), token);
+                this.authService.createCorporateUser(mUser, regUser.getId(), token, getBaseUrl(request));
                 sendEmailNewPassword(randomPassword, regUser.getEmail(), regUser.getFirstName());
                 ++count;
             }
@@ -553,7 +556,7 @@ public class UserServiceImpl implements UserService {
                 Users regUser = usersRepo.save(user);
                 if (regUser == null)
                     continue;
-                this.authService.createPrivateUser(regUser);
+                this.authService.createPrivateUser(regUser, getBaseUrl(request));
                 sendEmailNewPassword(randomPassword, regUser.getEmail(), regUser.getFirstName());
                 ++count;
             }

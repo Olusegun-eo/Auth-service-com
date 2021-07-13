@@ -1,6 +1,9 @@
 package com.waya.wayaauthenticationservice.controller;
 
-import com.waya.wayaauthenticationservice.pojo.*;
+import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
+import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.pojo.password.PinPojo;
+import com.waya.wayaauthenticationservice.pojo.password.PinPojo2;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
@@ -33,7 +36,7 @@ public class AuthenticationController {
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping(path = "/create", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {
             MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<?> create(@Valid @RequestBody BaseUserPojo user, HttpServletRequest request, Device device) {
+    public ResponseEntity<?> create( @Valid @RequestBody BaseUserPojo user, HttpServletRequest request, Device device) {
         return authenticationServiceImpl.createUser(user, request, device, false);
     }
 
@@ -67,13 +70,13 @@ public class AuthenticationController {
         return authenticationServiceImpl.verifyEmail(emailPojo);
     }
 
-    @ApiOperation(value = "Password Change (Service consumption only. Do not Use)", notes = "This is meant for service consumption", tags = {
-            "AUTH"})
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
-    @PostMapping("/password-change")
-    public ResponseEntity<?> changePass(@RequestBody PasswordPojo passwordPojo) {
-        return authenticationServiceImpl.changePassword(passwordPojo);
-    }
+//    @ApiOperation(value = "Password Change (Service consumption only. Do not Use)", notes = "This is meant for service consumption", tags = {
+//            "AUTH"})
+//    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
+//    @PostMapping("/password-change")
+//    public ResponseEntity<?> changePass(@RequestBody PasswordPojo passwordPojo) {
+//        return authenticationServiceImpl.changePassword(passwordPojo);
+//    }
 
     @ApiOperation(value = "Forgot Password (Service consumption only. Do not Use)", notes = "This is meant for service consumption", tags = {
             "AUTH"})
@@ -159,8 +162,8 @@ public class AuthenticationController {
     @ApiOperation(value = "Resend Verification Email", tags = {"AUTH"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/resend-otp-mail/{email}")
-    public ResponseEntity<?> resendOTPEmail(@PathVariable String email) {
-        return authenticationServiceImpl.resendVerificationMail(email);
+    public ResponseEntity<?> resendOTPEmail(@PathVariable String email, final HttpServletRequest request) {
+        return authenticationServiceImpl.resendVerificationMail(email, getBaseUrl(request));
     }
 
     @ApiOperation(value = "Check if user is an admin: (Internal Consumption only)", tags = {"AUTH"})
@@ -170,4 +173,7 @@ public class AuthenticationController {
         return userService.isUserAdmin(userId);
     }
 
+    private String getBaseUrl(HttpServletRequest request) {
+        return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+    }
 }

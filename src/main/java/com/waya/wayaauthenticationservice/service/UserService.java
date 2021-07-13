@@ -10,10 +10,10 @@ import org.springframework.mobile.device.Device;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
-import com.waya.wayaauthenticationservice.pojo.UserEditPojo;
+import com.waya.wayaauthenticationservice.pojo.others.ContactPojoReq;
+import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
-import com.waya.wayaauthenticationservice.pojo.UserRoleUpdateRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
 
 public interface UserService {
 

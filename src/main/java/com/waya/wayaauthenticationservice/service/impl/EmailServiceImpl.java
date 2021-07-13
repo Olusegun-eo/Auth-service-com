@@ -2,22 +2,31 @@ package com.waya.wayaauthenticationservice.service.impl;
 
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.entity.OTPBase;
+import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.enums.StreamsEventType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
+import com.waya.wayaauthenticationservice.pojo.mail.context.AccountVerificationEmailContext;
 import com.waya.wayaauthenticationservice.repository.OTPRepository;
+import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.response.EmailVerificationResponse;
 import com.waya.wayaauthenticationservice.service.EmailService;
+import com.waya.wayaauthenticationservice.service.MailService;
 import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
 import com.waya.wayaauthenticationservice.streams.RecipientsEmail;
 import com.waya.wayaauthenticationservice.streams.StreamDataEmail;
 import com.waya.wayaauthenticationservice.streams.StreamPayload;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Email;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Optional;
@@ -27,50 +36,40 @@ import static com.waya.wayaauthenticationservice.util.Constant.*;
 import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateCode;
 
 @Service
+@AllArgsConstructor
+@Slf4j
 public class EmailServiceImpl implements EmailService {
 
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
-
     private final OTPRepository otpRepository;
+    private final ProfileRepository profileRepository;
+    private final MailService mailService;
     private final MessageQueueProducer messageQueueProducer;
-
     private final Gson gson;
-
-    @Autowired
-    public EmailServiceImpl(OTPRepository otpRepository, MessageQueueProducer messageQueueProducer, Gson gson) {
-        this.otpRepository = otpRepository;
-        this.messageQueueProducer = messageQueueProducer;
-        this.gson = gson;
-    }
 
     /**
      * generates a 6 digit OTP code and send code to email topic
      * in kafka
      *
      * @param email    request
-     * @param fullName name
      */
     @Override
-    public boolean sendEmailToken(String email, String fullName, String message) {
+    public boolean sendAcctVerificationEmailToken(String baseUrl, @Valid @Email String email) {
         try {
+            Profile profile = profileRepository.findByEmail(false, email)
+                    .orElseThrow(() -> new CustomException("profile does not exist", HttpStatus.NOT_FOUND));
             //generate the token
-            OTPBase otp = generateEmailToken(email);
-
-            StreamPayload<StreamDataEmail> post = new StreamPayload<>();
-            post.setEventType(StreamsEventType.EMAIL.toString());
-            post.setInitiator(WAYAPAY);
-            post.setToken(null);
-
-            StreamDataEmail data = new StreamDataEmail();
-            //data.setMessage(VERIFY_EMAIL_TOKEN_MESSAGE + otp.getCode() + MESSAGE_2);
-            message = message.replace("placeholder", String.valueOf(otp.getCode()));
-            data.setMessage(message);
-            data.setNames(Collections.singletonList(new RecipientsEmail(email, fullName)));
-
-            post.setData(data);
-            //send event to email topic in kafka
-            CompletableFuture.runAsync(() -> messageQueueProducer.send(EMAIL_TOPIC, post));
-            log.info("TOKEN sent to kafka message queue::: {}", post);
+            OTPBase otp = generateEmailToken(profile.getEmail());
+            AccountVerificationEmailContext emailContext = new AccountVerificationEmailContext();
+            emailContext.init(profile);
+            emailContext.buildURL(baseUrl, email, String.valueOf(otp.getCode()));
+            emailContext.setToken( String.valueOf(otp.getCode()));
+            try{
+                mailService.sendMail(emailContext);
+            }catch(Exception e){
+                log.error("An Error Occurred:: {}", e.getMessage());
+            }
+            // mailService.sendMail(user.getEmail(), message);
+            log.info("Activation email sent!! \n");
             return true;
         } catch (Exception exception) {
             log.error("could not process data ", exception);
@@ -126,7 +125,7 @@ public class EmailServiceImpl implements EmailService {
         LocalDateTime newExpiryDate = LocalDateTime.now().minusHours(12);
         //invalidate the previous record
         otpRepository.invalidatePreviousRecordsViaEmail(email, newExpiryDate, false);
-        otpRepository.save(otp);
+        otp = otpRepository.save(otp);
         return otp;
     }
 

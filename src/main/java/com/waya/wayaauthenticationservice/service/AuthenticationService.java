@@ -2,7 +2,10 @@ package com.waya.wayaauthenticationservice.service;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.waya.wayaauthenticationservice.pojo.*;
+import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
+import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.pojo.password.PinPojo;
+import com.waya.wayaauthenticationservice.pojo.password.PinPojo2;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import org.springframework.http.ResponseEntity;
@@ -26,8 +29,6 @@ public interface AuthenticationService {
 
 	ResponseEntity<?> verifyEmail(EmailPojo emailPojo);
 
-	ResponseEntity<?> changePassword(PasswordPojo passwordPojo);
-
 	ResponseEntity<?> forgotPassword(PasswordPojo2 passwordPojo);
 
 	ResponseEntity<?> changePin(PinPojo2 pinPojo);
@@ -36,7 +37,7 @@ public interface AuthenticationService {
 
 	ResponseEntity<?> resendOTPPhone(String phoneNumber);
 
-	ResponseEntity<?> resendVerificationMail(String email);
+	ResponseEntity<?> resendVerificationMail(String email, String baseUrl);
 
 	ResponseEntity<?> validateUser();
 
@@ -52,16 +53,16 @@ public interface AuthenticationService {
 
 	ResponseEntity<?> createWayagramAccount(WayagramPojo wayagramPojo);
 
-	ResponseEntity<?> createProfileAccount(PersonalProfileRequest profilePojo);
+	ResponseEntity<?> createProfileAccount(PersonalProfileRequest profilePojo, String baseUrl);
 
-	ResponseEntity<?> createCorporateProfileAccount(CorporateProfileRequest profilePojo);
+	ResponseEntity<?> createCorporateProfileAccount(CorporateProfileRequest profilePojo, String baseUrl);
 
 	String generateToken(Users regUser);
 	
 	//CompletableFuture<HttpEntity<String>> postProfile(ProfilePojo profilePojo);
 
-	void createCorporateUser(CorporateUserPojo mUser, Long id, String token);
+	void createCorporateUser(CorporateUserPojo mUser, Long id, String token, String baseUrl);
 
-	void createPrivateUser(Users regUser);
+	void createPrivateUser(Users regUser, String baseUrl);
 
 }

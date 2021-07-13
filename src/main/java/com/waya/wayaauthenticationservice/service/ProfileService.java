@@ -1,6 +1,6 @@
 package com.waya.wayaauthenticationservice.service;
 
-import com.waya.wayaauthenticationservice.pojo.*;
+import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.response.*;
 import com.waya.wayaauthenticationservice.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
@@ -17,14 +17,14 @@ public interface ProfileService {
      *
      * @param personalProfileRequest personal profile request
      */
-    ApiResponse<String> createProfile(final PersonalProfileRequest personalProfileRequest);
+    ApiResponse<String> createProfile(final PersonalProfileRequest personalProfileRequest, String baseUrl);
 
     /**
      * create a new corporate profile.
      *
      * @param profileRequest corporate profile request
      */
-    ApiResponse<String> createProfile(final CorporateProfileRequest profileRequest);
+    ApiResponse<String> createProfile(final CorporateProfileRequest profileRequest, String baseUrl);
 
     /**
      * gets a users profile

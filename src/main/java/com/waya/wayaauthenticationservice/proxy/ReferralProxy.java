@@ -1,13 +1,10 @@
 package com.waya.wayaauthenticationservice.proxy;
 
 import com.waya.wayaauthenticationservice.entity.Profile;
-import com.waya.wayaauthenticationservice.pojo.MainWalletResponse;
-import com.waya.wayaauthenticationservice.pojo.ReferralCodePojo;
+import com.waya.wayaauthenticationservice.pojo.others.ReferralCodePojo;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @FeignClient(name = "referral-code-client", url = "${app.config.referral.base-url}")
 public interface ReferralProxy {

@@ -5,9 +5,9 @@ import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.SMSAlertConfig;
 import com.waya.wayaauthenticationservice.entity.SMSCharge;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
-import com.waya.wayaauthenticationservice.enums.StreamsEventType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.pojo.*;
+import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
+import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
 import com.waya.wayaauthenticationservice.proxy.ReferralProxy;
 import com.waya.wayaauthenticationservice.repository.OtherDetailsRepository;
@@ -15,14 +15,7 @@ import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.SMSAlertConfigRepository;
 import com.waya.wayaauthenticationservice.repository.SMSChargeRepository;
 import com.waya.wayaauthenticationservice.response.*;
-import com.waya.wayaauthenticationservice.service.EmailService;
-import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
-import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.service.SMSTokenService;
-import com.waya.wayaauthenticationservice.streams.RecipientsEmail;
-import com.waya.wayaauthenticationservice.streams.StreamDataEmail;
-import com.waya.wayaauthenticationservice.streams.StreamPayload;
-import com.waya.wayaauthenticationservice.util.Constant;
+import com.waya.wayaauthenticationservice.service.*;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +57,6 @@ public class ProfileServiceImpl implements ProfileService {
     private final RestTemplate restClient;
     private final SMSAlertConfigRepository smsAlertConfigRepository;
     private final SMSChargeRepository smsChargeRepository;
-    private final String welcomeMessage;
     private final MessageQueueProducer messageQueueProducer;
     @Value("${app.config.main.profile.base-url}")
     private String getAddUrl;
@@ -72,6 +64,7 @@ public class ProfileServiceImpl implements ProfileService {
     private String getAutoFollowUrl;
     @Value("${app.config.auto.follow.base-url}")
     private String getProfileUrl;
+    private final MailService mailService;
 
     @Autowired
     public ProfileServiceImpl(ModelMapper modelMapper,
@@ -85,7 +78,7 @@ public class ProfileServiceImpl implements ProfileService {
                               SMSChargeRepository smsChargeRepository,
                               MessageQueueProducer messageQueueProducer,
                               EmailService emailService,
-                              @Value("${welcome-email.message}") String welcomeMessage) {
+                              MailService mailService) {
         this.modelMapper = modelMapper;
         this.profileRepository = profileRepository;
         this.smsTokenService = smsTokenService;
@@ -96,8 +89,8 @@ public class ProfileServiceImpl implements ProfileService {
         this.smsAlertConfigRepository = smsAlertConfigRepository;
         this.smsChargeRepository = smsChargeRepository;
         this.emailService = emailService;
-        this.welcomeMessage = welcomeMessage;
         this.messageQueueProducer = messageQueueProducer;
+        this.mailService = mailService;
     }
 
     private static SearchProfileResponse apply(Profile profilePersonal) {
@@ -152,7 +145,7 @@ public class ProfileServiceImpl implements ProfileService {
      * @param request profile
      */
     @Override
-    public ApiResponse<String> createProfile(PersonalProfileRequest request) {
+    public ApiResponse<String> createProfile(PersonalProfileRequest request, String baseUrl) {
         try {
             //check if the user exist in the profile table
             Optional<Profile> profile = profileRepository.findByEmail(
@@ -162,7 +155,7 @@ public class ProfileServiceImpl implements ProfileService {
 
             ReferralCodePojo referralCodePojo = referralProxy.getUserByReferralCode(request.getUserId());
 
-//            Optional<ReferralCode> referralCode = referralCodeRepository
+//          Optional<ReferralCode> referralCode = referralCodeRepository
 //                    .findByUserId(request.getUserId());
             //validation check
             ApiResponse<String> validationCheck = validationCheckOnProfile(profile, referralCodePojo);
@@ -186,8 +179,8 @@ public class ProfileServiceImpl implements ProfileService {
                         savedProfile.getPhoneNumber(), fullName));
 
                 // send email otp
-                CompletableFuture.runAsync(() -> emailService.sendEmailToken(
-                        savedProfile.getEmail(), fullName, message));
+                CompletableFuture.runAsync(() -> emailService.sendAcctVerificationEmailToken(
+                        baseUrl, savedProfile.getEmail()));
 
                 //create waya gram profile
                 CompletableFuture.runAsync(() -> createWayagramProfile(savedProfile.getUserId(), savedProfile.getSurname()));
@@ -219,7 +212,7 @@ public class ProfileServiceImpl implements ProfileService {
      */
     @Transactional
     @Override
-    public ApiResponse<String> createProfile(CorporateProfileRequest profileRequest) {
+    public ApiResponse<String> createProfile(CorporateProfileRequest profileRequest, String baseUrl) {
         try {
             //check if the user exist in the profile table
             Optional<Profile> profile = profileRepository.findByEmail(
@@ -248,8 +241,8 @@ public class ProfileServiceImpl implements ProfileService {
                         newCorporateProfile.getPhoneNumber(), fullName));
 
                 // send email otp
-                CompletableFuture.runAsync(() -> emailService.sendEmailToken(
-                        newCorporateProfile.getEmail(), fullName, message));
+                CompletableFuture.runAsync(() -> emailService.sendAcctVerificationEmailToken(
+                       baseUrl, newCorporateProfile.getEmail()));
 
                 return new ApiResponse<>(null,
                         CREATE_PROFILE_SUCCESS_MSG, true, OK);
@@ -809,40 +802,19 @@ public class ProfileServiceImpl implements ProfileService {
             log.error("wayaOfficialHandle  Exception: ", e);
         }
     }
-//
-//    private String generateToken(String email) {
-//        try {
-//
-//            String token = Jwts.builder().setSubject(email)
-//                    .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
-//                    .signWith(SignatureAlgorithm.HS512, SECRET_TOKEN).compact();
-//
-//            return TOKEN_PREFIX+token;
-//        } catch (Exception e) {
-//
-//            throw new RuntimeException(e.fillInStackTrace());
-//        }
-//
-//    }
 
     @Override
     public void sendWelcomeEmail(String email) {
-//        var userProfile = profileRepository.findByEmail(false, email)
-//                .orElseThrow(() -> new CustomException("profile does not exist", HttpStatus.NOT_FOUND));
-//
-//        StreamPayload<StreamDataEmail> post = new StreamPayload<>();
-//        post.setEventType(StreamsEventType.EMAIL.toString());
-//        post.setInitiator(WAYAPAY);
-//        post.setToken(null);
-//        post.setKey(TWILIO_PROVIDER);
-//
-//        var data = new StreamDataEmail();
-//        data.setMessage(welcomeMessage.replace("xxxx", userProfile.getFirstName()));
-//        data.setNames(Collections.singletonList(new RecipientsEmail(email, userProfile.getFirstName())));
-//
-//        post.setData(data);
-
-//        messageQueueProducer.send(EMAIL_TOPIC, post);
-        log.info("sending welcome message kafka message queue::: {}", "post");
+        Profile userProfile = profileRepository.findByEmail(false, email)
+                .orElseThrow(() -> new CustomException("profile does not exist", HttpStatus.NOT_FOUND));
+        WelcomeEmailContext emailContext = new WelcomeEmailContext();
+        emailContext.init(userProfile);
+        try{
+            mailService.sendMail(emailContext);
+        }catch(Exception e){
+            log.error("An Error Occurred:: {}", e.getMessage());
+        }
+        // mailService.sendMail(user.getEmail(), message);
+        log.info("Welcome email sent!! \n");
     }
 }

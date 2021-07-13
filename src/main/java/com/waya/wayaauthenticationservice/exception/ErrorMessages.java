@@ -11,9 +11,10 @@ public enum ErrorMessages {
 	COULD_NOT_DELETE_RECORD("Could not Delete record"),
 	EMAIL_ADDRESS_NOT_VERIFIED("Email Address could not be verified"), 
 	COULD_NOT_INSERT_RECORD("Could not Insert record"),
+	NOT_VALID("Input placeholder is not valid"),
 	NOT_EQUAL("Record is not Equal");
-	
-	private String errorMessage;
+
+    private String errorMessage;
 	
 	ErrorMessages(String errorMessage) {
 		this.errorMessage = errorMessage;
