@@ -1,10 +1,12 @@
 package com.waya.wayaauthenticationservice.response;
 
-import lombok.*;
-
-import javax.persistence.Column;
-import javax.validation.constraints.NotBlank;
 import java.util.UUID;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter

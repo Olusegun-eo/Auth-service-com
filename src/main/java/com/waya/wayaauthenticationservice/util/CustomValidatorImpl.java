@@ -2,9 +2,8 @@ package com.waya.wayaauthenticationservice.util;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import static com.waya.wayaauthenticationservice.util.HelperUtils.*;
 
 public class CustomValidatorImpl implements ConstraintValidator<CustomValidator, String> {
 
@@ -24,10 +23,10 @@ public class CustomValidatorImpl implements ConstraintValidator<CustomValidator,
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
 
-        if(value == null)
+        if (value == null)
             return true;
 
-        switch(this.type){
+        switch (this.type) {
             case SIZE:
                 return validateForSize(value);
             case TEXT_STRING:
@@ -38,32 +37,18 @@ public class CustomValidatorImpl implements ConstraintValidator<CustomValidator,
                 return validateStringIsEmail(value);
             case CONTAINS:
                 return validateContains(value);
+            case EMAIL_OR_PHONENUMBER:
+                return validateStringIsEmailOrPhoneNumber(value);
         }
         return false;
     }
 
     private boolean validateContains(String value) {
-        for(String val : this.values){
-            if(!value.toLowerCase().contains(val.toLowerCase()))
+        for (String val : this.values) {
+            if (!value.toLowerCase().contains(val.toLowerCase()))
                 return false;
         }
         return true;
-    }
-
-    private boolean validateStringIsEmail(String value) {
-        Pattern pattern = Pattern.compile("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\." + "[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@"
-                + "(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?");
-        Matcher matcher = pattern.matcher(value);
-        return matcher.matches();
-    }
-
-    private boolean validateStringNumericOnly(String value) {
-        //value.matches("[0-9]+")
-        return value.matches("^[0-9]*$");
-    }
-
-    private boolean validateStringTextOnly (String value) {
-        return value.matches("^[a-zA-Z]*$");
     }
 
     private boolean validateForSize(String value) {

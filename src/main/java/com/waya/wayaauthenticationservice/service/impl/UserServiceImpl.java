@@ -1,6 +1,34 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import com.waya.wayaauthenticationservice.config.ApplicationConfig;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+import static org.springframework.http.HttpStatus.OK;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mobile.device.Device;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
 import com.waya.wayaauthenticationservice.controller.UserController;
 import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
 import com.waya.wayaauthenticationservice.entity.Roles;
@@ -11,8 +39,19 @@ import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
 import com.waya.wayaauthenticationservice.pojo.notification.NamesPojo;
 import com.waya.wayaauthenticationservice.pojo.notification.NotificationResponsePojo;
-import com.waya.wayaauthenticationservice.pojo.others.*;
-import com.waya.wayaauthenticationservice.pojo.userDTO.*;
+import com.waya.wayaauthenticationservice.pojo.others.ContactPojo;
+import com.waya.wayaauthenticationservice.pojo.others.ContactPojoReq;
+import com.waya.wayaauthenticationservice.pojo.others.DeleteRequest;
+import com.waya.wayaauthenticationservice.pojo.others.DevicePojo;
+import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
+import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UserWalletPojo;
+import com.waya.wayaauthenticationservice.pojo.others.WalletAccount;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
@@ -26,27 +65,8 @@ import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.service.UserService;
 import com.waya.wayaauthenticationservice.util.HelperUtils;
 import com.waya.wayaauthenticationservice.util.ReqIPUtils;
+
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.*;
-import org.springframework.mobile.device.Device;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
-import javax.servlet.http.HttpServletRequest;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-import static org.springframework.http.HttpStatus.OK;
 
 @Service
 @Slf4j
@@ -70,10 +90,12 @@ public class UserServiceImpl implements UserService {
     private RolesRepository rolesRepo;
     @Autowired
     private WalletProxy walletProxy;
-    @Autowired
-    private RestTemplate restClient;
-    @Autowired
-    private ApplicationConfig applicationConfig;
+    
+	/*
+	 * @Autowired private RestTemplate restClient;
+	 * @Autowired private ApplicationConfig applicationConfig;
+	 */
+    
     @Autowired
     private ReqIPUtils reqUtil;
     @Autowired
@@ -344,30 +366,30 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private boolean validateUser(String token) {
-        try {
-            log.info("validating user token ... {}", token);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-            headers.set("authorization", token);
-
-            Map<String, Object> map = new HashMap<>();
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
-            ResponseEntity<String> response = restClient.postForEntity(applicationConfig.getValidateUser(), entity,
-                    String.class);
-            if (response.getStatusCode() == OK) {
-                log.info("User verified with body {}", response.getBody());
-                return true;
-            } else {
-                log.info("user not verified :: {}", response.getStatusCode());
-                return false;
-            }
-        } catch (Exception e) {
-            log.error("Error verifying user: ", e);
-            return false;
-        }
-    }
+//    private boolean validateUser(String token) {
+//        try {
+//            log.info("validating user token ... {}", token);
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.setContentType(MediaType.APPLICATION_JSON);
+//            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+//            headers.set("authorization", token);
+//
+//            Map<String, Object> map = new HashMap<>();
+//            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
+//            ResponseEntity<String> response = restClient.postForEntity(applicationConfig.getValidateUser(), entity,
+//                    String.class);
+//            if (response.getStatusCode() == OK) {
+//                log.info("User verified with body {}", response.getBody());
+//                return true;
+//            } else {
+//                log.info("user not verified :: {}", response.getStatusCode());
+//                return false;
+//            }
+//        } catch (Exception e) {
+//            log.error("Error verifying user: ", e);
+//            return false;
+//        }
+//    }
 
     @Override
     public UserProfileResponsePojo toModelDTO(Users user) {

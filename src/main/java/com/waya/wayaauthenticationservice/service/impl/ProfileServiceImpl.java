@@ -1,21 +1,29 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import com.waya.wayaauthenticationservice.entity.OtherDetails;
-import com.waya.wayaauthenticationservice.entity.Profile;
-import com.waya.wayaauthenticationservice.entity.SMSAlertConfig;
-import com.waya.wayaauthenticationservice.entity.SMSCharge;
-import com.waya.wayaauthenticationservice.enums.DeleteType;
-import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
-import com.waya.wayaauthenticationservice.pojo.others.*;
-import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
-import com.waya.wayaauthenticationservice.proxy.ReferralProxy;
-import com.waya.wayaauthenticationservice.repository.OtherDetailsRepository;
-import com.waya.wayaauthenticationservice.repository.ProfileRepository;
-import com.waya.wayaauthenticationservice.repository.SMSAlertConfigRepository;
-import com.waya.wayaauthenticationservice.repository.SMSChargeRepository;
-import com.waya.wayaauthenticationservice.response.*;
-import com.waya.wayaauthenticationservice.service.*;
+import static com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient.uploadImage;
+import static com.waya.wayaauthenticationservice.util.Constant.CATCH_EXCEPTION_MSG;
+import static com.waya.wayaauthenticationservice.util.Constant.COULD_NOT_PROCESS_REQUEST;
+import static com.waya.wayaauthenticationservice.util.Constant.CREATE_PROFILE_SUCCESS_MSG;
+import static com.waya.wayaauthenticationservice.util.Constant.DUPLICATE_KEY;
+import static com.waya.wayaauthenticationservice.util.Constant.ID_IS_REQUIRED;
+import static com.waya.wayaauthenticationservice.util.Constant.ID_IS_UNKNOWN;
+import static com.waya.wayaauthenticationservice.util.Constant.LIMIT;
+import static com.waya.wayaauthenticationservice.util.Constant.PHONE_NUMBER_REQUIRED;
+import static com.waya.wayaauthenticationservice.util.Constant.PROFILE_NOT_EXIST;
+import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.validateNum;
+import static org.springframework.http.HttpStatus.OK;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,29 +31,58 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-
-import static com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient.uploadImage;
-import static com.waya.wayaauthenticationservice.util.Constant.*;
-import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.validateNum;
-import static org.springframework.http.HttpStatus.OK;
+import com.waya.wayaauthenticationservice.entity.OtherDetails;
+import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.entity.SMSAlertConfig;
+import com.waya.wayaauthenticationservice.entity.SMSCharge;
+import com.waya.wayaauthenticationservice.enums.DeleteType;
+import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
+import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.DeleteRequest;
+import com.waya.wayaauthenticationservice.pojo.others.OtherDetailsRequest;
+import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.ReferralCodePojo;
+import com.waya.wayaauthenticationservice.pojo.others.SMSChargeFeeRequest;
+import com.waya.wayaauthenticationservice.pojo.others.ToggleSMSRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
+import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
+import com.waya.wayaauthenticationservice.proxy.ReferralProxy;
+import com.waya.wayaauthenticationservice.repository.OtherDetailsRepository;
+import com.waya.wayaauthenticationservice.repository.ProfileRepository;
+import com.waya.wayaauthenticationservice.repository.SMSAlertConfigRepository;
+import com.waya.wayaauthenticationservice.repository.SMSChargeRepository;
+import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.response.DeleteResponse;
+import com.waya.wayaauthenticationservice.response.OtherdetailsResponse;
+import com.waya.wayaauthenticationservice.response.ProfileImageResponse;
+import com.waya.wayaauthenticationservice.response.SMSChargeResponse;
+import com.waya.wayaauthenticationservice.response.SearchProfileResponse;
+import com.waya.wayaauthenticationservice.response.ToggleSMSResponse;
+import com.waya.wayaauthenticationservice.response.UserProfileResponse;
+import com.waya.wayaauthenticationservice.service.EmailService;
+import com.waya.wayaauthenticationservice.service.MailService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.service.SMSTokenService;
 
 @Service
 public class ProfileServiceImpl implements ProfileService {
 
-    private static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
-    private static final String SECRET_TOKEN = "wayas3cr3t";
-    private static final String TOKEN_PREFIX = "serial ";
+//    private static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
+//    private static final String SECRET_TOKEN = "wayas3cr3t";
+//    private static final String TOKEN_PREFIX = "serial ";
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final ModelMapper modelMapper;
     private final ProfileRepository profileRepository;
@@ -57,7 +94,6 @@ public class ProfileServiceImpl implements ProfileService {
     private final RestTemplate restClient;
     private final SMSAlertConfigRepository smsAlertConfigRepository;
     private final SMSChargeRepository smsChargeRepository;
-    private final MessageQueueProducer messageQueueProducer;
     @Value("${app.config.main.profile.base-url}")
     private String getAddUrl;
     @Value("${app.config.auto.follow.base-url}")
@@ -76,7 +112,6 @@ public class ProfileServiceImpl implements ProfileService {
                               ReferralProxy referralProxy,
                               SMSAlertConfigRepository smsAlertConfigRepository,
                               SMSChargeRepository smsChargeRepository,
-                              MessageQueueProducer messageQueueProducer,
                               EmailService emailService,
                               MailService mailService) {
         this.modelMapper = modelMapper;
@@ -89,7 +124,6 @@ public class ProfileServiceImpl implements ProfileService {
         this.smsAlertConfigRepository = smsAlertConfigRepository;
         this.smsChargeRepository = smsChargeRepository;
         this.emailService = emailService;
-        this.messageQueueProducer = messageQueueProducer;
         this.mailService = mailService;
     }
 
@@ -173,7 +207,7 @@ public class ProfileServiceImpl implements ProfileService {
                 String fullName = String.format("%s %s", savedProfile.getFirstName(),
                         savedProfile.getSurname());
 
-                String message = VERIFY_EMAIL_TOKEN_MESSAGE + "placeholder" + MESSAGE_2;
+                //String message = VERIFY_EMAIL_TOKEN_MESSAGE + "placeholder" + MESSAGE_2;
                 //send otp
                 CompletableFuture.runAsync(() -> smsTokenService.sendSMSOTP(
                         savedProfile.getPhoneNumber(), fullName));
@@ -222,8 +256,8 @@ public class ProfileServiceImpl implements ProfileService {
 
             ReferralCodePojo referralCodePojo = referralProxy.getUserByReferralCode(profileRequest.getUserId());
 
-//            Optional<ReferralCode> referralCode = referralCodeRepository
-//                    .findByUserId(profileRequest.getUserId());
+			// Optional<ReferralCode> referralCode = referralCodeRepository
+			// .findByUserId(profileRequest.getUserId());
             //validation check
             ApiResponse<String> validationCheck = validationCheckOnProfile(profile, referralCodePojo);
 
@@ -235,7 +269,7 @@ public class ProfileServiceImpl implements ProfileService {
 
                 String fullName = String.format("%s %s", newCorporateProfile.getFirstName(),
                         newCorporateProfile.getSurname());
-                String message = VERIFY_EMAIL_TOKEN_MESSAGE + "placeholder" + MESSAGE_2;
+                //String message = VERIFY_EMAIL_TOKEN_MESSAGE + "placeholder" + MESSAGE_2;
                 //send sms otp
                 CompletableFuture.runAsync(() -> smsTokenService.sendSMSOTP(
                         newCorporateProfile.getPhoneNumber(), fullName));

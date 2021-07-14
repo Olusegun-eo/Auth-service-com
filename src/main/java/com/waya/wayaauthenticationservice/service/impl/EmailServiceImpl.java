@@ -1,9 +1,20 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import com.google.gson.Gson;
+import static com.waya.wayaauthenticationservice.util.Constant.EMAIL_VERIFICATION_MSG;
+import static com.waya.wayaauthenticationservice.util.Constant.EMAIL_VERIFICATION_MSG_ERROR;
+import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateCode;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+import javax.validation.Valid;
+import javax.validation.constraints.Email;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+
 import com.waya.wayaauthenticationservice.entity.OTPBase;
 import com.waya.wayaauthenticationservice.entity.Profile;
-import com.waya.wayaauthenticationservice.enums.StreamsEventType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.mail.context.AccountVerificationEmailContext;
@@ -12,28 +23,9 @@ import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.response.EmailVerificationResponse;
 import com.waya.wayaauthenticationservice.service.EmailService;
 import com.waya.wayaauthenticationservice.service.MailService;
-import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
-import com.waya.wayaauthenticationservice.streams.RecipientsEmail;
-import com.waya.wayaauthenticationservice.streams.StreamDataEmail;
-import com.waya.wayaauthenticationservice.streams.StreamPayload;
+
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-
-import javax.validation.Valid;
-import javax.validation.constraints.Email;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-
-import static com.waya.wayaauthenticationservice.util.Constant.*;
-import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateCode;
 
 @Service
 @AllArgsConstructor
@@ -43,8 +35,6 @@ public class EmailServiceImpl implements EmailService {
     private final OTPRepository otpRepository;
     private final ProfileRepository profileRepository;
     private final MailService mailService;
-    private final MessageQueueProducer messageQueueProducer;
-    private final Gson gson;
 
     /**
      * generates a 6 digit OTP code and send code to email topic

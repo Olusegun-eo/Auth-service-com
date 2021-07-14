@@ -1,33 +1,26 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
-import com.waya.wayaauthenticationservice.entity.CorporateUser;
-import com.waya.wayaauthenticationservice.entity.RedisUser;
-import com.waya.wayaauthenticationservice.entity.Roles;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.exception.ErrorMessages;
-import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
-import com.waya.wayaauthenticationservice.pojo.others.*;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
+import static com.waya.wayaauthenticationservice.util.Constant.VIRTUAL_ACCOUNT_TOPIC;
+import static com.waya.wayaauthenticationservice.util.Constant.WALLET_ACCOUNT_TOPIC;
+import static com.waya.wayaauthenticationservice.util.Constant.WAYAGRAM_PROFILE_TOPIC;
+import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletRequest;
+
+import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
+import com.waya.wayaauthenticationservice.pojo.notification.NamesPojo;
+import com.waya.wayaauthenticationservice.pojo.notification.NotificationResponsePojo;
 import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
-import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
-import com.waya.wayaauthenticationservice.proxy.WalletProxy;
-import com.waya.wayaauthenticationservice.repository.CorporateUserRepository;
-import com.waya.wayaauthenticationservice.repository.RedisUserDao;
-import com.waya.wayaauthenticationservice.repository.RolesRepository;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.response.*;
-import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
-import com.waya.wayaauthenticationservice.service.AuthenticationService;
-import com.waya.wayaauthenticationservice.service.EmailService;
-import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.service.SMSTokenService;
-import com.waya.wayaauthenticationservice.util.ReqIPUtils;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,16 +29,47 @@ import org.springframework.mobile.device.Device;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
-import javax.servlet.http.HttpServletRequest;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
+import com.waya.wayaauthenticationservice.entity.CorporateUser;
+import com.waya.wayaauthenticationservice.entity.RedisUser;
+import com.waya.wayaauthenticationservice.entity.Roles;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.exception.ErrorMessages;
+import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
+import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.CreateAccountPojo;
+import com.waya.wayaauthenticationservice.pojo.others.DevicePojo;
+import com.waya.wayaauthenticationservice.pojo.others.EmailPojo;
+import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.ValidateUserPojo;
+import com.waya.wayaauthenticationservice.pojo.others.VirtualAccountPojo;
+import com.waya.wayaauthenticationservice.pojo.others.WalletPojo;
+import com.waya.wayaauthenticationservice.pojo.others.WayagramPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
+import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
+import com.waya.wayaauthenticationservice.proxy.WalletProxy;
+import com.waya.wayaauthenticationservice.repository.CorporateUserRepository;
+import com.waya.wayaauthenticationservice.repository.RedisUserDao;
+import com.waya.wayaauthenticationservice.repository.RolesRepository;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.response.EmailVerificationResponse;
+import com.waya.wayaauthenticationservice.response.ErrorResponse;
+import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
+import com.waya.wayaauthenticationservice.response.SuccessResponse;
+import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
+import com.waya.wayaauthenticationservice.service.AuthenticationService;
+import com.waya.wayaauthenticationservice.service.EmailService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.service.SMSTokenService;
+import com.waya.wayaauthenticationservice.util.ReqIPUtils;
 
-import static com.waya.wayaauthenticationservice.util.Constant.*;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -54,9 +78,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
     public static final String TOKEN_PREFIX = "serial ";
     private static final String SECRET_TOKEN = "wayas3cr3t";
-    @Autowired
-    public static Pattern emailPattern = Pattern.compile("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\." + "[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@"
-            + "(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?");
+
     @Autowired
     KafkaMessageProducer kafkaMessageProducer;
     @Autowired
@@ -66,8 +88,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private RolesRepository rolesRepo;
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
-    @Autowired
-    private RestTemplate restTemplate;
+
     @Autowired
     private RedisUserDao redisUserDao;
     @Autowired
@@ -76,12 +97,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private CorporateUserRepository corporateUserRepository;
     @Autowired
     private WalletProxy walletProxy;
-    @Autowired
-    private NotificationProxy notificationProxy;
+
     @Autowired
     private VirtualAccountProxy virtualAccountProxy;
     @Autowired
     private ReqIPUtils reqUtil;
+
+    @Autowired
+    private NotificationProxy notificationProxy;
 
     @Autowired
     private ModelMapper mapper;
@@ -148,7 +171,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setName(fullName);
             user.setRegDevicePlatform(dev.getPlatform());
             user.setRegDeviceType(dev.getDeviceType());
-            if (adminAction) user.setActive(true);
+            if (adminAction) {
+                user.setActive(true);
+                user.setAccountStatus(-1);
+                CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(),mUser.getFirstName()));
+            }
             user.setPassword(passwordEncoder.encode(mUser.getPassword()));
             user.setRolesList(roleList);
 
@@ -171,7 +198,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     @Transactional
-    public ResponseEntity<?> createCorporateUser(CorporateUserPojo mUser, HttpServletRequest request, Device device) {
+    public ResponseEntity<?> createCorporateUser(CorporateUserPojo mUser, HttpServletRequest request, Device device, boolean adminAction) {
 
         try {
             // Check if email exists
@@ -222,6 +249,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setPhoneNumber(mUser.getPhoneNumber());
             user.setPhoneVerified(false);
             user.setPinCreated(false);
+            if (adminAction) {
+                user.setActive(true);
+                user.setAccountStatus(-1);
+                CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(),mUser.getFirstName()));
+            }
             user.setReferenceCode(mUser.getReferenceCode());
             user.setSurname(mUser.getSurname());
             String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
@@ -234,6 +266,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         HttpStatus.INTERNAL_SERVER_ERROR);
 
             String token = generateToken(regUser);
+
             createCorporateUser(mUser, regUser.getId(), token, getBaseUrl(request));
 
             return new ResponseEntity<>(new SuccessResponse(
@@ -440,7 +473,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("Verify Email starts {}", emailPojo);
         EmailVerificationResponse emailResponse = verifyEmail(emailPojo.getEmail(), Integer.parseInt(emailPojo.getToken()));
         log.info("Verify Email ends {}", emailPojo);
-        if (emailResponse == null && emailResponse.isValid()) {
+        if (emailResponse != null && emailResponse.isValid()) {
             user.setEmailVerified(true);
             user.setActive(true);
             return new ResponseEntity<>(new SuccessResponse(emailResponse.getMessage()), HttpStatus.BAD_REQUEST);
@@ -575,5 +608,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         redisUser.setRoles(new ArrayList<>(user.getRolesList()));
 
         redisUserDao.save(redisUser);
+    }
+
+    private void sendEmailNewPassword(String randomPassword, String email, String firstName){
+        //Email Sending of new Password Here
+        NotificationResponsePojo notification = new NotificationResponsePojo();
+        NamesPojo name = new NamesPojo();
+        name.setEmail(email);
+        name.setFullName(firstName);
+        List<NamesPojo> names = new ArrayList<>();
+        names.add(name);
+        DataPojo dataPojo = new DataPojo();
+        String message = String.format("<h3>Hello %s </h3><br> <p> Kindly Use the password below to login to the System, " +
+                        "ensure you change it.</p> <br> <h4 style=\"font-weight:bold\"> %s </h4>",
+                firstName, randomPassword);
+        dataPojo.setMessage(message);
+        dataPojo.setNames(names);
+        notification.setData(dataPojo);
+        notification.setEventType("EMAIL");
+        notification.setInitiator(email);
+        CompletableFuture.runAsync(() -> notificationProxy.sendEmail(notification));
     }
 }

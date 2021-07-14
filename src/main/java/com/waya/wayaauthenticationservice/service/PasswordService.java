@@ -1,8 +1,8 @@
 package com.waya.wayaauthenticationservice.service;
 
 import com.waya.wayaauthenticationservice.pojo.password.PasswordPojo;
-import com.waya.wayaauthenticationservice.pojo.password.PinPojo;
-import com.waya.wayaauthenticationservice.pojo.password.PinPojo2;
+import com.waya.wayaauthenticationservice.pojo.password.NewPinPojo;
+import com.waya.wayaauthenticationservice.pojo.password.ChangePINPojo;
 import com.waya.wayaauthenticationservice.pojo.password.ResetPasswordPojo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -10,22 +10,25 @@ import org.springframework.security.access.prepost.PreAuthorize;
 public interface PasswordService {
 
     @PreAuthorize(value = "@userSecurity.useHierarchy(#passwordPojo.email, authentication) or hasRole('ADMIN')")
-    ResponseEntity<?> setForgotPassword(PasswordPojo passwordPojo);
+    ResponseEntity<?> changePassword(PasswordPojo passwordPojo);
 
     @PreAuthorize(value = "@userSecurity.useHierarchy(#email, authentication) or hasRole('ADMIN')")
-    ResponseEntity<?> sendPasswordResetOTP(String email, String baseUrl);
+    ResponseEntity<?> sendPasswordResetOTPByEmail(String email, String baseUrl);
+
+    ResponseEntity<?> sendResetOTPByPhoneNumber(String phoneNumber);
 
     @PreAuthorize(value = "@userSecurity.useHierarchy(#passwordPojo.email, authentication) or hasRole('ADMIN')")
     ResponseEntity<?> resetPassword(ResetPasswordPojo passwordPojo);
 
     @PreAuthorize(value = "@userSecurity.useHierarchy(#email, authentication) or hasRole('ADMIN')")
-    ResponseEntity<?> forgotPin(String email);
+    ResponseEntity<?> sendPinResetOTPByEmail(String email, String redirectUrl);
 
-    ResponseEntity<?> createPin(PinPojo pinPojo);
+    @PreAuthorize(value = "@userSecurity.useHierarchy(#pinPojo.phoneOrEmail, authentication)")
+    ResponseEntity<?> createPin(NewPinPojo pinPojo);
 
-    ResponseEntity<?> changePin(PinPojo2 pinPojo);
+    ResponseEntity<?> changePin(ChangePINPojo pinPojo);
 
-    ResponseEntity<?> forgotPin(PinPojo pinPojo);
+    ResponseEntity<?> changeForgotPIN(NewPinPojo pinPojo);
 
     ResponseEntity<?> validatePin(Long userId, int pin);
 

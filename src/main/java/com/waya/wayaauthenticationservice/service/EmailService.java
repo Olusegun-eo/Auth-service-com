@@ -10,7 +10,7 @@ public interface EmailService {
 
     boolean sendAcctVerificationEmailToken(String baseUrl, @Valid @Email String email);
 
-    EmailVerificationResponse verifyEmailToken( @Valid @Email String email, Integer otp);
+    EmailVerificationResponse verifyEmailToken(@Valid @Email String email, Integer otp);
 
     OTPBase generateEmailToken(@Valid @Email String email);
 }

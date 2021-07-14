@@ -6,35 +6,37 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 
-public class ResetPasswordPojo {
+public class ChangePINPojo {
 
-    @NotNull
-    private int otp;
+    @NotBlank(message = "oldPin cannot be blank or null")
+    @Size(message = "Should be of size {}", min = 4, max = 4)
+    private String oldPin;
 
-    @NotBlank(message = "NewPassword cannot be blank")
-    private String newPassword;
+    @NotBlank(message = "newPin cannot be blank or null")
+    @Size(message = "Should be of size {}", min = 4, max = 4)
+    private String newPin;
 
     @NotBlank(message = "Field cannot be blank or Null")
     @CustomValidator(message = "phoneOrEmail field has to be either a Phone or an Email", type = Type.EMAIL_OR_PHONENUMBER)
     private String phoneOrEmail;
 
-    public int getOtp() {
-        return otp;
+    public String getOldPin() {
+        return oldPin;
     }
 
-    public void setOtp(int otp) {
-        this.otp = otp;
+    public void setOldPin(String oldPin) {
+        this.oldPin = oldPin.replaceAll("\\s+", "").trim();
     }
 
-    public String getNewPassword() {
-        return newPassword;
+    public String getNewPin() {
+        return newPin;
     }
 
-    public void setNewPassword(String newPassword) {
-        this.newPassword = newPassword;
+    public void setNewPin(String newPin) {
+        this.newPin = newPin.replaceAll("\\s+", "").trim();
     }
 
     public String getPhoneOrEmail() {

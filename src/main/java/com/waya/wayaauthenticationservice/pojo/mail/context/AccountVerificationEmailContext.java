@@ -1,10 +1,9 @@
 package com.waya.wayaauthenticationservice.pojo.mail.context;
 
-import com.waya.wayaauthenticationservice.entity.Profile;
-import com.waya.wayaauthenticationservice.entity.Users;
-
-import com.waya.wayaauthenticationservice.pojo.mail.AbstractEmailContext;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.pojo.mail.AbstractEmailContext;
 
 public class AccountVerificationEmailContext extends AbstractEmailContext {
 

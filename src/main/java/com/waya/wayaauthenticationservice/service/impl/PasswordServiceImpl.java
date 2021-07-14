@@ -1,43 +1,39 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
+
+import com.waya.wayaauthenticationservice.pojo.mail.context.PinResetContext;
+import com.waya.wayaauthenticationservice.response.*;
+import com.waya.wayaauthenticationservice.service.SMSTokenService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.waya.wayaauthenticationservice.entity.OTPBase;
 import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordResetContext;
-import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
-import com.waya.wayaauthenticationservice.pojo.notification.NamesPojo;
-import com.waya.wayaauthenticationservice.pojo.notification.NotificationResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.password.PasswordPojo;
-import com.waya.wayaauthenticationservice.pojo.password.PinPojo;
-import com.waya.wayaauthenticationservice.pojo.password.PinPojo2;
+import com.waya.wayaauthenticationservice.pojo.password.NewPinPojo;
+import com.waya.wayaauthenticationservice.pojo.password.ChangePINPojo;
 import com.waya.wayaauthenticationservice.pojo.password.ResetPasswordPojo;
-import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
-import com.waya.wayaauthenticationservice.repository.OTPRepository;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.response.EmailVerificationResponse;
-import com.waya.wayaauthenticationservice.response.ErrorResponse;
-import com.waya.wayaauthenticationservice.response.ResponsePojo;
-
-import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.service.EmailService;
 import com.waya.wayaauthenticationservice.service.MailService;
 import com.waya.wayaauthenticationservice.service.PasswordService;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
-import static com.waya.wayaauthenticationservice.util.Constant.VERIFY_RESET_TOKEN_MESSAGE;
+import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
 
 @Service
 @AllArgsConstructor
@@ -45,6 +41,7 @@ import static com.waya.wayaauthenticationservice.util.Constant.VERIFY_RESET_TOKE
 public class PasswordServiceImpl implements PasswordService {
 
     private final EmailService emailService;
+    private final SMSTokenService smsTokenService;
     private final UserRepository usersRepo;
     private final ProfileRepository profileRepo;
     private final MailService mailService;
@@ -52,12 +49,12 @@ public class PasswordServiceImpl implements PasswordService {
     private AuthenticatedUserFacade authenticatedUserFacade;
 
     @Override
-    public ResponseEntity<?> setForgotPassword(PasswordPojo passPojo) {
+    public ResponseEntity<?> changePassword(PasswordPojo passPojo) {
         try {
-            Users user = usersRepo.findByEmailIgnoreCase(passPojo.getEmail()).orElse(null);
+            Users user = usersRepo.findByEmailOrPhoneNumber(passPojo.getPhoneOrEmail()).orElse(null);
             if (user == null) {
                 return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
-                        + " For User with email: " + passPojo.getEmail(), null), HttpStatus.BAD_REQUEST);
+                        + " For User with input: " + passPojo.getPhoneOrEmail(), null), HttpStatus.BAD_REQUEST);
             }
             boolean isPasswordMatched = passwordEncoder.matches(passPojo.getOldPassword(), user.getPassword());
             if (!isPasswordMatched) {
@@ -74,7 +71,42 @@ public class PasswordServiceImpl implements PasswordService {
     }
 
     @Override
-    public ResponseEntity<?> sendPasswordResetOTP(String email, String baseUrl) {
+    public ResponseEntity<?> resetPassword(ResetPasswordPojo passPojo) {
+        try {
+            Users user = usersRepo.findByEmailOrPhoneNumber(passPojo.getPhoneOrEmail()).orElse(null);
+            if (user == null) {
+                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
+                        + " For User with email: " + passPojo.getPhoneOrEmail(), null), HttpStatus.BAD_REQUEST);
+            }
+
+            Map<String, Object> map = doValidations(passPojo.getPhoneOrEmail(), String.valueOf(passPojo.getOtp()));
+            if(!Boolean.valueOf(map.get("success").toString())){
+                String errorMessage = ErrorMessages.NOT_VALID.getErrorMessage()
+                        .replace("placeholder", "token: " + passPojo.getOtp())
+                        + "for: " + passPojo.getPhoneOrEmail() + ". Message is: "
+                        + map.get("message").toString();
+                return new ResponseEntity<>(new ErrorResponse(errorMessage),
+                        HttpStatus.BAD_REQUEST);
+            }
+
+            String newPassword = passwordEncoder.encode(passPojo.getNewPassword());
+            user.setPassword(newPassword);
+            user.setAccountStatus(1);
+
+            usersRepo.save(user);
+            return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private Integer generateEmailOTP(String email) {
+        OTPBase otpBase = this.emailService.generateEmailToken(email);
+        return otpBase.getCode();
+    }
+
+    @Override
+    public ResponseEntity<?> sendPasswordResetOTPByEmail(String email, String baseUrl) {
         try {
             Users user = usersRepo.findByEmailIgnoreCase(email).orElse(null);
             if (user == null)
@@ -87,7 +119,7 @@ public class PasswordServiceImpl implements PasswordService {
                         + " For Profile with userId: " + user.getId(), null), HttpStatus.BAD_REQUEST);
 
             PasswordResetContext emailContext = new PasswordResetContext();
-            Integer otpToken = generateOTP(email);
+            Integer otpToken = generateEmailOTP(email);
             emailContext.init(profile);
             emailContext.redirectTo(baseUrl);
             emailContext.seToken(String.valueOf(otpToken));
@@ -101,29 +133,79 @@ public class PasswordServiceImpl implements PasswordService {
         }
     }
 
-    private Integer generateOTP(String email) {
-        OTPBase otpBase = this.emailService.generateEmailToken(email);
-        return otpBase.getCode();
+    @Override
+    public ResponseEntity<?> sendResetOTPByPhoneNumber(String phoneNumber) {
+        try {
+            Users user = usersRepo.findByPhoneNumber(phoneNumber).orElse(null);
+            if (user == null)
+                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
+                        + " For User with phoneNumber: " + phoneNumber, null), HttpStatus.BAD_REQUEST);
+
+            Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
+            if (profile == null)
+                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
+                        + " For Profile with userId: " + user.getId(), null), HttpStatus.BAD_REQUEST);
+
+            // Send the Phone Number
+            CompletableFuture.runAsync(() -> this.smsTokenService.sendSMSOTP(phoneNumber, user.getName()));
+
+            return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
+        } catch (Exception ex) {
+            log.error("An Error Occurred: {}", ex.getMessage());
+            throw new CustomException(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+        }
     }
 
     @Override
-    public ResponseEntity<?> resetPassword(ResetPasswordPojo passPojo) {
+    public ResponseEntity<?> sendPinResetOTPByEmail(String email, String redirectUrl) {
         try {
-            Users user = usersRepo.findByEmailIgnoreCase(passPojo.getEmail()).orElse(null);
+            Users user = usersRepo.findByEmailIgnoreCase(email).orElse(null);
+            if (user == null)
+                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
+                        + " For User with email: " + email, null), HttpStatus.BAD_REQUEST);
+
+            Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
+            if (profile == null)
+                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
+                        + " For Profile with userId: " + user.getId(), null), HttpStatus.BAD_REQUEST);
+
+            PinResetContext emailContext = new PinResetContext();
+            Integer otpToken = generateEmailOTP(email);
+            emailContext.init(profile);
+            emailContext.redirectTo(redirectUrl);
+            emailContext.seToken(String.valueOf(otpToken));
+            // Send the Mail
+            CompletableFuture.runAsync(() -> this.mailService.sendMail(emailContext));
+
+            return new ResponseEntity<>(new SuccessResponse("Email for Pin Reset has been sent"), HttpStatus.OK);
+        } catch (Exception ex) {
+            log.error("An Error Occurred: {}", ex.getMessage());
+            throw new CustomException(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> changeForgotPIN(NewPinPojo pinPojo) {
+        try {
+            if(pinPojo.getOtp().isBlank())
+                return new ResponseEntity<>(new ErrorResponse("Kindly pass in a Pin"), HttpStatus.BAD_REQUEST);
+
+            Users user = usersRepo.findByEmailOrPhoneNumber(pinPojo.getPhoneOrEmail()).orElse(null);
             if (user == null) {
                 return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
-                        + " For User with email: " + passPojo.getEmail(), null), HttpStatus.BAD_REQUEST);
+                        + " For User with email: " + pinPojo.getPhoneOrEmail(), null), HttpStatus.BAD_REQUEST);
             }
-            EmailVerificationResponse emailVerificationResponse =
-                    this.emailService.verifyEmailToken(passPojo.getEmail(), passPojo.getOtp());
-            if(emailVerificationResponse == null || !emailVerificationResponse.isValid())
-                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NOT_VALID.getErrorMessage()
-                        .replace("placeholder", "token: " + passPojo.getOtp())),
+            Map<String, Object> map = doValidations(pinPojo.getPhoneOrEmail(), pinPojo.getOtp());
+            if(!Boolean.valueOf(map.get("success").toString())){
+                String errorMessage = ErrorMessages.NOT_VALID.getErrorMessage()
+                        .replace("placeholder", "token: " + pinPojo.getOtp())
+                        + "for: " + pinPojo.getPhoneOrEmail() + ". Message is: "
+                        + map.get("message").toString();
+                return new ResponseEntity<>(new ErrorResponse(errorMessage),
                         HttpStatus.BAD_REQUEST);
-
-            String newPassword = passwordEncoder.encode(passPojo.getNewPassword());
-            user.setPassword(newPassword);
-            user.setAccountStatus(1);
+            }
+            String newPin = passwordEncoder.encode(pinPojo.getPin());
+            user.setPinHash(newPin);
 
             usersRepo.save(user);
             return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);
@@ -132,19 +214,33 @@ public class PasswordServiceImpl implements PasswordService {
         }
     }
 
-    @Override
-    public ResponseEntity<?> forgotPin(String email) {
-        try {
+    private Map<String, Object> doValidations(String phoneOrEmail, String otp){
+        Matcher matcher = emailPattern.matcher(phoneOrEmail);
+        boolean isEmail = matcher.matches();
+        String message;
+        boolean success;
+        Map<String, Object> map = new HashMap<>();
+        if (isEmail) {
+            EmailVerificationResponse emailVerificationResponse =
+                    this.emailService.verifyEmailToken(phoneOrEmail, Integer.parseInt(otp));
 
-        } catch (Exception ex) {
+            success = emailVerificationResponse.isValid();
+            message = emailVerificationResponse.getMessage();
+        } else {
+            ApiResponse<OTPVerificationResponse> profileResponse =
+                    this.smsTokenService.verifySMSOTP(phoneOrEmail, Integer.parseInt(otp));
 
+            success = profileResponse.getData().isValid();
+            message = profileResponse.getData().getMessage();
         }
-        return null;
+        map.put("success", success);
+        map.put("message", message);
+        return map;
     }
 
     @Override
-    public ResponseEntity<?> changePin(PinPojo2 pinPojo) {
-        Users user = usersRepo.findByEmailIgnoreCase(pinPojo.getEmail()).orElse(null);
+    public ResponseEntity<?> changePin(ChangePINPojo pinPojo) {
+        Users user = usersRepo.findByEmailOrPhoneNumber(pinPojo.getPhoneOrEmail()).orElse(null);
         if (user == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
         }
@@ -162,32 +258,20 @@ public class PasswordServiceImpl implements PasswordService {
     }
 
     @Override
-    public ResponseEntity<?> forgotPin(PinPojo pinPojo) {
-        Users user = usersRepo.findByEmailIgnoreCase(pinPojo.getEmail()).orElse(null);
-        if (user == null) {
-            return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.NOT_FOUND);
-        }
-        user.setPinHash(passwordEncoder.encode(String.valueOf(pinPojo.getPin())));
-        try {
-            usersRepo.save(user);
-            return new ResponseEntity<>(new SuccessResponse("Pin Changed.", null), HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @Override
-    public ResponseEntity<?> createPin(PinPojo pinPojo) {
+    public ResponseEntity<?> createPin(NewPinPojo pinPojo) {
         try {
             // Check if email exists
-            Users existingEmail = usersRepo.findById(pinPojo.getUserId()).orElse(null);
-
+            Users existingEmail = usersRepo.findByEmailOrPhoneNumber(pinPojo.getPhoneOrEmail()).orElse(null);
             if (existingEmail != null) {
-                if (String.valueOf(pinPojo.getPin()).length() != 4) {
+                if (pinPojo.getPin().length() != 4) {
                     return new ResponseEntity<>(new ErrorResponse("Transaction pin should be exactly 4 Digits"),
                             HttpStatus.BAD_REQUEST);
                 }
-                existingEmail.setPinHash(passwordEncoder.encode(String.valueOf(pinPojo.getPin())));
+                if (existingEmail.isPinCreated()) {
+                    return new ResponseEntity<>(new ErrorResponse("Transaction pin exists already"),
+                            HttpStatus.BAD_REQUEST);
+                }
+                existingEmail.setPinHash(passwordEncoder.encode(pinPojo.getPin()));
                 existingEmail.setPinCreated(true);
                 usersRepo.save(existingEmail);
                 return new ResponseEntity<>(new SuccessResponse("Transaction pin created successfully.", null),

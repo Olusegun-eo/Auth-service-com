@@ -10,7 +10,7 @@ import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-@SuppressWarnings("ALL")
+@SuppressWarnings("all")
 public interface OTPRepository extends JpaRepository<OTPBase, Long> {
 
     @Transactional

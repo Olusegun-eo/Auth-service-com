@@ -1,11 +1,12 @@
 package com.waya.wayaauthenticationservice.pojo.password;
 
-import io.swagger.annotations.ApiModelProperty;
-import lombok.Getter;
-import lombok.Setter;
-
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
+
+import com.waya.wayaauthenticationservice.util.CustomValidator;
+import com.waya.wayaauthenticationservice.util.Type;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -14,8 +15,9 @@ public class PasswordPojo {
     @NotBlank(message = "NewPassword cannot be blank")
     private String newPassword;
 
-    @Email(message = "Must be a valid Email")
-    private String email;
+    @NotBlank(message = "Field cannot be blank or Null")
+    @CustomValidator(message = "phoneOrEmail field has to be either a Phone or an Email", type = Type.EMAIL_OR_PHONENUMBER)
+    private String phoneOrEmail;
 
     @NotBlank(message = "OldPassword cannot be blank")
     private String oldPassword;

@@ -15,6 +15,8 @@ import javax.validation.constraints.NotNull;
 public class OTPPojo {
 
     @NotBlank(message = "PhoneNumber or Email Cannot be blank")
+    @CustomValidator(message = "OTP Passed must be either Email or PhoneNumber",
+            type = Type.EMAIL_OR_PHONENUMBER)
     private String phoneOrEmail;
 
     @NotBlank(message = "OTP Cannot be blank")

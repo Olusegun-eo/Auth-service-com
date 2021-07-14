@@ -45,7 +45,7 @@ public class AuthenticationController {
             MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<?> createCorporate(@Valid @RequestBody CorporateUserPojo user, HttpServletRequest request,
                                              Device device) {
-        return authenticationServiceImpl.createCorporateUser(user, request, device);
+        return authenticationServiceImpl.createCorporateUser(user, request, device, false);
     }
 
     @ApiOperation(value = "Verify Account with OTP", tags = {"AUTH"})

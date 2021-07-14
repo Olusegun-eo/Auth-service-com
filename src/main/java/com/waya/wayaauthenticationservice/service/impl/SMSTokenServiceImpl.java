@@ -1,28 +1,36 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import static com.waya.wayaauthenticationservice.util.Constant.INVALID_OTP;
+import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE;
+import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_2;
+import static com.waya.wayaauthenticationservice.util.Constant.OTP_ERROR_MESSAGE;
+import static com.waya.wayaauthenticationservice.util.Constant.OTP_SUCCESS_MESSAGE;
+import static com.waya.wayaauthenticationservice.util.Constant.SMS_TOPIC;
+import static com.waya.wayaauthenticationservice.util.Constant.TWILIO_PROVIDER;
+import static com.waya.wayaauthenticationservice.util.Constant.WAYAPAY;
+import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateCode;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.entity.OTPBase;
 import com.waya.wayaauthenticationservice.enums.StreamsEventType;
 import com.waya.wayaauthenticationservice.repository.OTPRepository;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
+import com.waya.wayaauthenticationservice.response.ApiResponse;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
 import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
 import com.waya.wayaauthenticationservice.service.SMSTokenService;
 import com.waya.wayaauthenticationservice.streams.RecipientsSMS;
 import com.waya.wayaauthenticationservice.streams.StreamDataSMS;
 import com.waya.wayaauthenticationservice.streams.StreamPayload;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Optional;
-
-import static com.waya.wayaauthenticationservice.util.Constant.*;
-import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateCode;
 
 @Component
 public class SMSTokenServiceImpl implements SMSTokenService {
@@ -31,10 +39,6 @@ public class SMSTokenServiceImpl implements SMSTokenService {
 
     private final OTPRepository otpRepository;
     private final MessageQueueProducer messageQueueProducer;
-    private final ProfileRepository profileRepository;
-
-
-    private final Gson gson;
 
     @Autowired
     public SMSTokenServiceImpl(OTPRepository otpRepository,
@@ -43,8 +47,6 @@ public class SMSTokenServiceImpl implements SMSTokenService {
     ) {
         this.otpRepository = otpRepository;
         this.messageQueueProducer = messageQueueProducer;
-        this.profileRepository = profileRepository;
-        this.gson = gson;
     }
 
     /**
@@ -53,7 +55,8 @@ public class SMSTokenServiceImpl implements SMSTokenService {
      * @param phoneNumber user phone number
      * @return OTPBase
      */
-    private OTPBase generateSMSOTP(String phoneNumber) {
+    @Override
+    public OTPBase generateSMSOTP(String phoneNumber) {
         OTPBase otp = new OTPBase();
         otp.setCode(generateCode());
         otp.setPhoneNumber(phoneNumber);
@@ -115,7 +118,7 @@ public class SMSTokenServiceImpl implements SMSTokenService {
         try {
             Optional<OTPBase> otpBase = otpRepository.getOtpDetailsViaPhoneNumber(phoneNumber, otp);
             if (otpBase.isPresent()) {
-                var token = otpBase.get();
+                OTPBase token = otpBase.get();
                 LocalDateTime newTokenExpiryDate = token.getExpiryDate().minusHours(1);
                 if (token.isValid()) {
                     otpRepository.updateToken(phoneNumber, token.getId(), newTokenExpiryDate, false);
