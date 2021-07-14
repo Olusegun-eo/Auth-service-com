@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.waya.wayaauthenticationservice.model.AuthProvider;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
@@ -15,6 +16,7 @@ import java.util.Objects;
 
 @Data
 @Entity
+@ToString
 @Table(name = "m_users", uniqueConstraints = {
         @UniqueConstraint(name = "UniqueEmailAndPhoneNumberAndDelFlg", columnNames = {"phone_number", "email", "is_deleted"})})
 public class Users implements Serializable {

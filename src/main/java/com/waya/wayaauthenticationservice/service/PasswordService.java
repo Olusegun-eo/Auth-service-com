@@ -12,12 +12,10 @@ public interface PasswordService {
     @PreAuthorize(value = "@userSecurity.useHierarchy(#passwordPojo.email, authentication) or hasRole('ADMIN')")
     ResponseEntity<?> changePassword(PasswordPojo passwordPojo);
 
-    @PreAuthorize(value = "@userSecurity.useHierarchy(#email, authentication) or hasRole('ADMIN')")
     ResponseEntity<?> sendPasswordResetOTPByEmail(String email, String baseUrl);
 
     ResponseEntity<?> sendResetOTPByPhoneNumber(String phoneNumber);
 
-    @PreAuthorize(value = "@userSecurity.useHierarchy(#passwordPojo.email, authentication) or hasRole('ADMIN')")
     ResponseEntity<?> resetPassword(ResetPasswordPojo passwordPojo);
 
     @PreAuthorize(value = "@userSecurity.useHierarchy(#email, authentication) or hasRole('ADMIN')")

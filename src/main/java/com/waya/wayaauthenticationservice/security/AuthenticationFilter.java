@@ -16,8 +16,10 @@ import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.waya.wayaauthenticationservice.exception.CustomException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -100,14 +102,16 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	@Override
 	protected void successfulAuthentication(HttpServletRequest req, HttpServletResponse res, FilterChain chain,
 			Authentication auth) throws IOException, SignatureException {
+		// Inspect Here
+		Users user = ((UserPrincipal) auth.getPrincipal()).getUser().orElseThrow(() ->
+				new CustomException("Error Fetching User Object", HttpStatus.UNPROCESSABLE_ENTITY));
 
-		String userName = ((UserPrincipal) auth.getPrincipal()).getName();
+		log.info("Signed in User ::: {}", user);
+		String userName = user.getEmail();
 
 		String token = Jwts.builder().setSubject(userName)
 				.setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))
 				.signWith(SignatureAlgorithm.HS256, SecurityConstants.getSecret()).compact();
-
-		Users user = ((UserPrincipal) auth.getPrincipal()).getUser().orElse(null);
 
 		LoginResponsePojo loginResponsePojo = new LoginResponsePojo();
 		if(user.getAccountStatus() != -1){

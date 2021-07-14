@@ -60,6 +60,16 @@ public class PasswordServiceImpl implements PasswordService {
             if (!isPasswordMatched) {
                 return new ResponseEntity<>(new ErrorResponse("Incorrect Old Password"), HttpStatus.BAD_REQUEST);
             }
+            Map<String, Object> map = doValidations(passPojo.getPhoneOrEmail(), String.valueOf(passPojo.getOtp()));
+            boolean success = Boolean.valueOf(map.get("success").toString());
+            if(!success){
+                String errorMessage = ErrorMessages.NOT_VALID.getErrorMessage()
+                        .replace("placeholder", "token: " + passPojo.getOtp())
+                        + "for: " + passPojo.getPhoneOrEmail() + ". Message is: "
+                        + map.get("message").toString();
+                return new ResponseEntity<>(new ErrorResponse(errorMessage),
+                        HttpStatus.BAD_REQUEST);
+            }
             String newPassword = passwordEncoder.encode(passPojo.getNewPassword());
             user.setPassword(newPassword);
             user.setAccountStatus(1);
@@ -247,6 +257,15 @@ public class PasswordServiceImpl implements PasswordService {
         boolean isPinMatched = passwordEncoder.matches(String.valueOf(pinPojo.getOldPin()), user.getPinHash());
         if (!isPinMatched) {
             return new ResponseEntity<>(new ErrorResponse("Incorrect Old Pin"), HttpStatus.BAD_REQUEST);
+        }
+        Map<String, Object> map = doValidations(pinPojo.getPhoneOrEmail(), pinPojo.getOtp());
+        if(!Boolean.valueOf(map.get("success").toString())){
+            String errorMessage = ErrorMessages.NOT_VALID.getErrorMessage()
+                    .replace("placeholder", "token: " + pinPojo.getOtp())
+                    + "for: " + pinPojo.getPhoneOrEmail() + ". Message is: "
+                    + map.get("message").toString();
+            return new ResponseEntity<>(new ErrorResponse(errorMessage),
+                    HttpStatus.BAD_REQUEST);
         }
         user.setPinHash(passwordEncoder.encode(String.valueOf(pinPojo.getNewPin())));
         try {

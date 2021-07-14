@@ -12,6 +12,9 @@ import lombok.Setter;
 @Setter
 public class PasswordPojo {
 
+    @NotBlank(message = "otp cannot be blank")
+    private String otp;
+
     @NotBlank(message = "NewPassword cannot be blank")
     private String newPassword;
 

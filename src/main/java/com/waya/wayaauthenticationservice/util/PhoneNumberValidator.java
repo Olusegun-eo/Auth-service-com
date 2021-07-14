@@ -18,7 +18,8 @@ public class PhoneNumberValidator implements ConstraintValidator<ValidPhone, Str
         if(phoneNumberField == null)
             return true;
 
-        return numericPattern.matcher(phoneNumberField).find() && phoneNumberField.startsWith("234")
-                && phoneNumberField.length() >= 11 && phoneNumberField.length() < 14;
+        return numericPattern.matcher(phoneNumberField).find()
+                && phoneNumberField.startsWith("234")
+                && phoneNumberField.length() == 13;
     }
 }

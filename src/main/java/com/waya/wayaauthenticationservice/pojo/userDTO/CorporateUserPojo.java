@@ -6,6 +6,7 @@ import java.util.Objects;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -38,6 +39,7 @@ public class CorporateUserPojo extends BaseUserPojo {
 	@NotBlank(message = "Business Type Cannot be null or blank")
 	private String businessType;
 
+	@JsonIgnore
 	private Long userId = 0L;
 
 	@Override

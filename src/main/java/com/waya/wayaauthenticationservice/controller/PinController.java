@@ -3,9 +3,11 @@ package com.waya.wayaauthenticationservice.controller;
 import com.waya.wayaauthenticationservice.pojo.password.ChangePINPojo;
 import com.waya.wayaauthenticationservice.pojo.password.NewPinPojo;
 import com.waya.wayaauthenticationservice.service.PasswordService;
+import com.waya.wayaauthenticationservice.util.ValidPhone;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -18,6 +20,7 @@ import javax.validation.constraints.Email;
         @Tag(name = "PIN Resource", description = "REST API for PIN Service.")
 })
 @CrossOrigin
+@Validated
 public class PinController {
 
     @Autowired
@@ -49,17 +52,17 @@ public class PinController {
 
     @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
     @ApiOperation(value = "Send OTP to email, this is for forgot pin Post Request", notes = "Send OTP to email, this is for forgot pin post Request")
-    @GetMapping("/forgot-pin/{email}/{redirectUrl}")
+    @GetMapping("/forgot-pin/byEmail")
     @CrossOrigin
-    public ResponseEntity<?> forgotPinRequestEmail(@Valid @Email @PathVariable("email") String email, @PathVariable("redirectUrl") String redirectUrl) {
+    public ResponseEntity<?> forgotPinRequestEmail(@RequestParam("email") @Email String email, @RequestParam("redirectUrl") String redirectUrl) {
         return passwordService.sendPinResetOTPByEmail(email, redirectUrl);
     }
 
     @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
     @ApiOperation(value = "Send OTP to Phone, this is for forgot pin post Request", notes = "Send OTP to PhoneNumber, this is for forgot pin post Request")
-    @GetMapping("/forgot-pin/{phoneNumber}")
+    @GetMapping("/forgot-pin/byPhone")
     @CrossOrigin
-    public ResponseEntity<?> forgotPinRequestPhone(@PathVariable("phoneNumber") String phoneNumber) {
+    public ResponseEntity<?> forgotPinRequestPhone(@RequestParam("phoneNumber") @ValidPhone String phoneNumber) {
         return passwordService.sendResetOTPByPhoneNumber(phoneNumber);
     }
 
@@ -73,17 +76,17 @@ public class PinController {
 
     @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
     @ApiOperation(value = "Send OTP to email, this is for Change pin post Request", notes = "Send OTP to email, this is for Change pin post Request")
-    @GetMapping("/change-pin/{email}/{redirectUrl}")
+    @GetMapping("/change-pin/byEmail")
     @CrossOrigin
-    public ResponseEntity<?> requestChangePinEmail(@Valid @Email @PathVariable("email") String email, @PathVariable("redirectUrl") String redirectUrl) {
+    public ResponseEntity<?> requestChangePinEmail(@RequestParam("email") @Email String email, @RequestParam("redirectUrl") String redirectUrl) {
         return passwordService.sendPinResetOTPByEmail(email, redirectUrl);
     }
 
     @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
     @ApiOperation(value = "Send OTP to email, this is for Change pin post Request", notes = "Send OTP to email, this is for Change pin post Request")
-    @GetMapping("/change-pin/{phoneNumber}")
+    @GetMapping("/change-pin/byPhone")
     @CrossOrigin
-    public ResponseEntity<?> requestChangePinPhone(@PathVariable("phoneNumber") String phoneNumber) {
+    public ResponseEntity<?> requestChangePinPhone(@RequestParam("phoneNumber") @ValidPhone String phoneNumber) {
         return passwordService.sendResetOTPByPhoneNumber(phoneNumber);
     }
 

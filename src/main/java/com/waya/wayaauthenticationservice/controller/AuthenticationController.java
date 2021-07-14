@@ -7,21 +7,25 @@ import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
 import com.waya.wayaauthenticationservice.service.UserService;
+import com.waya.wayaauthenticationservice.util.ValidPhone;
 import io.swagger.annotations.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import javax.validation.constraints.Email;
 import javax.ws.rs.Produces;
 
 @RestController
 @RequestMapping("/api/v1/auth")
 @Tag(name = "AUTH", description = "User Authentication Service API")
+@Validated
 public class AuthenticationController {
 
     @Autowired
@@ -51,21 +55,21 @@ public class AuthenticationController {
     @ApiOperation(value = "Verify Account with OTP", tags = {"AUTH"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping("/verify-otp")
-    public ResponseEntity<?> verifyAccount(@RequestBody OTPPojo otpPojo) {
+    public ResponseEntity<?> verifyAccount(@Valid @RequestBody OTPPojo otpPojo) {
         return authenticationServiceImpl.verifyAccountCreation(otpPojo);
     }
 
     @ApiOperation(value = "Verify phone number with OTP", tags = {"AUTH"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping("/verify-phone")
-    public ResponseEntity<?> verifyOTP(@RequestBody OTPPojo otpPojo) {
+    public ResponseEntity<?> verifyOTP(@Valid @RequestBody OTPPojo otpPojo) {
         return authenticationServiceImpl.verifyPhoneUsingOTP(otpPojo);
     }
 
     @ApiOperation(value = "Verify email", tags = {"AUTH"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping("/verify-email")
-    public ResponseEntity<?> verifyEmail(@RequestBody EmailPojo emailPojo) {
+    public ResponseEntity<?> verifyEmail(@Valid @RequestBody EmailPojo emailPojo) {
         return authenticationServiceImpl.verifyEmail(emailPojo);
     }
 
@@ -98,14 +102,14 @@ public class AuthenticationController {
     @ApiOperation(value = "Resend OTP to Phone", tags = {"AUTH"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/resend-otp/{phoneNumber}")
-    public ResponseEntity<?> resendOTPPhone(@PathVariable("phoneNumber") String phoneNumber) {
+    public ResponseEntity<?> resendOTPPhone(@PathVariable("phoneNumber") @ValidPhone String phoneNumber) {
         return authenticationServiceImpl.resendOTPPhone(phoneNumber);
     }
 
     @ApiOperation(value = "Resend Verification Email", tags = {"AUTH"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/resend-otp-mail/{email}")
-    public ResponseEntity<?> resendOTPEmail(@PathVariable String email, final HttpServletRequest request) {
+    public ResponseEntity<?> resendOTPEmail(@PathVariable @Email String email, final HttpServletRequest request) {
         return authenticationServiceImpl.resendVerificationMail(email, getBaseUrl(request));
     }
 

@@ -11,6 +11,9 @@ import javax.validation.constraints.Size;
 
 public class ChangePINPojo {
 
+    @NotBlank(message = "otp cannot be blank")
+    private String otp;
+
     @NotBlank(message = "oldPin cannot be blank or null")
     @Size(message = "Should be of size {}", min = 4, max = 4)
     private String oldPin;
@@ -45,5 +48,13 @@ public class ChangePINPojo {
 
     public void setPhoneOrEmail(String phoneOrEmail) {
         this.phoneOrEmail = phoneOrEmail.replaceAll("\\s+", "").trim();
+    }
+
+    public String getOtp() {
+        return otp;
+    }
+
+    public void setOtp(String otp) {
+        this.otp = otp;
     }
 }

@@ -1,26 +1,36 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import static com.waya.wayaauthenticationservice.util.Constant.VIRTUAL_ACCOUNT_TOPIC;
-import static com.waya.wayaauthenticationservice.util.Constant.WALLET_ACCOUNT_TOPIC;
-import static com.waya.wayaauthenticationservice.util.Constant.WAYAGRAM_PROFILE_TOPIC;
-import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.servlet.http.HttpServletRequest;
-
+import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
+import com.waya.wayaauthenticationservice.entity.CorporateUser;
+import com.waya.wayaauthenticationservice.entity.RedisUser;
+import com.waya.wayaauthenticationservice.entity.Roles;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
 import com.waya.wayaauthenticationservice.pojo.notification.NamesPojo;
 import com.waya.wayaauthenticationservice.pojo.notification.NotificationResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
+import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
+import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
+import com.waya.wayaauthenticationservice.proxy.WalletProxy;
+import com.waya.wayaauthenticationservice.repository.CorporateUserRepository;
+import com.waya.wayaauthenticationservice.repository.RedisUserDao;
+import com.waya.wayaauthenticationservice.repository.RolesRepository;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.response.*;
+import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
+import com.waya.wayaauthenticationservice.service.AuthenticationService;
+import com.waya.wayaauthenticationservice.service.EmailService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.service.SMSTokenService;
+import com.waya.wayaauthenticationservice.util.ReqIPUtils;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,46 +40,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
-import com.waya.wayaauthenticationservice.entity.CorporateUser;
-import com.waya.wayaauthenticationservice.entity.RedisUser;
-import com.waya.wayaauthenticationservice.entity.Roles;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.exception.ErrorMessages;
-import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
-import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.CreateAccountPojo;
-import com.waya.wayaauthenticationservice.pojo.others.DevicePojo;
-import com.waya.wayaauthenticationservice.pojo.others.EmailPojo;
-import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.ValidateUserPojo;
-import com.waya.wayaauthenticationservice.pojo.others.VirtualAccountPojo;
-import com.waya.wayaauthenticationservice.pojo.others.WalletPojo;
-import com.waya.wayaauthenticationservice.pojo.others.WayagramPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
-import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
-import com.waya.wayaauthenticationservice.proxy.WalletProxy;
-import com.waya.wayaauthenticationservice.repository.CorporateUserRepository;
-import com.waya.wayaauthenticationservice.repository.RedisUserDao;
-import com.waya.wayaauthenticationservice.repository.RolesRepository;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
-import com.waya.wayaauthenticationservice.response.EmailVerificationResponse;
-import com.waya.wayaauthenticationservice.response.ErrorResponse;
-import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
-import com.waya.wayaauthenticationservice.response.SuccessResponse;
-import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
-import com.waya.wayaauthenticationservice.service.AuthenticationService;
-import com.waya.wayaauthenticationservice.service.EmailService;
-import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.service.SMSTokenService;
-import com.waya.wayaauthenticationservice.util.ReqIPUtils;
+import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import lombok.extern.slf4j.Slf4j;
+import static com.waya.wayaauthenticationservice.util.Constant.*;
+import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
 
 @Service
 @Slf4j
@@ -83,12 +61,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     KafkaMessageProducer kafkaMessageProducer;
     @Autowired
     ProfileServiceDAO profileServiceDAO;
+    @Autowired
     private UserRepository userRepo;
     @Autowired
     private RolesRepository rolesRepo;
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
-
     @Autowired
     private RedisUserDao redisUserDao;
     @Autowired
@@ -97,15 +75,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private CorporateUserRepository corporateUserRepository;
     @Autowired
     private WalletProxy walletProxy;
-
     @Autowired
     private VirtualAccountProxy virtualAccountProxy;
     @Autowired
     private ReqIPUtils reqUtil;
-
     @Autowired
     private NotificationProxy notificationProxy;
-
     @Autowired
     private ModelMapper mapper;
     @Autowired
@@ -174,7 +149,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             if (adminAction) {
                 user.setActive(true);
                 user.setAccountStatus(-1);
-                CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(),mUser.getFirstName()));
+                CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
             }
             user.setPassword(passwordEncoder.encode(mUser.getPassword()));
             user.setRolesList(roleList);
@@ -220,7 +195,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
 
             List<Roles> roleList = new ArrayList<>(Arrays.asList(userRole, merchRole));
-
+            if (mUser.isAdmin()) {
+                Roles corpAdminRole = rolesRepo.findByName("ROLE_USER")
+                        .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+                roleList.add(corpAdminRole);
+            }
             final String ip = reqUtil.getClientIP(request);
             log.info("Request IP: " + ip);
 
@@ -252,7 +231,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             if (adminAction) {
                 user.setActive(true);
                 user.setAccountStatus(-1);
-                CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(),mUser.getFirstName()));
+                CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
             }
             user.setReferenceCode(mUser.getReferenceCode());
             user.setSurname(mUser.getSurname());
@@ -296,7 +275,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         createAccount.setLastName(coopUser.getSurname());
         createAccount.setMobileNo(coopUser.getPhoneNumber());
         createAccount.setSavingsProductId(1);
-        walletProxy.createCorporateAccount(createAccount);
+
+        CompletableFuture.runAsync(() -> walletProxy.createCorporateAccount(createAccount));
 
         // Implementation for internal calls begin here
         CorporateProfileRequest corporateProfileRequest = new CorporateProfileRequest();
@@ -320,8 +300,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         virtualAccountPojo.setAccountName(coopUser.getFirstName() + " " + coopUser.getSurname());
         virtualAccountPojo.setUserId(String.valueOf(userId));
 
-        ResponseEntity<String> response = virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token);
-        log.info("Response: {}", response.getBody());
+        CompletableFuture.runAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token));
     }
 
     public void createPrivateUser(Users user, String baseUrl) {
@@ -332,9 +311,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         virtualAccountPojo.setUserId(id);
 
         String token = generateToken(user);
-        ResponseEntity<String> response = virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token);
-
-        log.info("Response: {}", response.getBody());
+        CompletableFuture.runAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token));
 
         PersonalProfileRequest personalProfileRequest = new PersonalProfileRequest();
         personalProfileRequest.setEmail(user.getEmail());
@@ -610,7 +587,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         redisUserDao.save(redisUser);
     }
 
-    private void sendEmailNewPassword(String randomPassword, String email, String firstName){
+    private void sendEmailNewPassword(String randomPassword, String email, String firstName) {
         //Email Sending of new Password Here
         NotificationResponsePojo notification = new NotificationResponsePojo();
         NamesPojo name = new NamesPojo();

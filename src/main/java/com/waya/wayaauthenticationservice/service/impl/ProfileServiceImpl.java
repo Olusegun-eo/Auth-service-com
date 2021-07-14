@@ -217,10 +217,9 @@ public class ProfileServiceImpl implements ProfileService {
                         baseUrl, savedProfile.getEmail()));
 
                 //create waya gram profile
-                CompletableFuture.runAsync(() -> createWayagramProfile(savedProfile.getUserId(), savedProfile.getSurname()));
+                CompletableFuture.runAsync(() -> createWayagramProfile(savedProfile.getUserId(), savedProfile.getSurname(), fullName));
                 return new ApiResponse<>(null,
                         CREATE_PROFILE_SUCCESS_MSG, true, OK);
-
             } else {
                 //return the error
                 return validationCheck;
@@ -669,7 +668,7 @@ public class ProfileServiceImpl implements ProfileService {
      * @param userId
      * @param username
      */
-    private void createWayagramProfile(String userId, String username) {
+    private void createWayagramProfile(String userId, String username, String name) {
 
         log.info("Creating waya gram Profile  with userid .....{}", userId);
         try {
@@ -679,6 +678,7 @@ public class ProfileServiceImpl implements ProfileService {
             Map<String, Object> map = new HashMap<>();
             map.put("user_id", userId);
             map.put("username", username);
+            map.put("displayName", name);
             map.put("notPublic", false);
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
             ResponseEntity<String> response = restClient.postForEntity(getAddUrl, entity, String.class);
