@@ -256,7 +256,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         createAccount.setLastName(coopUser.getSurname());
         createAccount.setMobileNo(coopUser.getPhoneNumber());
         createAccount.setSavingsProductId(1);
-        walletProxy.createCorporateAccount(createAccount);
+        CompletableFuture.runAsync(() -> walletProxy.createCorporateAccount(createAccount));
 
         ProfilePojo2 profilePojo = new ProfilePojo2();
         profilePojo.setBusinessType(coopUser.getBusinessType());
@@ -275,8 +275,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         virtualAccountPojo.setAccountName(coopUser.getFirstName() + " " + coopUser.getSurname());
         virtualAccountPojo.setUserId(String.valueOf(userId));
 
-        ResponseEntity<String> response = virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token);
-        log.info("Response: {}", response.getBody());
+        CompletableFuture.runAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token));
 
         kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC, profilePojo);
         try {
@@ -300,9 +299,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         virtualAccountPojo.setUserId(id);
 
         String token = generateToken(user);
-        ResponseEntity<String> response = virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token);
+        CompletableFuture.runAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token));
 
-        log.info("Response: {}", response.getBody());
         // TODO: Confirm that the Number is important for Profile Service Call to Fly
         ProfilePojo profilePojo = new ProfilePojo(user.getEmail(), user.getFirstName(), user.getPhoneNumber(),
                 user.getSurname(), id, false);
