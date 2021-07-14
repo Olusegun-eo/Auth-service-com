@@ -565,7 +565,7 @@ public class UserServiceImpl implements UserService {
         DataPojo dataPojo = new DataPojo();
         String message = String.format("<h3>Hello %s </h3><br> <p> Kindly Use the password below to login to the System, " +
                         "ensure you change it.</p> <br> <h4 style=\"font-weight:bold\"> %s </h4>",
-                        firstName, randomPassword);
+                firstName, randomPassword);
         dataPojo.setMessage(message);
         dataPojo.setNames(names);
         notification.setData(dataPojo);

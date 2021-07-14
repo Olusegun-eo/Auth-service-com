@@ -144,7 +144,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setName(fullName);
             user.setRegDevicePlatform(dev.getPlatform());
             user.setRegDeviceType(dev.getDeviceType());
-            if (adminAction) user.setActive(true);
             user.setPassword(passwordEncoder.encode(mUser.getPassword()));
             user.setRolesList(roleList);
 
@@ -152,7 +151,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             if (regUser == null)
                 return new ResponseEntity<>(new ErrorResponse(ErrorMessages.COULD_NOT_INSERT_RECORD.getErrorMessage()),
                         HttpStatus.INTERNAL_SERVER_ERROR);
-
+            if (adminAction) {
+                user.setActive(true);
+                user.setAccountStatus(-1);
+                CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
+            }
             createPrivateUser(regUser);
 
             return new ResponseEntity<>(new SuccessResponse(
@@ -166,7 +169,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     @Transactional
-    public ResponseEntity<?> createCorporateUser(CorporateUserPojo mUser, HttpServletRequest request, Device device) {
+    public ResponseEntity<?> createCorporateUser(CorporateUserPojo mUser, HttpServletRequest request, Device device, boolean adminAction) {
 
         try {
             // Check if email exists
@@ -215,11 +218,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setSurname(mUser.getSurname());
             String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
             user.setName(fullName);
-
             Users regUser = userRepo.saveAndFlush(user);
             if (regUser == null)
                 return new ResponseEntity<>(new ErrorResponse(ErrorMessages.COULD_NOT_INSERT_RECORD.getErrorMessage()),
                         HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if (adminAction) {
+                user.setActive(true);
+                user.setAccountStatus(-1);
+                CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
+            }
 
             String token = generateToken(regUser);
             createCorporateUser(mUser, regUser.getId(), token);
@@ -440,7 +448,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     HttpStatus.BAD_REQUEST);
 
         if (user.isActive() && user.isEmailVerified())
-            return new ResponseEntity<>(new SuccessResponse("Account and Phone been Verified already.", null),
+            return new ResponseEntity<>(new SuccessResponse("Account and Email been Verified already.", null),
                     HttpStatus.CREATED);
 
         String url = PROFILE_SERVICE + "profile-service/email-verify/" + emailPojo.getEmail() + "/"
@@ -738,4 +746,27 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
         return requestBody;
     }
+
+    private void sendEmailNewPassword(String randomPassword, String email, String firstName){
+        //Email Sending of new Password Here
+        NotificationResponsePojo notification = new NotificationResponsePojo();
+        NamesPojo name = new NamesPojo();
+        name.setEmail(email);
+        name.setFullName(firstName);
+        List<NamesPojo> names = new ArrayList<>();
+        names.add(name);
+        DataPojo dataPojo = new DataPojo();
+        String message = String.format("<h3>Hello %s </h3><br> <p> Kindly Use the password below to login to the System, " +
+                        "ensure you change it.</p> <br> <h4 style=\"font-weight:bold\"> %s </h4>",
+                firstName, randomPassword);
+        dataPojo.setMessage(message);
+        dataPojo.setNames(names);
+        notification.setData(dataPojo);
+        notification.setEventType("EMAIL");
+        notification.setInitiator(email);
+        CompletableFuture.runAsync(() -> notificationProxy.sendEmail(notification));
+    }
+
+
+
 }

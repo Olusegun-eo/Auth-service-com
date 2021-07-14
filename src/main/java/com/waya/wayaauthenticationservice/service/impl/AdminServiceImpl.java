@@ -5,6 +5,7 @@ import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
@@ -64,6 +65,11 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public ResponseEntity<?> createUser(@Valid BaseUserPojo userPojo, HttpServletRequest request, Device device) {
         return authenticationService.createUser(userPojo, request, device, true);
+    }
+
+    @Override
+    public ResponseEntity<?> createUser(CorporateUserPojo userPojo, HttpServletRequest request, Device device) {
+        return authenticationService.createCorporateUser(userPojo, request, device, true);
     }
 
     @Override

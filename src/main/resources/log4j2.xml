@@ -98,7 +98,7 @@
 			<AppenderRef ref="Console" />
 		</Logger>
 
-		<Root level="TRACE">
+		<Root level="INFO">
 			<AppenderRef ref="Console" />
 		</Root>
 
