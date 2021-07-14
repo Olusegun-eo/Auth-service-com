@@ -169,13 +169,15 @@ public class ProfileServiceImpl implements ProfileService {
 
             if (validationCheck.getStatus()) {
                 Profile newProfile = modelMapper.map(request, Profile.class);
+                // check if
                 newProfile.setReferral(request.getReferralCode());
                 newProfile.setCorporate(false);
                 //save new personal profile
                 Profile savedProfile = profileRepository.save(newProfile);
                 log.info("saving new personal profile ::: {}", newProfile);
                 //save referral code
-                saveReferralCode(savedProfile, request.getUserId());
+                //saveReferralCode(savedProfile, request.getUserId());
+                CompletableFuture.runAsync(() -> saveReferralCode(savedProfile, request.getUserId()));
 
                 String fullName = String.format("%s %s", savedProfile.getFirstName(),
                         savedProfile.getSurname());
@@ -314,10 +316,27 @@ public class ProfileServiceImpl implements ProfileService {
      * @param newProfile new profile
      */
     private void saveReferralCode(Profile newProfile, String userId) {
+        ProfileDto profileDto = new ProfileDto();
+
+        profileDto.setAddress(newProfile.getAddress());
+        profileDto.setCity(newProfile.getCity());
+        profileDto.setCorporate(false);
+        profileDto.setDateOfBirth(newProfile.getDateOfBirth());
+        profileDto.setDistrict(newProfile.getDistrict());
+        profileDto.setEmail(newProfile.getEmail());
+        profileDto.setFirstName(newProfile.getFirstName());
+        profileDto.setGender(newProfile.getGender());
+        profileDto.setMiddleName(newProfile.getMiddleName());
+        profileDto.setOrganisationName(newProfile.getOrganisationName());
+        profileDto.setSurname(newProfile.getSurname());
+        profileDto.setUserId(newProfile.getUserId());
+        profileDto.setPhoneNumber(newProfile.getPhoneNumber());
+        profileDto.setReferral(newProfile.getReferral());
+        profileDto.setState(newProfile.getState());
 
         try {
             log.info("saving referral code for this new profile");
-            ResponseEntity<String> response = referralProxy.saveReferralCode(newProfile, userId);
+            ResponseEntity<String> response = referralProxy.saveReferralCode(profileDto, userId);
             log.info("Response: {}", response.getBody());
         } catch (Exception exception) {
             log.error(exception.getMessage());
@@ -807,7 +826,7 @@ public class ProfileServiceImpl implements ProfileService {
             log.error("wayaOfficialHandle  Exception: ", e);
         }
     }
-//
+
 //    private String generateToken(String email) {
 //        try {
 //
@@ -842,5 +861,21 @@ public class ProfileServiceImpl implements ProfileService {
 
         messageQueueProducer.send(EMAIL_TOPIC, post);
         log.info("sending welcome message kafka message queue::: {}", "post");
+    }
+
+    @Override
+    public UserProfileResponse getProfileByReferralCode(String referralCode) {
+        Optional<Profile> profile;
+        try{
+            profile = profileRepository.findByReferral(false,referralCode);
+                if (!profile.isPresent()){
+                    throw new CustomException("Null", HttpStatus.BAD_REQUEST);
+                }
+            } catch (Exception e) {
+            throw new RuntimeException(e.fillInStackTrace());
+        }
+
+        return setProfileResponse(profile.get());
+
     }
 }

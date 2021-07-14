@@ -147,9 +147,7 @@ public class AdminController {
     }
 
 
-    @ApiOperation(
-            value = "${api.corporate-profile.update-corporate-profile.description}",
-            notes = "${api.corporate-profile.update-corporate-profile.notes}")
+    @ApiOperation(value = "Admin Should be able to update Corporate Profile onbehalf of the user")
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
@@ -165,9 +163,7 @@ public class AdminController {
     }
 
 
-    @ApiOperation(
-            value = "${api.profile.update-user-profile.description}",
-            notes = "${api.profile.update-user-profile.notes}")
+    @ApiOperation(value = "Admin Should be able to update Personal Profile onbehalf of the user")
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)

@@ -293,6 +293,24 @@ public class ProfileController {
     }
 
 
+    @ApiOperation(
+            value = "View Active SMS Charge",
+            notes = "View Active SMS Charge: User can check status of sms alert")
+    @ApiResponses(value = {
+            @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
+            @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
+    })
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/get-user-profile/{referralCode}")
+    ResponseEntity<ApiResponse<UserProfileResponse>> getProfileByReferralCode(@PathVariable String referralCode){
+        UserProfileResponse userProfileResponse = profileService.getProfileByReferralCode(referralCode);
+        ApiResponse<UserProfileResponse> response = new ApiResponse<>(userProfileResponse, "Data created successfully", true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+
+
 
 
 

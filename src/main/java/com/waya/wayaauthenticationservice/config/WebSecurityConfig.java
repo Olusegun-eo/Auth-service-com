@@ -30,7 +30,6 @@ import com.waya.wayaauthenticationservice.security.oauth2.HttpCookieOAuth2Author
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @EnableWebSecurity
-@Profile(value = {"development", "production"})
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Autowired
