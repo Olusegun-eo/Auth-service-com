@@ -3,7 +3,7 @@ package com.waya.wayaauthenticationservice.integration;
 import com.waya.wayaauthenticationservice.entity.OtherDetails;
 import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
-import com.waya.wayaauthenticationservice.pojo.*;
+import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.repository.OtherDetailsRepository;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.response.ProfileImageResponse;

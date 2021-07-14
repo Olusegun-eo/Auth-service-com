@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.waya.wayaauthenticationservice.model.AuthProvider;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
@@ -15,6 +16,7 @@ import java.util.Objects;
 
 @Data
 @Entity
+@ToString
 @Table(name = "m_users", uniqueConstraints = {
         @UniqueConstraint(name = "UniqueEmailAndPhoneNumberAndDelFlg", columnNames = {"phone_number", "email", "is_deleted"})})
 public class Users implements Serializable {
@@ -83,6 +85,9 @@ public class Users implements Serializable {
 
     private String imageUrl;
 
+    @Column(name = "account_status")
+    private int accountStatus = 1;
+
     @Column(name = "account_non_expired", nullable = false)
     private boolean accountNonExpired;
 
@@ -90,7 +95,7 @@ public class Users implements Serializable {
     private LocalDateTime accountExpiredDate;
 
     @Column(name = "account_non_locked", nullable = false)
-    private boolean accountNonLocked = false;
+    private boolean accountNonLocked;
 
     @Column(name = "account_lock_date")
     private LocalDateTime accountLockDate;

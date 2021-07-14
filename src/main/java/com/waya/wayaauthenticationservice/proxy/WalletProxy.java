@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 import com.waya.wayaauthenticationservice.config.AuthClientConfiguration;
-import com.waya.wayaauthenticationservice.pojo.CreateAccountPojo;
-import com.waya.wayaauthenticationservice.pojo.CreateAccountResponse;
-import com.waya.wayaauthenticationservice.pojo.MainWalletResponse;
-import com.waya.wayaauthenticationservice.pojo.WalletAccount;
+import com.waya.wayaauthenticationservice.pojo.others.CreateAccountPojo;
+import com.waya.wayaauthenticationservice.pojo.others.CreateAccountResponse;
+import com.waya.wayaauthenticationservice.pojo.others.MainWalletResponse;
+import com.waya.wayaauthenticationservice.pojo.others.WalletAccount;
 
 
 @FeignClient(name = "TEMPORAL-WALLET-SERVICE", url = "${app.config.wallet-service.base-url}", configuration = AuthClientConfiguration.class)

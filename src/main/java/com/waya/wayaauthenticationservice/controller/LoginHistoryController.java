@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.waya.wayaauthenticationservice.pojo.LoginHistoryPojo;
+import com.waya.wayaauthenticationservice.pojo.others.LoginHistoryPojo;
 import com.waya.wayaauthenticationservice.service.LoginHistoryService;
 
 import io.swagger.annotations.ApiImplicitParam;

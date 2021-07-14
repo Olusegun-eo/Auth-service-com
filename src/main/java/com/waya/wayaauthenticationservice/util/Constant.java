@@ -41,7 +41,7 @@ public class Constant {
     public static final String MESSAGE_404 = "Request is not found";
 
     public static final String VERIFY_EMAIL_TOKEN_MESSAGE = "Please verify your email with this pin. PIN: ";
-
+    public static final String VERIFY_RESET_TOKEN_MESSAGE = "Please verify your Password Change request with this OTP. OTP: ";
     public static final String EMAIL_TOPIC = "email";
 
     public static final String SMS_TOPIC = "sms";

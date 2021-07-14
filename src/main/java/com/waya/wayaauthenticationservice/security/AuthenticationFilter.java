@@ -16,8 +16,10 @@ import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.waya.wayaauthenticationservice.exception.CustomException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -33,9 +35,9 @@ import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.LoginDetailsPojo;
-import com.waya.wayaauthenticationservice.pojo.LoginResponsePojo;
-import com.waya.wayaauthenticationservice.pojo.UserProfileResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
+import com.waya.wayaauthenticationservice.pojo.others.LoginResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.repository.PrivilegeRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.service.LoginHistoryService;
@@ -100,18 +102,19 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	@Override
 	protected void successfulAuthentication(HttpServletRequest req, HttpServletResponse res, FilterChain chain,
 			Authentication auth) throws IOException, SignatureException {
+		// Inspect Here
+		Users user = ((UserPrincipal) auth.getPrincipal()).getUser().orElseThrow(() ->
+				new CustomException("Error Fetching User Object", HttpStatus.UNPROCESSABLE_ENTITY));
 
-		String userName = ((UserPrincipal) auth.getPrincipal()).getName();
+		log.info("Signed in User ::: {}", user);
+		String userName = user.getEmail();
 
 		String token = Jwts.builder().setSubject(userName)
 				.setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))
 				.signWith(SignatureAlgorithm.HS256, SecurityConstants.getSecret()).compact();
 
-		Users user = ((UserPrincipal) auth.getPrincipal()).getUser().orElse(null);
-
 		LoginResponsePojo loginResponsePojo = new LoginResponsePojo();
-		if(user != null){
-
+		if(user.getAccountStatus() != -1){
 			Map<String, Object> m = new HashMap<>();
 			//if (user.isPhoneVerified() || user.isEmailVerified()) {
 			if (!user.isActive()) {
@@ -162,7 +165,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		} else {
 			loginResponsePojo.setCode(-2);
 			loginResponsePojo.setStatus(false);
-			loginResponsePojo.setMessage("User Fetch Error");
+			loginResponsePojo.setMessage("User's Password should be Changed ");
 			res.setStatus(400);
 		}
 

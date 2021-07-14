@@ -12,14 +12,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
-import com.waya.wayaauthenticationservice.pojo.UserEditPojo;
-import com.waya.wayaauthenticationservice.pojo.UserRoleUpdateRequest;
+import com.waya.wayaauthenticationservice.pojo.others.ContactPojoReq;
+import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
+import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
 import com.waya.wayaauthenticationservice.repository.RedisUserDao;
 import com.waya.wayaauthenticationservice.service.UserService;
 

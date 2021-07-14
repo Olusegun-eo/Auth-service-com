@@ -1,6 +1,6 @@
 package com.waya.wayaauthenticationservice.unit;
 
-import com.waya.wayaauthenticationservice.pojo.EmailTokenRequest;
+import com.waya.wayaauthenticationservice.pojo.others.EmailTokenRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

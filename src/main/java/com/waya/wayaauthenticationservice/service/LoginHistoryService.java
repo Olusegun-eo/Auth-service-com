@@ -2,7 +2,7 @@ package com.waya.wayaauthenticationservice.service;
 
 import org.springframework.http.ResponseEntity;
 
-import com.waya.wayaauthenticationservice.pojo.LoginHistoryPojo;
+import com.waya.wayaauthenticationservice.pojo.others.LoginHistoryPojo;
 
 public interface LoginHistoryService {
 

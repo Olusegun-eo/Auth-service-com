@@ -1,6 +1,6 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import com.waya.wayaauthenticationservice.pojo.ChatPojo;
+import com.waya.wayaauthenticationservice.pojo.others.ChatPojo;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.service.KafkaPushService;
 import org.springframework.beans.factory.annotation.Autowired;

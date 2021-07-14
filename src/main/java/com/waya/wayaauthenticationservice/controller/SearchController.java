@@ -1,6 +1,7 @@
 package com.waya.wayaauthenticationservice.controller;
 
 import com.waya.wayaauthenticationservice.response.SearchProfileResponse;
+import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.service.impl.ProfileServiceImpl;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,7 @@ import static com.waya.wayaauthenticationservice.util.Constant.*;
 @RestController
 public class SearchController {
 
-    private final ProfileServiceImpl profileService;
+    private final ProfileService profileService;
 
     @Autowired
     public SearchController(ProfileServiceImpl profileService) {

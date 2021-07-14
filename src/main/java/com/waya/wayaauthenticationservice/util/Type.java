@@ -5,5 +5,7 @@ public enum Type {
     EMAIL,
     NUMERIC_STRING,
     TEXT_STRING,
-    SIZE
+    SIZE,
+    CONTAINS,
+    EMAIL_OR_PHONENUMBER
 }

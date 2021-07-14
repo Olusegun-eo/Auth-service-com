@@ -5,7 +5,6 @@ import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -60,8 +59,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				.antMatchers("/api/v1/auth/login").permitAll()
 				.antMatchers("/api/v1/auth/create", "/api/v1/auth/create-corporate", "/api/v1/profile/**").permitAll()
 				.antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
-				.antMatchers("/api/v1/auth/resend-otp**/**", "/api/v1/auth/verify-otp", "/api/v1/business/type/find/all").permitAll()
-				.antMatchers("/api/v1/auth/verify-email", "/api/v1/auth/forgot-password").permitAll()
+				.antMatchers("/api/v1/auth/resend-otp**/**", "/api/v1/auth/verify-otp").permitAll()
+				.antMatchers("/api/v1/business/type/find/all", "/api/v1/password/forgot-password").permitAll()
+				.antMatchers("/api/v1/auth/verify**", "/api/v1/password/forgot-password**/**").permitAll()
 				// all other requests need to be authenticated
 				.anyRequest().authenticated().and()
 				// make sure we use stateLess session; session won't be used to
@@ -72,8 +72,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
-		web.ignoring().antMatchers("/v2/api-docs", "/configuration/ui", "/swagger-resources/**",
-				"/configuration/security", "/swagger-ui/index.html", "/webjars/**");
+		web.ignoring().antMatchers(
+				"/v2/api-docs", "/configuration/ui",
+				"/swagger-resources/**","/configuration/security",
+				"/swagger-ui/index.html", "/webjars/**");
 	}
 
 	protected AuthenticationFilter getAuthenticationFilter() throws Exception {

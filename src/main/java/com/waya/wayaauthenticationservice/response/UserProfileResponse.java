@@ -19,6 +19,8 @@ public class UserProfileResponse {
     private String address;
     private String phoneNumber;
     private String userId;
+    private String referenceCode;
+    private boolean pinCreated;
     private String city;
     private boolean corporate;
 

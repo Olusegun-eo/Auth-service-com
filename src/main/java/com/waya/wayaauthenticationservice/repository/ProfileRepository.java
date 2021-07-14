@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-@SuppressWarnings("ALL")
+@SuppressWarnings("all")
 @Repository
 public interface ProfileRepository extends JpaRepository<Profile, UUID> {
 

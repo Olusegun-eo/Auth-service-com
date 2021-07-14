@@ -22,9 +22,6 @@ public class AuthenticatedUserFacadeImpl implements AuthenticatedUserFacade {
     @Override
     public Users getUser() {
         UserPrincipal userPrincipal = (UserPrincipal) this.getAuthentication().getPrincipal();
-        if(userPrincipal != null){
-            return userPrincipal.getUser().orElse(null);
-        }
-        return null;
+        return userPrincipal.getUser().orElse(null);
     }
 }

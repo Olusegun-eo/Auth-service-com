@@ -1,6 +1,7 @@
 package com.waya.wayaauthenticationservice.util;
 
 import java.security.SecureRandom;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class HelperUtils {
@@ -22,6 +23,27 @@ public class HelperUtils {
                 .collect(StringBuilder::new, StringBuilder::appendCodePoint,
                         StringBuilder::append)
                 .toString();
+    }
+
+    public static boolean validateStringIsEmail(String value) {
+        Matcher matcher = emailPattern.matcher(value);
+        return matcher.matches();
+    }
+
+    public static  boolean validateStringIsEmailOrPhoneNumber(String value) {
+        boolean val = numericPattern.matcher(value).find() && value.startsWith("234")
+                && value.length() >= 11 && value.length() < 14;
+        Matcher emailMatcher = emailPattern.matcher(value);
+        return emailMatcher.matches() || val;
+    }
+
+    public static  boolean validateStringNumericOnly(String value) {
+        //value.matches("[0-9]+")
+        return value.matches("^[0-9]*$");
+    }
+
+    public static  boolean validateStringTextOnly (String value) {
+        return value.matches("^[a-zA-Z]*$");
     }
 
     public static int generateRandomNumber(int max, int min) {

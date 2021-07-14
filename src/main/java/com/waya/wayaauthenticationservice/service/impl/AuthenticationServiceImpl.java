@@ -1,12 +1,20 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
 import com.waya.wayaauthenticationservice.entity.CorporateUser;
 import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.entity.Roles;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
-import com.waya.wayaauthenticationservice.pojo.*;
+import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
+import com.waya.wayaauthenticationservice.pojo.notification.NamesPojo;
+import com.waya.wayaauthenticationservice.pojo.notification.NotificationResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
+import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
+import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.repository.CorporateUserRepository;
@@ -19,7 +27,6 @@ import com.waya.wayaauthenticationservice.service.AuthenticationService;
 import com.waya.wayaauthenticationservice.service.EmailService;
 import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.service.SMSTokenService;
-import com.waya.wayaauthenticationservice.util.HelperUtils;
 import com.waya.wayaauthenticationservice.util.ReqIPUtils;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -32,7 +39,6 @@ import org.springframework.mobile.device.Device;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -50,16 +56,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
     public static final String TOKEN_PREFIX = "serial ";
     private static final String SECRET_TOKEN = "wayas3cr3t";
+
     @Autowired
     KafkaMessageProducer kafkaMessageProducer;
+    @Autowired
+    ProfileServiceDAO profileServiceDAO;
     @Autowired
     private UserRepository userRepo;
     @Autowired
     private RolesRepository rolesRepo;
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
-    @Autowired
-    private RestTemplate restTemplate;
     @Autowired
     private RedisUserDao redisUserDao;
     @Autowired
@@ -73,6 +80,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Autowired
     private ReqIPUtils reqUtil;
     @Autowired
+    private NotificationProxy notificationProxy;
+    @Autowired
     private ModelMapper mapper;
     @Autowired
     private ProfileService profileService;
@@ -80,6 +89,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private SMSTokenService smsTokenService;
     @Autowired
     private EmailService emailService;
+
+    private String getBaseUrl(HttpServletRequest request) {
+        return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+    }
 
     @Override
     @Transactional
@@ -127,18 +140,27 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setReferenceCode(mUser.getReferenceCode());
             user.setSurname(mUser.getSurname());
             user.setDateCreated(LocalDateTime.now());
+            user.setAccountStatus(1);
             user.setRegDeviceIP(ip);
             String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
             user.setName(fullName);
             user.setRegDevicePlatform(dev.getPlatform());
             user.setRegDeviceType(dev.getDeviceType());
-            if (adminAction) user.setActive(true);
+            if (adminAction) {
+                user.setActive(true);
+                user.setAccountStatus(-1);
+                CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
+            }
             user.setPassword(passwordEncoder.encode(mUser.getPassword()));
             user.setRolesList(roleList);
 
             Users regUser = userRepo.saveAndFlush(user);
 
-            createPrivateUser(regUser);
+            if (regUser == null)
+                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.COULD_NOT_INSERT_RECORD.getErrorMessage()),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+
+            createPrivateUser(regUser, getBaseUrl(request));
 
             return new ResponseEntity<>(new SuccessResponse(
                     "User Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
@@ -151,7 +173,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     @Transactional
-    public ResponseEntity<?> createCorporateUser(CorporateUserPojo mUser, HttpServletRequest request, Device device) {
+    public ResponseEntity<?> createCorporateUser(CorporateUserPojo mUser, HttpServletRequest request, Device device, boolean adminAction) {
 
         try {
             // Check if email exists
@@ -159,6 +181,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             if (existingEmail != null) {
                 return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
             }
+
             // Check if Phone exists
             Users existingTelephone = userRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
             if (existingTelephone != null)
@@ -172,7 +195,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
 
             List<Roles> roleList = new ArrayList<>(Arrays.asList(userRole, merchRole));
-
+            if (mUser.isAdmin()) {
+                Roles corpAdminRole = rolesRepo.findByName("ROLE_USER")
+                        .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+                roleList.add(corpAdminRole);
+            }
             final String ip = reqUtil.getClientIP(request);
             log.info("Request IP: " + ip);
 
@@ -184,11 +211,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             //    publicUserId = HelperUtils.generateRandomPassword();
             //}
             //user.setUserId(publicUserId);
+
             user.setAdmin(mUser.isAdmin());
             user.setId(0L);
             user.setCorporate(true);
             user.setDateCreated(LocalDateTime.now());
             user.setRegDeviceIP(ip);
+            user.setAccountStatus(1);
             user.setRegDevicePlatform(dev.getPlatform());
             user.setRegDeviceType(dev.getDeviceType());
             user.setPassword(passwordEncoder.encode(mUser.getPassword()));
@@ -199,6 +228,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setPhoneNumber(mUser.getPhoneNumber());
             user.setPhoneVerified(false);
             user.setPinCreated(false);
+            if (adminAction) {
+                user.setActive(true);
+                user.setAccountStatus(-1);
+                CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
+            }
             user.setReferenceCode(mUser.getReferenceCode());
             user.setSurname(mUser.getSurname());
             String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
@@ -206,8 +240,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             Users regUser = userRepo.saveAndFlush(user);
 
+            if (regUser == null)
+                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.COULD_NOT_INSERT_RECORD.getErrorMessage()),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+
             String token = generateToken(regUser);
-            createCorporateUser(mUser, regUser.getId(), token);
+
+            createCorporateUser(mUser, regUser.getId(), token, getBaseUrl(request));
 
             return new ResponseEntity<>(new SuccessResponse(
                     "Corporate Account Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
@@ -218,7 +257,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
-    public void createCorporateUser(CorporateUserPojo mUser, Long userId, String token) {
+    public void createCorporateUser(CorporateUserPojo mUser, Long userId, String token, String baseUrl) {
+
         String Id = String.valueOf(userId);
 
         CorporateUser coopUser = mapper.map(mUser, CorporateUser.class);
@@ -230,11 +270,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         CreateAccountPojo createAccount = new CreateAccountPojo();
         createAccount.setEmailAddress(coopUser.getEmail());
         createAccount.setExternalId(Id);
+
         createAccount.setFirstName(coopUser.getFirstName());
         createAccount.setLastName(coopUser.getSurname());
         createAccount.setMobileNo(coopUser.getPhoneNumber());
         createAccount.setSavingsProductId(1);
-        walletProxy.createCorporateAccount(createAccount);
+
+        CompletableFuture.runAsync(() -> walletProxy.createCorporateAccount(createAccount));
 
         // Implementation for internal calls begin here
         CorporateProfileRequest corporateProfileRequest = new CorporateProfileRequest();
@@ -251,18 +293,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         // Implementation for internal call
         log.info("CorporateProfile account creation starts: " + corporateProfileRequest);
-        ApiResponse<String> corporateResponse = profileService.createProfile(corporateProfileRequest);
+        ApiResponse<String> corporateResponse = profileService.createProfile(corporateProfileRequest, baseUrl);
         log.info("CorporateProfile account creation ends: " + corporateResponse);
 
         VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
         virtualAccountPojo.setAccountName(coopUser.getFirstName() + " " + coopUser.getSurname());
         virtualAccountPojo.setUserId(String.valueOf(userId));
 
-        ResponseEntity<String> response = virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token);
-        log.info("Response: {}", response.getBody());
+        CompletableFuture.runAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token));
     }
 
-    public void createPrivateUser(Users user) {
+    public void createPrivateUser(Users user, String baseUrl) {
         String id = String.valueOf(user.getId());
 
         VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
@@ -270,9 +311,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         virtualAccountPojo.setUserId(id);
 
         String token = generateToken(user);
-        ResponseEntity<String> response = virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token);
-
-        log.info("Response: {}", response.getBody());
+        CompletableFuture.runAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token));
 
         PersonalProfileRequest personalProfileRequest = new PersonalProfileRequest();
         personalProfileRequest.setEmail(user.getEmail());
@@ -282,7 +321,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         personalProfileRequest.setUserId(id);
 
         log.info("PersonalProfile account creation starts: " + personalProfileRequest);
-        ApiResponse<String> personalResponse = profileService.createProfile(personalProfileRequest);
+        ApiResponse<String> personalResponse = profileService.createProfile(personalProfileRequest, baseUrl);
         log.info("PersonalProfile account creation ends: " + personalResponse);
     }
 
@@ -301,32 +340,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ResponseEntity<?> createPin(PinPojo pinPojo) {
-        try {
-            // Check if email exists
-            Users existingEmail = userRepo.findById(pinPojo.getUserId()).orElse(null);
-
-            if (existingEmail != null) {
-                if (!pinIs4Digit(pinPojo.getPin())) {
-                    return new ResponseEntity<>(new ErrorResponse("Transaction pin should be exactly 4 Digits"),
-                            HttpStatus.BAD_REQUEST);
-                }
-                existingEmail.setPinHash(passwordEncoder.encode(String.valueOf(pinPojo.getPin())));
-                existingEmail.setPinCreated(true);
-                userRepo.save(existingEmail);
-                return new ResponseEntity<>(new SuccessResponse("Transaction pin created successfully.", null),
-                        HttpStatus.CREATED);
-            } else {
-                return new ResponseEntity<>(new ErrorResponse("This email does exists"), HttpStatus.BAD_REQUEST);
-            }
-        } catch (Exception e) {
-            log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
-            return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @Override
     public ResponseEntity<?> verifyAccountCreation(OTPPojo otpPojo) {
+
         try {
             log.info("Verify Account Creation starts {}", otpPojo);
             Users user = userRepo.findByEmailOrPhoneNumber(otpPojo.getPhoneOrEmail()).orElse(null);
@@ -334,6 +349,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 return new ResponseEntity<>(new ErrorResponse(
                         ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + "For User with " + otpPojo.getPhoneOrEmail()),
                         HttpStatus.BAD_REQUEST);
+
+            if (user.isActive())
+                return new ResponseEntity<>(new SuccessResponse("Account has been Verified already. Please login.", null),
+                        HttpStatus.CREATED);
 
             Matcher matcher = emailPattern.matcher(otpPojo.getPhoneOrEmail());
             boolean isEmail = matcher.matches();
@@ -371,17 +390,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public ResponseEntity<?> verifyPhoneUsingOTP(OTPPojo otpPojo) {
+
+        Users user = userRepo.findByPhoneNumber(otpPojo.getPhoneOrEmail()).orElse(null);
+        if (user == null) {
+            return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND
+                    .getErrorMessage() + " For User: " + otpPojo.getPhoneOrEmail()), HttpStatus.BAD_REQUEST);
+        }
         // Implementation for internal call
         log.info("Verify Phone UsingOTP starts {}", otpPojo);
         ApiResponse<OTPVerificationResponse> profileResponse = verifyOTP(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
         log.info("Verify Phone UsingOTP ends {}", profileResponse.getData());
 
         if (profileResponse.getData().isValid()) {
-            Users user = userRepo.findByPhoneNumber(otpPojo.getPhoneOrEmail()).orElse(null);
-            if (user == null) {
-                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND
-                        .getErrorMessage() + " For User: " + otpPojo.getPhoneOrEmail()), HttpStatus.BAD_REQUEST);
-            }
             user.setPhoneVerified(true);
             // user.setActive(true);
             try {
@@ -412,8 +432,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return smsTokenService.sendSMSOTP(phoneNumber, fullName);
     }
 
-    private boolean pushEMailToken(String email, String fullName) {
-        return emailService.sendEmailToken(email, fullName);
+    private boolean pushEMailToken(String baseUrl, String email) {
+        return emailService.sendAcctVerificationEmailToken(baseUrl, email);
     }
 
     @Override
@@ -423,94 +443,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if (user == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
         }
+        if (user.isActive() && user.isEmailVerified())
+            return new ResponseEntity<>(new SuccessResponse("Account and Phone been Verified already.", null),
+                    HttpStatus.CREATED);
+
         log.info("Verify Email starts {}", emailPojo);
-        EmailVerificationResponse generalResponse = verifyEmail(emailPojo.getEmail(), Integer.parseInt(emailPojo.getToken()));
+        EmailVerificationResponse emailResponse = verifyEmail(emailPojo.getEmail(), Integer.parseInt(emailPojo.getToken()));
         log.info("Verify Email ends {}", emailPojo);
-        if (generalResponse.isValid()) {
+        if (emailResponse != null && emailResponse.isValid()) {
             user.setEmailVerified(true);
             user.setActive(true);
-            try {
-                userRepo.save(user);
-                return new ResponseEntity<>(new SuccessResponse("Email verified successfully. Please login.", null),
-                        HttpStatus.CREATED);
-
-            } catch (Exception e) {
-                log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
-                return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
-            }
+            return new ResponseEntity<>(new SuccessResponse(emailResponse.getMessage()), HttpStatus.BAD_REQUEST);
         } else {
-            return new ResponseEntity<>(new ErrorResponse(generalResponse.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @Override
-    public ResponseEntity<?> changePassword(PasswordPojo passwordPojo) {
-        Users user = userRepo.findByEmailIgnoreCase(passwordPojo.getEmail()).orElse(null);
-        if (user == null) {
-            return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
-        }
-        boolean isPasswordMatched = passwordEncoder.matches(passwordPojo.getOldPassword(), user.getPassword());
-        if (!isPasswordMatched) {
-            return new ResponseEntity<>(new ErrorResponse("Incorrect Old Password"), HttpStatus.BAD_REQUEST);
-        }
-        String newPassword = passwordEncoder.encode(passwordPojo.getNewPassword());
-        user.setPassword(newPassword);
-        try {
-            userRepo.save(user);
-            return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);
-
-        } catch (Exception e) {
-            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @Override
-    public ResponseEntity<?> forgotPassword(PasswordPojo2 passwordPojo) {
-        Users user = userRepo.findByEmailIgnoreCase(passwordPojo.getEmail()).orElse(null);
-        if (user == null) {
-            return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
-        }
-        user.setPassword(passwordEncoder.encode(passwordPojo.getNewPassword()));
-        try {
-            userRepo.save(user);
-            return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);
-
-        } catch (Exception e) {
-            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @Override
-    public ResponseEntity<?> changePin(PinPojo2 pinPojo) {
-        Users user = userRepo.findByEmailIgnoreCase(pinPojo.getEmail()).orElse(null);
-        if (user == null) {
-            return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
-        }
-        boolean isPinMatched = passwordEncoder.matches(String.valueOf(pinPojo.getOldPin()), user.getPinHash());
-        if (!isPinMatched) {
-            return new ResponseEntity<>(new ErrorResponse("Incorrect Old Pin"), HttpStatus.BAD_REQUEST);
-        }
-        user.setPinHash(passwordEncoder.encode(String.valueOf(pinPojo.getNewPin())));
-        try {
-            userRepo.save(user);
-            return new ResponseEntity<>(new SuccessResponse("Pin Changed.", null), HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @Override
-    public ResponseEntity<?> forgotPin(PinPojo pinPojo) {
-        Users user = userRepo.findByEmailIgnoreCase(pinPojo.getEmail()).orElse(null);
-        if (user == null) {
-            return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.NOT_FOUND);
-        }
-        user.setPinHash(passwordEncoder.encode(String.valueOf(pinPojo.getPin())));
-        try {
-            userRepo.save(user);
-            return new ResponseEntity<>(new SuccessResponse("Pin Changed.", null), HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse(emailResponse.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -521,6 +466,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
                     HttpStatus.NOT_FOUND);
 
+        if (user.isActive() && user.isPhoneVerified())
+            return new ResponseEntity<>(new SuccessResponse("Account and PhoneNumber has been Verified already.", null),
+                    HttpStatus.CREATED);
         // Implementation for internal call
         log.info("Resend OTPPhone starts {}", phoneNumber);
         boolean generalResponse = sendOTP(phoneNumber, user.getName());
@@ -534,7 +482,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ResponseEntity<?> resendVerificationMail(String email) {
+    public ResponseEntity<?> resendVerificationMail(String email, String baseUrl) {
         Users user = userRepo.findByEmailIgnoreCase(email).orElse(null);
         if (user == null)
             return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
@@ -542,7 +490,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         // Implementation for internal call
         log.info("Resend Verification Mail starts for {}", email);
-        boolean check = pushEMailToken(email, user.getName());
+        boolean check = pushEMailToken(baseUrl, email);
         log.info("Response From Verification Mail {}", check);
 
         if (check) {
@@ -581,34 +529,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ResponseEntity<?> validatePin(Long userId, int pin) {
-        Users users = userRepo.findById(userId).orElse(null);
-        if (users == null) {
-            return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.BAD_REQUEST);
-        }
-        boolean isPinMatched = passwordEncoder.matches(String.valueOf(pin), users.getPinHash());
-        if (isPinMatched) {
-            return new ResponseEntity<>(new SuccessResponse("Pin valid."), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @Override
-    public ResponseEntity<?> validatePinFromUser(int pin) {
-        Users users = authenticatedUserFacade.getUser();
-        if (users == null) {
-            return new ResponseEntity<>(new ErrorResponse("Invalid User."), HttpStatus.NOT_FOUND);
-        }
-        boolean isPinMatched = passwordEncoder.matches(String.valueOf(pin), users.getPinHash());
-        if (isPinMatched) {
-            return new ResponseEntity<>(new SuccessResponse("Pin valid."), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @Override
     public ResponseEntity<?> userByPhone(String phone) {
         Users users = userRepo.findByPhoneNumber(phone).orElse(null);
         if (users == null) {
@@ -636,17 +556,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ResponseEntity<?> createProfileAccount(PersonalProfileRequest profilePojo) {
-        ApiResponse<String> response = profileService.createProfile(profilePojo);
+    public ResponseEntity<?> createProfileAccount(PersonalProfileRequest profilePojo, String baseUrl) {
+        ApiResponse<String> response = profileService.createProfile(profilePojo, baseUrl);
         //kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC, profilePojo);
         return new ResponseEntity<>(new SuccessResponse(response.getData(), null), HttpStatus.OK);
     }
 
     @Override
-    public ResponseEntity<?> createCorporateProfileAccount(CorporateProfileRequest profilePojo) {
-        ApiResponse<String> response = profileService.createProfile(profilePojo);
+    public ResponseEntity<?> createCorporateProfileAccount(CorporateProfileRequest profilePojo, String baseUrl) {
+        ApiResponse<String> response = profileService.createProfile(profilePojo, baseUrl);
         //kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC, profilePojo2);
         return new ResponseEntity<>(new SuccessResponse(response.getData(), null), HttpStatus.OK);
+
     }
 
     public boolean pinIs4Digit(int pin) {
@@ -664,5 +585,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         redisUser.setRoles(new ArrayList<>(user.getRolesList()));
 
         redisUserDao.save(redisUser);
+    }
+
+    private void sendEmailNewPassword(String randomPassword, String email, String firstName) {
+        //Email Sending of new Password Here
+        NotificationResponsePojo notification = new NotificationResponsePojo();
+        NamesPojo name = new NamesPojo();
+        name.setEmail(email);
+        name.setFullName(firstName);
+        List<NamesPojo> names = new ArrayList<>();
+        names.add(name);
+        DataPojo dataPojo = new DataPojo();
+        String message = String.format("<h3>Hello %s </h3><br> <p> Kindly Use the password below to login to the System, " +
+                        "ensure you change it.</p> <br> <h4 style=\"font-weight:bold\"> %s </h4>",
+                firstName, randomPassword);
+        dataPojo.setMessage(message);
+        dataPojo.setNames(names);
+        notification.setData(dataPojo);
+        notification.setEventType("EMAIL");
+        notification.setInitiator(email);
+        CompletableFuture.runAsync(() -> notificationProxy.sendEmail(notification));
     }
 }

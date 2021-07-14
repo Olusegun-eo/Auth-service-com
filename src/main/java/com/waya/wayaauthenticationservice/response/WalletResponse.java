@@ -1,6 +1,6 @@
 package com.waya.wayaauthenticationservice.response;
 
-import com.waya.wayaauthenticationservice.pojo.WalletPojo2;
+import com.waya.wayaauthenticationservice.pojo.others.WalletPojo2;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -2,7 +2,7 @@ package com.waya.wayaauthenticationservice.service.impl;
 
 import com.waya.wayaauthenticationservice.entity.BusinessType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.pojo.ResponsePojo;
+import com.waya.wayaauthenticationservice.response.ResponsePojo;
 import com.waya.wayaauthenticationservice.repository.BusinessTypeRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -24,6 +24,13 @@ public class ApiResponse<T> {
         this.data = data;
     }
 
+    public ApiResponse(String message, boolean status) {
+        timestamp = ZonedDateTime.now();
+        this.status = status;
+        this.message = message;
+        this.data = null;
+    }
+
     public ApiResponse(T data, String message, boolean status, HttpStatus httpStatus) {
         timestamp = ZonedDateTime.now();
         this.status = status;

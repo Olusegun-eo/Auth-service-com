@@ -12,6 +12,6 @@ import java.util.UUID;
 public interface SMSChargeRepository extends JpaRepository<SMSCharge, UUID> {
     Optional<SMSCharge> findById(Long id);
 
-    @Query("SELECT i FROM SMSAlertConfig i WHERE i.active = true")
+    @Query("SELECT i FROM SMSCharge i WHERE i.active = true")
     Optional<SMSCharge> findByActive();
 }

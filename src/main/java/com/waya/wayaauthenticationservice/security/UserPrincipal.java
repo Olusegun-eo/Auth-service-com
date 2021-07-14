@@ -12,113 +12,114 @@ import java.util.stream.Collectors;
 
 @SuppressWarnings("serial")
 public class UserPrincipal implements OAuth2User, UserDetails {
-    private Users user;
-    private Map<String, Object> attributes;
 
-    public UserPrincipal(Users user) {
-        this.user = user;
-    }
+	private Users user;
+	private Map<String, Object> attributes;
 
-    public static UserPrincipal create(Users user) {
-        return new UserPrincipal(user);
-    }
+	public UserPrincipal(Users user) {
+		this.user = user;
+	}
 
-    public static UserPrincipal create(Users user, Map<String, Object> attributes) {
-        UserPrincipal userPrincipal = UserPrincipal.create(user);
-        userPrincipal.setAttributes(attributes);
-        return userPrincipal;
-    }
+	public static UserPrincipal create(Users user) {
+		return new UserPrincipal(user);
+	}
 
-    public Long getId() {
-        return user.getId();
-    }
+	public static UserPrincipal create(Users user, Map<String, Object> attributes) {
+		UserPrincipal userPrincipal = UserPrincipal.create(user);
+		userPrincipal.setAttributes(attributes);
+		return userPrincipal;
+	}
 
-    @Override
-    public String getPassword() {
-        return user.getPassword();
-    }
+	public Long getId() {
+		return user.getId();
+	}
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return this.user.isAccountNonExpired();
-    }
+	@Override
+	public String getPassword() {
+		return user.getPassword();
+	}
 
-    @Override
-    public boolean isAccountNonLocked() {
-        return this.user.isAccountNonLocked();
-    }
+	@Override
+	public boolean isAccountNonExpired() {
+		return this.user.isAccountNonExpired();
+	}
 
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return this.user.isCredentialsNonExpired();
-    }
+	@Override
+	public boolean isAccountNonLocked() {
+		return this.user.isAccountNonLocked();
+	}
 
-    @Override
-    public boolean isEnabled() {
-        return this.user.isActive();
-    }
+	@Override
+	public boolean isCredentialsNonExpired() {
+		return this.user.isCredentialsNonExpired();
+	}
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
+	@Override
+	public boolean isEnabled() {
+		return this.user.isActive();
+	}
 
-        List<Roles> roles = new ArrayList<Roles>(this.user.getRolesList());
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
 
-        Collection<GrantedAuthority> grantedAuthorities = roles.stream()
+		List<Roles> roles = new ArrayList<Roles>(this.user.getRolesList());
+
+		Collection<GrantedAuthority> grantedAuthorities = roles.stream()
 				.map(r -> new SimpleGrantedAuthority(r.getName())).collect(Collectors.toSet());
-        grantedAuthorities.addAll(getGrantedAuthorities(getPrivileges(roles)));
+		grantedAuthorities.addAll(getGrantedAuthorities(getPrivileges(roles)));
+		
+		return grantedAuthorities;
+	}
 
-        return grantedAuthorities;
-    }
+	@Override
+	public Map<String, Object> getAttributes() {
+		return attributes;
+	}
 
-    @Override
-    public Map<String, Object> getAttributes() {
-        return attributes;
-    }
+	public void setAttributes(Map<String, Object> attributes) {
+		this.attributes = attributes;
+	}
+	
+	public Optional<Users> getUser() {
+		return Optional.of(this.user);
+	}
+	
+	private final Set<String> getPrivileges(final Collection<Roles> roles) {
+		Set<String> privileges = new HashSet<String>();
+		for (Roles role : roles) {
+			privileges.addAll(role.getPermissions().stream().map(p -> p.getName()).collect(Collectors.toSet()));
+		}
+		return privileges;
+	}
 
-    public void setAttributes(Map<String, Object> attributes) {
-        this.attributes = attributes;
-    }
+	private List<GrantedAuthority> getGrantedAuthorities(Set<String> privileges) {
+		List<GrantedAuthority> authorities = new ArrayList<>();
+		for (String privilege : privileges) {
+			authorities.add(new SimpleGrantedAuthority(privilege));
+		}
+		return authorities;
+	}
 
-    public Optional<Users> getUser() {
-        return Optional.of(this.user);
-    }
+	/**
+	 * Returns the name of the authenticated <code>Principal</code>. Never
+	 * <code>null</code>.
+	 *
+	 * @return the name of the authenticated <code>Principal</code>
+	 */
+	@Override
+	public String getName() {
+		return user.getEmail() != null ? this.user.getEmail() : this.user.getPhoneNumber();
+	}
 
-    private final Set<String> getPrivileges(final Collection<Roles> roles) {
-        Set<String> privileges = new HashSet<String>();
-        for (Roles role : roles) {
-            privileges.addAll(role.getPermissions().stream().map(p -> p.getName()).collect(Collectors.toSet()));
-        }
-        return privileges;
-    }
-
-    private List<GrantedAuthority> getGrantedAuthorities(Set<String> privileges) {
-        List<GrantedAuthority> authorities = new ArrayList<>();
-        for (String privilege : privileges) {
-            authorities.add(new SimpleGrantedAuthority(privilege));
-        }
-        return authorities;
-    }
-
-    /**
-     * Returns the name of the authenticated <code>Principal</code>. Never
-     * <code>null</code>.
-     *
-     * @return the name of the authenticated <code>Principal</code>
-     */
-    @Override
-    public String getName() {
-        return this.user.getEmail();
-    }
-
-    /**
-     * Returns the username used to authenticate the user. Cannot return
-     * <code>null</code>.
-     *
-     * @return the username (never <code>null</code>)
-     */
-    @Override
-    public String getUsername() {
-        return this.user.getEmail();
-    }
+	/**
+	 * Returns the username used to authenticate the user. Cannot return
+	 * <code>null</code>.
+	 *
+	 * @return the username (never <code>null</code>)
+	 */
+	@Override
+	public String getUsername() {
+		return user.getEmail() != null ? this.user.getEmail() : this.user.getPhoneNumber();
+	}
 
 }
