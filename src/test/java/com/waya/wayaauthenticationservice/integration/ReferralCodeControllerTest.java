@@ -16,10 +16,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 
+import java.util.Optional;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ActiveProfiles("test")
+@ActiveProfiles("application-test")
 @SpringBootTest(properties = {"eureka.client.enabled=false"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -50,7 +52,9 @@ class ReferralCodeControllerTest {
         referralCode.setReferalCode("pqwe");
         referralCode.setUserId("124");
         referralCode.setProfile(profile);
-        referralCodeRepository.save(referralCode);
+        Optional<ReferralCode> referralCode1 = referralCodeRepository.findByUserId(referralCode.getUserId());
+        if (!referralCode1.isPresent());
+            referralCodeRepository.save(referralCode);
     }
 
     @Test

@@ -2,11 +2,13 @@ package com.waya.wayaauthenticationservice.integration;
 
 import com.waya.wayaauthenticationservice.entity.OtherDetails;
 import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.entity.ReferralCode;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.repository.OtherDetailsRepository;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
+import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.ProfileImageResponse;
 import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
@@ -33,6 +35,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -40,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ActiveProfiles("test")
+@ActiveProfiles("application-test")
 @SpringBootTest(properties = {"eureka.client.enabled=false"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -54,6 +57,9 @@ class ProfileControllerTest {
 
     @Autowired
     private ProfileRepository profileRepository;
+
+    @Autowired
+    private ReferralCodeRepository referralCodeRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -475,7 +481,9 @@ class ProfileControllerTest {
         profilePersonal.setPhoneNumber("0029934");
         profilePersonal.setUserId(String.valueOf(regUser.getId()));
         profilePersonal.setDeleted(false);
-        profileRepository.save(profilePersonal);
+        Optional<Profile> profile1 = profileRepository.findByEmail(false,profilePersonal.getEmail());
+        if (!profile1.isPresent());
+            profileRepository.save(profilePersonal);
 
         //personal profile 1
         profile.setGender("male");
@@ -488,14 +496,16 @@ class ProfileControllerTest {
         profile.setUserId("123");
         profile.setDeleted(false);
 
-        profileRepository.save(profile);
+         profileRepository.save(profile);
 
-//        ReferralCode referralCode = new ReferralCode();
-//        referralCode.setReferalCode("102kkdjeurw2");
-//        referralCode.setProfile(profile);
-//        referralCode.setUserId("123");
+        ReferralCode referralCode = new ReferralCode();
+        referralCode.setReferalCode("102kkdjeurw2");
+        referralCode.setProfile(profile);
+        referralCode.setUserId("123");
 //
-//        referralCodeRepository.save(referralCode);
+        Optional<ReferralCode> referralCode1 = referralCodeRepository.findByUserId(referralCode.getUserId());
+        if (!referralCode1.isPresent())
+            referralCodeRepository.save(referralCode);
 
         //corporate profile 1
         OtherDetails otherDetails = new OtherDetails();
@@ -516,7 +526,8 @@ class ProfileControllerTest {
         corporate.setPhoneNumber("09123");
         corporate.setOtherDetails(otherDetails);
 
-        profileRepository.save(corporate);
+        if (!profileRepository.existsByEmail(corporate.getEmail()))
+            profileRepository.save(corporate);
 
     }
 

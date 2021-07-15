@@ -13,4 +13,6 @@ public interface ReferralCodeRepository extends JpaRepository<ReferralCode, UUID
 
     @Query(value = "select * from referral_code where user_id =:userId", nativeQuery = true)
     ReferralCode getReferralCodeByUserId(String userId);
+
+
 }
