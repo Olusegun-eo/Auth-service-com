@@ -2,6 +2,8 @@ package com.waya.wayaauthenticationservice.controller;
 
 import com.waya.wayaauthenticationservice.assembler.UserAssembler;
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
 import com.waya.wayaauthenticationservice.pojo.userDTO.*;
 import com.waya.wayaauthenticationservice.repository.RedisUserDao;
 import com.waya.wayaauthenticationservice.response.UserProfileResponse;
@@ -147,7 +149,7 @@ public class AdminController {
     }
 
 
-    @ApiOperation(value = "Admin Should be able to update Corporate Profile onbehalf of the user")
+    @ApiOperation(value = "Admin Should be able to update Corporate Profile on behalf of the user")
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
@@ -163,21 +165,19 @@ public class AdminController {
     }
 
 
-    @ApiOperation(value = "Admin Should be able to update Personal Profile onbehalf of the user")
+    @ApiOperation(value = "Admin Should be able to update Personal Profile on behalf of the user")
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
     })
     @PutMapping("/update-personal-profile/{userId}")
-    ResponseEntity<com.waya.wayaauthenticationservice.response.ApiResponse<Object>> updateProfile(
+    ResponseEntity<?> updateProfile(
             @Valid @RequestBody UpdatePersonalProfileRequest updatePersonalProfileRequest,
             @PathVariable String userId){
         UserProfileResponse profileResponse = profileService.updateProfile(updatePersonalProfileRequest, userId);
         return new ResponseEntity<>(new com.waya.wayaauthenticationservice.response.ApiResponse<>(profileResponse,
                 "profile updated successfully", true), HttpStatus.CREATED);
     }
-
-
 
     public  ResponseEntity<?> deactivateUserAccount(){
 
