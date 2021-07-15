@@ -8,7 +8,9 @@ import javax.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
@@ -16,6 +18,8 @@ import lombok.Setter;
 @Getter
 @Table(name = "m_privilege")
 @JsonIgnoreType
+@AllArgsConstructor
+@NoArgsConstructor
 public class Privilege  extends AuditModel implements Serializable {
     private static final long serialVersionUID = -2675537776836756234L;
 

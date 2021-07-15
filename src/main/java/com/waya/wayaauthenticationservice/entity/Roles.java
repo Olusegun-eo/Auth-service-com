@@ -6,13 +6,17 @@ import java.util.Collection;
 import javax.persistence.*;
 import javax.validation.constraints.Size;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Getter
 @Setter
 @Table(name = "m_roles")
+@AllArgsConstructor
+@NoArgsConstructor
 public class Roles implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -39,9 +43,6 @@ public class Roles implements Serializable {
 //    @ManyToMany(mappedBy = "rolesList")
 //    @JsonIgnore
 //    private List<Users> usersList;
-
-	public Roles() {
-	}
 
 	public Roles(Long id, String name) {
 		this.id = id;
