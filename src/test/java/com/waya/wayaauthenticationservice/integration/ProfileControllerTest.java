@@ -463,13 +463,16 @@ class ProfileControllerTest {
         user.setAccountStatus(1);
         String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
         user.setName(fullName);
-        Users regUser = userRepository.save(user);
+        Users regUser;
+        if(userRepository.existsByEmail(user.getEmail()) || userRepository.existsByPhoneNumber(user.getEmail()))
+            regUser = user;
+        else
+            regUser = userRepository.save(user);
 
         profilePersonal.setEmail("mike@app.com");
         profilePersonal.setFirstName("Mike");
         profilePersonal.setSurname("Ang");
         profilePersonal.setPhoneNumber("0029934");
-        //profilePersonal.setUserId(setUpUserId);
         profilePersonal.setUserId(String.valueOf(regUser.getId()));
         profilePersonal.setDeleted(false);
         profileRepository.save(profilePersonal);

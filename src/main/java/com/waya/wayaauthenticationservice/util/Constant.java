@@ -1,6 +1,12 @@
 package com.waya.wayaauthenticationservice.util;
 
 public class Constant {
+
+    // JWT Token Constants
+    public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
+    public static final String TOKEN_PREFIX = "serial ";
+    public static final String SECRET_TOKEN = "wayas3cr3t";
+
     public static final String SUCCESS_MESSAGE = "Successful";
     public static final String ERROR_MESSAGE = "Error";
     public static final String ACCOUNT_CREATION = "http://ACCOUNT-CREATION-SERVICE/";
@@ -17,7 +23,6 @@ public class Constant {
     public static final String CHAT_TOPIC = "wayagram-chat";
     public static final String WAYAPAY = "Wayapay";
     public static final String CHARACTERS = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPZMXNCBVALSKDJFHG1234509687";
-    public static final String TOKEN_PREFIX = "serial ";
     public static final String HEADER_STRING = "Authorization";
     public static final String AUTHORITIES_KEY = "scopes";
     public static final String USERNAME = "username";

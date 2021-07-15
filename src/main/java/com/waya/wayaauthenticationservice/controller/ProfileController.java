@@ -150,7 +150,6 @@ public class ProfileController {
                 "profile updated successfully", true), HttpStatus.CREATED);
     }
 
-
     /**
      * endpoint to update profile image
      *
@@ -207,7 +206,6 @@ public class ProfileController {
     })
     @PutMapping("delete-restore")
     ResponseEntity<DeleteResponse> toggleDelete(@Valid @RequestBody DeleteRequest deleteRequest){
-
         return profileService.toggleDelete(deleteRequest);
     }
 
@@ -275,7 +273,6 @@ public class ProfileController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-
     @ApiOperation(
             value = "View Active SMS Charge",
             notes = "View Active SMS Charge: User can check status of sms alert")
@@ -309,9 +306,5 @@ public class ProfileController {
     private String getBaseUrl(HttpServletRequest request) {
         return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
     }
-
-
-
-
 
 }

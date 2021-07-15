@@ -9,7 +9,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 public interface PasswordService {
 
-    @PreAuthorize(value = "@userSecurity.useHierarchy(#passwordPojo.email, authentication) or hasRole('ADMIN')")
     ResponseEntity<?> changePassword(PasswordPojo passwordPojo);
 
     ResponseEntity<?> sendPasswordResetOTPByEmail(String email, String baseUrl);
@@ -21,13 +20,13 @@ public interface PasswordService {
     @PreAuthorize(value = "@userSecurity.useHierarchy(#email, authentication) or hasRole('ADMIN')")
     ResponseEntity<?> sendPinResetOTPByEmail(String email, String redirectUrl);
 
-    @PreAuthorize(value = "@userSecurity.useHierarchy(#pinPojo.phoneOrEmail, authentication)")
     ResponseEntity<?> createPin(NewPinPojo pinPojo);
 
     ResponseEntity<?> changePin(ChangePINPojo pinPojo);
 
     ResponseEntity<?> changeForgotPIN(NewPinPojo pinPojo);
 
+    @PreAuthorize(value = "hasRole('ADMIN')")
     ResponseEntity<?> validatePin(Long userId, int pin);
 
     ResponseEntity<?> validatePinFromUser(int pin);

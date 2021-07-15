@@ -53,10 +53,6 @@ import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
 @Slf4j
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-    public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
-    public static final String TOKEN_PREFIX = "serial ";
-    private static final String SECRET_TOKEN = "wayas3cr3t";
-
     @Autowired
     KafkaMessageProducer kafkaMessageProducer;
     @Autowired
@@ -261,35 +257,34 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         String Id = String.valueOf(userId);
 
-        CorporateUser coopUser = mapper.map(mUser, CorporateUser.class);
-        coopUser.setBusinessType(mUser.getBusinessType());
-        coopUser.setPassword(passwordEncoder.encode(mUser.getPassword()));
-        coopUser.setUserId(Id);
-        coopUser = corporateUserRepository.save(coopUser);
+//        CorporateUser coopUser = mapper.map(mUser, CorporateUser.class);
+//        coopUser.setBusinessType(mUser.getBusinessType());
+//        coopUser.setPassword(passwordEncoder.encode(mUser.getPassword()));
+//        coopUser.setUserId(Id);
+//        coopUser = corporateUserRepository.save(coopUser);
 
         CreateAccountPojo createAccount = new CreateAccountPojo();
-        createAccount.setEmailAddress(coopUser.getEmail());
+        createAccount.setEmailAddress(mUser.getEmail());
         createAccount.setExternalId(Id);
-
-        createAccount.setFirstName(coopUser.getFirstName());
-        createAccount.setLastName(coopUser.getSurname());
-        createAccount.setMobileNo(coopUser.getPhoneNumber());
+        createAccount.setFirstName(mUser.getFirstName());
+        createAccount.setLastName(mUser.getSurname());
+        createAccount.setMobileNo(mUser.getPhoneNumber());
         createAccount.setSavingsProductId(1);
 
         CompletableFuture.runAsync(() -> walletProxy.createCorporateAccount(createAccount));
 
         // Implementation for internal calls begin here
         CorporateProfileRequest corporateProfileRequest = new CorporateProfileRequest();
-        corporateProfileRequest.setBusinessType(coopUser.getBusinessType());
-        corporateProfileRequest.setOrganisationEmail(coopUser.getOrgEmail());
-        corporateProfileRequest.setOrganisationName(coopUser.getOrgName());
-        corporateProfileRequest.setOrganisationType(coopUser.getOrgType());
-        corporateProfileRequest.setReferralCode(coopUser.getReferenceCode());
-        corporateProfileRequest.setEmail(coopUser.getEmail());
-        corporateProfileRequest.setSurname(coopUser.getSurname());
+        corporateProfileRequest.setBusinessType(mUser.getBusinessType());
+        corporateProfileRequest.setOrganisationEmail(mUser.getOrgEmail());
+        corporateProfileRequest.setOrganisationName(mUser.getOrgName());
+        corporateProfileRequest.setOrganisationType(mUser.getOrgType());
+        corporateProfileRequest.setReferralCode(mUser.getReferenceCode());
+        corporateProfileRequest.setEmail(mUser.getEmail());
+        corporateProfileRequest.setSurname(mUser.getSurname());
         corporateProfileRequest.setUserId(Id);
-        corporateProfileRequest.setPhoneNumber(coopUser.getPhoneNumber());
-        corporateProfileRequest.setFirstName(coopUser.getFirstName());
+        corporateProfileRequest.setPhoneNumber(mUser.getPhoneNumber());
+        corporateProfileRequest.setFirstName(mUser.getFirstName());
 
         // Implementation for internal call
         log.info("CorporateProfile account creation starts: " + corporateProfileRequest);
@@ -297,7 +292,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("CorporateProfile account creation ends: " + corporateResponse);
 
         VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
-        virtualAccountPojo.setAccountName(coopUser.getFirstName() + " " + coopUser.getSurname());
+        virtualAccountPojo.setAccountName(mUser.getFirstName() + " " + mUser.getSurname());
         virtualAccountPojo.setUserId(String.valueOf(userId));
 
         CompletableFuture.runAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token));

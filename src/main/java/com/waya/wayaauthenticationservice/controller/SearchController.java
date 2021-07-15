@@ -7,10 +7,7 @@ import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import com.waya.wayaauthenticationservice.response.ApiResponse;
 import java.util.List;
 import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_400;
@@ -23,6 +20,7 @@ import static com.waya.wayaauthenticationservice.util.Constant.*;
 })
 @CrossOrigin
 @RestController
+@RequestMapping("/api/v1/search")
 public class SearchController {
 
     private final ProfileService profileService;
@@ -31,7 +29,6 @@ public class SearchController {
     public SearchController(ProfileServiceImpl profileService) {
         this.profileService = profileService;
     }
-
 
     /**
      * search for a profile by name

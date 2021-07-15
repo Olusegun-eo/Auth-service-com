@@ -22,15 +22,26 @@ public interface UserRepository extends JpaRepository<Users, Long> {
 	@Query("SELECT u FROM Users u WHERE u.phoneNumber LIKE CONCAT('%', ?1)" + " AND u.isDeleted = false")
 	Optional<Users> findByPhoneNumber(String phoneNumber);
 
-	@Query(value = "SELECT _user FROM Users _user " + "WHERE UPPER(_user.email) = UPPER(:value) OR "
-			+ "_user.phoneNumber LIKE CONCAT('%', :value) " + "AND _user.isDeleted = false")
+	@Query(value = "SELECT u FROM Users u " + "WHERE UPPER(u.email) = UPPER(:value) OR "
+			+ "u.phoneNumber LIKE CONCAT('%', :value) AND u.isDeleted = false")
 	Optional<Users> findByEmailOrPhoneNumber(@Param("value") String value);
 
 	Page<Users> findByRolesListIn(Collection<Roles> roles, Pageable pageable);
 
     Page<Users> findUserByIsCorporate(boolean value, Pageable pageable);
 
-    //boolean existsByUserId(String userId);
+	@Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM Users u " +
+			"WHERE UPPER(u.email) = UPPER(:email) AND u.isDeleted = false")
+    boolean existsByEmail(@Param("email") String email);
+
+	@Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM Users u " +
+			"WHERE u.phoneNumber LIKE CONCAT('%', :value) AND u.isDeleted = false")
+	boolean existsByPhoneNumber(@Param("value") String value);
+
+	@Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM Users u " +
+			"WHERE UPPER(u.email) = UPPER(:value) OR "
+			+ "u.phoneNumber LIKE CONCAT('%', :value) AND u.isDeleted = false")
+	boolean existsByEmailOrPhoneNumber(String value);
 
     //@Query("SELECT u FROM Users u WHERE UPPER(u.userId) = UPPER(:userId)" +
     //        " AND u.isDeleted = false")
