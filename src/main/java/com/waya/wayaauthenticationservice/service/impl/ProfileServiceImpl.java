@@ -1,34 +1,18 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import static com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient.uploadImage;
-import static com.waya.wayaauthenticationservice.util.Constant.CATCH_EXCEPTION_MSG;
-import static com.waya.wayaauthenticationservice.util.Constant.COULD_NOT_PROCESS_REQUEST;
-import static com.waya.wayaauthenticationservice.util.Constant.CREATE_PROFILE_SUCCESS_MSG;
-import static com.waya.wayaauthenticationservice.util.Constant.DUPLICATE_KEY;
-import static com.waya.wayaauthenticationservice.util.Constant.ID_IS_REQUIRED;
-import static com.waya.wayaauthenticationservice.util.Constant.ID_IS_UNKNOWN;
-import static com.waya.wayaauthenticationservice.util.Constant.LIMIT;
-import static com.waya.wayaauthenticationservice.util.Constant.PHONE_NUMBER_REQUIRED;
-import static com.waya.wayaauthenticationservice.util.Constant.PROFILE_NOT_EXIST;
-import static com.waya.wayaauthenticationservice.util.Constant.*;
-import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateReferralCode;
-import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.validateNum;
-import static org.springframework.http.HttpStatus.OK;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-
-import javax.servlet.http.HttpServletRequest;
-
 import com.waya.wayaauthenticationservice.entity.*;
+import com.waya.wayaauthenticationservice.enums.DeleteType;
+import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
 import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
+import com.waya.wayaauthenticationservice.proxy.ReferralProxy;
 import com.waya.wayaauthenticationservice.repository.*;
+import com.waya.wayaauthenticationservice.response.*;
+import com.waya.wayaauthenticationservice.service.EmailService;
+import com.waya.wayaauthenticationservice.service.MailService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.service.SMSTokenService;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,39 +20,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.waya.wayaauthenticationservice.enums.DeleteType;
-import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
-import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
-import com.waya.wayaauthenticationservice.proxy.ReferralProxy;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
-import com.waya.wayaauthenticationservice.response.DeleteResponse;
-import com.waya.wayaauthenticationservice.response.OtherdetailsResponse;
-import com.waya.wayaauthenticationservice.response.ProfileImageResponse;
-import com.waya.wayaauthenticationservice.response.SMSChargeResponse;
-import com.waya.wayaauthenticationservice.response.SearchProfileResponse;
-import com.waya.wayaauthenticationservice.response.ToggleSMSResponse;
-import com.waya.wayaauthenticationservice.response.UserProfileResponse;
-import com.waya.wayaauthenticationservice.service.EmailService;
-import com.waya.wayaauthenticationservice.service.MailService;
-import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.service.SMSTokenService;
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
+import static com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient.uploadImage;
+import static com.waya.wayaauthenticationservice.util.Constant.*;
+import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateReferralCode;
+import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.validateNum;
+import static org.springframework.http.HttpStatus.OK;
 
 @Service
 public class ProfileServiceImpl implements ProfileService {
 
-//    private static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
+    //    private static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
 //    private static final String SECRET_TOKEN = "wayas3cr3t";
 //    private static final String TOKEN_PREFIX = "serial ";
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -152,9 +125,9 @@ public class ProfileServiceImpl implements ProfileService {
             // make a call to the profile service to get getReferralCodeByUserId
             //ReferralCodePojo referralCodePojo = referralProxy.getReferralCodeByUserId(userId);
 
-             ReferralCode referrals = referralCodeRepository.getReferralCodeByUserId(userId);
+            ReferralCode referrals = referralCodeRepository.getReferralCodeByUserId(userId);
 
-            return profileRepository.findAllByReferralCode(referrals.getReferalCode(), LIMIT,
+            return profileRepository.findAllByReferralCode(referrals.getReferralCode(), LIMIT,
                     parsePageNumber * LIMIT, false)
                     .stream().map(this::setProfileResponse)
                     .collect(Collectors.toList());
@@ -178,14 +151,11 @@ public class ProfileServiceImpl implements ProfileService {
                     false, request.getEmail().trim());
             //check if the user exist in the referral table
             ///get-user-by-referral-code/{userId}
-
 //            ReferralCodePojo referralCodePojo = referralProxy.getUserByReferralCode(request.getUserId());
-
-          Optional<ReferralCode> referralCode = referralCodeRepository
+            Optional<ReferralCode> referralCode = referralCodeRepository
                     .findByUserId(request.getUserId());
             //validation check
             ApiResponse<String> validationCheck = validationCheckOnProfile(profile, referralCode);
-
             if (validationCheck.getStatus()) {
                 Profile newProfile = modelMapper.map(request, Profile.class);
                 // check if
@@ -196,7 +166,7 @@ public class ProfileServiceImpl implements ProfileService {
                 log.info("saving new personal profile ::: {}", newProfile);
                 //save referral code
                 saveReferralCode(savedProfile, request.getUserId());
-               // CompletableFuture.runAsync(() -> saveReferralCode(savedProfile, request.getUserId()));
+                // CompletableFuture.runAsync(() -> saveReferralCode(savedProfile, request.getUserId()));
 
                 String fullName = String.format("%s %s", savedProfile.getFirstName(),
                         savedProfile.getSurname());
@@ -246,10 +216,10 @@ public class ProfileServiceImpl implements ProfileService {
             //check if the user exist in the referral table
             // now this check will extend to the referral service
 
-//            ReferralCodePojo referralCodePojo = referralProxy.getUserByReferralCode(profileRequest.getUserId());
+//          ReferralCodePojo referralCodePojo = referralProxy.getUserByReferralCode(profileRequest.getUserId());
 
-			 Optional<ReferralCode> referralCode = referralCodeRepository
-			 .findByUserId(profileRequest.getUserId());
+            Optional<ReferralCode> referralCode = referralCodeRepository
+                    .findByUserId(profileRequest.getUserId());
             //validation check
             ApiResponse<String> validationCheck = validationCheckOnProfile(profile, referralCode);
 
@@ -268,7 +238,7 @@ public class ProfileServiceImpl implements ProfileService {
 
                 // send email otp
                 CompletableFuture.runAsync(() -> emailService.sendAcctVerificationEmailToken(
-                       baseUrl, newCorporateProfile.getEmail()));
+                        baseUrl, newCorporateProfile.getEmail()));
 
                 return new ApiResponse<>(null,
                         CREATE_PROFILE_SUCCESS_MSG, true, OK);
@@ -363,19 +333,19 @@ public class ProfileServiceImpl implements ProfileService {
 //        }
 
 //        ReferralCodePojo pro saveReferralCode
-        /**
-         * check for the availability of the service
-         * rollback if the service is unavailable
-         */
-        // provide endpoint to send data to referral service
 
+    /**
+     * check for the availability of the service
+     * rollback if the service is unavailable
+     */
+    // provide endpoint to send data to referral service
     private void saveReferralCode(Profile newProfile, String userId) {
         // send details to the referral Service
         referralCodeRepository.save(
                 new ReferralCode(generateReferralCode(REFERRAL_CODE_LENGHT),
                         newProfile, userId));
 
-            log.info("saving referral code for this new profile");
+        log.info("saving referral code for this new profile");
     }
 
     /**
@@ -390,7 +360,7 @@ public class ProfileServiceImpl implements ProfileService {
     public UserProfileResponse getUserProfile(String userId, HttpServletRequest request) {
         try {
             Optional<Profile> profile = profileRepository.findByUserId(false, userId);
-            if (profile.isPresent())
+            if (!profile.isPresent())
                 throw new CustomException("profile with that user id is not found", HttpStatus.NOT_FOUND);
 
             log.info("getting users profile from db ::: {}", profile.get());
@@ -664,7 +634,7 @@ public class ProfileServiceImpl implements ProfileService {
             return new ApiResponse<>(null,
                     DUPLICATE_KEY, false, HttpStatus.UNPROCESSABLE_ENTITY);
         }
-        if (referralCodePojo != null) {
+        if (referralCodePojo.isPresent()) {
             return new ApiResponse<>(null, "user id already exists",
                     false, HttpStatus.UNPROCESSABLE_ENTITY);
         } else {
@@ -855,9 +825,9 @@ public class ProfileServiceImpl implements ProfileService {
                 .orElseThrow(() -> new CustomException("profile does not exist", HttpStatus.NOT_FOUND));
         WelcomeEmailContext emailContext = new WelcomeEmailContext();
         emailContext.init(userProfile);
-        try{
+        try {
             mailService.sendMail(emailContext);
-        }catch(Exception e){
+        } catch (Exception e) {
             log.error("An Error Occurred:: {}", e.getMessage());
         }
         // mailService.sendMail(user.getEmail(), message);
@@ -868,12 +838,12 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public UserProfileResponse getProfileByReferralCode(String referralCode) {
         Optional<Profile> profile;
-        try{
-            profile = profileRepository.findByReferral(false,referralCode);
-                if (!profile.isPresent()){
-                    throw new CustomException("Null", HttpStatus.BAD_REQUEST);
-                }
-            } catch (Exception e) {
+        try {
+            profile = profileRepository.findByReferral(false, referralCode);
+            if (!profile.isPresent()) {
+                throw new CustomException("Null", HttpStatus.BAD_REQUEST);
+            }
+        } catch (Exception e) {
             throw new RuntimeException(e.fillInStackTrace());
         }
 

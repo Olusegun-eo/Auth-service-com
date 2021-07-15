@@ -45,21 +45,16 @@ public class Users implements Serializable {
     @Column(nullable = false)
     private String surname;
 
-    @JsonIgnore
     @Column(nullable = false)
     private String password;
 
-    @JsonIgnore
     private String pinHash;
 
-    @JsonIgnore
     @Column(nullable = false)
     private String name;
 
-    @JsonIgnore
     private boolean phoneVerified = false;
 
-    @JsonIgnore
     private boolean emailVerified = false;
 
     @Column(name = "email_verified_date")
@@ -82,8 +77,6 @@ public class Users implements Serializable {
     private String regDevicePlatform;
 
     private String regDeviceIP;
-
-    private String imageUrl;
 
     @Column(name = "account_status")
     private int accountStatus = 1;
@@ -109,8 +102,8 @@ public class Users implements Serializable {
     @Column(name = "is_active", nullable = false)
     private boolean isActive = false;
 
-    @Column(name = "first_time_login_remaining", nullable = false)
-    private boolean firstTimeLoginRemaining;
+    @Column(name = "first_time_login_attempt", nullable = false)
+    private boolean isFirstTimeLogin = true;
 
     @Column(name = "first_time_login_date")
     private LocalDateTime firstTimeLoginDate;

@@ -26,7 +26,7 @@ public class ReferralCodeServiceImpl implements ReferralService {
         Optional<ReferralCode> referralCode = Optional.of(referralCodeRepository.findByUserId(userId)
                 .orElseThrow(() -> new CustomException("invalid userId", HttpStatus.NOT_FOUND)));
 
-        return referralCode.map(x -> new ReferralCodeResponse(x.getReferalCode())).get();
+        return referralCode.map(x -> new ReferralCodeResponse(x.getReferralCode())).get();
 
     }
 }

@@ -2,6 +2,7 @@ package com.waya.wayaauthenticationservice.security;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -112,6 +113,14 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		String token = Jwts.builder().setSubject(userName)
 				.setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))
 				.signWith(SignatureAlgorithm.HS256, SecurityConstants.getSecret()).compact();
+
+		// Check for First Login Attempt and Update User Table
+		UserRepository userRepository = (UserRepository) SpringApplicationContext.getBean("userRepository");
+		if(user.isFirstTimeLogin()){
+			user.setFirstTimeLogin(false);
+			user.setFirstTimeLoginDate(LocalDateTime.now());
+			userRepository.save(user);
+		}
 
 		LoginResponsePojo loginResponsePojo = new LoginResponsePojo();
 		if(user.getAccountStatus() != -1){
