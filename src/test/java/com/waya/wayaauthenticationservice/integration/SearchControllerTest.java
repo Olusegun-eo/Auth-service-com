@@ -18,14 +18,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 
 import static com.waya.wayaauthenticationservice.util.Constant.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ActiveProfiles("application-test")
+@ActiveProfiles("test")
 @SpringBootTest(properties = {"eureka.client.enabled=false"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -83,8 +82,8 @@ class SearchControllerTest {
             String name, ResultMatcher expectedStatus
     ) throws Exception {
 
-        mockMvc.perform(get("/api/v1/search/search-profile-name/"+name)
-                .header("Authorization",generateToken(user))
+        mockMvc.perform(get("/api/v1/search/search-profile-name/" + name)
+                .header("Authorization", generateToken(user))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(expectedStatus);
     }
@@ -92,8 +91,8 @@ class SearchControllerTest {
     private void searchAndVerifyProfileByPhoneNumber(
             String phoneNumber, ResultMatcher expectedStatus
     ) throws Exception {
-        mockMvc.perform(get("/api/v1/search/search-profile-phoneNumber/"+phoneNumber)
-                .header("Authorization",generateToken(user))
+        mockMvc.perform(get("/api/v1/search/search-profile-phoneNumber/" + phoneNumber)
+                .header("Authorization", generateToken(user))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(expectedStatus);
     }
@@ -101,8 +100,8 @@ class SearchControllerTest {
     private void searchAndVerifyProfileByEmail(
             String email, ResultMatcher expectedStatus
     ) throws Exception {
-        mockMvc.perform(get("/api/v1/search/search-profile-email/"+email)
-                .header("Authorization",generateToken(user))
+        mockMvc.perform(get("/api/v1/search/search-profile-email/" + email)
+                .header("Authorization", generateToken(user))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(expectedStatus);
     }
@@ -110,8 +109,8 @@ class SearchControllerTest {
     private void searchAndVerifyProfileOrganisationName(
             String organisationName, ResultMatcher expectedStatus
     ) throws Exception {
-        mockMvc.perform(get("/api/v1/search/search-profile-organisationName/"+ organisationName)
-                .header("Authorization",generateToken(user))
+        mockMvc.perform(get("/api/v1/search/search-profile-organisationName/" + organisationName)
+                .header("Authorization", generateToken(user))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(expectedStatus);
     }
@@ -130,7 +129,8 @@ class SearchControllerTest {
         profile.setUserId(String.valueOf(user.getId()));
         profile.setDeleted(false);
 
-        profileRepository.save(profile);
+        if (!profileRepository.existsByEmail(profile.getEmail()))
+            profileRepository.save(profile);
 
         //corporate profile 1
         OtherDetails otherDetails = new OtherDetails();
@@ -151,8 +151,8 @@ class SearchControllerTest {
         corporate.setPhoneNumber("09123");
         corporate.setOtherDetails(otherDetails);
 
-        profileRepository.save(corporate);
-
+        if (!profileRepository.existsByEmail(corporate.getEmail()))
+            profileRepository.save(corporate);
     }
 
     public String generateToken(Users user) {

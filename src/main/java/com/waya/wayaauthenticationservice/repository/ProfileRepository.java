@@ -52,5 +52,9 @@ public interface ProfileRepository extends JpaRepository<Profile, UUID> {
 
     @Query(value = "select * from m_user_profile where referral =:referral and deleted =:deleted", nativeQuery = true)
     Optional<Profile> findByReferral(boolean deleted, String referral);
+
+    @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM Profile u " +
+            "WHERE UPPER(u.email) = UPPER(:email) AND u.deleted = false")
+    boolean existsByEmail(@Param("email") String email);
 }
 
