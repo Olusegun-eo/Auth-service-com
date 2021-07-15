@@ -2,10 +2,10 @@ spring:
   application:
     name: auth-service
   datasource:
-    #    url: jdbc:postgresql://127.0.0.1:5432/app_dev
+    url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
     #    username: app_dev
     #    password: e1bc9e7f864d
-    url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaPayChatAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+    #url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaPayChatAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
     username: ${POSTGRES_USERNAME:WayaPayChat2020}
     password: ${POSTGRES_PASSWORD:gh9shfit2m53g4xz}
     initialization-mode: always
@@ -123,15 +123,15 @@ deleteprofile:
 app:
   config:
     referral:
-      base-url: http://68.183.60.114:8282/referral
+      base-url: http://46.101.41.187:8282/referral
     auto:
       follow:
         base-url: http://157.245.84.14:1000/graph/friend/waya-auto-follow
-    wayagram-profile:
-      base-url: http://157.245.84.14:1000/profile
-    main:
-      profile:
-        base-url: http://157.245.84.14:1000/main/profile/create
+#    wayagram-profile:
+#      base-url: http://157.245.84.14:1000/profile
+#    main:
+#      profile:
+#        base-url: http://157.245.84.14:1000/main/profile/create
     file-resource:
       base-url: http://46.101.41.187:9098/file-resource/api
     virtual-account:
@@ -154,37 +154,6 @@ app:
       - myandroidapp://oauth2/redirect
       - myiosapp://oauth2/redirect
 api:
-  otp:
-    send-otp:
-      description: Send otp to user
-      notes: |
-        # Normal Response
-        if the request passes all validation, it will send an OTP to the user,
-        # Error Response
-        returns with a detailed response about the error.
-    verify-otp:
-      description: Verify otp
-      notes: |
-        # Normal Response
-        Verifies an Otp.
-        # Error Response
-        returns with a detailed response about the error.
-
-  email:
-    email-token:
-      description: Get a token
-      notes: |
-        # Normal Response
-        if the request passes all validation, it will send a token to your email
-        # Error Response
-        returns with a detailed response about the error.
-    email-verify:
-      description: Verify your email
-      notes: |
-        # Normal Response
-        if the request passes all validation, it will verify your email successfully
-        # Error Response
-        returns with a detailed response about the error.
 
   corporate-profile:
     create-corporate-profile:

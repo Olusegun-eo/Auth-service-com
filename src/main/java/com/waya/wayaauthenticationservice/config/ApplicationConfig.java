@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 @Setter
 @Getter
 public class ApplicationConfig {
-private String deleteProfileUrl;
-private String validateUser;
-private String disableWayagramUrl;
+
+    private String deleteWallet;
+    private String deleteWayagram;
 }
