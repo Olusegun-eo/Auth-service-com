@@ -167,5 +167,6 @@ class SearchControllerTest {
             throw new RuntimeException(e.fillInStackTrace());
         }
     }
+
 }
 
