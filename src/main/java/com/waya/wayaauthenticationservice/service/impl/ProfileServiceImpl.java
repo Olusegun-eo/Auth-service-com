@@ -837,9 +837,17 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public UserProfileResponse getProfileByReferralCode(String referralCode) {
+        ReferralCode referralCode1;
         Optional<Profile> profile;
         try {
-            profile = profileRepository.findByReferral(false, referralCode);
+            referralCode1 = referralCodeRepository.getReferralCodeByUserId(referralCode);
+
+            if (referralCode1 == null) {
+                throw new CustomException("Null", HttpStatus.BAD_REQUEST);
+            }
+
+            profile =  profileRepository.findByUserId(false,referralCode1.getUserId());
+
             if (!profile.isPresent()) {
                 throw new CustomException("Null", HttpStatus.BAD_REQUEST);
             }
