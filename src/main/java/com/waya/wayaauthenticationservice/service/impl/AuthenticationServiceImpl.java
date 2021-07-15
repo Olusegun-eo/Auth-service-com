@@ -141,11 +141,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setName(fullName);
             user.setRegDevicePlatform(dev.getPlatform());
             user.setRegDeviceType(dev.getDeviceType());
-            if (adminAction) {
-                user.setActive(true);
-                user.setAccountStatus(-1);
-                CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
-            }
             user.setPassword(passwordEncoder.encode(mUser.getPassword()));
             user.setRoleList(roleList);
 
@@ -154,7 +149,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             if (regUser == null)
                 return new ResponseEntity<>(new ErrorResponse(ErrorMessages.COULD_NOT_INSERT_RECORD.getErrorMessage()),
                         HttpStatus.INTERNAL_SERVER_ERROR);
-
+            // As soon as User is created by Admin Send email advising new Password
+            if (adminAction) {
+                user.setActive(true);
+                user.setAccountStatus(-1);
+                CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
+            }
             createPrivateUser(regUser, getBaseUrl(request));
 
             return new ResponseEntity<>(new SuccessResponse(
@@ -232,12 +232,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setSurname(mUser.getSurname());
             String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
             user.setName(fullName);
-
             Users regUser = userRepo.saveAndFlush(user);
 
             if (regUser == null)
                 return new ResponseEntity<>(new ErrorResponse(ErrorMessages.COULD_NOT_INSERT_RECORD.getErrorMessage()),
                         HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if (adminAction) {
+                user.setActive(true);
+                user.setAccountStatus(-1);
+                CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
+            }
 
             String token = generateToken(regUser);
 
@@ -269,7 +274,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         createAccount.setLastName(mUser.getSurname());
         createAccount.setMobileNo(mUser.getPhoneNumber());
         createAccount.setSavingsProductId(1);
-
         CompletableFuture.runAsync(() -> walletProxy.createCorporateAccount(createAccount));
 
         // Implementation for internal calls begin here
@@ -317,6 +321,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("PersonalProfile account creation starts: " + personalProfileRequest);
         ApiResponse<String> personalResponse = profileService.createProfile(personalProfileRequest, baseUrl);
         log.info("PersonalProfile account creation ends: " + personalResponse);
+
     }
 
     public String generateToken(Users userResponse) {
@@ -411,6 +416,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return new ResponseEntity<>(new ErrorResponse(profileResponse.getData().getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
+
 
     private ApiResponse<OTPVerificationResponse> verifyOTP(String phoneNumber, Integer otp) {
         ApiResponse<OTPVerificationResponse> verify = smsTokenService.verifySMSOTP(phoneNumber, otp);
@@ -600,4 +606,5 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         notification.setInitiator(email);
         CompletableFuture.runAsync(() -> notificationProxy.sendEmail(notification));
     }
+
 }

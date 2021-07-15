@@ -7,12 +7,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
+
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class BulkPrivateUserCreationDTO {
 
-	private Set<BaseUserPojo> usersList;
+	@NotEmpty(message= "List Should Not be Empty")
+	private Set<@Valid BaseUserPojo> usersList;
 	
 }
