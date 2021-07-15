@@ -69,7 +69,7 @@ public class Constant {
 
     public static final String COULD_NOT_PROCESS_REQUEST = "could not process request {}";
 
-    public static final String DUPLICATE_KEY = "duplicate key exception, user id or email might already exist ";
+    public static final String DUPLICATE_KEY = "duplicate key exception, user id or email might already exist";
 
     public static final String ID_IS_REQUIRED = "Id is required";
 

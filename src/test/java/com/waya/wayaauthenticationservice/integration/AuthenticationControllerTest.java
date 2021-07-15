@@ -89,7 +89,7 @@ public class AuthenticationControllerTest {
         user.setEmail("micro@toju.com");
         user.setFirstName("Stan");
         user.setSurname("Toju");
-        user.setPhoneNumber("2348166302445");
+        user.setPhoneNumber("2347030355396");
         user.setPassword("test@123");
         user.setCity("Shomolu");
         user.setBusinessType("Banking");

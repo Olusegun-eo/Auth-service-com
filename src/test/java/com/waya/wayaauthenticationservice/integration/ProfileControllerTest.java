@@ -44,7 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ActiveProfiles("application-test")
+@ActiveProfiles("test")
 @SpringBootTest(properties = {"eureka.client.enabled=false"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -98,7 +98,7 @@ class ProfileControllerTest {
     void setUp() {
         testHelper = new TestHelper(userRepository, rolesRepository);
         user = testHelper.createTestUser();
-        seedData(user);
+        seedData();
     }
 
     @Order(1)
@@ -133,7 +133,7 @@ class ProfileControllerTest {
                 "app@app12.com", "123");
 
         createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
-                "user id already exists",
+                "duplicate key exception, user id or email might already exist",
                 "$.httpStatus", "UNPROCESSABLE_ENTITY");
     }
 
@@ -204,7 +204,7 @@ class ProfileControllerTest {
 
         final UpdatePersonalProfileRequest updatePersonalProfileRequest = setUpdatePersonalProfileRequest();
 
-        updateAndVerifyPersonalProfile(updatePersonalProfileRequest, "123", "$.message",
+        updateAndVerifyPersonalProfile(updatePersonalProfileRequest, "1234", "$.message",
                 "profile updated successfully", status().isCreated());
     }
 
@@ -494,13 +494,13 @@ class ProfileControllerTest {
         return updateCorporateProfileRequest;
     }
 
-    private void seedData(Users user) {
+    private void seedData() {
 
         profilePersonal.setEmail("mikey@app.com");
         profilePersonal.setFirstName("Mike");
         profilePersonal.setSurname("Ang");
         profilePersonal.setPhoneNumber("0029934");
-        profilePersonal.setUserId(String.valueOf(user.getId()));
+        profilePersonal.setUserId("123");
         profilePersonal.setDeleted(false);
 
         if (!profileRepository.existsByEmail(profilePersonal.getEmail()))
@@ -514,7 +514,7 @@ class ProfileControllerTest {
         profile.setSurname("app");
         profile.setState("state");
         profile.setCorporate(false);
-        profile.setUserId("123");
+        profile.setUserId("1234");
         profile.setDeleted(false);
 
         if (!profileRepository.existsByEmail(profile.getEmail()))
@@ -523,8 +523,8 @@ class ProfileControllerTest {
         ReferralCode referralCode = new ReferralCode();
         referralCode.setReferralCode("102kkdjeurw2");
         referralCode.setProfile(profile);
-        referralCode.setUserId("123");
-        if(!referralCodeRepository.existsByEmail("102kkdjeurw2", "123"))
+        referralCode.setUserId("1234");
+        if(!referralCodeRepository.existsByEmail("102kkdjeurw2", "1234"))
             referralCodeRepository.save(referralCode);
 
         //corporate profile 1
