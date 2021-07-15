@@ -7,13 +7,19 @@ import com.waya.wayaauthenticationservice.enums.DeleteType;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.repository.OtherDetailsRepository;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
+import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.ProfileImageResponse;
 import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
+
+import static com.waya.wayaauthenticationservice.util.Constant.*;
 import static com.waya.wayaauthenticationservice.util.JsonString.asJsonString;
 
 import com.waya.wayaauthenticationservice.util.Constant;
 import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.util.TestHelper;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -33,6 +39,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -56,9 +63,6 @@ class ProfileControllerTest {
     private ProfileRepository profileRepository;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private OtherDetailsRepository otherDetailsRepository;
 
     @MockBean
@@ -66,7 +70,6 @@ class ProfileControllerTest {
 
     private final Profile profilePersonal = new Profile();
     private final Profile profile = new Profile();
-    private final Users user = new Users();
 
     final MockMultipartFile file = new MockMultipartFile("files",
             "snapshot.png", MediaType.IMAGE_JPEG_VALUE, "content".getBytes(StandardCharsets.UTF_8));
@@ -79,9 +82,21 @@ class ProfileControllerTest {
 
     final String setUpUserId = "uew748";
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RolesRepository rolesRepository;
+
+    private Users user = new Users();
+
+    private TestHelper testHelper;
+
     @BeforeAll
-    public void setUp() {
-        seedData();
+    void setUp() {
+        testHelper = new TestHelper(userRepository, rolesRepository);
+        user = testHelper.createTestUser();
+        seedData(user);
     }
 
     @Test
@@ -303,13 +318,13 @@ class ProfileControllerTest {
                 "$.code", "300");
     }
 
-
     private void createAndVerifyPersonalProfile(
             final PersonalProfileRequest personalProfileRequest,
             final String jsonPath0, final String jsonPathMessage0,
             final String jsonPath1, final String jsonPathMessage1
     ) throws Exception {
         mockMvc.perform(post("/api/v1/profile/personal-profile")
+                .header("Authorization", generateToken(user))
                 .contentType(APPLICATION_JSON)
                 .content(asJsonString(personalProfileRequest)))
                 .andExpect(jsonPath(jsonPath0, Is.is(jsonPathMessage0)))
@@ -324,6 +339,7 @@ class ProfileControllerTest {
     ) throws Exception {
 
         mockMvc.perform(put("/api/v1/profile/delete-restore")
+                .header("Authorization", generateToken(user))
                 .contentType(APPLICATION_JSON)
                 .content(asJsonString(deleteRequest)))
                 .andExpect(status().isOk())
@@ -337,6 +353,7 @@ class ProfileControllerTest {
             final String jsonPath1, final String jsonPathMessage1
     ) throws Exception {
         mockMvc.perform(post("/api/v1/profile/corporate-profile")
+                .header("Authorization", generateToken(user))
                 .contentType(APPLICATION_JSON)
                 .content(asJsonString(corporateProfileRequest)))
                 .andExpect(jsonPath(jsonPath0, Is.is(jsonPathMessage0))).andDo(print())
@@ -349,6 +366,7 @@ class ProfileControllerTest {
             ResultMatcher expectedStatus
     ) throws Exception {
         mockMvc.perform(get("/api/v1/profile/" + userId)
+                .header("Authorization", generateToken(user))
                 .contentType(APPLICATION_JSON))
                 .andExpect(expectedStatus)
                 .andExpect(jsonPath(jsonPath, Is.is(jsonPathMessage)))
@@ -361,6 +379,7 @@ class ProfileControllerTest {
             final String jsonPathMessage, ResultMatcher expectedStatus
     ) throws Exception {
         mockMvc.perform(put("/api/v1/profile/update-personal-profile/" + userId)
+                .header("Authorization", generateToken(user))
                 .contentType(APPLICATION_JSON)
                 .content(asJsonString(profileRequest)))
                 .andExpect(expectedStatus)
@@ -373,6 +392,7 @@ class ProfileControllerTest {
             final String jsonPathMessage, ResultMatcher expectedStatus
     ) throws Exception {
         mockMvc.perform(put("/api/v1/profile/update-corporate-profile/" + userId)
+                .header("Authorization", generateToken(user))
                 .contentType(APPLICATION_JSON)
                 .content(asJsonString(corporateProfileRequest)))
                 .andExpect(expectedStatus)
@@ -383,6 +403,7 @@ class ProfileControllerTest {
             final String userId, ResultMatcher expectedStatus
     ) throws Exception {
         mockMvc.perform(get("/api/v1/profile/user-referrals/" + userId)
+                .header("Authorization", generateToken(user))
                 .contentType(APPLICATION_JSON))
                 .andExpect(expectedStatus);
     }
@@ -452,30 +473,17 @@ class ProfileControllerTest {
         return updateCorporateProfileRequest;
     }
 
-    private void seedData() {
+    private void seedData(Users user) {
 
-        user.setEmail("mike@app.com");
-        user.setFirstName("Mike");
-        user.setPhoneNumber("0029934");
-        user.setReferenceCode("CRT");
-        user.setSurname("Ang");
-        user.setDateCreated(LocalDateTime.now());
-        user.setAccountStatus(1);
-        String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
-        user.setName(fullName);
-        Users regUser;
-        if(userRepository.existsByEmail(user.getEmail()) || userRepository.existsByPhoneNumber(user.getEmail()))
-            regUser = user;
-        else
-            regUser = userRepository.save(user);
-
-        profilePersonal.setEmail("mike@app.com");
+        profilePersonal.setEmail("mikey@app.com");
         profilePersonal.setFirstName("Mike");
         profilePersonal.setSurname("Ang");
         profilePersonal.setPhoneNumber("0029934");
-        profilePersonal.setUserId(String.valueOf(regUser.getId()));
+        profilePersonal.setUserId(String.valueOf(user.getId()));
         profilePersonal.setDeleted(false);
-        profileRepository.save(profilePersonal);
+
+        if (!profileRepository.existsByEmail(profilePersonal.getEmail()))
+            profileRepository.save(profile);
 
         //personal profile 1
         profile.setGender("male");
@@ -488,7 +496,8 @@ class ProfileControllerTest {
         profile.setUserId("123");
         profile.setDeleted(false);
 
-        profileRepository.save(profile);
+        if (!profileRepository.existsByEmail(profile.getEmail()))
+            profileRepository.save(profile);
 
 //        ReferralCode referralCode = new ReferralCode();
 //        referralCode.setReferalCode("102kkdjeurw2");
@@ -516,8 +525,22 @@ class ProfileControllerTest {
         corporate.setPhoneNumber("09123");
         corporate.setOtherDetails(otherDetails);
 
-        profileRepository.save(corporate);
+        if (!profileRepository.existsByEmail(corporate.getEmail()))
+            profileRepository.save(corporate);
 
+    }
+
+    public String generateToken(Users user) {
+        try {
+            System.out.println("::::::GENERATE TOKEN:::::");
+            String token = Jwts.builder().setSubject(user.getEmail())
+                    .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
+                    .signWith(SignatureAlgorithm.HS512, SECRET_TOKEN).compact();
+            System.out.println(":::::Token:::::");
+            return TOKEN_PREFIX + token;
+        } catch (Exception e) {
+            throw new RuntimeException(e.fillInStackTrace());
+        }
     }
 
 }
