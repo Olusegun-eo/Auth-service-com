@@ -4,7 +4,9 @@ import com.waya.wayaauthenticationservice.entity.OtherDetails;
 import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
+import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.util.TestHelper;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.junit.jupiter.api.*;
@@ -39,11 +41,18 @@ class SearchControllerTest {
     @Autowired
     private UserRepository userRepository;
 
-    private final Users user = new Users();
+    @Autowired
+    private RolesRepository rolesRepository;
+
+    private Users user = new Users();
+
+    private TestHelper testHelper;
 
     @BeforeAll
     void setUp() {
-        seedData();
+        testHelper = new TestHelper(userRepository, rolesRepository);
+        user = testHelper.createTestUser();
+        seedData(user);
     }
 
     @Order(1)
@@ -75,7 +84,7 @@ class SearchControllerTest {
     ) throws Exception {
 
         mockMvc.perform(get("/api/v1/search/search-profile-name/"+name)
-                .header("Authorization","serial eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlbW1veDU1QGdtYWlsLmNvbSIsImV4cCI6MTY1NzY1NjI0Nn0.xOCakRQLFNXqbSOI3b3jsFek5ybfOmdMCfZ71N1TQ2o")
+                .header("Authorization",generateToken(user))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(expectedStatus);
     }
@@ -84,7 +93,7 @@ class SearchControllerTest {
             String phoneNumber, ResultMatcher expectedStatus
     ) throws Exception {
         mockMvc.perform(get("/api/v1/search/search-profile-phoneNumber/"+phoneNumber)
-                .header("Authorization","serial eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlbW1veDU1QGdtYWlsLmNvbSIsImV4cCI6MTY1NzY1NjI0Nn0.xOCakRQLFNXqbSOI3b3jsFek5ybfOmdMCfZ71N1TQ2o")
+                .header("Authorization",generateToken(user))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(expectedStatus);
     }
@@ -93,7 +102,7 @@ class SearchControllerTest {
             String email, ResultMatcher expectedStatus
     ) throws Exception {
         mockMvc.perform(get("/api/v1/search/search-profile-email/"+email)
-                .header("Authorization","serial eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlbW1veDU1QGdtYWlsLmNvbSIsImV4cCI6MTY1NzY1NjI0Nn0.xOCakRQLFNXqbSOI3b3jsFek5ybfOmdMCfZ71N1TQ2o")
+                .header("Authorization",generateToken(user))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(expectedStatus);
     }
@@ -102,27 +111,12 @@ class SearchControllerTest {
             String organisationName, ResultMatcher expectedStatus
     ) throws Exception {
         mockMvc.perform(get("/api/v1/search/search-profile-organisationName/"+ organisationName)
-                .header("Authorization","serial eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlbW1veDU1QGdtYWlsLmNvbSIsImV4cCI6MTY1NzY1NjI0Nn0.xOCakRQLFNXqbSOI3b3jsFek5ybfOmdMCfZ71N1TQ2o")
+                .header("Authorization",generateToken(user))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(expectedStatus);
     }
 
-    private void seedData() {
-
-        user.setEmail("mike@app.com");
-        user.setFirstName("Mike");
-        user.setPhoneNumber("0029934");
-        user.setReferenceCode("CRT");
-        user.setSurname("Ang");
-        user.setDateCreated(LocalDateTime.now());
-        user.setAccountStatus(1);
-        String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
-        user.setName(fullName);
-        Users regUser;
-        if(userRepository.existsByEmail(user.getEmail()) || userRepository.existsByPhoneNumber(user.getEmail()))
-            regUser = user;
-        else
-            regUser = userRepository.save(user);
+    private void seedData(Users user) {
 
         //personal profile 1
         Profile profile = new Profile();
@@ -133,7 +127,7 @@ class SearchControllerTest {
         profile.setSurname("appp");
         profile.setState("state");
         profile.setCorporate(false);
-        profile.setUserId(String.valueOf(regUser.getId()));
+        profile.setUserId(String.valueOf(user.getId()));
         profile.setDeleted(false);
 
         profileRepository.save(profile);
@@ -161,10 +155,10 @@ class SearchControllerTest {
 
     }
 
-    public String generateToken(String userName) {
+    public String generateToken(Users user) {
         try {
             System.out.println("::::::GENERATE TOKEN:::::");
-            String token = Jwts.builder().setSubject(userName)
+            String token = Jwts.builder().setSubject(user.getEmail())
                     .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
                     .signWith(SignatureAlgorithm.HS512, SECRET_TOKEN).compact();
             System.out.println(":::::Token:::::");
@@ -173,8 +167,5 @@ class SearchControllerTest {
             throw new RuntimeException(e.fillInStackTrace());
         }
     }
-
-    public
-
 }
 

@@ -8,7 +8,9 @@ import com.waya.wayaauthenticationservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
+import javax.management.relation.Role;
 import java.time.LocalDateTime;
+import java.util.Collections;
 
 //@ActiveProfiles("test")
 //@SpringBootTest(properties = {"eureka.client.enabled=false"})
@@ -18,24 +20,25 @@ import java.time.LocalDateTime;
 //@EmbeddedKafka(partitions = 1, brokerProperties =
 //        {"listeners=PLAINTEXT://localhost:9092", "port=9092"})
 
-public class TestHelperClass {
+public class TestHelper {
 
     private UserRepository userRepository;
     private RolesRepository rolesRepository;
 
-    public TestHelperClass(UserRepository userRepository, RolesRepository rolesRepository) {
+    public TestHelper(UserRepository userRepository, RolesRepository rolesRepository) {
         this.userRepository = userRepository;
         this.rolesRepository = rolesRepository;
     }
 
     private final Users user = new Users();
 
-    public void createTestUser(){
-
-
+    public Users createTestUser(){
+        Roles userRole = this.rolesRepository.findByName("ROLE_USER")
+                .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
 
         user.setEmail("mike@app.com");
         user.setFirstName("Mike");
+        user.setPassword("test@123");
         user.setPhoneNumber("0029934");
         user.setReferenceCode("CRT");
         user.setSurname("Ang");
@@ -43,10 +46,14 @@ public class TestHelperClass {
         user.setAccountStatus(1);
         String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
         user.setName(fullName);
+        user.setRolesList(Collections.singletonList(userRole));
+        Users regUser;
+        if(userRepository.existsByEmail(user.getEmail()) || userRepository.existsByPhoneNumber(user.getEmail()))
+            regUser = user;
+        else
+            regUser = userRepository.save(user);
 
-        Roles userRole = rolesRepository.findByName("ROLE_USER")
-                .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
-
+        return regUser;
     }
 
 }

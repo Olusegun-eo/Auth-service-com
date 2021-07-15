@@ -3,13 +3,7 @@ package com.waya.wayaauthenticationservice.entity;
 import java.io.Serializable;
 import java.util.Collection;
 
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.Size;
 
 import lombok.Getter;
@@ -24,8 +18,7 @@ public class Roles implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@Basic(optional = false)
-	@Column(name = "id")
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
 	@Size(max = 50)
@@ -34,7 +27,13 @@ public class Roles implements Serializable {
 
 	private String description;
 
-	@OneToMany(mappedBy = "role", fetch = FetchType.EAGER)
+	@ManyToMany(fetch = FetchType.EAGER)
+	@JoinTable(
+			name = "m_roles_privileges",
+			joinColumns = @JoinColumn(
+					name = "role_id", referencedColumnName = "id"),
+			inverseJoinColumns = @JoinColumn(
+					name = "privilege_id", referencedColumnName = "id"))
 	private Collection<Privilege> permissions;
 
 //    @ManyToMany(mappedBy = "rolesList")
@@ -51,7 +50,6 @@ public class Roles implements Serializable {
 
 	public Roles(Long id) {
 		this.id = id;
-
 	}
 
 	public Roles(String name) {
