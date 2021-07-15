@@ -23,6 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,6 +36,7 @@ import javax.validation.Valid;
 @Tag(name = "ADMIN", description = "Admin Authentication Service API")
 @EnableCaching
 @PreAuthorize(value = "hasRole('ADMIN')")
+@Validated
 public class AdminController {
 
     @Autowired
