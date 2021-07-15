@@ -37,7 +37,7 @@ public class CustomValidatorImpl implements ConstraintValidator<CustomValidator,
                 return validateStringIsEmail(value);
             case CONTAINS:
                 return validateContains(value);
-            case EMAIL_OR_PHONENUMBER:
+            case EMAIL_OR_PHONE:
                 return validateStringIsEmailOrPhoneNumber(value);
         }
         return false;
