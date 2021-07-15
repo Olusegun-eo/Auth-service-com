@@ -86,13 +86,15 @@ public class ProfileServiceImpl implements ProfileService {
     private final RestTemplate restClient;
     private final SMSAlertConfigRepository smsAlertConfigRepository;
     private final SMSChargeRepository smsChargeRepository;
+    private final MailService mailService;
+
     @Value("${app.config.wayagram-profile.base-url}")
     private String getAddUrl;
     @Value("${app.config.auto.follow.base-url}")
     private String getAutoFollowUrl;
     @Value("${app.config.auto.follow.base-url}")
     private String getProfileUrl;
-    private final MailService mailService;
+
 
     @Autowired
     public ProfileServiceImpl(ModelMapper modelMapper,
@@ -201,7 +203,6 @@ public class ProfileServiceImpl implements ProfileService {
                 String fullName = String.format("%s %s", savedProfile.getFirstName(),
                         savedProfile.getSurname());
 
-                //String message = VERIFY_EMAIL_TOKEN_MESSAGE + "placeholder" + MESSAGE_2;
                 //send otp
                 CompletableFuture.runAsync(() -> smsTokenService.sendSMSOTP(
                         savedProfile.getPhoneNumber(), fullName));
