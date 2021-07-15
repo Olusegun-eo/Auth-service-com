@@ -18,4 +18,5 @@ public interface ReferralCodeRepository extends JpaRepository<ReferralCode, UUID
     @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM ReferralCode u " +
             "WHERE UPPER(u.referralCode) = UPPER(:referralCode) AND u.userId = :userId")
     boolean existsByEmail(@Param("referralCode") String referralCode, @Param("userId") String userId);
+
 }

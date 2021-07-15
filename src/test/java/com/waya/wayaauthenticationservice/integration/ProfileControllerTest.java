@@ -6,6 +6,11 @@ import com.waya.wayaauthenticationservice.entity.ReferralCode;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
 import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.repository.OtherDetailsRepository;
+import com.waya.wayaauthenticationservice.repository.ProfileRepository;
+import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.response.ProfileImageResponse;
 import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
 import com.waya.wayaauthenticationservice.repository.*;
 import com.waya.wayaauthenticationservice.response.ApiResponse;
@@ -39,7 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ActiveProfiles("test")
+@ActiveProfiles("application-test")
 @SpringBootTest(properties = {"eureka.client.enabled=false"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -57,6 +62,9 @@ class ProfileControllerTest {
 
     @Autowired
     private ReferralCodeRepository referralCodeRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private OtherDetailsRepository otherDetailsRepository;
@@ -78,8 +86,6 @@ class ProfileControllerTest {
 
     final String setUpUserId = "uew748";
 
-    @Autowired
-    private UserRepository userRepository;
 
     @Autowired
     private RolesRepository rolesRepository;
@@ -542,6 +548,7 @@ class ProfileControllerTest {
 
         if (!profileRepository.existsByEmail(corporate.getEmail()))
             profileRepository.save(corporate);
+
 
     }
 
