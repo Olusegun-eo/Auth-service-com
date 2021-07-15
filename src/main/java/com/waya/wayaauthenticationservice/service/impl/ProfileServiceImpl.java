@@ -86,7 +86,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final RestTemplate restClient;
     private final SMSAlertConfigRepository smsAlertConfigRepository;
     private final SMSChargeRepository smsChargeRepository;
-    @Value("${app.config.main.profile.base-url}")
+    @Value("${app.config.wayagram-profile.base-url}")
     private String getAddUrl;
     @Value("${app.config.auto.follow.base-url}")
     private String getAutoFollowUrl;
