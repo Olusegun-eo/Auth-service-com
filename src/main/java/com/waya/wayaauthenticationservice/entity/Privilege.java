@@ -5,7 +5,6 @@ import java.util.Collection;
 
 import javax.persistence.*;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 
 import lombok.AllArgsConstructor;
@@ -20,7 +19,7 @@ import lombok.Setter;
 @JsonIgnoreType
 @AllArgsConstructor
 @NoArgsConstructor
-public class Privilege  extends AuditModel implements Serializable {
+public class Privilege extends AuditModel implements Serializable {
     private static final long serialVersionUID = -2675537776836756234L;
 
     @Id
@@ -30,8 +29,8 @@ public class Privilege  extends AuditModel implements Serializable {
     private String name;
     private String description;
 
-    @ManyToMany(mappedBy = "permissions")
-    private Collection<Roles> roles;
+    @ManyToMany(mappedBy = "privileges")
+    private Collection<Role> roles;
 
     public Privilege(String name){
         this.name = name;

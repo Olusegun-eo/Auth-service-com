@@ -4,7 +4,7 @@ import java.util.List;
 
 
 
-import com.waya.wayaauthenticationservice.entity.Roles;
+import com.waya.wayaauthenticationservice.entity.Role;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -38,6 +38,6 @@ public class UserEditPojo {
 
     private boolean isCorporate = false;
 
-    private List<Roles> rolesList;
+    private List<Role> roleList;
 
 }

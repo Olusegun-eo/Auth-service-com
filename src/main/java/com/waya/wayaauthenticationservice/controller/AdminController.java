@@ -41,7 +41,7 @@ import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_422;
 @RequestMapping("/api/v1/admin")
 @Tag(name = "ADMIN", description = "Admin Authentication Service API")
 @EnableCaching
-@PreAuthorize(value = "hasRole('ADMIN')")
+@PreAuthorize(value = "hasRole('APP_ADMIN')")
 public class AdminController {
 
     @Autowired

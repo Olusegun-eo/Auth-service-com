@@ -29,6 +29,4 @@ public interface AdminService {
 
     ByteArrayInputStream createExcelSheet(boolean isCorporate);
 
-
-
 }

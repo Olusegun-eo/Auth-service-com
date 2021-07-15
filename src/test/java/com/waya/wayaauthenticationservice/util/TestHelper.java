@@ -1,14 +1,12 @@
 package com.waya.wayaauthenticationservice.util;
 
-import com.waya.wayaauthenticationservice.entity.Roles;
+import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
-import javax.management.relation.Role;
 import java.time.LocalDateTime;
 import java.util.Collections;
 
@@ -33,7 +31,7 @@ public class TestHelper {
     private final Users user = new Users();
 
     public Users createTestUser(){
-        Roles userRole = this.rolesRepository.findByName("ROLE_USER")
+        Role userRole = this.rolesRepository.findByName("ROLE_USER")
                 .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
 
         user.setEmail("mike@app.com");
@@ -46,7 +44,7 @@ public class TestHelper {
         user.setAccountStatus(1);
         String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
         user.setName(fullName);
-        user.setRolesList(Collections.singletonList(userRole));
+        user.setRoleList(Collections.singletonList(userRole));
         Users regUser;
         if(userRepository.existsByEmail(user.getEmail()) || userRepository.existsByPhoneNumber(user.getEmail()))
             regUser = user;

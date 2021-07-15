@@ -10,7 +10,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
 import com.waya.wayaauthenticationservice.entity.Privilege;
-import com.waya.wayaauthenticationservice.entity.Roles;
+import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.repository.PrivilegeRepository;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 
@@ -70,11 +70,11 @@ public class SetUpLoader implements ApplicationListener<ContextRefreshedEvent> {
 	}
 
 	@Transactional
-	Roles createRoleIfNotFound(String name, String description, Collection<Privilege> privileges) {
-		Optional<Roles> option = roleRepository.findByName(name);
-		Roles role = new Roles(name);
+	Role createRoleIfNotFound(String name, String description, Collection<Privilege> privileges) {
+		Optional<Role> option = roleRepository.findByName(name);
+		Role role = new Role(name);
 		role.setDescription(description);
-		role.setPermissions(privileges);
+		role.setPrivileges(privileges);
 		if (!option.isPresent()) {
 			role = roleRepository.save(role);
 		}

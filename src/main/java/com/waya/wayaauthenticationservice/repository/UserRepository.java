@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.waya.wayaauthenticationservice.entity.Roles;
+import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
 
 @Repository
@@ -26,7 +26,7 @@ public interface UserRepository extends JpaRepository<Users, Long> {
 			+ "u.phoneNumber LIKE CONCAT('%', :value) AND u.isDeleted = false")
 	Optional<Users> findByEmailOrPhoneNumber(@Param("value") String value);
 
-	Page<Users> findByRolesListIn(Collection<Roles> roles, Pageable pageable);
+	Page<Users> findByRoleListIn(Collection<Role> roles, Pageable pageable);
 
     Page<Users> findUserByIsCorporate(boolean value, Pageable pageable);
 
