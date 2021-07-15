@@ -2,10 +2,12 @@ package com.waya.wayaauthenticationservice.integration;
 
 import com.waya.wayaauthenticationservice.entity.OtherDetails;
 import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.repository.OtherDetailsRepository;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.ProfileImageResponse;
 import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
 import static com.waya.wayaauthenticationservice.util.JsonString.asJsonString;
@@ -30,6 +32,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -53,6 +56,9 @@ class ProfileControllerTest {
     private ProfileRepository profileRepository;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private OtherDetailsRepository otherDetailsRepository;
 
     @MockBean
@@ -60,6 +66,7 @@ class ProfileControllerTest {
 
     private final Profile profilePersonal = new Profile();
     private final Profile profile = new Profile();
+    private final Users user = new Users();
 
     final MockMultipartFile file = new MockMultipartFile("files",
             "snapshot.png", MediaType.IMAGE_JPEG_VALUE, "content".getBytes(StandardCharsets.UTF_8));
@@ -447,14 +454,26 @@ class ProfileControllerTest {
 
     private void seedData() {
 
+        user.setEmail("mike@app.com");
+        user.setFirstName("Mike");
+        user.setPhoneNumber("0029934");
+        user.setReferenceCode("CRT");
+        user.setSurname("Ang");
+        user.setDateCreated(LocalDateTime.now());
+        user.setAccountStatus(1);
+        String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
+        user.setName(fullName);
+        Users regUser = userRepository.save(user);
+
         profilePersonal.setEmail("mike@app.com");
         profilePersonal.setFirstName("Mike");
         profilePersonal.setSurname("Ang");
         profilePersonal.setPhoneNumber("0029934");
-        profilePersonal.setUserId(setUpUserId);
+        //profilePersonal.setUserId(setUpUserId);
+        profilePersonal.setUserId(String.valueOf(regUser.getId()));
         profilePersonal.setDeleted(false);
-
         profileRepository.save(profilePersonal);
+
         //personal profile 1
         profile.setGender("male");
         profile.setPhoneNumber("09123");
