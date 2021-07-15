@@ -2,8 +2,6 @@ package com.waya.wayaauthenticationservice.pojo.password;
 
 import com.waya.wayaauthenticationservice.util.CustomValidator;
 import com.waya.wayaauthenticationservice.util.Type;
-import lombok.Getter;
-import lombok.Setter;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -18,7 +16,7 @@ public class ResetPasswordPojo {
     private String newPassword;
 
     @NotBlank(message = "Field cannot be blank or Null")
-    @CustomValidator(message = "phoneOrEmail field has to be either a Phone or an Email", type = Type.EMAIL_OR_PHONENUMBER)
+    @CustomValidator(message = "phoneOrEmail field has to be either a Phone or an Email", type = Type.EMAIL_OR_PHONE)
     private String phoneOrEmail;
 
     public int getOtp() {

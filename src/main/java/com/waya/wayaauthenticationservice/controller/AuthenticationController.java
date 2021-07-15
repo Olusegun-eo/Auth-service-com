@@ -76,7 +76,7 @@ public class AuthenticationController {
     @ApiOperation(value = "User login", tags = {"AUTH"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping("/login")
-    public void login(@RequestBody LoginDetailsPojo loginRequestModel) {
+    public void login(@Valid @RequestBody LoginDetailsPojo loginRequestModel) {
         throw new IllegalStateException("This Method should not be called!");
     }
 

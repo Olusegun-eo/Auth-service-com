@@ -1,6 +1,5 @@
 package com.waya.wayaauthenticationservice.pojo.password;
 
-import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 
 import com.waya.wayaauthenticationservice.util.CustomValidator;
@@ -19,7 +18,7 @@ public class PasswordPojo {
     private String newPassword;
 
     @NotBlank(message = "Field cannot be blank or Null")
-    @CustomValidator(message = "phoneOrEmail field has to be either a Phone or an Email", type = Type.EMAIL_OR_PHONENUMBER)
+    @CustomValidator(message = "phoneOrEmail field has to be either a Phone or an Email", type = Type.EMAIL_OR_PHONE)
     private String phoneOrEmail;
 
     @NotBlank(message = "OldPassword cannot be blank")

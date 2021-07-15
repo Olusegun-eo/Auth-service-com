@@ -7,7 +7,6 @@ import lombok.Setter;
 import lombok.ToString;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 
 @Getter
 @Setter
@@ -16,7 +15,7 @@ public class OTPPojo {
 
     @NotBlank(message = "PhoneNumber or Email Cannot be blank")
     @CustomValidator(message = "OTP Passed must be either Email or PhoneNumber",
-            type = Type.EMAIL_OR_PHONENUMBER)
+            type = Type.EMAIL_OR_PHONE)
     private String phoneOrEmail;
 
     @NotBlank(message = "OTP Cannot be blank")

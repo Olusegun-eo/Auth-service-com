@@ -73,8 +73,9 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			throws AuthenticationException {
 		try {
 			LoginDetailsPojo creds = new ObjectMapper().readValue(req.getInputStream(), LoginDetailsPojo.class);
-			isAdmin = creds.isAdmin();
-			log.info("Admin is {}", isAdmin);
+
+			//	isAdmin = creds.isAdmin();
+			//	log.info("Admin is {}", isAdmin);
 
 			UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
 
@@ -88,10 +89,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			}).collect(Collectors.toSet());
 
 			grantedAuthorities.addAll(getGrantedAuthorities(getPrivileges(roles)));
-
-			// return getAuthenticationManager().authenticate(
-			// new UsernamePasswordAuthenticationToken(creds.getEmail(),
-			// creds.getPassword(), grantedAuthorities));
 
 			return getAuthenticationManager().authenticate(
 					new UsernamePasswordAuthenticationToken(creds.getEmailOrPhoneNumber(), creds.getPassword(), grantedAuthorities));

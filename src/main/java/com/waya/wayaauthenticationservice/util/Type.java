@@ -7,5 +7,5 @@ public enum Type {
     TEXT_STRING,
     SIZE,
     CONTAINS,
-    EMAIL_OR_PHONENUMBER
+    EMAIL_OR_PHONE
 }
