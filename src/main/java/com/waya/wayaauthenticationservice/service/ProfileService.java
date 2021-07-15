@@ -118,4 +118,6 @@ public interface ProfileService {
 
 
     void sendWelcomeEmail(String email);
+
+    UserProfileResponse getProfileByReferralCode(String referralCode);
 }

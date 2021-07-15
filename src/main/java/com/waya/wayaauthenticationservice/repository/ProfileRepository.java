@@ -49,5 +49,8 @@ public interface ProfileRepository extends JpaRepository<Profile, UUID> {
 
     @Query(value = "select * from m_user_profile where referral =:referralCode and deleted =:deleted LIMIT :limit OFFSET :offset", nativeQuery = true)
     List<Profile> findAllByReferralCode(String referralCode, int limit, int offset, boolean deleted);
+
+    @Query(value = "select * from m_user_profile where referral =:referral and deleted =:deleted", nativeQuery = true)
+    Optional<Profile> findByReferral(boolean deleted, String referral);
 }
 

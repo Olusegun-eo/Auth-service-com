@@ -145,10 +145,7 @@ class SearchControllerTest {
 
         profileRepository.save(corporate);
 
-
-
     }
-
 
     public String getToken(){
         return "serial eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlbW1veDU1QGdtYWlsLmNvbSIsImV4cCI6MTY1NzY1NjI0Nn0.xOCakRQLFNXqbSOI3b3jsFek5ybfOmdMCfZ71N1TQ2o";

@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.waya.wayaauthenticationservice.pojo.others.*;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,15 +50,6 @@ import com.waya.wayaauthenticationservice.entity.SMSCharge;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
-import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.DeleteRequest;
-import com.waya.wayaauthenticationservice.pojo.others.OtherDetailsRequest;
-import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.ReferralCodePojo;
-import com.waya.wayaauthenticationservice.pojo.others.SMSChargeFeeRequest;
-import com.waya.wayaauthenticationservice.pojo.others.ToggleSMSRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
 import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
 import com.waya.wayaauthenticationservice.proxy.ReferralProxy;
 import com.waya.wayaauthenticationservice.repository.OtherDetailsRepository;
@@ -196,13 +188,15 @@ public class ProfileServiceImpl implements ProfileService {
 
             if (validationCheck.getStatus()) {
                 Profile newProfile = modelMapper.map(request, Profile.class);
+                // check if
                 newProfile.setReferral(request.getReferralCode());
                 newProfile.setCorporate(false);
                 //save new personal profile
                 Profile savedProfile = profileRepository.save(newProfile);
                 log.info("saving new personal profile ::: {}", newProfile);
                 //save referral code
-                saveReferralCode(savedProfile, request.getUserId());
+                //saveReferralCode(savedProfile, request.getUserId());
+                CompletableFuture.runAsync(() -> saveReferralCode(savedProfile, request.getUserId()));
 
                 String fullName = String.format("%s %s", savedProfile.getFirstName(),
                         savedProfile.getSurname());
@@ -342,10 +336,27 @@ public class ProfileServiceImpl implements ProfileService {
      * @param newProfile new profile
      */
     private void saveReferralCode(Profile newProfile, String userId) {
+        ProfileDto profileDto = new ProfileDto();
+
+        profileDto.setAddress(newProfile.getAddress());
+        profileDto.setCity(newProfile.getCity());
+        profileDto.setCorporate(false);
+        profileDto.setDateOfBirth(newProfile.getDateOfBirth());
+        profileDto.setDistrict(newProfile.getDistrict());
+        profileDto.setEmail(newProfile.getEmail());
+        profileDto.setFirstName(newProfile.getFirstName());
+        profileDto.setGender(newProfile.getGender());
+        profileDto.setMiddleName(newProfile.getMiddleName());
+        profileDto.setOrganisationName(newProfile.getOrganisationName());
+        profileDto.setSurname(newProfile.getSurname());
+        profileDto.setUserId(newProfile.getUserId());
+        profileDto.setPhoneNumber(newProfile.getPhoneNumber());
+        profileDto.setReferral(newProfile.getReferral());
+        profileDto.setState(newProfile.getState());
 
         try {
             log.info("saving referral code for this new profile");
-            ResponseEntity<String> response = referralProxy.saveReferralCode(newProfile, userId);
+            ResponseEntity<String> response = referralProxy.saveReferralCode(profileDto, userId);
             log.info("Response: {}", response.getBody());
         } catch (Exception exception) {
             log.error(exception.getMessage());
@@ -837,6 +848,7 @@ public class ProfileServiceImpl implements ProfileService {
         }
     }
 
+
     @Override
     public void sendWelcomeEmail(String email) {
         Profile userProfile = profileRepository.findByEmail(false, email)
@@ -850,5 +862,22 @@ public class ProfileServiceImpl implements ProfileService {
         }
         // mailService.sendMail(user.getEmail(), message);
         log.info("Welcome email sent!! \n");
+
+    }
+
+    @Override
+    public UserProfileResponse getProfileByReferralCode(String referralCode) {
+        Optional<Profile> profile;
+        try{
+            profile = profileRepository.findByReferral(false,referralCode);
+                if (!profile.isPresent()){
+                    throw new CustomException("Null", HttpStatus.BAD_REQUEST);
+                }
+            } catch (Exception e) {
+            throw new RuntimeException(e.fillInStackTrace());
+        }
+
+        return setProfileResponse(profile.get());
+
     }
 }

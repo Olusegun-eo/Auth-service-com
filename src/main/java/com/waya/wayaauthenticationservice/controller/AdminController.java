@@ -4,7 +4,9 @@ import com.waya.wayaauthenticationservice.assembler.UserAssembler;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.userDTO.*;
 import com.waya.wayaauthenticationservice.repository.RedisUserDao;
+import com.waya.wayaauthenticationservice.response.UserProfileResponse;
 import com.waya.wayaauthenticationservice.service.AdminService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.service.UserService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -29,6 +31,9 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
+import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_400;
+import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_422;
+
 @CrossOrigin
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -51,6 +56,9 @@ public class AdminController {
 
     @Autowired
     UserAssembler userAssembler;
+
+    @Autowired
+    ProfileService profileService;
 
     @ApiOperation(value = "Fetch all Users (Admin Endpoint)", tags = {"ADMIN"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
@@ -137,5 +145,54 @@ public class AdminController {
         PagedModel<UserProfileResponsePojo> userPagedModel = pagedResourcesAssembler.toModel(usersPage, userAssembler);
         return new ResponseEntity<>(userPagedModel, HttpStatus.OK);
     }
+
+
+    @ApiOperation(value = "Admin Should be able to update Corporate Profile onbehalf of the user")
+    @ApiResponses(value = {
+            @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
+            @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
+    })
+    @PutMapping("/update-corporate-profile/{userId}")
+    ResponseEntity<?> updateCorporateProfile(
+            @Valid @RequestBody UpdateCorporateProfileRequest updateCorporateProfileRequest,
+            @PathVariable String userId){
+        UserProfileResponse corporateProfileResponse = profileService.updateProfile(updateCorporateProfileRequest, userId);
+        com.waya.wayaauthenticationservice.response.ApiResponse response =  new com.waya.wayaauthenticationservice.response.ApiResponse(corporateProfileResponse,
+                "profile updated successfully", true);
+        return new ResponseEntity<>(response,HttpStatus.CREATED);
+    }
+
+
+    @ApiOperation(value = "Admin Should be able to update Personal Profile onbehalf of the user")
+    @ApiResponses(value = {
+            @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
+            @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
+    })
+    @PutMapping("/update-personal-profile/{userId}")
+    ResponseEntity<com.waya.wayaauthenticationservice.response.ApiResponse<Object>> updateProfile(
+            @Valid @RequestBody UpdatePersonalProfileRequest updatePersonalProfileRequest,
+            @PathVariable String userId){
+        UserProfileResponse profileResponse = profileService.updateProfile(updatePersonalProfileRequest, userId);
+        return new ResponseEntity<>(new com.waya.wayaauthenticationservice.response.ApiResponse<>(profileResponse,
+                "profile updated successfully", true), HttpStatus.CREATED);
+    }
+
+
+
+    public  ResponseEntity<?> deactivateUserAccount(){
+
+        return new ResponseEntity<>(null, HttpStatus.OK);
+    }
+
+    public  ResponseEntity<?> activateUserAccount(){
+
+        return new ResponseEntity<>(null, HttpStatus.OK);
+    }
+    public  ResponseEntity<?> signOutUser(){
+
+        return new ResponseEntity<>(null, HttpStatus.OK);
+    }
+
+    //ability to manage account details and profile on behalf of the user�delete, edit, sign out , deactivate, activate
 
 }

@@ -291,9 +291,25 @@ public class ProfileController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "Get Profile By Referral Code",
+            notes = "View Active SMS Charge: Admin can validate that the referral code belongs to another user")
+    @ApiResponses(value = {
+            @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
+            @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
+    })
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/get-user-profile/{referralCode}")
+    ResponseEntity<ApiResponse<UserProfileResponse>> getProfileByReferralCode(@PathVariable String referralCode){
+        UserProfileResponse userProfileResponse = profileService.getProfileByReferralCode(referralCode);
+        ApiResponse<UserProfileResponse> response = new ApiResponse<>(userProfileResponse, "Data created successfully", true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     private String getBaseUrl(HttpServletRequest request) {
         return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
     }
+
 
 
 
