@@ -5,13 +5,24 @@ spring:
       - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
       - org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        show-sql: true
+        jdbc:
+          time_zone: UTC
+
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+
   datasource:
-    url: jdbc:h2:mem:testdb
-    username: sa
-    password: password
-    driverClassName: org.h2.Driver
-    driver-class-name: org.h2.Driver
+    url: jdbc:postgresql://127.0.0.1:5432/app_dev
+    username: app_dev
+    password: e1bc9e7f864d
+    driver-class-name: org.postgresql.Driver
   h2:
     console:
       enabled: true
