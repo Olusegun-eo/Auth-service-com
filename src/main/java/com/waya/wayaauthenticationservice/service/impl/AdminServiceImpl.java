@@ -1,7 +1,6 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import com.waya.wayaauthenticationservice.entity.CorporateUser;
-import com.waya.wayaauthenticationservice.entity.Roles;
+import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
@@ -54,11 +53,11 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public Page<Users> getUsersByRole(long roleId, int page, int size) {
-        Roles role = rolesRepository.findById(roleId).orElse(null);
+        Role role = rolesRepository.findById(roleId).orElse(null);
         if (role == null) throw new
                 CustomException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage(), HttpStatus.BAD_REQUEST);
         Pageable pageable = PageRequest.of(page, size);
-        return userRepository.findByRolesListIn(Collections.singletonList(role), pageable);
+        return userRepository.findByRoleListIn(Collections.singletonList(role), pageable);
     }
 
     @Override

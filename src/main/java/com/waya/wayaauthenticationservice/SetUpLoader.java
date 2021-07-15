@@ -10,7 +10,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
 import com.waya.wayaauthenticationservice.entity.Privilege;
-import com.waya.wayaauthenticationservice.entity.Roles;
+import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.repository.PrivilegeRepository;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 
@@ -32,14 +32,14 @@ public class SetUpLoader implements ApplicationListener<ContextRefreshedEvent> {
 		if (alreadySetup)
 			return;
 
-		Privilege readPrivilege = createPrivilegeIfNotFound("READ_USER");
-		Privilege updatePrivilege = createPrivilegeIfNotFound("UPDATE_USER");
-		Privilege writePrivilege = createPrivilegeIfNotFound("CREATE_USER");
-		Privilege lockPrivilege = createPrivilegeIfNotFound("LOCK_USER");
-		Privilege unlockPrivilege = createPrivilegeIfNotFound("UNLOCK_USER");
-		Privilege deletePrivilege = createPrivilegeIfNotFound("DELETE_USER");
-        Privilege appAdmin = createPrivilegeIfNotFound("APP_ADMIN");
-        Privilege appOwner = createPrivilegeIfNotFound("APP_OWNER");
+		Privilege readPrivilege = createPrivilegeIfNotFound("READ_USER", "READ");
+		Privilege updatePrivilege = createPrivilegeIfNotFound("UPDATE_USER", "UPDATE");
+		Privilege writePrivilege = createPrivilegeIfNotFound("CREATE_USER", "CREATE");
+		Privilege lockPrivilege = createPrivilegeIfNotFound("LOCK_USER", "LOCK");
+		Privilege unlockPrivilege = createPrivilegeIfNotFound("UNLOCK_USER", "UNLOCK");
+		Privilege deletePrivilege = createPrivilegeIfNotFound("DELETE_USER", "DELETE");
+        Privilege appAdmin = createPrivilegeIfNotFound("APP_ADMIN", "ADMIN");
+        Privilege appOwner = createPrivilegeIfNotFound("APP_OWNER", "OWNER");
 
 		List<Privilege> userPrivileges = Collections.singletonList(readPrivilege);
         List<Privilege> merchAdminPrivileges = Arrays.asList(readPrivilege, updatePrivilege, writePrivilege, lockPrivilege,
@@ -49,19 +49,20 @@ public class SetUpLoader implements ApplicationListener<ContextRefreshedEvent> {
 		List<Privilege> ownerPrivileges = Arrays.asList(readPrivilege, updatePrivilege, writePrivilege, lockPrivilege,
 				unlockPrivilege, deletePrivilege, appOwner);
 
-		createRoleIfNotFound("ROLE_USER", userPrivileges);
-        createRoleIfNotFound("ROLE_CORP", userPrivileges);
-        createRoleIfNotFound("ROLE_CORP_ADMIN", merchAdminPrivileges);
-		createRoleIfNotFound("ROLE_APP_ADMIN", adminPrivileges);
-		createRoleIfNotFound("ROLE_SUPER_ADMIN", ownerPrivileges);
+		createRoleIfNotFound("ROLE_USER", "USER ROLE", userPrivileges);
+        createRoleIfNotFound("ROLE_CORP", "CORPORATE ROLE", userPrivileges);
+        createRoleIfNotFound("ROLE_CORP_ADMIN", "CORPORATE ADMIN ROLE", merchAdminPrivileges);
+		createRoleIfNotFound("ROLE_APP_ADMIN", "APPLICATION ADMIN", adminPrivileges);
+		createRoleIfNotFound("ROLE_SUPER_ADMIN", "SUPER ADMIN ROLE", ownerPrivileges);
 
 		alreadySetup = true;
 	}
 
 	@Transactional
-	Privilege createPrivilegeIfNotFound(String name) {
+	Privilege createPrivilegeIfNotFound(String name, String description) {
 		Optional<Privilege> option = privilegeRepository.findByName(name);
 		Privilege privilege = new Privilege(name);
+		privilege.setDescription(description);
 		if (!option.isPresent()) {
 			privilege = privilegeRepository.save(privilege);
 		}
@@ -69,10 +70,11 @@ public class SetUpLoader implements ApplicationListener<ContextRefreshedEvent> {
 	}
 
 	@Transactional
-	Roles createRoleIfNotFound(String name, Collection<Privilege> privileges) {
-		Optional<Roles> option = roleRepository.findByName(name);
-		Roles role = new Roles(name);
-		role.setPermissions(privileges);
+	Role createRoleIfNotFound(String name, String description, Collection<Privilege> privileges) {
+		Optional<Role> option = roleRepository.findByName(name);
+		Role role = new Role(name);
+		role.setDescription(description);
+		role.setPrivileges(privileges);
 		if (!option.isPresent()) {
 			role = roleRepository.save(role);
 		}

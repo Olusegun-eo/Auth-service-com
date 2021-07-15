@@ -1,9 +1,8 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
 import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
-import com.waya.wayaauthenticationservice.entity.CorporateUser;
 import com.waya.wayaauthenticationservice.entity.RedisUser;
-import com.waya.wayaauthenticationservice.entity.Roles;
+import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
@@ -106,13 +105,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
                         HttpStatus.BAD_REQUEST);
 
-            List<Roles> roleList = new ArrayList<>();
-            Roles userRole = rolesRepo.findByName("ROLE_USER")
+            List<Role> roleList = new ArrayList<>();
+            Role userRole = rolesRepo.findByName("ROLE_USER")
                     .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
             roleList.add(userRole);
 
             if (mUser.isAdmin()) {
-                Roles adminRole = rolesRepo.findByName("ROLE_ADMIN")
+                Role adminRole = rolesRepo.findByName("ROLE_APP_ADMIN")
                         .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
                 roleList.add(adminRole);
             }
@@ -148,7 +147,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
             }
             user.setPassword(passwordEncoder.encode(mUser.getPassword()));
-            user.setRolesList(roleList);
+            user.setRoleList(roleList);
 
             Users regUser = userRepo.saveAndFlush(user);
 
@@ -184,15 +183,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
                         HttpStatus.BAD_REQUEST);
 
-            Roles merchRole = rolesRepo.findByName("ROLE_MERCH")
+            Role userRole = rolesRepo.findByName("ROLE_USER")
                     .orElseThrow(() -> new CustomException("Merchant Role Not Available", HttpStatus.BAD_REQUEST));
 
-            Roles userRole = rolesRepo.findByName("ROLE_USER")
+            Role merchRole = rolesRepo.findByName("ROLE_CORP")
                     .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
 
-            List<Roles> roleList = new ArrayList<>(Arrays.asList(userRole, merchRole));
+            List<Role> roleList = new ArrayList<>(Arrays.asList(userRole, merchRole));
             if (mUser.isAdmin()) {
-                Roles corpAdminRole = rolesRepo.findByName("ROLE_USER")
+                Role corpAdminRole = rolesRepo.findByName("ROLE_CORP_ADMIN")
                         .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
                 roleList.add(corpAdminRole);
             }
@@ -217,7 +216,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setRegDevicePlatform(dev.getPlatform());
             user.setRegDeviceType(dev.getDeviceType());
             user.setPassword(passwordEncoder.encode(mUser.getPassword()));
-            user.setRolesList(roleList);
+            user.setRoleList(roleList);
             user.setEmail(mUser.getEmail().trim());
             user.setEmailVerified(false);
             user.setFirstName(mUser.getFirstName());
@@ -503,8 +502,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return new ResponseEntity<>(new ErrorResponse("Invalid user."), HttpStatus.OK);
         } else {
             List<String> roles = new ArrayList<>();
-            Collection<Roles> userRoles = user.getRolesList();
-            for (Roles r : userRoles) {
+            Collection<Role> userRoles = user.getRoleList();
+            for (Role r : userRoles) {
                 roles.add(r.getName());
             }
             ValidateUserPojo validateUserPojo = new ValidateUserPojo();
@@ -577,7 +576,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         redisUser.setEmail(user.getEmail());
         redisUser.setPhoneNumber(user.getPhoneNumber());
         redisUser.setSurname(user.getSurname());
-        redisUser.setRoles(new ArrayList<>(user.getRolesList()));
+        redisUser.setRoles(new ArrayList<>(user.getRoleList()));
 
         redisUserDao.save(redisUser);
     }

@@ -31,7 +31,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.waya.wayaauthenticationservice.controller.UserController;
 import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
-import com.waya.wayaauthenticationservice.entity.Roles;
+import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
@@ -140,9 +140,9 @@ public class UserServiceImpl implements UserService {
 		if (user == null) {
 			return false;
 		}
-		Roles adminRole = rolesRepo.findByName("ROLE_ADMIN")
+		Role adminRole = rolesRepo.findByName("ROLE_ADMIN")
 				.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
-		Optional<Collection<Roles>> roles = Optional.ofNullable(user.getRolesList());
+		Optional<Collection<Role>> roles = Optional.ofNullable(user.getRoleList());
 		if (!roles.isPresent())
 			return false;
 
@@ -155,14 +155,14 @@ public class UserServiceImpl implements UserService {
 //		if (!validateAdmin(user)) {
 //			return new ResponseEntity<>(new ErrorResponse("Invalid Access"), HttpStatus.BAD_REQUEST);
 //		}
-        Roles role = rolesRepo.findById(roleId).orElse(null);
+        Role role = rolesRepo.findById(roleId).orElse(null);
         if (role == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid Role"), HttpStatus.BAD_REQUEST);
         }
         List<UserProfileResponsePojo> userList = new ArrayList<>();
         rolesRepo.findAll().forEach(roles -> {
             usersRepo.findAll().forEach(us -> {
-                us.getRolesList().forEach(usRole -> {
+                us.getRoleList().forEach(usRole -> {
                     if (usRole.getId().equals(roleId)) {
                         UserProfileResponsePojo u = this.toModelDTO(us);
                         userList.add(u);
@@ -277,7 +277,7 @@ public class UserServiceImpl implements UserService {
             List<Users> users = new ArrayList<Users>();
             rolesRepo.findAll().forEach(role -> {
                 usersRepo.findAll().forEach(user -> {
-                    user.getRolesList().forEach(uRole -> {
+                    user.getRoleList().forEach(uRole -> {
                         if (uRole.getName().equals(roleName)) {
                             users.add(user);
                         }
@@ -297,11 +297,11 @@ public class UserServiceImpl implements UserService {
         try {
             return usersRepo.findById(user.getUserId()).map(mUser -> {
                 for (Integer i : user.getRolesList()) {
-                    Optional<Roles> mRole = rolesRepo.findById(Long.parseLong(String.valueOf(i)));
+                    Optional<Role> mRole = rolesRepo.findById(Long.parseLong(String.valueOf(i)));
                     if (mRole.isPresent()) {
-                        if (mUser.getRolesList().contains(mRole.get()))
+                        if (mUser.getRoleList().contains(mRole.get()))
                             continue;
-                        mUser.getRolesList().add(mRole.get());
+                        mUser.getRoleList().add(mRole.get());
                     }
                 }
                 usersRepo.save(mUser);
@@ -325,7 +325,7 @@ public class UserServiceImpl implements UserService {
         user.setReferenceCode(userEditPojo.getReferenceCode());
         user.setSurname(userEditPojo.getSurname());
         user = usersRepo.save(user);
-        return new UserEditPojo(user.getId(), user.getEmail(), user.getPhoneNumber(), user.getReferenceCode(), user.getFirstName(), user.getSurname(), user.isPhoneVerified(), user.isEmailVerified(), user.isPinCreated(), user.isCorporate(), (List<Roles>) user.getRolesList());
+        return new UserEditPojo(user.getId(), user.getEmail(), user.getPhoneNumber(), user.getReferenceCode(), user.getFirstName(), user.getSurname(), user.isPhoneVerified(), user.isEmailVerified(), user.isPinCreated(), user.isCorporate(), (List<Role>) user.getRoleList());
     }
 
     @Override
@@ -341,7 +341,7 @@ public class UserServiceImpl implements UserService {
                 us.setPhoneVerified(user.isPhoneVerified());
                 us.setPinCreated(user.isPinCreated());
                 us.setReferenceCode(user.getReferenceCode());
-                us.setRolesList(new ArrayList<>(user.getRolesList()));
+                us.setRoleList(new ArrayList<>(user.getRoleList()));
                 us.setSurname(user.getSurname());
                 us.setEmailVerified(user.isEmailVerified());
                 return us;
@@ -411,10 +411,10 @@ public class UserServiceImpl implements UserService {
         if (user == null)
             return null;
 
-        Set<String> roles = user.getRolesList().stream().map(u -> u.getName()).collect(Collectors.toSet());
+        Set<String> roles = user.getRoleList().stream().map(u -> u.getName()).collect(Collectors.toSet());
         Set<String> permits = new HashSet<>();
-        user.getRolesList().forEach(u -> {
-            permits.addAll(u.getPermissions().stream().map(p -> p.getName()).collect(Collectors.toSet()));
+        user.getRoleList().forEach(u -> {
+            permits.addAll(u.getPrivileges().stream().map(p -> p.getName()).collect(Collectors.toSet()));
         });
 
         UserProfileResponsePojo userDto = UserProfileResponsePojo.builder().email(user.getEmail())
@@ -469,13 +469,13 @@ public class UserServiceImpl implements UserService {
                 if (existingTelephone != null)
                     continue;
 
-                Roles merchRole = rolesRepo.findByName("ROLE_MERCH")
+                Role merchRole = rolesRepo.findByName("ROLE_MERCH")
                         .orElseThrow(() -> new CustomException("Merchant Role Not Available", HttpStatus.BAD_REQUEST));
 
-                Roles userRole = rolesRepo.findByName("ROLE_USER")
+                Role userRole = rolesRepo.findByName("ROLE_USER")
                         .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
 
-                List<Roles> roleList = new ArrayList<>();
+                List<Role> roleList = new ArrayList<>();
                 roleList.addAll(Arrays.asList(userRole, merchRole));
 
                 // Generate and Save Random Password
@@ -499,7 +499,7 @@ public class UserServiceImpl implements UserService {
                 user.setPassword(passwordEncoder.encode(mUser.getPassword()));
                 user.setDateOfActivation(LocalDateTime.now());
                 user.setActive(true);
-                user.setRolesList(roleList);
+                user.setRoleList(roleList);
                 user.setEmail(mUser.getEmail().trim());
                 user.setEmailVerified(false);
                 user.setFirstName(mUser.getFirstName());
@@ -549,13 +549,13 @@ public class UserServiceImpl implements UserService {
                 if (existingTelephone != null)
                     continue;
 
-                List<Roles> roleList = new ArrayList<>();
+                List<Role> roleList = new ArrayList<>();
 
-                Roles userRole = rolesRepo.findByName("ROLE_USER")
+                Role userRole = rolesRepo.findByName("ROLE_USER")
                         .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
                 roleList.add(userRole);
                 if (mUser.isAdmin()) {
-                    Roles adminRole = rolesRepo.findByName("ROLE_ADMIN")
+                    Role adminRole = rolesRepo.findByName("ROLE_ADMIN")
                             .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
                     roleList.add(adminRole);
                 }
@@ -588,7 +588,7 @@ public class UserServiceImpl implements UserService {
                 user.setDateOfActivation(LocalDateTime.now());
                 user.setActive(true);
                 user.setPassword(passwordEncoder.encode(mUser.getPassword()));
-                user.setRolesList(roleList);
+                user.setRoleList(roleList);
 
                 Users regUser = usersRepo.save(user);
                 if (regUser == null)

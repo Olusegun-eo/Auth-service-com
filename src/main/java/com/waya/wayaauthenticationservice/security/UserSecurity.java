@@ -5,7 +5,7 @@ import java.util.Collection;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import com.waya.wayaauthenticationservice.entity.Roles;
+import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.exception.UserServiceException;
@@ -65,16 +65,15 @@ public class UserSecurity {
 		Integer returnEmp = 0;
 
 		// TODO: To Compare both User Roles and See who is greater
-		boolean role = roleCheck(authEmp.getRolesList(), "ROLE_ADMIN");
-		if (role)
-			authEmpLevel = 1;
+		boolean role = roleCheck(authEmp.getRoleList(), "ADMIN");
+		if (role) authEmpLevel = 1;
 
 		log.info("Authenticating User level is {}, Target User level is {}", authEmpLevel, returnEmp);
 		return authEmpLevel.compareTo(returnEmp);
 	}
 
-	public boolean roleCheck(Collection<Roles> rolesList, String role) {
-		return rolesList.stream().anyMatch(e -> e.getName().equals(role));
+	public boolean roleCheck(Collection<Role> roleList, String role) {
+		return roleList.stream().anyMatch(e -> e.getName().contains(role));
 	}
 
 }

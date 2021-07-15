@@ -33,7 +33,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
-import com.waya.wayaauthenticationservice.entity.Roles;
+import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
 import com.waya.wayaauthenticationservice.pojo.others.LoginResponsePojo;
@@ -80,7 +80,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			Users user = userLoginRepo.findByEmailOrPhoneNumber(creds.getEmailOrPhoneNumber())
 					.orElseThrow(() -> new BadCredentialsException("User Does not exist"));
 
-			List<Roles> roles = new ArrayList<Roles>(user.getRolesList());
+			List<Role> roles = new ArrayList<Role>(user.getRoleList());
 
 			Collection<GrantedAuthority> grantedAuthorities = roles.stream().map(r -> {
 				return new SimpleGrantedAuthority(r.getName());
@@ -123,8 +123,8 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 				loginResponsePojo.setMessage("User account is disabled, kindly contact Waya Admin");
 				res.setStatus(400);
 			} else {
-				Set<String> permit = getPrivileges(user.getRolesList());
-				Set<String> roles = user.getRolesList().stream().map(u -> u.getName()).collect(Collectors.toSet());
+				Set<String> permit = getPrivileges(user.getRoleList());
+				Set<String> roles = user.getRoleList().stream().map(u -> u.getName()).collect(Collectors.toSet());
 				// true == true
 				// if (isAdmin == roleCheck(rs, "ROLE_ADMIN")) {
 				loginResponsePojo.setCode(0);
@@ -195,14 +195,14 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		pr.write(str);
 	}
 
-	public boolean roleCheck(Collection<Roles> rolesList, String role) {
-		return rolesList.stream().anyMatch(e -> e.getName().equals(role));
+	public boolean roleCheck(Collection<Role> roleList, String role) {
+		return roleList.stream().anyMatch(e -> e.getName().equals(role));
 	}
 
-	private final Set<String> getPrivileges(final Collection<Roles> roles) {
+	private final Set<String> getPrivileges(final Collection<Role> roles) {
 		Set<String> privileges = new HashSet<String>();
-		for (Roles role : roles) {
-			privileges.addAll(role.getPermissions().stream().map(p -> p.getName()).collect(Collectors.toSet()));
+		for (Role role : roles) {
+			privileges.addAll(role.getPrivileges().stream().map(p -> p.getName()).collect(Collectors.toSet()));
 		}
 		return privileges;
 	}

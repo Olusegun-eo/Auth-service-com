@@ -17,7 +17,7 @@ public interface PasswordService {
 
     ResponseEntity<?> resetPassword(ResetPasswordPojo passwordPojo);
 
-    @PreAuthorize(value = "@userSecurity.useHierarchy(#email, authentication) or hasRole('ADMIN')")
+    @PreAuthorize(value = "@userSecurity.useHierarchy(#email, authentication) or hasRole('APP_ADMIN')")
     ResponseEntity<?> sendPinResetOTPByEmail(String email, String redirectUrl);
 
     ResponseEntity<?> createPin(NewPinPojo pinPojo);
@@ -26,7 +26,7 @@ public interface PasswordService {
 
     ResponseEntity<?> changeForgotPIN(NewPinPojo pinPojo);
 
-    @PreAuthorize(value = "hasRole('ADMIN')")
+    @PreAuthorize(value = "hasRole('APP_ADMIN')")
     ResponseEntity<?> validatePin(Long userId, int pin);
 
     ResponseEntity<?> validatePinFromUser(int pin);

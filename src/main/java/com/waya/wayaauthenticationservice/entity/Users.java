@@ -126,11 +126,9 @@ public class Users implements Serializable {
     @Column(name = "password_never_expires", nullable = false)
     private boolean passwordNeverExpires;
 
-    @ApiModelProperty(hidden = true)
-    @JsonIgnore
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.MERGE )
     @JoinTable(name = "m_users_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
-    private Collection<Roles> rolesList;
+    private Collection<Role> roleList;
 
     @CreationTimestamp
     @ApiModelProperty(hidden = true)
