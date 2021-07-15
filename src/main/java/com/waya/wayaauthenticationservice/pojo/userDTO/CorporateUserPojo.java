@@ -35,12 +35,8 @@ public class CorporateUserPojo extends BaseUserPojo {
 	@NotBlank(message = "please enter your organisation type")
 	private String orgType;
 
-	@Size(min = 5, message = "Business Type should be at least 5 characters long")
 	@NotBlank(message = "Business Type Cannot be null or blank")
 	private String businessType;
-
-	@JsonIgnore
-	private Long userId = 0L;
 
 	@Override
 	public int hashCode() {
