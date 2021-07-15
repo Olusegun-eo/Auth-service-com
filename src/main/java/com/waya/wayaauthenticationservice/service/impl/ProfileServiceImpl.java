@@ -10,6 +10,8 @@ import static com.waya.wayaauthenticationservice.util.Constant.ID_IS_UNKNOWN;
 import static com.waya.wayaauthenticationservice.util.Constant.LIMIT;
 import static com.waya.wayaauthenticationservice.util.Constant.PHONE_NUMBER_REQUIRED;
 import static com.waya.wayaauthenticationservice.util.Constant.PROFILE_NOT_EXIST;
+import static com.waya.wayaauthenticationservice.util.Constant.*;
+import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateReferralCode;
 import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.validateNum;
 import static org.springframework.http.HttpStatus.OK;
 
@@ -24,7 +26,9 @@ import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.waya.wayaauthenticationservice.entity.*;
 import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.repository.*;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,19 +47,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.waya.wayaauthenticationservice.entity.OtherDetails;
-import com.waya.wayaauthenticationservice.entity.Profile;
-import com.waya.wayaauthenticationservice.entity.SMSAlertConfig;
-import com.waya.wayaauthenticationservice.entity.SMSCharge;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
 import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
 import com.waya.wayaauthenticationservice.proxy.ReferralProxy;
-import com.waya.wayaauthenticationservice.repository.OtherDetailsRepository;
-import com.waya.wayaauthenticationservice.repository.ProfileRepository;
-import com.waya.wayaauthenticationservice.repository.SMSAlertConfigRepository;
-import com.waya.wayaauthenticationservice.repository.SMSChargeRepository;
 import com.waya.wayaauthenticationservice.response.ApiResponse;
 import com.waya.wayaauthenticationservice.response.DeleteResponse;
 import com.waya.wayaauthenticationservice.response.OtherdetailsResponse;
@@ -87,6 +83,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final SMSAlertConfigRepository smsAlertConfigRepository;
     private final SMSChargeRepository smsChargeRepository;
     private final MailService mailService;
+    private final ReferralCodeRepository referralCodeRepository;
 
     @Value("${app.config.wayagram-profile.base-url}")
     private String getAddUrl;
@@ -107,7 +104,7 @@ public class ProfileServiceImpl implements ProfileService {
                               SMSAlertConfigRepository smsAlertConfigRepository,
                               SMSChargeRepository smsChargeRepository,
                               EmailService emailService,
-                              MailService mailService) {
+                              MailService mailService, ReferralCodeRepository referralCodeRepository) {
         this.modelMapper = modelMapper;
         this.profileRepository = profileRepository;
         this.smsTokenService = smsTokenService;
@@ -119,6 +116,7 @@ public class ProfileServiceImpl implements ProfileService {
         this.smsChargeRepository = smsChargeRepository;
         this.emailService = emailService;
         this.mailService = mailService;
+        this.referralCodeRepository = referralCodeRepository;
     }
 
     private static SearchProfileResponse apply(Profile profilePersonal) {
@@ -152,11 +150,11 @@ public class ProfileServiceImpl implements ProfileService {
             if (parsePageNumber > 0) parsePageNumber--;
 
             // make a call to the profile service to get getReferralCodeByUserId
-            ReferralCodePojo referralCodePojo = referralProxy.getReferralCodeByUserId(userId);
+            //ReferralCodePojo referralCodePojo = referralProxy.getReferralCodeByUserId(userId);
 
-            // ReferralCode referrals = referralCodeRepository.getReferralCodeByUserId(userId);
+             ReferralCode referrals = referralCodeRepository.getReferralCodeByUserId(userId);
 
-            return profileRepository.findAllByReferralCode(referralCodePojo.getReferralCode(), LIMIT,
+            return profileRepository.findAllByReferralCode(referrals.getReferalCode(), LIMIT,
                     parsePageNumber * LIMIT, false)
                     .stream().map(this::setProfileResponse)
                     .collect(Collectors.toList());
@@ -181,12 +179,12 @@ public class ProfileServiceImpl implements ProfileService {
             //check if the user exist in the referral table
             ///get-user-by-referral-code/{userId}
 
-            ReferralCodePojo referralCodePojo = referralProxy.getUserByReferralCode(request.getUserId());
+//            ReferralCodePojo referralCodePojo = referralProxy.getUserByReferralCode(request.getUserId());
 
-//          Optional<ReferralCode> referralCode = referralCodeRepository
-//                    .findByUserId(request.getUserId());
+          Optional<ReferralCode> referralCode = referralCodeRepository
+                    .findByUserId(request.getUserId());
             //validation check
-            ApiResponse<String> validationCheck = validationCheckOnProfile(profile, referralCodePojo);
+            ApiResponse<String> validationCheck = validationCheckOnProfile(profile, referralCode);
 
             if (validationCheck.getStatus()) {
                 Profile newProfile = modelMapper.map(request, Profile.class);
@@ -197,8 +195,8 @@ public class ProfileServiceImpl implements ProfileService {
                 Profile savedProfile = profileRepository.save(newProfile);
                 log.info("saving new personal profile ::: {}", newProfile);
                 //save referral code
-                //saveReferralCode(savedProfile, request.getUserId());
-                CompletableFuture.runAsync(() -> saveReferralCode(savedProfile, request.getUserId()));
+                saveReferralCode(savedProfile, request.getUserId());
+               // CompletableFuture.runAsync(() -> saveReferralCode(savedProfile, request.getUserId()));
 
                 String fullName = String.format("%s %s", savedProfile.getFirstName(),
                         savedProfile.getSurname());
@@ -248,12 +246,12 @@ public class ProfileServiceImpl implements ProfileService {
             //check if the user exist in the referral table
             // now this check will extend to the referral service
 
-            ReferralCodePojo referralCodePojo = referralProxy.getUserByReferralCode(profileRequest.getUserId());
+//            ReferralCodePojo referralCodePojo = referralProxy.getUserByReferralCode(profileRequest.getUserId());
 
-			// Optional<ReferralCode> referralCode = referralCodeRepository
-			// .findByUserId(profileRequest.getUserId());
+			 Optional<ReferralCode> referralCode = referralCodeRepository
+			 .findByUserId(profileRequest.getUserId());
             //validation check
-            ApiResponse<String> validationCheck = validationCheckOnProfile(profile, referralCodePojo);
+            ApiResponse<String> validationCheck = validationCheckOnProfile(profile, referralCode);
 
             if (validationCheck.getStatus()) {
                 Profile newCorporateProfile = saveCorporateProfile(profileRequest);
@@ -336,33 +334,33 @@ public class ProfileServiceImpl implements ProfileService {
      *
      * @param newProfile new profile
      */
-    private void saveReferralCode(Profile newProfile, String userId) {
-        ProfileDto profileDto = new ProfileDto();
-
-        profileDto.setAddress(newProfile.getAddress());
-        profileDto.setCity(newProfile.getCity());
-        profileDto.setCorporate(false);
-        profileDto.setDateOfBirth(newProfile.getDateOfBirth());
-        profileDto.setDistrict(newProfile.getDistrict());
-        profileDto.setEmail(newProfile.getEmail());
-        profileDto.setFirstName(newProfile.getFirstName());
-        profileDto.setGender(newProfile.getGender());
-        profileDto.setMiddleName(newProfile.getMiddleName());
-        profileDto.setOrganisationName(newProfile.getOrganisationName());
-        profileDto.setSurname(newProfile.getSurname());
-        profileDto.setUserId(newProfile.getUserId());
-        profileDto.setPhoneNumber(newProfile.getPhoneNumber());
-        profileDto.setReferral(newProfile.getReferral());
-        profileDto.setState(newProfile.getState());
-
-        try {
-            log.info("saving referral code for this new profile");
-            ResponseEntity<String> response = referralProxy.saveReferralCode(profileDto, userId);
-            log.info("Response: {}", response.getBody());
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new CustomException(exception.getMessage(), HttpStatus.BAD_REQUEST);
-        }
+//    private void saveReferralCode(Profile newProfile, String userId) {
+//        ProfileDto profileDto = new ProfileDto();
+//
+//        profileDto.setAddress(newProfile.getAddress());
+//        profileDto.setCity(newProfile.getCity());
+//        profileDto.setCorporate(false);
+//        profileDto.setDateOfBirth(newProfile.getDateOfBirth());
+//        profileDto.setDistrict(newProfile.getDistrict());
+//        profileDto.setEmail(newProfile.getEmail());
+//        profileDto.setFirstName(newProfile.getFirstName());
+//        profileDto.setGender(newProfile.getGender());
+//        profileDto.setMiddleName(newProfile.getMiddleName());
+//        profileDto.setOrganisationName(newProfile.getOrganisationName());
+//        profileDto.setSurname(newProfile.getSurname());
+//        profileDto.setUserId(newProfile.getUserId());
+//        profileDto.setPhoneNumber(newProfile.getPhoneNumber());
+//        profileDto.setReferral(newProfile.getReferral());
+//        profileDto.setState(newProfile.getState());
+//
+//        try {
+//            log.info("saving referral code for this new profile");
+//            ResponseEntity<String> response = referralProxy.saveReferralCode(profileDto, userId);
+//            log.info("Response: {}", response.getBody());
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new CustomException(exception.getMessage(), HttpStatus.BAD_REQUEST);
+//        }
 
 //        ReferralCodePojo pro saveReferralCode
         /**
@@ -371,12 +369,13 @@ public class ProfileServiceImpl implements ProfileService {
          */
         // provide endpoint to send data to referral service
 
-
+    private void saveReferralCode(Profile newProfile, String userId) {
         // send details to the referral Service
-//        referralCodeRepository.save(
-//                new ReferralCode(generateReferralCode(REFERRAL_CODE_LENGHT),
-//                        newProfile, userId));
+        referralCodeRepository.save(
+                new ReferralCode(generateReferralCode(REFERRAL_CODE_LENGHT),
+                        newProfile, userId));
 
+            log.info("saving referral code for this new profile");
     }
 
     /**
@@ -659,7 +658,7 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     private ApiResponse<String> validationCheckOnProfile(
-            Optional<Profile> profile, ReferralCodePojo referralCodePojo) {
+            Optional<Profile> profile, Optional<ReferralCode> referralCodePojo) {
 
         if (profile.isPresent()) {
             return new ApiResponse<>(null,

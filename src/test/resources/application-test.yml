@@ -1,6 +1,7 @@
 spring:
+  profiles:
+    active: test
   autoconfigure:
-    profiles: application-test
     exclude:
       - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
       - org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration
