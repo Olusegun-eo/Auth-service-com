@@ -49,7 +49,7 @@ public class KafkaMessageProducer implements MessageQueueProducer {
     @Override
     public void send(String topic, Object data) {
         //ProfilePojo2 creds = null;
-        logger.info(String.format("#### -> Producing message -> %s", data.toString()));
+        //logger.info(String.format("#### -> Producing message -> %s", data.toString()));
         /*
          * try { creds = new ObjectMapper().readValue(gson.toJson(data),
          * ProfilePojo2.class); } catch (JsonMappingException e1) {
@@ -69,9 +69,7 @@ public class KafkaMessageProducer implements MessageQueueProducer {
             @Override
             public void onSuccess(SendResult<String, Object> result) {
                 //persist in app event as a successful event
-                logger.info("Sent message=[" + data.toString() +
-                        "] with offset=[" + result.getRecordMetadata().offset() + "]");
-                logger.info("notification sent to the event queue");
+                logger.info("Success:: notification sent to the event queue");
             }
 
             /**
