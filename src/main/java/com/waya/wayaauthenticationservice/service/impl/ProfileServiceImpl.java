@@ -54,7 +54,6 @@ public class ProfileServiceImpl implements ProfileService {
     private final OtherDetailsRepository otherDetailsRepository;
     private final RestTemplate restClient;
     private final SMSAlertConfigRepository smsAlertConfigRepository;
-    private final SMSChargeRepository smsChargeRepository;
     private final MailService mailService;
     private final ReferralCodeRepository referralCodeRepository;
 
@@ -75,7 +74,6 @@ public class ProfileServiceImpl implements ProfileService {
                               @Qualifier("restClient") RestTemplate restClient,
                               ReferralProxy referralProxy,
                               SMSAlertConfigRepository smsAlertConfigRepository,
-                              SMSChargeRepository smsChargeRepository,
                               EmailService emailService,
                               MailService mailService, ReferralCodeRepository referralCodeRepository) {
         this.modelMapper = modelMapper;
@@ -86,7 +84,6 @@ public class ProfileServiceImpl implements ProfileService {
         this.restClient = restClient;
         this.referralProxy = referralProxy;
         this.smsAlertConfigRepository = smsAlertConfigRepository;
-        this.smsChargeRepository = smsChargeRepository;
         this.emailService = emailService;
         this.mailService = mailService;
         this.referralCodeRepository = referralCodeRepository;
@@ -146,6 +143,10 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ApiResponse<String> createProfile(PersonalProfileRequest request, String baseUrl) {
         try {
+
+            ReferralCode referralCode1 = referralCodeRepository.getReferralCodeByUserId(request.getReferralCode());
+            if(referralCode1 == null)
+                throw new CustomException("Please enter a valid referral code", HttpStatus.NO_CONTENT);
             //check if the user exist in the profile table
             Optional<Profile> profile = profileRepository.findByEmail(
                     false, request.getEmail().trim());
@@ -158,7 +159,7 @@ public class ProfileServiceImpl implements ProfileService {
             ApiResponse<String> validationCheck = validationCheckOnProfile(profile, referralCode);
             if (validationCheck.getStatus()) {
                 Profile newProfile = modelMapper.map(request, Profile.class);
-                // check if
+                // check if this referral code is already mapped to a user
                 newProfile.setReferral(request.getReferralCode());
                 newProfile.setCorporate(false);
                 //save new personal profile
@@ -210,6 +211,9 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ApiResponse<String> createProfile(CorporateProfileRequest profileRequest, String baseUrl) {
         try {
+            // validate that the user ID exist
+
+
             //check if the user exist in the profile table
             Optional<Profile> profile = profileRepository.findByEmail(
                     false, profileRequest.getEmail().trim());
@@ -601,6 +605,13 @@ public class ProfileServiceImpl implements ProfileService {
             otherDetails = otherDetailsRepository
                     .findById(profile.getOtherDetails().getId());
         }
+
+        // get referralcode for this user
+        Optional<ReferralCode> referralCode = Optional.empty();
+        if (profile.getUserId() !=null) {
+            referralCode = referralCodeRepository.findByUserId(profile.getUserId());
+        }
+
         //initialize to null
         OtherdetailsResponse otherdetailsResponse = null;
         //map data if present
@@ -620,6 +631,7 @@ public class ProfileServiceImpl implements ProfileService {
                 .surname(profile.getSurname())
                 .middleName(profile.getMiddleName())
                 .phoneNumber(profile.getPhoneNumber())
+                .referenceCode(referralCode.get().getReferralCode())
                 .userId(profile.getUserId())
                 .city(profile.getCity())
                 .corporate(profile.isCorporate())
@@ -746,20 +758,7 @@ public class ProfileServiceImpl implements ProfileService {
         return toggleSMSResponse;
     }
 
-    public SMSChargeResponse configureSMSCharge(SMSChargeFeeRequest smsChargeFeeRequest) {
-        SMSChargeResponse smsChargeResponse = null;
-        try {
-            SMSCharge smsCharge = new SMSCharge();
-            smsCharge.setFee(smsChargeFeeRequest.getFee());
-            smsCharge = smsChargeRepository.save(smsCharge);
-            smsChargeResponse = new SMSChargeResponse(smsCharge.getId(), smsCharge.getFee(), smsCharge.isActive());
-            log.info("ProfileService::: {} done creating SMS Charge");
-        } catch (Exception ex) {
-            log.error("Cannot create configureSMSCharge {}", ex.getMessage());
-            throw new CustomException("Cannot create configureSMSCharge ", HttpStatus.BAD_REQUEST);
-        }
-        return smsChargeResponse;
-    }
+
 
     public ToggleSMSResponse getSMSAlertStatus(String phoneNumber) {
         ToggleSMSResponse toggleSMSResponse = null;
@@ -767,34 +766,11 @@ public class ProfileServiceImpl implements ProfileService {
             throw new CustomException(PHONE_NUMBER_REQUIRED, HttpStatus.BAD_REQUEST);
         }
         Optional<SMSAlertConfig> smsCharges = smsAlertConfigRepository.findByPhoneNumber(phoneNumber);
+
         if (smsCharges.isPresent()) {
             toggleSMSResponse = new ToggleSMSResponse(smsCharges.get().getId(), smsCharges.get().getPhoneNumber(), smsCharges.get().isActive());
         }
         return toggleSMSResponse;
-    }
-
-    public SMSChargeResponse toggleSMSCharge(Long id) throws CustomException {
-        if (Objects.isNull(id)) {
-            throw new CustomException(ID_IS_REQUIRED, HttpStatus.BAD_REQUEST);
-        }
-        SMSCharge smsCharge = smsChargeRepository.findById(id).orElseThrow(() -> new CustomException(ID_IS_UNKNOWN, HttpStatus.BAD_REQUEST));
-        smsCharge.setActive(!smsCharge.isActive());
-        smsCharge = smsChargeRepository.save(smsCharge);
-        return new SMSChargeResponse(smsCharge.getId(), smsCharge.getFee(), smsCharge.isActive());
-
-    }
-
-    public SMSChargeResponse getActiveSMSCharge() {
-        SMSChargeResponse smsChargeResponse = null;
-        try {
-            Optional<SMSCharge> smsCharge = smsChargeRepository.findByActive();
-            if (smsCharge.isPresent()) {
-                smsChargeResponse = new SMSChargeResponse(smsCharge.get().getId(), smsCharge.get().getFee(), smsCharge.get().isActive());
-            }
-        } catch (Exception ex) {
-            throw new CustomException(ex.getMessage(), HttpStatus.BAD_REQUEST);
-        }
-        return smsChargeResponse;
     }
 
     private void makeAutoFollow(String userId) {

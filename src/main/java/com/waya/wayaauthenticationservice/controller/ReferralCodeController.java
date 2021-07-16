@@ -30,7 +30,6 @@ public class ReferralCodeController {
     @GetMapping("referral-code/{userId}")
     public ResponseEntity<ApiResponse<ReferralCodeResponse>> getReferralCode(@PathVariable String userId) {
         ReferralCodeResponse referralCodeResponse = referralService.getReferralCode(userId);
-
         ApiResponse<ReferralCodeResponse> response = new ApiResponse<>(referralCodeResponse, "retrieved data successfully", true);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

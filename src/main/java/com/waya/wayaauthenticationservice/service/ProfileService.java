@@ -105,17 +105,9 @@ public interface ProfileService {
      */
     ResponseEntity<DeleteResponse> toggleDelete(DeleteRequest deleteRequest);
 
-
     ToggleSMSResponse toggleSMSAlert(ToggleSMSRequest toggleSMSRequest);
 
-    SMSChargeResponse configureSMSCharge(SMSChargeFeeRequest smsChargeFeeRequest);
-
     ToggleSMSResponse getSMSAlertStatus(String phoneNumber);
-
-    SMSChargeResponse toggleSMSCharge(Long id);
-
-    SMSChargeResponse getActiveSMSCharge();
-
 
     void sendWelcomeEmail(String email);
 

@@ -23,13 +23,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import static com.waya.wayaauthenticationservice.util.Constant.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ActiveProfiles("application-test")
+@ActiveProfiles("test")
 @SpringBootTest(properties = {"eureka.client.enabled=false"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -53,9 +54,14 @@ class ReferralCodeControllerTest {
     private Users user = new Users();
 
     private TestHelper testHelper;
+    ReferralCode referralCode;
 
     @BeforeAll
     void setUp() {
+       List<ReferralCode> list = referralCodeRepository.findAll();
+        System.out.println("MEET ME FOR HERE :::::::"+ list);
+
+
         testHelper = new TestHelper(userRepository, rolesRepository);
         user = testHelper.createTestUser();
 
@@ -66,17 +72,22 @@ class ReferralCodeControllerTest {
         profile.setFirstName("firstname");
         profile.setDeleted(false);
         profile.setUserId("124");
-        if (!profileRepository.existsByEmail(profile.getEmail()))
-            profileRepository.save(profile);
+        Optional<Profile> profile1 = null;
+        if (!profileRepository.existsByEmail(profile.getEmail())){
+            profile = profileRepository.save(profile);
+        }else{
+            profile1 = profileRepository.findByUserId(false,profile.getUserId());
+            profile = profile1.get();
+        }
 
-        ReferralCode referralCode = new ReferralCode();
+        referralCode = new ReferralCode();
         referralCode.setReferralCode("pqwe");
         referralCode.setUserId("124");
         referralCode.setProfile(profile);
         Optional<ReferralCode> referralCode1 = referralCodeRepository.findByUserId(referralCode.getUserId());
         if (!referralCode1.isPresent())
-            referralCodeRepository.save(referralCode);
-
+            referralCode = referralCodeRepository.save(referralCode);
+        System.out.println("This is the saved {} ::" + referralCode);
         //        if (!referralCodeRepository.existsByEmail(referralCode.getReferralCode(), referralCode.getUserId()))
 //            referralCodeRepository.save(referralCode);
     }
@@ -84,13 +95,15 @@ class ReferralCodeControllerTest {
     @Test
     @DisplayName("get referral code successfully")
     void getUserReferralCode() throws Exception {
-        getAndVerifyUserReferralCode("124", status().isOk());
+        System.out.println("getUserReferralCode {} ::" + referralCode.getUserId());
+        getAndVerifyUserReferralCode(referralCode.getUserId(), status().isOk());
     }
 
     @Test
     @DisplayName("get referral code with invalid user id")
     void getUserReferralCodeWithInvalidUserId() throws Exception {
-        getAndVerifyUserReferralCode("12431", status().isNotFound());
+        System.out.println("getUserReferralCodeWithInvalidUserId {} ::" + referralCode.getUserId());
+        getAndVerifyUserReferralCode(referralCode.getUserId(), status().isNotFound());
     }
 
     private void getAndVerifyUserReferralCode(

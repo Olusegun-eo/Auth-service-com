@@ -225,22 +225,6 @@ public class ProfileController {
     }
 
     @ApiOperation(
-            value = "Config SMS Charge Fee",
-            notes = "Config SMS Charge Fee: Admin can create sms alert charge")
-    @ApiResponses(value = {
-            @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
-            @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
-    })
-    @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("/config-sms-charges")
-    ResponseEntity<ApiResponse<SMSChargeResponse>> configureSMSCharges(@Valid @RequestBody SMSChargeFeeRequest smsChargeFeeRequest){
-
-        SMSChargeResponse smsChargeResponse = profileService.configureSMSCharge(smsChargeFeeRequest);
-        ApiResponse<SMSChargeResponse> response = new ApiResponse<>(smsChargeResponse, "Data created successfully", true);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    @ApiOperation(
             value = "Check SMS Alert Status",
             notes = "Config SMS Charge Fee: User can check status of sms alert")
     @ApiResponses(value = {
@@ -252,41 +236,11 @@ public class ProfileController {
     ResponseEntity<ApiResponse<ToggleSMSResponse>> getSMSAlertStatus(@Valid @ApiParam(example = "08054354344") @PathVariable String phoneNumber){
 
         ToggleSMSResponse toggleSMSResponse = profileService.getSMSAlertStatus(phoneNumber);
+        System.out.println(" ### back from service class smsCharges: :::: " + toggleSMSResponse);
         ApiResponse<ToggleSMSResponse> response = new ApiResponse<>(toggleSMSResponse, "Data created successfully", true);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-
-    @ApiOperation(
-            value = "Config SMS Charge Fee",
-            notes = "Config SMS Charge Fee: Admin can create sms alert charge")
-    @ApiResponses(value = {
-            @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
-            @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
-    })
-    @ResponseStatus(HttpStatus.OK)
-    @PutMapping("/sms-charges/toggle/{id}")
-    ResponseEntity<ApiResponse<SMSChargeResponse>> toggleSMSCharges(@Valid @ApiParam(example = "1") @PathVariable Long id){
-
-        SMSChargeResponse smsChargeResponse = profileService.toggleSMSCharge(id);
-        ApiResponse<SMSChargeResponse> response = new ApiResponse<>(smsChargeResponse, "Data created successfully", true);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    @ApiOperation(
-            value = "View Active SMS Charge",
-            notes = "View Active SMS Charge: User can check status of sms alert")
-    @ApiResponses(value = {
-            @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
-            @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
-    })
-    @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/view-active-sms-charge")
-    ResponseEntity<ApiResponse<SMSChargeResponse>> getActiveSMSCharge(){
-        SMSChargeResponse toggleSMSResponse = profileService.getActiveSMSCharge();
-        ApiResponse<SMSChargeResponse> response = new ApiResponse<>(toggleSMSResponse, "Data created successfully", true);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
 
     @ApiOperation(
             value = "Get Profile By Referral Code",

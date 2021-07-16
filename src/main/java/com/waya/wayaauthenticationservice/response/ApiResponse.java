@@ -4,11 +4,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.http.HttpStatus;
 
 import java.time.ZonedDateTime;
+import java.util.Date;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
 
-    private ZonedDateTime timestamp;
+    private Date timestamp;
     private  String message;
     private  boolean status;
     private HttpStatus httpStatus;
@@ -18,21 +19,21 @@ public class ApiResponse<T> {
     }
 
     public ApiResponse(T data, String message, boolean status) {
-        timestamp = ZonedDateTime.now();
+        timestamp = new Date();
         this.status = status;
         this.message = message;
         this.data = data;
     }
 
     public ApiResponse(String message, boolean status) {
-        timestamp = ZonedDateTime.now();
+        timestamp = new Date();
         this.status = status;
         this.message = message;
         this.data = null;
     }
 
     public ApiResponse(T data, String message, boolean status, HttpStatus httpStatus) {
-        timestamp = ZonedDateTime.now();
+        timestamp = new Date();
         this.status = status;
         this.message = message;
         this.data = data;
@@ -40,7 +41,7 @@ public class ApiResponse<T> {
     }
 
 
-    public ZonedDateTime getTimestamp() {
+    public Date getTimestamp() {
         return timestamp;
     }
 

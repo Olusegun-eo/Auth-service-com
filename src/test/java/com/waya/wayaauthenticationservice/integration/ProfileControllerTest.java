@@ -35,6 +35,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.Optional;
 
 import static com.waya.wayaauthenticationservice.util.Constant.*;
 import static com.waya.wayaauthenticationservice.util.JsonString.asJsonString;
@@ -44,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ActiveProfiles("application-test")
+@ActiveProfiles("test")
 @SpringBootTest(properties = {"eureka.client.enabled=false"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -73,7 +74,7 @@ class ProfileControllerTest {
     private FileResourceServiceFeignClient fileResourceServiceFeignClient;
 
     private final Profile profilePersonal = new Profile();
-    private final Profile profile = new Profile();
+    private Profile profile = new Profile();
 
     final MockMultipartFile file = new MockMultipartFile("files",
             "snapshot.png", MediaType.IMAGE_JPEG_VALUE, "content".getBytes(StandardCharsets.UTF_8));
@@ -85,6 +86,8 @@ class ProfileControllerTest {
             new ApiResponse<>(profileImageResponse, "success", true);
 
     final String setUpUserId = "uew748";
+    private final String EMAIL = "app@app.com";
+    private final String EMAIL2 = "cpd@app.com";
 
 
     @Autowired
@@ -93,9 +96,23 @@ class ProfileControllerTest {
     private Users user = new Users();
 
     private TestHelper testHelper;
+    private ReferralCode referralCode;
 
     @BeforeAll
     void setUp() {
+        Optional<Profile> profile = profileRepository.findByUserId(false,EMAIL);
+        if (profile.isPresent()){
+            System.out.println("profile {} :::::::: " + profile.get());
+            profileRepository.delete(profile.get());
+            System.out.println("profile {} :::::::: " + profile.get());
+        }
+        Optional<Profile> profile2 = profileRepository.findByUserId(false,EMAIL2);
+        if (profile2.isPresent()){
+            System.out.println("profile 2{} :::::::: " + profile2.get());
+            profileRepository.delete(profile2.get());
+            System.out.println("profile 2 {} :::::::: " + profile2.get());
+        }
+
         testHelper = new TestHelper(userRepository, rolesRepository);
         user = testHelper.createTestUser();
         seedData(user);
@@ -516,13 +533,17 @@ class ProfileControllerTest {
         profile.setCorporate(false);
         profile.setUserId("123");
         profile.setDeleted(false);
+        Optional<Profile> profile1 = null;
+        if (!profileRepository.existsByEmail(profile.getEmail())){
+            profile = profileRepository.save(profile);
+        }else{
+            profile1 = profileRepository.findByUserId(false,profile.getUserId());
+            profile = profile1.get();
+        }
 
-        if (!profileRepository.existsByEmail(profile.getEmail()))
-            profileRepository.save(profile);
-
-        ReferralCode referralCode = new ReferralCode();
+        referralCode = new ReferralCode();
         referralCode.setReferralCode("102kkdjeurw2");
-        referralCode.setProfile(profile);
+        referralCode.setProfile(profile1.get());
         referralCode.setUserId("123");
         if(!referralCodeRepository.existsByEmail("102kkdjeurw2", "123"))
             referralCodeRepository.save(referralCode);
@@ -548,6 +569,9 @@ class ProfileControllerTest {
 
         if (!profileRepository.existsByEmail(corporate.getEmail()))
             profileRepository.save(corporate);
+
+
+
 
 
     }

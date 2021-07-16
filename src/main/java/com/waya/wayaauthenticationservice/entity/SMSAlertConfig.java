@@ -35,7 +35,7 @@ public class SMSAlertConfig {
     private UUID id;
 
     @NotBlank(message = "please enter a phone number")
-    @Column(name="phone_number", unique = true)
+    @Column(name="phone_number", unique = true, nullable = false)
     private String phoneNumber;
 
     private boolean active = true;
