@@ -612,6 +612,17 @@ public class ProfileServiceImpl implements ProfileService {
             referralCode = referralCodeRepository.findByUserId(profile.getUserId());
         }
 
+        // check user SMS alert Status
+        Optional<SMSAlertConfig> smsAlertConfig;
+        boolean isSMSAlertActive = false;
+        if (profile.getUserId() !=null) {
+            smsAlertConfig = smsAlertConfigRepository.findByPhoneNumber(profile.getPhoneNumber());
+            if (smsAlertConfig.get().isActive()){
+                isSMSAlertActive = true;
+            }
+        }
+
+
         //initialize to null
         OtherdetailsResponse otherdetailsResponse = null;
         //map data if present
@@ -632,6 +643,7 @@ public class ProfileServiceImpl implements ProfileService {
                 .middleName(profile.getMiddleName())
                 .phoneNumber(profile.getPhoneNumber())
                 .referenceCode(referralCode.get().getReferralCode())
+                .smsAlertConfig(isSMSAlertActive)
                 .userId(profile.getUserId())
                 .city(profile.getCity())
                 .corporate(profile.isCorporate())
