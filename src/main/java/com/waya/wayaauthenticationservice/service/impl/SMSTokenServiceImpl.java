@@ -60,7 +60,7 @@ public class SMSTokenServiceImpl implements SMSTokenService {
         OTPBase otp = new OTPBase();
         otp.setCode(generateCode());
         otp.setPhoneNumber(phoneNumber);
-        //otp.setEmail(email);
+        otp.setValid(true);
         otp.setExpiryDate(10);
 
         //update previous token expiry dates and isValid fields
@@ -114,7 +114,7 @@ public class SMSTokenServiceImpl implements SMSTokenService {
      */
     //@CachePut(cacheNames = "OTPBase", key = "#phoneNumber")
     @Override
-    public ApiResponse<OTPVerificationResponse> verifySMSOTP(String phoneNumber, Integer otp) {
+    public OTPVerificationResponse verifySMSOTP(String phoneNumber, Integer otp) {
         try {
             Optional<OTPBase> otpBase = otpRepository.getOtpDetailsViaPhoneNumber(phoneNumber, otp);
             if (otpBase.isPresent()) {
@@ -122,19 +122,18 @@ public class SMSTokenServiceImpl implements SMSTokenService {
                 LocalDateTime newTokenExpiryDate = token.getExpiryDate().minusHours(1);
                 if (token.isValid()) {
                     otpRepository.updateToken(phoneNumber, token.getId(), newTokenExpiryDate, false);
-                    return new ApiResponse<>(new OTPVerificationResponse(true,
-                            OTP_SUCCESS_MESSAGE), OTP_SUCCESS_MESSAGE, true);
+                    return new OTPVerificationResponse(true,
+                            OTP_SUCCESS_MESSAGE);
                 } else {
-                    return new ApiResponse<>(new OTPVerificationResponse(false,
-                            OTP_ERROR_MESSAGE), OTP_ERROR_MESSAGE, false);
+                    return new OTPVerificationResponse(false,
+                            OTP_ERROR_MESSAGE);
                 }
             }
-            return new ApiResponse<>(new OTPVerificationResponse(false,
-                    INVALID_OTP), INVALID_OTP, false);
+            return new OTPVerificationResponse(false,
+                    INVALID_OTP);
         } catch (Exception exception) {
             log.error("could not process data {}", exception.getMessage());
-            return new ApiResponse<>(new OTPVerificationResponse(false,
-                    INVALID_OTP), INVALID_OTP, false);
+            return new OTPVerificationResponse(false, INVALID_OTP);
         }
     }
 

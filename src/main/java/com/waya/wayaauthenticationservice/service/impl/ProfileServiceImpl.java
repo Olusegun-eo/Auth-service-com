@@ -1,18 +1,31 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import com.waya.wayaauthenticationservice.entity.*;
-import com.waya.wayaauthenticationservice.enums.DeleteType;
-import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
-import com.waya.wayaauthenticationservice.pojo.others.*;
-import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
-import com.waya.wayaauthenticationservice.proxy.ReferralProxy;
-import com.waya.wayaauthenticationservice.repository.*;
-import com.waya.wayaauthenticationservice.response.*;
-import com.waya.wayaauthenticationservice.service.EmailService;
-import com.waya.wayaauthenticationservice.service.MailService;
-import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.service.SMSTokenService;
+import static com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient.uploadImage;
+import static com.waya.wayaauthenticationservice.util.Constant.CATCH_EXCEPTION_MSG;
+import static com.waya.wayaauthenticationservice.util.Constant.COULD_NOT_PROCESS_REQUEST;
+import static com.waya.wayaauthenticationservice.util.Constant.CREATE_PROFILE_SUCCESS_MSG;
+import static com.waya.wayaauthenticationservice.util.Constant.DUPLICATE_KEY;
+import static com.waya.wayaauthenticationservice.util.Constant.ID_IS_REQUIRED;
+import static com.waya.wayaauthenticationservice.util.Constant.ID_IS_UNKNOWN;
+import static com.waya.wayaauthenticationservice.util.Constant.LIMIT;
+import static com.waya.wayaauthenticationservice.util.Constant.PHONE_NUMBER_REQUIRED;
+import static com.waya.wayaauthenticationservice.util.Constant.PROFILE_NOT_EXIST;
+import static com.waya.wayaauthenticationservice.util.Constant.REFERRAL_CODE_LENGHT;
+import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateReferralCode;
+import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.validateNum;
+import static org.springframework.http.HttpStatus.OK;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,23 +33,51 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-
-import static com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient.uploadImage;
-import static com.waya.wayaauthenticationservice.util.Constant.*;
-import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateReferralCode;
-import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.validateNum;
-import static org.springframework.http.HttpStatus.OK;
+import com.waya.wayaauthenticationservice.entity.OtherDetails;
+import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.entity.ReferralCode;
+import com.waya.wayaauthenticationservice.entity.SMSAlertConfig;
+import com.waya.wayaauthenticationservice.entity.SMSCharge;
+import com.waya.wayaauthenticationservice.enums.DeleteType;
+import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
+import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.DeleteRequest;
+import com.waya.wayaauthenticationservice.pojo.others.OtherDetailsRequest;
+import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.SMSChargeFeeRequest;
+import com.waya.wayaauthenticationservice.pojo.others.ToggleSMSRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
+import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
+import com.waya.wayaauthenticationservice.repository.OtherDetailsRepository;
+import com.waya.wayaauthenticationservice.repository.ProfileRepository;
+import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
+import com.waya.wayaauthenticationservice.repository.SMSAlertConfigRepository;
+import com.waya.wayaauthenticationservice.repository.SMSChargeRepository;
+import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.response.DeleteResponse;
+import com.waya.wayaauthenticationservice.response.OtherdetailsResponse;
+import com.waya.wayaauthenticationservice.response.ProfileImageResponse;
+import com.waya.wayaauthenticationservice.response.SMSChargeResponse;
+import com.waya.wayaauthenticationservice.response.SearchProfileResponse;
+import com.waya.wayaauthenticationservice.response.ToggleSMSResponse;
+import com.waya.wayaauthenticationservice.response.UserProfileResponse;
+import com.waya.wayaauthenticationservice.service.EmailService;
+import com.waya.wayaauthenticationservice.service.MailService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.service.SMSTokenService;
 
 @Service
 public class ProfileServiceImpl implements ProfileService {
@@ -47,7 +88,6 @@ public class ProfileServiceImpl implements ProfileService {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final ModelMapper modelMapper;
     private final ProfileRepository profileRepository;
-    private final ReferralProxy referralProxy;
     private final SMSTokenService smsTokenService;
     private final EmailService emailService;
     private final FileResourceServiceFeignClient fileResourceServiceFeignClient;
@@ -72,7 +112,6 @@ public class ProfileServiceImpl implements ProfileService {
                               FileResourceServiceFeignClient fileResourceServiceFeignClient,
                               OtherDetailsRepository otherDetailsRepository,
                               @Qualifier("restClient") RestTemplate restClient,
-                              ReferralProxy referralProxy,
                               SMSAlertConfigRepository smsAlertConfigRepository,
                               EmailService emailService,
                               MailService mailService, ReferralCodeRepository referralCodeRepository) {
@@ -82,7 +121,6 @@ public class ProfileServiceImpl implements ProfileService {
         this.fileResourceServiceFeignClient = fileResourceServiceFeignClient;
         this.otherDetailsRepository = otherDetailsRepository;
         this.restClient = restClient;
-        this.referralProxy = referralProxy;
         this.smsAlertConfigRepository = smsAlertConfigRepository;
         this.emailService = emailService;
         this.mailService = mailService;
@@ -811,6 +849,7 @@ public class ProfileServiceImpl implements ProfileService {
     public void sendWelcomeEmail(String email) {
         Profile userProfile = profileRepository.findByEmail(false, email)
                 .orElseThrow(() -> new CustomException("profile does not exist", HttpStatus.NOT_FOUND));
+
         WelcomeEmailContext emailContext = new WelcomeEmailContext();
         emailContext.init(userProfile);
         try {

@@ -17,7 +17,6 @@ import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.waya.wayaauthenticationservice.exception.CustomException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,6 +35,7 @@ import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
 import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
 import com.waya.wayaauthenticationservice.pojo.others.LoginResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
@@ -53,7 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 	private final Gson gson = new Gson();
-	private boolean isAdmin = false;
+	//private boolean isAdmin = false;
 
 	@Autowired
 	LoginHistoryService loginHistoryService;

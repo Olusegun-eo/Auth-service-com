@@ -30,7 +30,8 @@ public class OTPBase implements Serializable {
 
     private String email;
 
-    private boolean valid = true;
+    @SuppressWarnings("unused")
+	private boolean valid;
 
     private String phoneNumber;
 
@@ -50,5 +51,5 @@ public class OTPBase implements Serializable {
     public boolean isValid() {
         return this.expiryDate.isAfter(LocalDateTime.now());
     }
-
+    
 }

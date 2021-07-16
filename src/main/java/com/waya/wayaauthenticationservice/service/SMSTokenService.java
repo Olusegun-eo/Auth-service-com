@@ -10,5 +10,5 @@ public interface SMSTokenService {
 
     boolean sendSMSOTP(String phoneNumber, String fullName);
 
-    ApiResponse<OTPVerificationResponse> verifySMSOTP(String phoneNumber, Integer otp);
+    OTPVerificationResponse verifySMSOTP(String phoneNumber, Integer otp);
 }

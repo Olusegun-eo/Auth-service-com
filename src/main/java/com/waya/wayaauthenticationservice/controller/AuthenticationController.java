@@ -11,6 +11,7 @@ import com.waya.wayaauthenticationservice.util.ValidPhone;
 import io.swagger.annotations.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
@@ -31,11 +32,17 @@ public class AuthenticationController {
     @Autowired
     UserService userService;
 
-    //public static final String HEADER_STRING = "Authorization";
+    @Value("${api.server.deployed}")
+    private String urlRedirect;
+
     @Autowired
     private AuthenticationService authenticationServiceImpl;
 
-    @ApiOperation(value = "Personal User Registration", tags = {"AUTH"})
+    //@ApiOperation(value = "Personal User Registration", tags = {"AUTH"})
+    @ApiOperation(
+            value = "${api.auth.create.description}",
+            notes = "${api.auth.create.notes}",
+            tags = {"AUTH"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping(path = "/create", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {
             MediaType.APPLICATION_JSON_VALUE})
@@ -43,7 +50,11 @@ public class AuthenticationController {
         return authenticationServiceImpl.createUser(user, request, device, false);
     }
 
-    @ApiOperation(value = "Corporate User Registration", tags = {"AUTH"})
+    //@ApiOperation(value = "Corporate User Registration", tags = {"AUTH"})
+    @ApiOperation(
+            value = "${api.auth.create-corporate.description}",
+            notes = "${api.auth.create-corporate.notes}",
+            tags = {"AUTH"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping(path = "/create-corporate", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {
             MediaType.APPLICATION_JSON_VALUE})
@@ -52,28 +63,42 @@ public class AuthenticationController {
         return authenticationServiceImpl.createCorporateUser(user, request, device, false);
     }
 
-    @ApiOperation(value = "Verify Account with OTP", tags = {"AUTH"})
+    @ApiOperation(
+            value = "${api.auth.verify-otp.description}",
+            notes = "${api.auth.verify-otp.notes}",
+            tags = {"AUTH"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyAccount(@Valid @RequestBody OTPPojo otpPojo) {
         return authenticationServiceImpl.verifyAccountCreation(otpPojo);
     }
 
-    @ApiOperation(value = "Verify phone number with OTP", tags = {"AUTH"})
+    @ApiOperation(
+            value = "${api.auth.verify-phone.description}",
+            notes = "${api.auth.verify-phone.notes}",
+            tags = {"AUTH"})
+    //@ApiOperation(value = "Verify phone number with OTP", tags = {"AUTH"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping("/verify-phone")
     public ResponseEntity<?> verifyOTP(@Valid @RequestBody OTPPojo otpPojo) {
         return authenticationServiceImpl.verifyPhoneUsingOTP(otpPojo);
     }
 
-    @ApiOperation(value = "Verify email", tags = {"AUTH"})
+    @ApiOperation(
+            value = "${api.auth.verify-email.description}",
+            notes = "${api.auth.verify-email.notes}",
+            tags = {"AUTH"})
+    //@ApiOperation(value = "Verify email", tags = {"AUTH"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping("/verify-email")
-    public ResponseEntity<?> verifyEmail(@Valid @RequestBody EmailPojo emailPojo) {
-        return authenticationServiceImpl.verifyEmail(emailPojo);
+    public ResponseEntity<?> verifyEmail(@Valid @RequestBody OTPPojo otpPojo) {
+        return authenticationServiceImpl.verifyEmail(otpPojo);
     }
 
-    @ApiOperation(value = "User login", tags = {"AUTH"})
+    @ApiOperation(
+            value = "${api.auth.login.description}",
+            notes = "${api.auth.login.notes}",
+            tags = {"AUTH"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping("/login")
     public void login(@Valid @RequestBody LoginDetailsPojo loginRequestModel) {
@@ -82,31 +107,25 @@ public class AuthenticationController {
 
     @GetMapping("/social")
     @Produces(javax.ws.rs.core.MediaType.TEXT_HTML)
-    @ApiOperation(value = "Github login", tags = {"AUTH"})
+    @ApiOperation(
+            value = "${api.auth.social.description}",
+            notes = "${api.auth.social.notes}",
+            tags = {"AUTH"})
     public String login() {
         // return "Log in with <a
         // href=\"http://localhost:8059/oauth2/callback/authorization/github\">GitHub</a>";
         return "<a href=\"http://localhost:8080/oauth2/authorize/google\"> Log in with Google</a><br><br><a href=\"http://localhost:8080/oauth2/authorize/facebook\">Log in with Facebook</a><br><br><a href=\"http://localhost:8080/oauth2/authorize/github\">Log in with Github</a>";
     }
 
-    @ApiOperation(value = "User Validation (Service consumption only. Do not Use)", notes = "This endpoint help validate user and is meant for service consumption only", tags = {
-            "AUTH"})
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
-    @RequestMapping(value = "/validate-user", method = RequestMethod.POST, consumes = {MediaType.APPLICATION_JSON_VALUE,
-            MediaType.MULTIPART_FORM_DATA_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<?> validateUser() {
-        return authenticationServiceImpl.validateUser();
-    }
-
-    @ApiOperation(value = "Resend OTP to Phone", tags = {"AUTH"})
+    @ApiOperation(value = "Resend OTP to Phone", notes = "See POjo Object for what to pass", tags = {"AUTH"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/resend-otp/{phoneNumber}")
     public ResponseEntity<?> resendOTPPhone(@PathVariable("phoneNumber") @ValidPhone String phoneNumber) {
         return authenticationServiceImpl.resendOTPPhone(phoneNumber);
     }
 
-    @ApiOperation(value = "Resend Verification Email", tags = {"AUTH"})
+    //@ApiOperation(value = "Resend Verification Email", tags = {"AUTH"})
+    @ApiOperation(value = "Resend OTP to Email Address Provided", notes = "See POjo Object for what to pass", tags = {"AUTH"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/resend-otp-mail/{email}")
     public ResponseEntity<?> resendOTPEmail(@PathVariable @Email String email, final HttpServletRequest request) {
@@ -120,7 +139,17 @@ public class AuthenticationController {
         return userService.isUserAdmin(userId);
     }
 
+    @ApiOperation(value = "User Validation (Service consumption only. Do not Use)", notes = "This endpoint help validate user and is meant for service consumption only", tags = {
+            "AUTH"})
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
+    @RequestMapping(value = "/validate-user", method = RequestMethod.POST, consumes = {MediaType.APPLICATION_JSON_VALUE,
+            MediaType.MULTIPART_FORM_DATA_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<?> validateUser() {
+        return authenticationServiceImpl.validateUser();
+    }
+
     private String getBaseUrl(HttpServletRequest request) {
-        return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+        return "http://" + urlRedirect + ":" + request.getServerPort() + request.getContextPath();
     }
 }

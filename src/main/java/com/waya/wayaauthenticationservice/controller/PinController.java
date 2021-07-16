@@ -4,7 +4,10 @@ import com.waya.wayaauthenticationservice.pojo.password.ChangePINPojo;
 import com.waya.wayaauthenticationservice.pojo.password.NewPinPojo;
 import com.waya.wayaauthenticationservice.service.PasswordService;
 import com.waya.wayaauthenticationservice.util.ValidPhone;
-import io.swagger.annotations.*;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -15,10 +18,7 @@ import javax.validation.constraints.Email;
 
 @RestController
 @RequestMapping("/api/v1/pin")
-@Api(tags = {"PIN Resource"})
-@SwaggerDefinition(tags = {
-        @Tag(name = "PIN Resource", description = "REST API for PIN Service.")
-})
+@Tag(name = "PIN Resource",  description = "REST API for PIN Service API")
 @CrossOrigin
 @Validated
 public class PinController {

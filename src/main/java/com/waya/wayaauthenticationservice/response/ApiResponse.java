@@ -8,8 +8,7 @@ import java.util.Date;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
-
-    private Date timestamp;
+    private Date timestamp = new Date();
     private  String message;
     private  boolean status;
     private HttpStatus httpStatus;
@@ -26,6 +25,7 @@ public class ApiResponse<T> {
     }
 
     public ApiResponse(String message, boolean status) {
+
         timestamp = new Date();
         this.status = status;
         this.message = message;
@@ -33,13 +33,13 @@ public class ApiResponse<T> {
     }
 
     public ApiResponse(T data, String message, boolean status, HttpStatus httpStatus) {
+
         timestamp = new Date();
         this.status = status;
         this.message = message;
         this.data = data;
         this.httpStatus = httpStatus;
     }
-
 
     public Date getTimestamp() {
         return timestamp;

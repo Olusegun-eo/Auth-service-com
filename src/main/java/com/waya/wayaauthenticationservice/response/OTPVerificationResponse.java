@@ -12,6 +12,7 @@ import lombok.Setter;
 public class OTPVerificationResponse implements Serializable {
 
 	private static final long serialVersionUID = 2535303439894069556L;
+
 	private boolean valid;
     private String message;
 }

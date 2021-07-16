@@ -26,7 +26,7 @@ import lombok.ToString;
 @Entity
 @ToString
 @Table(name = "m_user_profile")
-public class Profile {
+public class Profile extends AuditModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -69,12 +69,6 @@ public class Profile {
 
     @Column(nullable = false, unique = true)
     private String userId;
-
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
 
     private String referral;
 

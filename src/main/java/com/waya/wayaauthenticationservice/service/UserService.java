@@ -42,7 +42,6 @@ public interface UserService {
 	// Get user details for Roles service
 	UserEditPojo getUserForRole(Long id);
 
-
 	ResponseEntity<?> isUserAdmin(Long userId);
 
 	UserProfileResponsePojo toModelDTO(Users user);

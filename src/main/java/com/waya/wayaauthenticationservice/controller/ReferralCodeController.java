@@ -3,15 +3,16 @@ package com.waya.wayaauthenticationservice.controller;
 import com.waya.wayaauthenticationservice.response.ReferralCodeResponse;
 import com.waya.wayaauthenticationservice.service.ReferralService;
 import com.waya.wayaauthenticationservice.util.Constant;
-import io.swagger.annotations.*;
+
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.waya.wayaauthenticationservice.response.ApiResponse;
-@Api(tags = {"ReferralCode Resource"})
-@SwaggerDefinition(tags = {
-        @Tag(name = "ReferralCode Resource", description = "REST API for ReferralCode.")
-})
+
+@Tag(name = "REFERRAL RESOURCE",  description = "REST API for Referral Service API")
 @CrossOrigin
 @RestController
 @RequestMapping("/api/v1/referral")

@@ -81,6 +81,14 @@
 			  margin-top: 40px;
 			}
 
+			.linkUrl {
+			  background: #ff6634;
+			  border: 1px #ff6634 solid;
+			  color: #ffffff;
+			  padding: 5px;
+			  border-radius: 5%;
+			}
+
 		</style>
 
 	</head>
@@ -92,12 +100,11 @@
 			<p style="margin: 0;">Tap the button below to reset your
 				customer account pin. If you didn't request a new pin,
 				you can safely delete this email, and do nothing.</p>
-			<div>
-				<a th:href="${url}" target="_blank"
-				   style="display: inline-block; padding: 16px 36px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; border-radius: 6px;">
-					Use the Token below to Reset Your Pin Here</a>
-				<p th:text="${token}"></p>
-			</div>
+			<p>
+				Use the Token to Reset Your Pin:
+				<span class="linkUrl" th:text="${token}"> 2345442</span>
+				<a th:href="${url}" target="_blank">Here</a>
+			</p>
 		</section>
 
 		<div class="end-note">

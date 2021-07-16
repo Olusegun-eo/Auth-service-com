@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -105,8 +106,11 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private NotificationProxy notificationProxy;
 
+    @Value("${api.server.deployed}")
+    private String urlRedirect;
+
     private String getBaseUrl(HttpServletRequest request) {
-        return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+        return "http://" + urlRedirect + ":" + request.getServerPort() + request.getContextPath();
     }
 
     @Override
@@ -248,7 +252,7 @@ public class UserServiceImpl implements UserService {
         try {
             //if (validateUser(token)) {
             Users user = usersRepo.findById(id)
-                    .orElseThrow(() -> new CustomException("User with id  not found", HttpStatus.NOT_FOUND));
+                    .orElseThrow(() -> new CustomException("User with id " + id + " not found", HttpStatus.NOT_FOUND));
             user.setActive(false);
             user.setDeleted(true);
             user.setDateOfActivation(LocalDateTime.now());
@@ -257,9 +261,6 @@ public class UserServiceImpl implements UserService {
             CompletableFuture.runAsync(() -> disableUserProfile(String.valueOf(finalUser.getId())));
 
             return new ResponseEntity<>(new CustomException("Account deleted", OK), OK);
-//            } else {
-//                return new ResponseEntity<>(new ErrorResponse("Invalid Token"), HttpStatus.BAD_REQUEST);
-//            }
         } catch (Exception e) {
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         }
@@ -354,57 +355,22 @@ public class UserServiceImpl implements UserService {
 
     private void disableUserProfile(String userId) {
         try {
-//            HttpHeaders headers = new HttpHeaders();
-//            headers.setContentType(MediaType.APPLICATION_JSON);
-//            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-//            headers.set("authorization", token);
-//            Map<String, Object> map = new HashMap<>();
-//            map.put("userId", userId);
-//            map.put("deleteType", "DELETE");
-//
-//            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
-//            ResponseEntity<String> response = restClient.postForEntity(applicationConfig.getDeleteProfileUrl(), entity,
-//                    String.class);
-//            if (response.getStatusCode() == OK) {
-//                log.info("User deleted {}", response.getBody());
-//            } else {
-//                log.info("User not deleted :: {}", response.getStatusCode());
-//            }
+            // Profile Service Delete Call
             DeleteRequest deleteRequest = DeleteRequest.builder()
                     .userId(userId)
                     .deleteType(DeleteType.DELETE)
                     .build();
             var returnValue = this.profileService.toggleDelete(deleteRequest);
             log.info("Profile Deleted: {} {}", returnValue.getBody().getCode(), returnValue.getBody().getMessage());
+
+            // Wallet Delete Account Call
+
+
+
         } catch (Exception e) {
             log.error("Error deleting user: ", e);
         }
     }
-
-//    private boolean validateUser(String token) {
-//        try {
-//            log.info("validating user token ... {}", token);
-//            HttpHeaders headers = new HttpHeaders();
-//            headers.setContentType(MediaType.APPLICATION_JSON);
-//            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-//            headers.set("authorization", token);
-//
-//            Map<String, Object> map = new HashMap<>();
-//            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
-//            ResponseEntity<String> response = restClient.postForEntity(applicationConfig.getValidateUser(), entity,
-//                    String.class);
-//            if (response.getStatusCode() == OK) {
-//                log.info("User verified with body {}", response.getBody());
-//                return true;
-//            } else {
-//                log.info("user not verified :: {}", response.getStatusCode());
-//                return false;
-//            }
-//        } catch (Exception e) {
-//            log.error("Error verifying user: ", e);
-//            return false;
-//        }
-//    }
 
     @Override
     public UserProfileResponsePojo toModelDTO(Users user) {
@@ -616,7 +582,7 @@ public class UserServiceImpl implements UserService {
         DataPojo dataPojo = new DataPojo();
         String message = String.format("<h3>Hello %s </h3><br> <p> Kindly Use the password below to login to the System, " +
                         "ensure you change it.</p> <br> <h4 style=\"font-weight:bold\"> %s </h4>",
-                        firstName, randomPassword);
+                firstName, randomPassword);
         dataPojo.setMessage(message);
         dataPojo.setNames(names);
         notification.setData(dataPojo);
