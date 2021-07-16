@@ -3,14 +3,13 @@ package com.waya.wayaauthenticationservice.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.http.HttpStatus;
 
-import java.time.ZonedDateTime;
 import java.util.Date;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
     private Date timestamp = new Date();
-    private  String message;
-    private  boolean status;
+    private String message;
+    private boolean status;
     private HttpStatus httpStatus;
     private T data;
 
