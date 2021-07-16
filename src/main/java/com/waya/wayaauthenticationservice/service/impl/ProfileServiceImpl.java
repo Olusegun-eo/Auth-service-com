@@ -147,7 +147,6 @@ public class ProfileServiceImpl implements ProfileService {
     public List<UserProfileResponse> findAllUserReferral(String userId, String page) {
         //TODO: This method should be accessible by admins only
         try {
-
             if (validateNum(page).equals(false)) throw new CustomException("invalid page number",
                     HttpStatus.BAD_REQUEST);
 
@@ -159,7 +158,9 @@ public class ProfileServiceImpl implements ProfileService {
             //ReferralCodePojo referralCodePojo = referralProxy.getReferralCodeByUserId(userId);
 
             ReferralCode referrals = referralCodeRepository.getReferralCodeByUserId(userId);
-
+            if(referrals == null){
+                return Collections.emptyList();
+            }
             return profileRepository.findAllByReferralCode(referrals.getReferralCode(), LIMIT,
                     parsePageNumber * LIMIT, false)
                     .stream().map(this::setProfileResponse)
@@ -180,9 +181,11 @@ public class ProfileServiceImpl implements ProfileService {
     public ApiResponse<String> createProfile(PersonalProfileRequest request, String baseUrl) {
         try {
 
-            ReferralCode referralCode1 = referralCodeRepository.getReferralCodeByUserId(request.getReferralCode());
-            if(referralCode1 == null)
-                throw new CustomException("Please enter a valid referral code", HttpStatus.NO_CONTENT);
+            if(request.getReferralCode() != null && !request.getReferralCode().isBlank()){
+                ReferralCode referralCode1 = referralCodeRepository.getReferralCodeByUserId(request.getReferralCode());
+                if(referralCode1 == null)
+                    request.setReferralCode(null);
+            }
             //check if the user exist in the profile table
             Optional<Profile> profile = profileRepository.findByEmail(
                     false, request.getEmail().trim());
@@ -247,9 +250,11 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ApiResponse<String> createProfile(CorporateProfileRequest profileRequest, String baseUrl) {
         try {
-            // validate that the user ID exist
-
-
+            if(profileRequest.getReferralCode() != null && !profileRequest.getReferralCode().isBlank()){
+                ReferralCode referralCode1 = referralCodeRepository.getReferralCodeByUserId(profileRequest.getReferralCode());
+                if(referralCode1 == null)
+                    profileRequest.setReferralCode(null);
+            }
             //check if the user exist in the profile table
             Optional<Profile> profile = profileRepository.findByEmail(
                     false, profileRequest.getEmail().trim());
@@ -642,10 +647,16 @@ public class ProfileServiceImpl implements ProfileService {
                     .findById(profile.getOtherDetails().getId());
         }
 
-        // get referralcode for this user
-        Optional<ReferralCode> referralCode = Optional.empty();
+        // get referralCodeValue for this user
+        Optional<ReferralCode> referralCode;
+        // Introduced referralCodeValue field
+
+        String referralCodeValue = null;
         if (profile.getUserId() !=null) {
             referralCode = referralCodeRepository.findByUserId(profile.getUserId());
+            if(referralCode.isPresent()){
+                referralCodeValue = referralCode.get().getReferralCode();
+            }
         }
 
         // check user SMS alert Status
@@ -653,11 +664,13 @@ public class ProfileServiceImpl implements ProfileService {
         boolean isSMSAlertActive = false;
         if (profile.getUserId() !=null) {
             smsAlertConfig = smsAlertConfigRepository.findByPhoneNumber(profile.getPhoneNumber());
-            if (smsAlertConfig.get().isActive()){
-                isSMSAlertActive = true;
+            //if (smsAlertConfig.get().isActive()){
+            //     isSMSAlertActive = true;
+            // }
+            if(smsAlertConfig.isPresent()){
+                isSMSAlertActive = smsAlertConfig.get().isActive();
             }
         }
-
 
         //initialize to null
         OtherdetailsResponse otherdetailsResponse = null;
@@ -678,7 +691,7 @@ public class ProfileServiceImpl implements ProfileService {
                 .surname(profile.getSurname())
                 .middleName(profile.getMiddleName())
                 .phoneNumber(profile.getPhoneNumber())
-                .referenceCode(referralCode.get().getReferralCode())
+                .referenceCode(referralCodeValue)
                 .smsAlertConfig(isSMSAlertActive)
                 .userId(profile.getUserId())
                 .city(profile.getCity())

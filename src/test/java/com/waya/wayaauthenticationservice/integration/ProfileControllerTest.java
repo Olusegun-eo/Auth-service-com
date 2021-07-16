@@ -163,7 +163,7 @@ class ProfileControllerTest {
                 "app@app12.com", "123");
 
         createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
-                "duplicate key exception, user id or email might already exist",
+                "user id already exists",
                 "$.httpStatus", "UNPROCESSABLE_ENTITY");
     }
 
@@ -207,7 +207,7 @@ class ProfileControllerTest {
     @Test
     @DisplayName("get a users profile")
     void getPersonalProfile() throws Exception {
-        getAndVerifyUserProfile("123", "$.message",
+        getAndVerifyUserProfile("244", "$.message",
                 "retrieved successfully", status().isOk());
     }
 
@@ -215,7 +215,7 @@ class ProfileControllerTest {
     @Test
     @DisplayName("get a corporate users profile")
     void getCorporateProfile() throws Exception {
-        getAndVerifyUserProfile("42", "$.message",
+        getAndVerifyUserProfile("5432", "$.message",
                 "retrieved successfully", status().isOk());
     }
 
@@ -234,7 +234,7 @@ class ProfileControllerTest {
 
         final UpdatePersonalProfileRequest updatePersonalProfileRequest = setUpdatePersonalProfileRequest();
 
-        updateAndVerifyPersonalProfile(updatePersonalProfileRequest, "1234", "$.message",
+        updateAndVerifyPersonalProfile(updatePersonalProfileRequest, "244", "$.message",
                 "profile updated successfully", status().isCreated());
     }
 
@@ -255,7 +255,7 @@ class ProfileControllerTest {
     void updateCorporateProfile() throws Exception {
         final UpdateCorporateProfileRequest updateCorporateProfileRequest = setUpdateCorporateProfileRequest();
 
-        updateAndVerifyCorporateProfile(updateCorporateProfileRequest, "42", "$.message",
+        updateAndVerifyCorporateProfile(updateCorporateProfileRequest, "5432", "$.message",
                 "profile updated successfully", status().isCreated());
     }
 
@@ -546,6 +546,7 @@ class ProfileControllerTest {
         profile.setCorporate(false);
         profile.setUserId("1234");
         profile.setDeleted(false);
+        profile.setReferral("102kkdjeurw2");
         Optional<Profile> profile1 = null;
         if (!profileRepository.existsByEmail(profile.getEmail())){
             profile = profileRepository.save(profile);

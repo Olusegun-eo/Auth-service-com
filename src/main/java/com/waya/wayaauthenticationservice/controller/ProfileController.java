@@ -196,9 +196,9 @@ public class ProfileController {
     })
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("user-referrals/{userId}")
-    List<UserProfileResponse> getAllUsersReferrals(
+    ResponseEntity<?> getAllUsersReferrals(
             @RequestParam(required = false, defaultValue = "0") String page, @PathVariable String userId) {
-        return profileService.findAllUserReferral(userId, page);
+        return new ResponseEntity<>(profileService.findAllUserReferral(userId, page), HttpStatus.OK);
     }
 
     @ApiOperation(
