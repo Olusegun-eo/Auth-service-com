@@ -20,6 +20,7 @@ import com.waya.wayaauthenticationservice.util.ApiResponse;
 @FeignClient(name = "TEMPORAL-WALLET-SERVICE", url = "http://157.230.223.54:9009/wallet", configuration = AuthClientConfiguration.class)
 public interface WalletProxy {
 
+
 	@GetMapping("/find/by/userId/{userId}")
 	List<MainWalletResponse> getWalletById(@PathVariable("userId") Long userId, @RequestHeader("Authorization") String token);
 	
