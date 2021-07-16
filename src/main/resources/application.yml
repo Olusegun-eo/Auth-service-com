@@ -2,10 +2,10 @@ spring:
   application:
     name: auth-service
   datasource:
-    url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+    #url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
     #    username: app_dev
     #    password: e1bc9e7f864d
-    #url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaPayChatAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+    url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaPayChatAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
     username: ${POSTGRES_USERNAME:WayaPayChat2020}
     password: ${POSTGRES_PASSWORD:gh9shfit2m53g4xz}
     initialization-mode: always
