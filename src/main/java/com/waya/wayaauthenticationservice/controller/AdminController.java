@@ -164,8 +164,7 @@ public class AdminController {
         return new ResponseEntity<>(userPagedModel, HttpStatus.OK);
     }
 
-
-    @ApiOperation(value = "Admin Should be able to update Corporate Profile on behalf of the user")
+    @ApiOperation(value = "Admin Should be able to update Corporate Profile on behalf of the user", tags = {"ADMIN"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
@@ -180,8 +179,7 @@ public class AdminController {
         return new ResponseEntity<>(response,HttpStatus.CREATED);
     }
 
-
-    @ApiOperation(value = "Admin Should be able to update Personal Profile on behalf of the user")
+    @ApiOperation(value = "Admin Should be able to update Personal Profile on behalf of the user", tags = {"ADMIN"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)

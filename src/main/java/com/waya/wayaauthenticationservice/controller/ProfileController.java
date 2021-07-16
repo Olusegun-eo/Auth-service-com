@@ -9,6 +9,7 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,9 @@ public class ProfileController {
 
     private final ProfileService profileService;
 
+    @Value("${api.server.deployed}")
+    private String urlRedirect;
+
     @Autowired
     public ProfileController(ProfileService profileService) {
         this.profileService = profileService;
@@ -46,7 +50,7 @@ public class ProfileController {
      */
     @ApiOperation(
             value = "${api.profile.get-user-profile.description}",
-            notes = "${api.profile.get-user-profile.notes}")
+            notes = "${api.profile.get-user-profile.notes}", tags = {"PROFILE RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
@@ -68,7 +72,7 @@ public class ProfileController {
     @ResponseStatus(HttpStatus.CREATED)
     @ApiOperation(
             value = "${api.profile.create-personal-profile.description}",
-            notes = "${api.profile.create-personal-profile.notes}")
+            notes = "${api.profile.create-personal-profile.notes}", tags = {"PROFILE RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
@@ -88,7 +92,7 @@ public class ProfileController {
     @ResponseStatus(HttpStatus.CREATED)
     @ApiOperation(
             value = "${api.corporate-profile.create-corporate-profile.description}",
-            notes = "${api.corporate-profile.create-corporate-profile.notes}")
+            notes = "${api.corporate-profile.create-corporate-profile.notes}", tags = {"PROFILE RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
@@ -110,7 +114,7 @@ public class ProfileController {
      */
     @ApiOperation(
             value = "${api.profile.update-user-profile.description}",
-            notes = "${api.profile.update-user-profile.notes}")
+            notes = "${api.profile.update-user-profile.notes}", tags = {"PROFILE RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
@@ -134,7 +138,7 @@ public class ProfileController {
      */
     @ApiOperation(
             value = "${api.corporate-profile.update-corporate-profile.description}",
-            notes = "${api.corporate-profile.update-corporate-profile.notes}")
+            notes = "${api.corporate-profile.update-corporate-profile.notes}", tags = {"PROFILE RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
@@ -162,7 +166,7 @@ public class ProfileController {
     @ResponseStatus(HttpStatus.CREATED)
     @ApiOperation(
             value = "${api.profile.update-user-profile-image.description}",
-            notes = "${api.profile.update-user-profile-image.notes}")
+            notes = "${api.profile.update-user-profile-image.notes}", tags = {"PROFILE RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
@@ -185,7 +189,7 @@ public class ProfileController {
      */
     @ApiOperation(
             value = "${api.profile.referals.description}",
-            notes = "${api.profile.referals.notes}")
+            notes = "${api.profile.referals.notes}", tags = {"PROFILE RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
@@ -199,7 +203,7 @@ public class ProfileController {
 
     @ApiOperation(
             value = "Delete user",
-            notes = "Toggle delete for user profile")
+            notes = "Toggle delete for user profile", tags = {"PROFILE RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
@@ -211,7 +215,7 @@ public class ProfileController {
 
     @ApiOperation(
             value = "SMS Alert",
-            notes = "SMS Alert: user can enable or disable sms alert")
+            notes = "SMS Alert: user can enable or disable sms alert", tags = {"PROFILE RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
@@ -225,7 +229,7 @@ public class ProfileController {
     }
 
     @ApiOperation(
-            value = "Check SMS Alert Status",
+            value = "Check SMS Alert Status", tags = {"PROFILE RESOURCE"},
             notes = "Config SMS Charge Fee: User can check status of sms alert")
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
@@ -243,7 +247,7 @@ public class ProfileController {
 
 
     @ApiOperation(
-            value = "Get Profile By Referral Code",
+            value = "Get Profile By Referral Code", tags = {"PROFILE RESOURCE"},
             notes = "View Active SMS Charge: Admin can validate that the referral code belongs to another user")
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
@@ -258,7 +262,7 @@ public class ProfileController {
     }
 
     private String getBaseUrl(HttpServletRequest request) {
-        return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+        return "http://" + urlRedirect + ":" + request.getServerPort() + request.getContextPath();
     }
 
 }

@@ -1,25 +1,12 @@
 package com.waya.wayaauthenticationservice.entity;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
-import javax.validation.constraints.Email;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+
+import javax.persistence.*;
+import javax.validation.constraints.Email;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -32,7 +19,7 @@ public class Profile extends AuditModel {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     @Email(message = "please enter a valid email")
     private String email;
 

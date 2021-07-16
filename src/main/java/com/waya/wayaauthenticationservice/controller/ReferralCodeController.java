@@ -23,7 +23,7 @@ public class ReferralCodeController {
         this.referralService = referralService;
     }
 
-    @ApiOperation( value = "referral-code/{userId}" )
+    @ApiOperation( value = "referral-code/{userId}", notes = "", tags = {"REFERRAL RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = Constant.MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = Constant.MESSAGE_422)
