@@ -81,9 +81,12 @@
 			  margin-top: 40px;
 			}
 
-			p a.linkUrl {
+			.linkUrl {
 			  background: #ff6634;
 			  border: 1px #ff6634 solid;
+			  color: #ffffff;
+			  padding: 5px;
+			  border-radius: 5%;
 			}
 
 		</style>
@@ -97,9 +100,9 @@
     <p style="margin: 0;">Tap or Copy and Paste on a different tab the link below to confirm your Email. If you didn't request for this  email Set-up/Change,
         you can safely delete this email, and do nothing.</p>
     <p>
-        <a th:href="${url}" target="_blank" class="linkUrl btn btn-primary"
-           style="display: inline-block; padding: 16px 36px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; border-radius: 6px;">
-            Verify Email Action</a>
+        Use the Token to Verify Your Email and/or Account Creation:
+        <span class="linkUrl" th:text="${token}"> 2345442</span>
+        <a th:href="${url}" target="_blank">Here</a>
     </p>
 </section>
 

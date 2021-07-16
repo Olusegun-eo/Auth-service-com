@@ -1,7 +1,7 @@
 package com.waya.wayaauthenticationservice.pojo.password;
 
 import com.waya.wayaauthenticationservice.util.CustomValidator;
-import com.waya.wayaauthenticationservice.util.Type;
+import com.waya.wayaauthenticationservice.enums.Type;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;

@@ -4,7 +4,7 @@ import com.waya.wayaauthenticationservice.security.UserPrincipal;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -13,8 +13,12 @@ import org.springframework.stereotype.Component;
 public class FeignClientInterceptor implements RequestInterceptor {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
-    @Autowired
-    AuthenticationService authenticationService;
+
+    private final AuthenticationService authenticationService;
+
+    public FeignClientInterceptor(@Lazy AuthenticationService authenticationService) {
+        this.authenticationService = authenticationService;
+    }
 
     @Override
     public void apply(RequestTemplate template) {

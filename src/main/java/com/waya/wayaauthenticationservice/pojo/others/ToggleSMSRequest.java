@@ -1,7 +1,7 @@
 package com.waya.wayaauthenticationservice.pojo.others;
 
 import com.waya.wayaauthenticationservice.util.CustomValidator;
-import com.waya.wayaauthenticationservice.util.Type;
+import com.waya.wayaauthenticationservice.enums.Type;
 import com.waya.wayaauthenticationservice.util.ValidPhone;
 import lombok.Data;
 

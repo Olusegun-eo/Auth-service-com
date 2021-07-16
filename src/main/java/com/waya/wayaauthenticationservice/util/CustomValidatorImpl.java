@@ -1,5 +1,7 @@
 package com.waya.wayaauthenticationservice.util;
 
+import com.waya.wayaauthenticationservice.enums.Type;
+
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 

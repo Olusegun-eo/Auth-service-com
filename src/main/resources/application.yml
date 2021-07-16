@@ -114,14 +114,11 @@ eureka:
 jwt:
   secret: mysecret
 
-deleteprofile:
-  #delete-profile-url: http://46.101.41.187:8080/profile-service/delete-restore
-  #validate-user: http://46.101.41.187:8080/profile-service/delete-restore
-  deleteWallet: http://46.101.41.187:1000/main/profile/delete-profile-by-id
-  deleteWayagram: http://46.101.41.187:1000/main/profile/delete-profile-by-id
-
 app:
   config:
+    deleteprofile:
+      deleteWallet: http://157.245.84.14:1000/main/activate-or-deactivate-wayagram-account
+      deleteWayagram: http://157.245.84.14:1000/main/activate-or-deactivate-wayagram-account
     referral:
       base-url: http://46.101.41.187:8282/referral
     auto:

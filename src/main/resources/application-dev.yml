@@ -4,4 +4,6 @@ spring:
     username: WayaPayChat2020
     password: gh9shfit2m53g4xz
     driver-class-name: org.postgresql.Driver
-
+api:
+  server:
+    deployed: 68.183.60.114 #Change per Environment

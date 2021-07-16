@@ -3,7 +3,7 @@ package com.waya.wayaauthenticationservice.pojo.password;
 import javax.validation.constraints.NotBlank;
 
 import com.waya.wayaauthenticationservice.util.CustomValidator;
-import com.waya.wayaauthenticationservice.util.Type;
+import com.waya.wayaauthenticationservice.enums.Type;
 import lombok.Getter;
 import lombok.Setter;
 

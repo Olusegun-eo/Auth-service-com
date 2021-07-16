@@ -8,7 +8,7 @@ import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.waya.wayaauthenticationservice.util.CustomValidator;
-import com.waya.wayaauthenticationservice.util.Type;
+import com.waya.wayaauthenticationservice.enums.Type;
 import com.waya.wayaauthenticationservice.util.ValidPhone;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

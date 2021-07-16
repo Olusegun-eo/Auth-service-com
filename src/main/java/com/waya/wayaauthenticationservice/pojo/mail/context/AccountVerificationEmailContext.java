@@ -17,7 +17,6 @@ public class AccountVerificationEmailContext extends AbstractEmailContext {
 		setEmail(customer.getEmail());
 		setTemplateLocation("emails/email-verification");
 		setSubject("Complete your Email Verification");
-		setFrom("iyabobostores@gmail.com");
 		setTo(customer.getEmail());
 		put("requestType", "Email Validation");
 	}
@@ -26,11 +25,11 @@ public class AccountVerificationEmailContext extends AbstractEmailContext {
 		put("token", token);
 	}
 
-	public void buildURL(final String baseURL, String email, final String token) {
-		final String url = UriComponentsBuilder.fromHttpUrl(baseURL)
-								.path("email-verify/" + email)
-								.queryParam("token", token)
-								.toUriString();
-		put("url", url);
+	public void buildURL(final String baseURL) {
+//		final String url = UriComponentsBuilder.fromHttpUrl(baseURL)
+//								.path("/auth/email-verify/" + email)
+//								.queryParam("token", token)
+//								.toUriString();
+		put("url", baseURL);
 	}
 }

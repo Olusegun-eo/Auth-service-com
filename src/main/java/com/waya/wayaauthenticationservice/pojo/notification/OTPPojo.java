@@ -1,7 +1,7 @@
 package com.waya.wayaauthenticationservice.pojo.notification;
 
 import com.waya.wayaauthenticationservice.util.CustomValidator;
-import com.waya.wayaauthenticationservice.util.Type;
+import com.waya.wayaauthenticationservice.enums.Type;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;

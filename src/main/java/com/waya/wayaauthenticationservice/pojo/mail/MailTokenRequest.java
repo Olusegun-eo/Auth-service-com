@@ -1,7 +1,7 @@
 package com.waya.wayaauthenticationservice.pojo.mail;
 
 import com.waya.wayaauthenticationservice.util.CustomValidator;
-import com.waya.wayaauthenticationservice.util.Type;
+import com.waya.wayaauthenticationservice.enums.Type;
 import lombok.Data;
 
 import javax.validation.constraints.Email;

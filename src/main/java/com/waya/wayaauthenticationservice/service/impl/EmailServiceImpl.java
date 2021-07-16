@@ -52,8 +52,8 @@ public class EmailServiceImpl implements EmailService {
             OTPBase otp = generateEmailToken(profile.getEmail());
             AccountVerificationEmailContext emailContext = new AccountVerificationEmailContext();
             emailContext.init(profile);
-            emailContext.buildURL(baseUrl, email, String.valueOf(otp.getCode()));
-            emailContext.setToken( String.valueOf(otp.getCode()));
+            emailContext.buildURL(baseUrl);
+            emailContext.setToken(String.valueOf(otp.getCode()));
             try{
                 mailService.sendMail(emailContext);
             }catch(Exception e){
