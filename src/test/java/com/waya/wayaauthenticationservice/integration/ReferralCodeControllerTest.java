@@ -103,7 +103,7 @@ class ReferralCodeControllerTest {
     @DisplayName("get referral code with invalid user id")
     void getUserReferralCodeWithInvalidUserId() throws Exception {
         System.out.println("getUserReferralCodeWithInvalidUserId {} ::" + referralCode.getUserId());
-        getAndVerifyUserReferralCode(referralCode.getUserId(), status().isNotFound());
+        getAndVerifyUserReferralCode("568", status().isNotFound());
     }
 
     private void getAndVerifyUserReferralCode(
