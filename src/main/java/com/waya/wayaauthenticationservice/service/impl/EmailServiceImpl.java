@@ -109,6 +109,7 @@ public class EmailServiceImpl implements EmailService {
         OTPBase otp = new OTPBase();
         otp.setCode(generateCode());
         otp.setEmail(email);
+        otp.setValid(true);
         otp.setExpiryDate(120);
 
         //update previous otp expiry dates and isValid fields

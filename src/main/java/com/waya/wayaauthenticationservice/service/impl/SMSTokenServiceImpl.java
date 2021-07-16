@@ -60,7 +60,7 @@ public class SMSTokenServiceImpl implements SMSTokenService {
         OTPBase otp = new OTPBase();
         otp.setCode(generateCode());
         otp.setPhoneNumber(phoneNumber);
-        //otp.setEmail(email);
+        otp.setValid(true);
         otp.setExpiryDate(10);
 
         //update previous token expiry dates and isValid fields

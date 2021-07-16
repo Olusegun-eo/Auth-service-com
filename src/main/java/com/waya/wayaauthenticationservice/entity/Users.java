@@ -1,27 +1,42 @@
 package com.waya.wayaauthenticationservice.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.waya.wayaauthenticationservice.model.AuthProvider;
-import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-import lombok.ToString;
-import org.hibernate.annotations.CreationTimestamp;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Objects;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotNull;
+
+import org.hibernate.annotations.CreationTimestamp;
+
+import com.waya.wayaauthenticationservice.model.AuthProvider;
+
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.ToString;
+
 @Data
 @Entity
 @ToString
 @Table(name = "m_users", uniqueConstraints = {
-        @UniqueConstraint(name = "UniqueEmailAndPhoneNumberAndDelFlg", columnNames = {"phone_number", "email", "is_deleted"})})
-public class Users implements Serializable {
+        @UniqueConstraint(name = "UniqueEmailAndPhoneNumberAndDelFlg", columnNames = {"id", "phone_number", "email", "is_deleted"})})
+public class Users extends AuditModel implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -2675537776836756234L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,10 +46,10 @@ public class Users implements Serializable {
     //@Column(name = "user_id", unique = true, nullable = false)
     //private String userId;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
 
-    @Column(nullable = false, name = "phone_number", unique = true)
+    @Column(nullable = false, name = "phone_number")
     private String phoneNumber;
 
     private String referenceCode;

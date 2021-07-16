@@ -3,6 +3,7 @@ package com.waya.wayaauthenticationservice.repository;
 import java.util.Collection;
 import java.util.Optional;
 
+import com.waya.wayaauthenticationservice.entity.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -47,4 +48,6 @@ public interface UserRepository extends JpaRepository<Users, Long> {
     //        " AND u.isDeleted = false")
     //Optional<Users> findByUserId(@Param("userId") String userId);
 
+	@Query(value = "update m_users set is_deleted =:deleted where id=:userId", nativeQuery = true)
+	Optional<Users> deleteAccountByUserId(boolean deleted, Long userId);
 }

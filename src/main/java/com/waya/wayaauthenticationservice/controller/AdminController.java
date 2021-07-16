@@ -1,23 +1,15 @@
 package com.waya.wayaauthenticationservice.controller;
 
-import com.waya.wayaauthenticationservice.assembler.UserAssembler;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.userDTO.*;
-import com.waya.wayaauthenticationservice.repository.RedisUserDao;
-import com.waya.wayaauthenticationservice.response.UserProfileResponse;
-import com.waya.wayaauthenticationservice.service.AdminService;
-import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.service.UserService;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_400;
+import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_422;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedModel;
@@ -28,14 +20,36 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
+import com.waya.wayaauthenticationservice.assembler.UserAssembler;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
+import com.waya.wayaauthenticationservice.repository.RedisUserDao;
+import com.waya.wayaauthenticationservice.response.UserProfileResponse;
+import com.waya.wayaauthenticationservice.service.AdminService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.service.UserService;
 
-import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_400;
-import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_422;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @CrossOrigin
 @RestController
@@ -161,7 +175,7 @@ public class AdminController {
             @Valid @RequestBody UpdateCorporateProfileRequest updateCorporateProfileRequest,
             @PathVariable String userId){
         UserProfileResponse corporateProfileResponse = profileService.updateProfile(updateCorporateProfileRequest, userId);
-        com.waya.wayaauthenticationservice.response.ApiResponse response =  new com.waya.wayaauthenticationservice.response.ApiResponse(corporateProfileResponse,
+        com.waya.wayaauthenticationservice.response.ApiResponse<UserProfileResponse> response =  new com.waya.wayaauthenticationservice.response.ApiResponse<UserProfileResponse>(corporateProfileResponse,
                 "profile updated successfully", true);
         return new ResponseEntity<>(response,HttpStatus.CREATED);
     }
