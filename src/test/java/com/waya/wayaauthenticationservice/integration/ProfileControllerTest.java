@@ -556,10 +556,9 @@ class ProfileControllerTest {
 
         referralCode = new ReferralCode();
         referralCode.setReferralCode("102kkdjeurw2");
-        referralCode.setProfile(profile1.get());
+        referralCode.setProfile(profile);
         referralCode.setUserId("123");
         if(!referralCodeRepository.existsByEmail("102kkdjeurw2", "123"))
-
             referralCodeRepository.save(referralCode);
 
         //corporate profile 1
@@ -583,11 +582,6 @@ class ProfileControllerTest {
 
         if (!profileRepository.existsByEmail(corporate.getEmail()))
             profileRepository.save(corporate);
-
-
-
-
-
     }
 
     public String generateToken(Users user) {
