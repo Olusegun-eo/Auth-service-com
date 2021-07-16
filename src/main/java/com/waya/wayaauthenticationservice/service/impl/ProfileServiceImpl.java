@@ -861,6 +861,7 @@ public class ProfileServiceImpl implements ProfileService {
     public void sendWelcomeEmail(String email) {
         Profile userProfile = profileRepository.findByEmail(false, email)
                 .orElseThrow(() -> new CustomException("profile does not exist", HttpStatus.NOT_FOUND));
+
         WelcomeEmailContext emailContext = new WelcomeEmailContext();
         emailContext.init(userProfile);
         try {

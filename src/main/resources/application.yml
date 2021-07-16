@@ -139,7 +139,7 @@ app:
     notification-service:
       base-url: http://68.183.60.114:8085/notification-service
     wallet-service:
-      base-url: http://157.230.223.54:9009/wallet
+      base-url: http://157.230.223.54:9009/api/v1/wallet
 
   auth:
     tokenSecret: 926D96C90030DD58429D2751AC1BDBBC
@@ -154,6 +154,69 @@ app:
       - myandroidapp://oauth2/redirect
       - myiosapp://oauth2/redirect
 api:
+  server:
+    deployed: 46.101.41.187 #Change per Environment
+
+  auth:
+    create:
+      description: Create a new Private User/ Can also be used to create In-App Admin and Super Admin Users
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will create the User obect, a Wallet Account and Profile successfully, as well as send an OTP to the user
+        on both phoneNumber and Email
+        # Error Response
+        returns with a detailed response about the error.
+
+    create-corporate:
+      description: Create a new Corporate User. Can also be used to create Corporate Admin Users
+      notes: |
+          # Normal Response
+          if the request passes all validation, it will create the User obect, 2 Wallet Accounts and Profile successfully, as well as send an OTP to the user
+          on both phoneNumber and Email
+          # Error Response
+          returns with a detailed response about the error.
+
+    verify-otp:
+      description: Verifies User Creation and Enables the User to Login Successfully
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will verify the newly created Users account and Send a welcome Mail
+        # Error Response
+        returns with a detailed response about the error.
+
+    verify-phone:
+      description: Verifies User Phone Numer after OTP has been Generated for it
+      notes: |
+        # Normal Response
+        It is expected that you first invoke the `/resend-otp/{phoneNumber}` endpoint before a call to this is done to verify
+        If Successful, good response is given
+        # Error Response
+        returns with a detailed response about the error.
+
+    verify-email:
+      description: Verifies User Email after OTP has been Generated for it
+      notes: |
+        # Normal Response
+        It is expected that you first invoke the `/resend-otp-mail/{email}` endpoint before a call to this is done to verify
+        If Successful, good response is given
+        # Error Response
+        returns with a detailed response about the error.
+
+    login:
+      description: Endpoint to Login to the system With
+      notes: |
+        # Normal Response
+        If User is Enabled and Active, response containing the User's profile is returned, together with the JWT Token to use for Authenticated Requests
+        # Error Response
+        returns with a detailed response about the error.
+
+    social:
+      description: Abstraction to allow Login from any of our Social Integrations
+      notes: |
+        # Normal Response
+        If Successful, good response is given
+        # Error Response
+        returns with a detailed response about the error.
 
   corporate-profile:
     create-corporate-profile:

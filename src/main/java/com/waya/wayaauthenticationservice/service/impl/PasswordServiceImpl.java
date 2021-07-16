@@ -231,17 +231,17 @@ public class PasswordServiceImpl implements PasswordService {
         boolean success;
         Map<String, Object> map = new HashMap<>();
         if (isEmail) {
-            EmailVerificationResponse emailVerificationResponse =
+            OTPVerificationResponse emailVerificationResponse =
                     this.emailService.verifyEmailToken(phoneOrEmail, Integer.parseInt(otp));
 
             success = emailVerificationResponse.isValid();
             message = emailVerificationResponse.getMessage();
         } else {
-            ApiResponse<OTPVerificationResponse> profileResponse =
+            OTPVerificationResponse profileResponse =
                     this.smsTokenService.verifySMSOTP(phoneOrEmail, Integer.parseInt(otp));
 
-            success = profileResponse.getData().isValid();
-            message = profileResponse.getData().getMessage();
+            success = profileResponse.isValid();
+            message = profileResponse.getMessage();
         }
         map.put("success", success);
         map.put("message", message);

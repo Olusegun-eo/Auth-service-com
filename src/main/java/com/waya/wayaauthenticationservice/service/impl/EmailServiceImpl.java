@@ -10,6 +10,7 @@ import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
 
+import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -76,7 +77,7 @@ public class EmailServiceImpl implements EmailService {
      */
     //@CachePut(cacheNames = "OTPBase", key = "#email")
     @Override
-    public EmailVerificationResponse verifyEmailToken(String email, Integer otp) {
+    public OTPVerificationResponse verifyEmailToken(String email, Integer otp) {
         try {
             Optional<OTPBase> otpBase = otpRepository.getOtpDetailsViaEmail(email, otp);
             if (otpBase.isPresent()) {
@@ -84,12 +85,12 @@ public class EmailServiceImpl implements EmailService {
                 if (token.isValid()) {
                     LocalDateTime newTokenExpiryDate = token.getExpiryDate().minusHours(2);
                     otpRepository.updateTokenForEmail(email, token.getId(), newTokenExpiryDate, false);
-                    return new EmailVerificationResponse(true, EMAIL_VERIFICATION_MSG);
+                    return new OTPVerificationResponse(true, EMAIL_VERIFICATION_MSG);
                 } else {
-                    return new EmailVerificationResponse(false, EMAIL_VERIFICATION_MSG_ERROR);
+                    return new OTPVerificationResponse(false, EMAIL_VERIFICATION_MSG_ERROR);
                 }
             }
-            return new EmailVerificationResponse(false, ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
+            return new OTPVerificationResponse(false, ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
 
         } catch (Exception exception) {
             log.error("could not process data ", exception);

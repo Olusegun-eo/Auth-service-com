@@ -34,7 +34,7 @@ public interface AuthenticationService {
 
 	ResponseEntity<?> validateUser();
 
-	ResponseEntity<?> verifyEmail(EmailPojo emailPojo);
+	ResponseEntity<?> verifyEmail(OTPPojo otpPojo);
 
 	ResponseEntity<?> userByPhone(String phone);
 

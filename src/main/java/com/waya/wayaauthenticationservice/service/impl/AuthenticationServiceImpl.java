@@ -20,6 +20,7 @@ import java.util.regex.Matcher;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
@@ -107,8 +108,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Autowired
     private EmailService emailService;
 
+    @Value("${api.server.deployed}")
+    private String urlRedirect;
+
     private String getBaseUrl(HttpServletRequest request) {
-        return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+        try{
+            StringBuffer url = request.getRequestURL();
+            String uri = request.getRequestURI();
+            int idx = (((uri != null) && (uri.length() > 0)) ? url.indexOf(uri) : url.length());
+            String host = url.substring(0, idx); //base url
+            idx = host.indexOf("://");
+            if(idx > 0) {
+                host = host.substring(idx); //remove scheme if present
+                log.info("Servers Host is {}", host);
+            }
+        }catch(Exception ex){
+            log.error("An Error has Occurred:: {}", ex.getMessage());
+        }
+        return "http://" + urlRedirect + ":" + request.getServerPort() + request.getContextPath();
     }
 
     @Override
@@ -245,11 +262,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setPhoneNumber(mUser.getPhoneNumber());
             user.setPhoneVerified(false);
             user.setPinCreated(false);
-            if (adminAction) {
-                user.setActive(true);
-                user.setAccountStatus(-1);
-                CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
-            }
             user.setReferenceCode(mUser.getReferenceCode());
             user.setSurname(mUser.getSurname());
             String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
@@ -343,7 +355,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("PersonalProfile account creation starts: " + personalProfileRequest);
         ApiResponse<String> personalResponse = profileService.createProfile(personalProfileRequest, baseUrl);
         log.info("PersonalProfile account creation ends: " + personalResponse);
-
     }
 
     public String generateToken(Users userResponse) {
@@ -377,19 +388,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             Matcher matcher = emailPattern.matcher(otpPojo.getPhoneOrEmail());
             boolean isEmail = matcher.matches();
-            String message;
-            boolean success;
-            ApiResponse<OTPVerificationResponse> profileResponse;
-            EmailVerificationResponse emailVerificationResponse;
+
+            OTPVerificationResponse otpResponse;
             if (isEmail) {
-                emailVerificationResponse = verifyEmail(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
-                success = emailVerificationResponse.isValid();
-                message = emailVerificationResponse.getMessage();
+                otpResponse = verifyEmail(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
             } else {
-                profileResponse = verifyOTP(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
-                success = profileResponse.getData().isValid();
-                message = profileResponse.getData().getMessage();
+                otpResponse = verifyOTP(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
             }
+            String message= otpResponse.getMessage();
+            boolean success = otpResponse.isValid();
+
             if (success) {
                 user.setActive(true);
                 user.setDateOfActivation(LocalDateTime.now());
@@ -419,34 +427,32 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
         // Implementation for internal call
         log.info("Verify Phone UsingOTP starts {}", otpPojo);
-        ApiResponse<OTPVerificationResponse> profileResponse = verifyOTP(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
-        log.info("Verify Phone UsingOTP ends {}", profileResponse.getData());
+        OTPVerificationResponse profileResponse = verifyOTP(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
+        log.info("Verify Phone UsingOTP ends {}", profileResponse);
 
-        if (profileResponse.getData().isValid()) {
+        if (profileResponse.isValid()) {
             user.setPhoneVerified(true);
             // user.setActive(true);
             try {
                 userRepo.save(user);
                 return new ResponseEntity<>(new SuccessResponse("OTP verified successfully. Please login.", null),
-                        HttpStatus.CREATED);
-
+                        HttpStatus.OK);
             } catch (Exception e) {
                 log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
                 return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
             }
         } else {
-            return new ResponseEntity<>(new ErrorResponse(profileResponse.getData().getMessage()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
-
-    private ApiResponse<OTPVerificationResponse> verifyOTP(String phoneNumber, Integer otp) {
-        ApiResponse<OTPVerificationResponse> verify = smsTokenService.verifySMSOTP(phoneNumber, otp);
+    private OTPVerificationResponse verifyOTP(String phoneNumber, Integer otp) {
+        OTPVerificationResponse verify = smsTokenService.verifySMSOTP(phoneNumber, otp);
         return verify;
     }
 
-    private EmailVerificationResponse verifyEmail(String email, Integer token) {
-        EmailVerificationResponse verifyEmail = emailService.verifyEmailToken(email, token);
+    private OTPVerificationResponse verifyEmail(String email, Integer token) {
+        OTPVerificationResponse verifyEmail = emailService.verifyEmailToken(email, token);
         return verifyEmail;
     }
 
@@ -459,25 +465,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ResponseEntity<?> verifyEmail(EmailPojo emailPojo) {
+    public ResponseEntity<?> verifyEmail(OTPPojo otpPojo) {
         // Implementation for internal call
-        Users user = userRepo.findByEmailIgnoreCase(emailPojo.getEmail()).orElse(null);
+        Users user = userRepo.findByEmailIgnoreCase(otpPojo.getPhoneOrEmail()).orElse(null);
         if (user == null) {
-            return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse("Invalid Email Passed"), HttpStatus.BAD_REQUEST);
         }
         if (user.isActive() && user.isEmailVerified())
             return new ResponseEntity<>(new SuccessResponse("Account and Phone been Verified already.", null),
                     HttpStatus.CREATED);
 
-        log.info("Verify Email starts {}", emailPojo);
-        EmailVerificationResponse emailResponse = verifyEmail(emailPojo.getEmail(), Integer.parseInt(emailPojo.getToken()));
-        log.info("Verify Email ends {}", emailPojo);
+        log.info("Verify Email starts {}", otpPojo);
+        OTPVerificationResponse emailResponse = verifyEmail(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
         if (emailResponse != null && emailResponse.isValid()) {
             user.setEmailVerified(true);
             user.setActive(true);
-            return new ResponseEntity<>(new SuccessResponse(emailResponse.getMessage()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new SuccessResponse(emailResponse.getMessage()), HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(new ErrorResponse(emailResponse.getMessage()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 

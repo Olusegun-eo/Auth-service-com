@@ -3,6 +3,7 @@ package com.waya.wayaauthenticationservice.controller;
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -20,15 +21,11 @@ import com.waya.wayaauthenticationservice.util.ValidPhone;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.SwaggerDefinition;
-import io.swagger.annotations.Tag;
 
 @RestController
 @RequestMapping("/api/v1/password")
 @Api(tags = {"Password Resource"})
-@SwaggerDefinition(tags = {
-        @Tag(name = "Password Resource", description = "REST API for Password Service.")
-})
+@Tag(name = "Password Resource", description = "REST API for Password Service.")
 @CrossOrigin
 @Validated
 public class PasswordController {

@@ -4,7 +4,10 @@ import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.response.*;
 import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.response.ApiResponse;
-import io.swagger.annotations.*;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,10 +24,8 @@ import java.util.concurrent.CompletableFuture;
 import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_400;
 import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_422;
 
-@Api(tags = {"Profile Resource"})
-@SwaggerDefinition(tags = {
-        @Tag(name = "Profile Resource", description = "REST API for Profile Service.")
-})
+
+@Tag(name = "PROFILE RESOURCE",  description = "REST API for Profile Service API")
 @CrossOrigin
 @RestController
 @RequestMapping("/api/v1/profile")
@@ -196,7 +197,6 @@ public class ProfileController {
         return profileService.findAllUserReferral(userId, page);
     }
 
-
     @ApiOperation(
             value = "Delete user",
             notes = "Toggle delete for user profile")
@@ -249,7 +249,7 @@ public class ProfileController {
     })
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/sms-alert/status/{phoneNumber}")
-    ResponseEntity<ApiResponse<ToggleSMSResponse>> getSMSAlertStatus(@Valid @ApiParam(example = "08054354344") @PathVariable String phoneNumber){
+    ResponseEntity<ApiResponse<ToggleSMSResponse>> getSMSAlertStatus(@Valid @ApiParam(example = "2348054354344") @PathVariable String phoneNumber){
 
         ToggleSMSResponse toggleSMSResponse = profileService.getSMSAlertStatus(phoneNumber);
         ApiResponse<ToggleSMSResponse> response = new ApiResponse<>(toggleSMSResponse, "Data created successfully", true);

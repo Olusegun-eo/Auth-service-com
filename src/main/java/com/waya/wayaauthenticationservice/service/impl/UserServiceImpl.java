@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -105,8 +106,11 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private NotificationProxy notificationProxy;
 
+    @Value("${api.server.deployed}")
+    private String urlRedirect;
+
     private String getBaseUrl(HttpServletRequest request) {
-        return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+        return "http://" + urlRedirect + ":" + request.getServerPort() + request.getContextPath();
     }
 
     @Override
