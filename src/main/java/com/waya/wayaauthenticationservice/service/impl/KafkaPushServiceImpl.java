@@ -1,6 +1,6 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import com.waya.wayaauthenticationservice.pojo.ChatPojo;
+import com.waya.wayaauthenticationservice.pojo.others.ChatPojo;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.service.KafkaPushService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,7 @@ public class KafkaPushServiceImpl implements KafkaPushService {
 
     @Override
     public ResponseEntity<SuccessResponse> postChat(ChatPojo chatPojo) {
-        kafkaMessageProducer.send(CHAT_TOPIC,chatPojo);
+        kafkaMessageProducer.send(CHAT_TOPIC, chatPojo);
         return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
     }
 }

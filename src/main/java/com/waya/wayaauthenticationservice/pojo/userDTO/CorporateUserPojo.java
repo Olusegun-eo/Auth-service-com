@@ -1,45 +1,43 @@
 package com.waya.wayaauthenticationservice.pojo.userDTO;
 
+
 import java.util.Objects;
 
-import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CorporateUserPojo extends BaseUserPojo {
 
-	@NotBlank(message = "City be null or blank")
+	@NotBlank(message = "please enter your organisation City")
 	private String city;
 
+	@NotBlank(message = "please enter your organisation Address")
 	private String officeAddress;
 
-	@NotBlank(message = "state be null or blank")
+	@NotBlank(message = "please enter your organisation State")
 	private String state;
 
-	@NotBlank(message = "orgName be null or blank")
+	@NotBlank(message = "please enter your organisation name")
 	private String orgName;
 
-	@Email(message = "orgEmail must be valid")
+	@NotBlank(message = "please enter your organisation Email")
 	private String orgEmail;
 
-	@NotBlank(message = "orgPhone be null or blank")
+	@NotBlank(message = "please enter your organisation Phone Number")
 	private String orgPhone;
 
-	@NotBlank(message = "orgType be null or blank")
+	@NotBlank(message = "please enter your organisation type")
 	private String orgType;
 
-	@Size(min = 5, message = "Business Type should be at least 5 characters long")
 	@NotBlank(message = "Business Type Cannot be null or blank")
 	private String businessType;
-
-	@JsonIgnore
-	private Long userId = 0L;
 
 	@Override
 	public int hashCode() {
@@ -64,6 +62,5 @@ public class CorporateUserPojo extends BaseUserPojo {
 		return Objects.equals(businessType, other.businessType) && Objects.equals(orgEmail, other.orgEmail)
 				&& Objects.equals(orgPhone, other.orgPhone);
 	}
-	
 	
 }

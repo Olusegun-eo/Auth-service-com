@@ -1,7 +1,12 @@
 package com.waya.wayaauthenticationservice;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.waya.wayaauthenticationservice.config.LoggableDispatcherServlet;
+import feign.RequestInterceptor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.entity.ContentType;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.config.Configuration.AccessLevel;
 import org.modelmapper.convention.MatchingStrategies;
@@ -13,6 +18,8 @@ import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -27,6 +34,7 @@ import java.util.Collections;
 @EnableDiscoveryClient
 @EnableFeignClients
 @EnableSwagger2
+@EnableJpaAuditing
 @Slf4j
 public class WayaAuthenticationServiceApplication {
 
@@ -81,11 +89,24 @@ public class WayaAuthenticationServiceApplication {
 		return modelMapper;
 	}
 
+	@Bean
+	public ObjectMapper objectMapper() {
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		return objectMapper;
+	}
+
 	@Bean(name = "multipartResolver")
 	public CommonsMultipartResolver createMultipartResolver() {
 		CommonsMultipartResolver resolver=new CommonsMultipartResolver();
 		resolver.setDefaultEncoding("utf-8");
 		return resolver;
+	}
+
+	@Bean
+	public RequestInterceptor requestInterceptor(){
+		return requestTemplate -> requestTemplate.header(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.getMimeType());
 	}
 
 }

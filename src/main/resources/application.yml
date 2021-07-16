@@ -1,17 +1,16 @@
 spring:
-#  profiles:
-#    active:
-#    - dev
   application:
     name: auth-service
   datasource:
-#    url: jdbc:postgresql://127.0.0.1:5432/app_dev
-#    username: app_dev
-#    password: e1bc9e7f864d
-    url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaPayChatAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
-    username: WayaPayChat2020
-    password: gh9shfit2m53g4xz
+    url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+    #    username: app_dev
+    #    password: e1bc9e7f864d
+    #url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaPayChatAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+    username: ${POSTGRES_USERNAME:WayaPayChat2020}
+    password: ${POSTGRES_PASSWORD:gh9shfit2m53g4xz}
+    initialization-mode: always
     driver-class-name: org.postgresql.Driver
+    continue-on-error: true
   jpa:
     hibernate:
       ddl-auto: update
@@ -21,17 +20,35 @@ spring:
         show-sql: true
         jdbc:
           time_zone: UTC
+    open-in-view: false #this config disables database queries which  may be performed during view rendering
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 2400000
+      cache-null-values: false
+      use-key-prefix: true
+      key-prefix: tokens
+  redis:
+    host: ${REDIS_HOST:waya-redis-staging-env.tk8m9t.0001.euw1.cache.amazonaws.com}
+    port: ${REDIS_PORT:6379}
+    timeout: 10000
+    password: ${REDIS_PASSWORD:wIYretruTPWPmAyLgq6HNQMa0wjRG3q8}
+    ttl: 86400000
+    connect-timeout: 10000
 
   jackson:
     serialization:
-      fail-on-empty-beans: false     
+      fail-on-empty-beans: false
   session:
     store-type: jdbc
   kafka:
-    bootstrapServers: 209.97.178.170:9092
+    bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:http://209.97.178.170:9092}
+    groupId: ${KAFKA_GROUP_ID:waya}
     consumer:
       group-id: waya
       auto-offset-reset: earliest
+
   servlet:
     multipart:
       max-file-size: 2MB
@@ -69,45 +86,58 @@ spring:
             userInfoUri: https://graph.facebook.com/v3.0/me?fields=id,first_name,middle_name,last_name,name,email,verified,is_verified,picture.width(250).height(250)
 
 server:
-  port: 8059 
+  port: 8059
+  error:
+    include-message: always
   servlet:
     context-path: /
 
 logging:
   level:
-    root: WARN
     org:
-      springframework: WARN
       hibernate:
         SQL: DEBUG
         type:
           descriptor:
             sql:
               BasicBinder: TRACE
+
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://46.101.41.187:8761/eureka
+      defaultZone: ${EUREKA_SERVER_URL:http://46.101.41.187:8761/eureka} #http://46.101.41.187:8761/eureka
     service-url:
-      default-zone: http://46.101.41.187:8761/eureka
+      default-zone: ${EUREKA_SERVER_URL:http://46.101.41.187:8761/eureka} #http://46.101.41.187:8761/eureka
   instance:
     preferIpAddress: true
 
 jwt:
   secret: mysecret
-deleteprofile:
-  delete-profile-url: http://46.101.41.187:8080/profile-service/delete-restore
-  validate-user: http://46.101.41.187:8080/profile-service/delete-restore
-  deleteWallet: http://46.101.41.187:1000/main/profile/delete-profile-by-id
-  deleteWayagram: http://46.101.41.187:1000/main/profile/delete-profile-by-id
 
 app:
   config:
+    deleteprofile:
+      deleteWallet: http://157.245.84.14:1000/main/activate-or-deactivate-wayagram-account
+      deleteWayagram: http://157.245.84.14:1000/main/activate-or-deactivate-wayagram-account
+    referral:
+      base-url: http://46.101.41.187:8282/referral
+    auto:
+      follow:
+        base-url: http://157.245.84.14:1000/graph/friend/waya-auto-follow
+    wayagram-profile:
+      base-url: http://157.245.84.14:1000/main/profile
+#    main:
+#      profile:
+#        base-url: http://157.245.84.14:1000/main/profile/create
+    file-resource:
+      base-url: http://46.101.41.187:9098/file-resource/api
+    virtual-account:
+      base-url: http://46.101.41.187:7090/account-creation-service/api
     notification-service:
       base-url: http://68.183.60.114:8085/notification-service
-    wallet:
-      profile:
-        url: http://46.101.41.187:8080/profile-service/personal-profile
+    wallet-service:
+      base-url: http://157.230.223.54:9009/api/v1/wallet
+
   auth:
     tokenSecret: 926D96C90030DD58429D2751AC1BDBBC
     tokenExpirationMsec: 864000000
@@ -120,3 +150,172 @@ app:
       - http://localhost:3000/oauth2/redirect
       - myandroidapp://oauth2/redirect
       - myiosapp://oauth2/redirect
+api:
+  server:
+    deployed: 46.101.41.187 #Change per Environment
+
+  auth:
+    create:
+      description: Create a new Private User/ Can also be used to create In-App Admin and Super Admin Users
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will create the User obect, a Wallet Account and Profile successfully, as well as send an OTP to the user
+        on both phoneNumber and Email
+        # Error Response
+        returns with a detailed response about the error.
+
+    create-corporate:
+      description: Create a new Corporate User. Can also be used to create Corporate Admin Users
+      notes: |
+          # Normal Response
+          if the request passes all validation, it will create the User obect, 2 Wallet Accounts and Profile successfully, as well as send an OTP to the user
+          on both phoneNumber and Email
+          # Error Response
+          returns with a detailed response about the error.
+
+    verify-otp:
+      description: Verifies User Creation and Enables the User to Login Successfully
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will verify the newly created Users account and Send a welcome Mail
+        # Error Response
+        returns with a detailed response about the error.
+
+    verify-phone:
+      description: Verifies User Phone Numer after OTP has been Generated for it
+      notes: |
+        # Normal Response
+        It is expected that you first invoke the `/resend-otp/{phoneNumber}` endpoint before a call to this is done to verify
+        If Successful, good response is given
+        # Error Response
+        returns with a detailed response about the error.
+
+    verify-email:
+      description: Verifies User Email after OTP has been Generated for it
+      notes: |
+        # Normal Response
+        It is expected that you first invoke the `/resend-otp-mail/{email}` endpoint before a call to this is done to verify
+        If Successful, good response is given
+        # Error Response
+        returns with a detailed response about the error.
+
+    login:
+      description: Endpoint to Login to the system With
+      notes: |
+        # Normal Response
+        If User is Enabled and Active, response containing the User's profile is returned, together with the JWT Token to use for Authenticated Requests
+        # Error Response
+        returns with a detailed response about the error.
+
+    social:
+      description: Abstraction to allow Login from any of our Social Integrations
+      notes: |
+        # Normal Response
+        If Successful, good response is given
+        # Error Response
+        returns with a detailed response about the error.
+
+  corporate-profile:
+    create-corporate-profile:
+      description: Create a new Corporate Profile (Backend Service to Service use only).
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will create the profile successfully, as well as send an OTP to the user
+        # Error Response
+        returns with a detailed response about the error.
+
+    update-corporate-profile:
+      description: Update a Corporate Profile
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will update the profile successfully.
+        # Error Response
+        returns with a detailed response about the error.
+
+    update-profile-pic:
+      description: Update a Corporate Profile Picture
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will update the profile successfully.
+        # Error Response
+        returns with a detailed response about the error.
+
+    get-corporate-profile:
+      description: Get a Corporate Profile
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will update the profile successfully.
+        # Error Response
+        returns with a detailed response about the error.
+
+  profile:
+    referals:
+      description: get all users referrals
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will get the referals successfully, as well as send an OTP to the user
+        # Error Response
+        returns with a detailed response about the error.
+
+    create-personal-profile:
+      description: Create a new Personal Profile (Backend Service to Service use only).
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will create the profile successfully, as well as send an OTP to the user
+        # Error Response
+        returns with a detailed response about the error.
+
+    get-user-profile:
+      description: Get a users profile
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will return with a data, containing the users profile.
+        # Error Response
+        returns with a detailed response about the error.
+    update-user-profile:
+      description: updates a users profile
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will update a users profile successfully,
+        # Error Response
+        returns with a detailed response about the error.
+
+    update-user-profile-image:
+      description: updates a users profile image
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will update a users profile image successfully,
+        # Error Response
+        returns with a detailed response about the error.
+
+    search-name:
+      description: search for a user by name
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will return various search result for a user,
+        # Error Response
+        returns with a detailed response about the error.
+
+    search-phone:
+      description: search for a user by phone number
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will return various search result for a user,
+        # Error Response
+        returns with a detailed response about the error.
+
+    search-email:
+      description: search for a user by email
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will return various search result for a user,
+        # Error Response
+        returns with a detailed response about the error.
+
+    search-organization:
+      description: search for a user by organisation name
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will return various search result for a user,
+        # Error Response
+        returns with a detailed response about the error.

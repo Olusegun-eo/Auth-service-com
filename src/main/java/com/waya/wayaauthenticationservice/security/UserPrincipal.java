@@ -1,24 +1,18 @@
 package com.waya.wayaauthenticationservice.security;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
+import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.Users;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
-import com.waya.wayaauthenticationservice.entity.Roles;
-import com.waya.wayaauthenticationservice.entity.Users;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("serial")
 public class UserPrincipal implements OAuth2User, UserDetails {
+
 	private Users user;
 	private Map<String, Object> attributes;
 
@@ -68,7 +62,7 @@ public class UserPrincipal implements OAuth2User, UserDetails {
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 
-		List<Roles> roles = new ArrayList<Roles>(this.user.getRolesList());
+		List<Role> roles = new ArrayList<Role>(this.user.getRoleList());
 
 		Collection<GrantedAuthority> grantedAuthorities = roles.stream()
 				.map(r -> new SimpleGrantedAuthority(r.getName())).collect(Collectors.toSet());
@@ -90,10 +84,10 @@ public class UserPrincipal implements OAuth2User, UserDetails {
 		return Optional.of(this.user);
 	}
 	
-	private final Set<String> getPrivileges(final Collection<Roles> roles) {
+	private final Set<String> getPrivileges(final Collection<Role> roles) {
 		Set<String> privileges = new HashSet<String>();
-		for (Roles role : roles) {
-			privileges.addAll(role.getPermissions().stream().map(p -> p.getName()).collect(Collectors.toSet()));
+		for (Role role : roles) {
+			privileges.addAll(role.getPrivileges().stream().map(p -> p.getName()).collect(Collectors.toSet()));
 		}
 		return privileges;
 	}

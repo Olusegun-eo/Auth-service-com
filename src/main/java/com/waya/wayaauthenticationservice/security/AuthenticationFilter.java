@@ -2,6 +2,7 @@ package com.waya.wayaauthenticationservice.security;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -18,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -31,10 +33,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
-import com.waya.wayaauthenticationservice.entity.Roles;
+import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.LoginDetailsPojo;
-import com.waya.wayaauthenticationservice.pojo.LoginResponsePojo;
+import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
+import com.waya.wayaauthenticationservice.pojo.others.LoginResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.repository.PrivilegeRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
@@ -50,7 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 	private final Gson gson = new Gson();
-	private boolean isAdmin = false;
+	//private boolean isAdmin = false;
 
 	@Autowired
 	LoginHistoryService loginHistoryService;
@@ -70,25 +73,22 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			throws AuthenticationException {
 		try {
 			LoginDetailsPojo creds = new ObjectMapper().readValue(req.getInputStream(), LoginDetailsPojo.class);
-			isAdmin = creds.isAdmin();
-			log.info("Admin is {}", isAdmin);
+
+			//	isAdmin = creds.isAdmin();
+			//	log.info("Admin is {}", isAdmin);
 
 			UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
 
 			Users user = userLoginRepo.findByEmailOrPhoneNumber(creds.getEmailOrPhoneNumber())
 					.orElseThrow(() -> new BadCredentialsException("User Does not exist"));
 
-			List<Roles> roles = new ArrayList<Roles>(user.getRolesList());
+			List<Role> roles = new ArrayList<Role>(user.getRoleList());
 
 			Collection<GrantedAuthority> grantedAuthorities = roles.stream().map(r -> {
 				return new SimpleGrantedAuthority(r.getName());
 			}).collect(Collectors.toSet());
 
 			grantedAuthorities.addAll(getGrantedAuthorities(getPrivileges(roles)));
-
-			// return getAuthenticationManager().authenticate(
-			// new UsernamePasswordAuthenticationToken(creds.getEmail(),
-			// creds.getPassword(), grantedAuthorities));
 
 			return getAuthenticationManager().authenticate(
 					new UsernamePasswordAuthenticationToken(creds.getEmailOrPhoneNumber(), creds.getPassword(), grantedAuthorities));
@@ -100,14 +100,24 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	@Override
 	protected void successfulAuthentication(HttpServletRequest req, HttpServletResponse res, FilterChain chain,
 			Authentication auth) throws IOException, SignatureException {
+		// Inspect Here
+		Users user = ((UserPrincipal) auth.getPrincipal()).getUser().orElseThrow(() ->
+				new CustomException("Error Fetching User Object", HttpStatus.UNPROCESSABLE_ENTITY));
 
-		String userName = ((UserPrincipal) auth.getPrincipal()).getName();
+		log.info("Signed in User ::: {}", user);
+		String userName = user.getEmail();
 
 		String token = Jwts.builder().setSubject(userName)
 				.setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))
 				.signWith(SignatureAlgorithm.HS256, SecurityConstants.getSecret()).compact();
 
-		Users user = ((UserPrincipal) auth.getPrincipal()).getUser().orElse(null);
+		// Check for First Login Attempt and Update User Table
+		UserRepository userRepository = (UserRepository) SpringApplicationContext.getBean("userRepository");
+		if(user.isFirstTimeLogin()){
+			user.setFirstTimeLogin(false);
+			user.setFirstTimeLoginDate(LocalDateTime.now());
+			userRepository.save(user);
+		}
 
 		LoginResponsePojo loginResponsePojo = new LoginResponsePojo();
 		if(user.getAccountStatus() != -1){
@@ -119,8 +129,8 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 				loginResponsePojo.setMessage("User account is disabled, kindly contact Waya Admin");
 				res.setStatus(400);
 			} else {
-				Set<String> permit = getPrivileges(user.getRolesList());
-				Set<String> roles = user.getRolesList().stream().map(u -> u.getName()).collect(Collectors.toSet());
+				Set<String> permit = getPrivileges(user.getRoleList());
+				Set<String> roles = user.getRoleList().stream().map(u -> u.getName()).collect(Collectors.toSet());
 				// true == true
 				// if (isAdmin == roleCheck(rs, "ROLE_ADMIN")) {
 				loginResponsePojo.setCode(0);
@@ -191,14 +201,14 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		pr.write(str);
 	}
 
-	public boolean roleCheck(Collection<Roles> rolesList, String role) {
-		return rolesList.stream().anyMatch(e -> e.getName().equals(role));
+	public boolean roleCheck(Collection<Role> roleList, String role) {
+		return roleList.stream().anyMatch(e -> e.getName().equals(role));
 	}
 
-	private final Set<String> getPrivileges(final Collection<Roles> roles) {
+	private final Set<String> getPrivileges(final Collection<Role> roles) {
 		Set<String> privileges = new HashSet<String>();
-		for (Roles role : roles) {
-			privileges.addAll(role.getPermissions().stream().map(p -> p.getName()).collect(Collectors.toSet()));
+		for (Role role : roles) {
+			privileges.addAll(role.getPrivileges().stream().map(p -> p.getName()).collect(Collectors.toSet()));
 		}
 		return privileges;
 	}

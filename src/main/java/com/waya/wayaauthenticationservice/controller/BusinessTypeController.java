@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.waya.wayaauthenticationservice.entity.BusinessType;
-import com.waya.wayaauthenticationservice.pojo.ResponsePojo;
+import com.waya.wayaauthenticationservice.response.ResponsePojo;
 import com.waya.wayaauthenticationservice.service.impl.BusinessTypeService;
 
 import io.swagger.annotations.ApiOperation;

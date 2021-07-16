@@ -70,7 +70,6 @@
 			</Policies>
 			<DefaultRolloverStrategy max="10" />
 		</RollingFile>
-
 	</Appenders>
 
 	<Loggers>
@@ -78,11 +77,6 @@
 		<Logger name="org.springframework.jdbc" additivity="false"
 			includeLocation="true">
 			<AppenderRef ref="debugLog" />
-		</Logger>
-
-		<Logger name="org.springframework" additivity="false"
-				includeLocation="true">
-			<AppenderRef ref="Console" />
 		</Logger>
 
 		<Logger name="com.waya.wayaauthenticationservice.config"

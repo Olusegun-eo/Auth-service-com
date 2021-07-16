@@ -1,30 +1,50 @@
 package com.waya.wayaauthenticationservice.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.waya.wayaauthenticationservice.model.AuthProvider;
-import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-import org.hibernate.annotations.CreationTimestamp;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Objects;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotNull;
+
+import org.hibernate.annotations.CreationTimestamp;
+
+import com.waya.wayaauthenticationservice.model.AuthProvider;
+
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.ToString;
+
 @Data
 @Entity
+@ToString
 @Table(name = "m_users", uniqueConstraints = {
         @UniqueConstraint(name = "UniqueEmailAndPhoneNumberAndDelFlg", columnNames = {"id", "phone_number", "email", "is_deleted"})})
-public class Users implements Serializable {
+public class Users extends AuditModel implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -2675537776836756234L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", unique = true, nullable = false)
     private Long id;
+
+    //@Column(name = "user_id", unique = true, nullable = false)
+    //private String userId;
 
     @Column(nullable = false)
     private String email;
@@ -40,21 +60,16 @@ public class Users implements Serializable {
     @Column(nullable = false)
     private String surname;
 
-    @JsonIgnore
     @Column(nullable = false)
     private String password;
 
-    @JsonIgnore
     private String pinHash;
 
-    @JsonIgnore
     @Column(nullable = false)
     private String name;
 
-    @JsonIgnore
     private boolean phoneVerified = false;
 
-    @JsonIgnore
     private boolean emailVerified = false;
 
     @Column(name = "email_verified_date")
@@ -78,10 +93,8 @@ public class Users implements Serializable {
 
     private String regDeviceIP;
 
-    private String imageUrl;
-
     @Column(name = "account_status")
-    private int accountStatus;
+    private int accountStatus = 1;
 
     @Column(name = "account_non_expired", nullable = false)
     private boolean accountNonExpired;
@@ -104,8 +117,8 @@ public class Users implements Serializable {
     @Column(name = "is_active", nullable = false)
     private boolean isActive = false;
 
-    @Column(name = "first_time_login_remaining", nullable = false)
-    private boolean firstTimeLoginRemaining;
+    @Column(name = "first_time_login_attempt", nullable = false)
+    private boolean isFirstTimeLogin = true;
 
     @Column(name = "first_time_login_date")
     private LocalDateTime firstTimeLoginDate;
@@ -121,11 +134,9 @@ public class Users implements Serializable {
     @Column(name = "password_never_expires", nullable = false)
     private boolean passwordNeverExpires;
 
-    @ApiModelProperty(hidden = true)
-    @JsonIgnore
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.MERGE )
     @JoinTable(name = "m_users_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
-    private Collection<Roles> rolesList;
+    private Collection<Role> roleList;
 
     @CreationTimestamp
     @ApiModelProperty(hidden = true)

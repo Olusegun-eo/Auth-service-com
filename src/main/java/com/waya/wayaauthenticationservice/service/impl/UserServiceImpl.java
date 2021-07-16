@@ -1,50 +1,73 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import com.waya.wayaauthenticationservice.config.ApplicationConfig;
-import com.waya.wayaauthenticationservice.controller.UserController;
-import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
-import com.waya.wayaauthenticationservice.entity.Roles;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.exception.ErrorMessages;
-import com.waya.wayaauthenticationservice.pojo.*;
-import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
-import com.waya.wayaauthenticationservice.pojo.notification.NamesPojo;
-import com.waya.wayaauthenticationservice.pojo.notification.NotificationResponsePojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.*;
-import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
-import com.waya.wayaauthenticationservice.proxy.WalletProxy;
-import com.waya.wayaauthenticationservice.repository.RolesRepository;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.response.ErrorResponse;
-import com.waya.wayaauthenticationservice.response.SuccessResponse;
-import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
-import com.waya.wayaauthenticationservice.service.AuthenticationService;
-import com.waya.wayaauthenticationservice.service.UserService;
-import com.waya.wayaauthenticationservice.util.ApiResponse;
-import com.waya.wayaauthenticationservice.util.HelperUtils;
-import com.waya.wayaauthenticationservice.util.ReqIPUtils;
-import lombok.extern.slf4j.Slf4j;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+import static org.springframework.http.HttpStatus.OK;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import javax.servlet.http.HttpServletRequest;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+import com.waya.wayaauthenticationservice.controller.UserController;
+import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
+import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.enums.DeleteType;
+import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.exception.ErrorMessages;
+import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
+import com.waya.wayaauthenticationservice.pojo.notification.NamesPojo;
+import com.waya.wayaauthenticationservice.pojo.notification.NotificationResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.others.ContactPojo;
+import com.waya.wayaauthenticationservice.pojo.others.ContactPojoReq;
+import com.waya.wayaauthenticationservice.pojo.others.DeleteRequest;
+import com.waya.wayaauthenticationservice.pojo.others.DevicePojo;
+import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
+import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UserWalletPojo;
+import com.waya.wayaauthenticationservice.pojo.others.WalletAccount;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
+import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
+import com.waya.wayaauthenticationservice.proxy.WalletProxy;
+import com.waya.wayaauthenticationservice.repository.RolesRepository;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.response.ErrorResponse;
+import com.waya.wayaauthenticationservice.response.SuccessResponse;
+import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
+import com.waya.wayaauthenticationservice.service.AuthenticationService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.service.UserService;
+import com.waya.wayaauthenticationservice.util.HelperUtils;
+import com.waya.wayaauthenticationservice.util.ReqIPUtils;
 
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-import static org.springframework.http.HttpStatus.OK;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -59,6 +82,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     ProfileServiceDAO profileServiceDAO;
     @Autowired
+    ProfileService profileService;
+    @Autowired
     private UserRepository usersRepo;
     @Autowired
     private AuthenticatedUserFacade authenticatedUserFacade;
@@ -66,10 +91,12 @@ public class UserServiceImpl implements UserService {
     private RolesRepository rolesRepo;
     @Autowired
     private WalletProxy walletProxy;
-    @Autowired
-    private RestTemplate restClient;
-    @Autowired
-    private ApplicationConfig applicationConfig;
+    
+	/*
+	 * @Autowired private RestTemplate restClient;
+	 * @Autowired private ApplicationConfig applicationConfig;
+	 */
+    
     @Autowired
     private ReqIPUtils reqUtil;
     @Autowired
@@ -79,15 +106,11 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private NotificationProxy notificationProxy;
 
-    @Override
-    public ResponseEntity<?> getUser(Long userId) {
-        Users user = usersRepo.findById(userId).orElse(null);
-        if (user == null) {
-            return new ResponseEntity<>(new ErrorResponse("Invalid Id"), HttpStatus.NOT_FOUND);
-        } else {
-            UserProfileResponsePojo userDto = this.toModelDTO(user);
-            return new ResponseEntity<>(new SuccessResponse("User info fetched", userDto), HttpStatus.OK);
-        }
+    @Value("${api.server.deployed}")
+    private String urlRedirect;
+
+    private String getBaseUrl(HttpServletRequest request) {
+        return "http://" + urlRedirect + ":" + request.getServerPort() + request.getContextPath();
     }
 
     @Override
@@ -106,30 +129,29 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-
     @Override
     public ResponseEntity<?> getUsers() {
-//		Users user = authenticatedUserFacade.getUser();
-//		if (!validateAdmin(user)) {
-//			return new ResponseEntity<>(new ErrorResponse("Invalid Access"), HttpStatus.BAD_REQUEST);
-//		}
+		Users user = authenticatedUserFacade.getUser();
+		if (!validateAdmin(user)) {
+			return new ResponseEntity<>(new ErrorResponse("Invalid Access"), HttpStatus.BAD_REQUEST);
+		}
         List<UserProfileResponsePojo> users = usersRepo.findAll().stream().map(u -> this.toModelDTO(u))
                 .collect(Collectors.toList());
         return new ResponseEntity<>(new SuccessResponse("User info fetched", users), HttpStatus.OK);
     }
 
-//	private boolean validateAdmin(Users user) {
-//		if (user == null) {
-//			return false;
-//		}
-//		Roles adminRole = rolesRepo.findByName("ROLE_ADMIN")
-//				.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
-//		Optional<Collection<Roles>> roles = Optional.ofNullable(user.getRolesList());
-//		if (!roles.isPresent())
-//			return false;
-//
-//		return roles.get().contains(adminRole);
-//	}
+	private boolean validateAdmin(Users user) {
+		if (user == null) {
+			return false;
+		}
+		Role adminRole = rolesRepo.findByName("ROLE_ADMIN")
+				.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+		Optional<Collection<Role>> roles = Optional.ofNullable(user.getRoleList());
+		if (!roles.isPresent())
+			return false;
+
+		return roles.get().contains(adminRole);
+	}
 
     @Override
     public ResponseEntity<?> getUsersByRole(long roleId) {
@@ -137,14 +159,14 @@ public class UserServiceImpl implements UserService {
 //		if (!validateAdmin(user)) {
 //			return new ResponseEntity<>(new ErrorResponse("Invalid Access"), HttpStatus.BAD_REQUEST);
 //		}
-        Roles role = rolesRepo.findById(roleId).orElse(null);
+        Role role = rolesRepo.findById(roleId).orElse(null);
         if (role == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid Role"), HttpStatus.BAD_REQUEST);
         }
         List<UserProfileResponsePojo> userList = new ArrayList<>();
         rolesRepo.findAll().forEach(roles -> {
             usersRepo.findAll().forEach(us -> {
-                us.getRolesList().forEach(usRole -> {
+                us.getRoleList().forEach(usRole -> {
                     if (usRole.getId().equals(roleId)) {
                         UserProfileResponsePojo u = this.toModelDTO(us);
                         userList.add(u);
@@ -226,26 +248,25 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<?> deleteUser(Long id, String token) {
+    public ResponseEntity<?> deleteUser(Long id) {
         try {
-            if (validateUser(token)) {
-                Users user = usersRepo.findById(id)
-                        .orElseThrow(() -> new CustomException("User with id  not found", HttpStatus.NOT_FOUND));
-                user.setActive(false);
-                user.setDateOfActivation(LocalDateTime.now());
-                usersRepo.saveAndFlush(user);
+            //if (validateUser(token)) {
+            Users user = usersRepo.findById(id)
+                    .orElseThrow(() -> new CustomException("User with id " + id + " not found", HttpStatus.NOT_FOUND));
+            user.setActive(false);
+            user.setDeleted(true);
+            user.setDateOfActivation(LocalDateTime.now());
+            Users finalUser = usersRepo.saveAndFlush(user);
 
-                CompletableFuture.runAsync(() -> disableUserProfile(String.valueOf(id), token));
-                return new ResponseEntity<>(new CustomException("Account deleted", OK), OK);
-            } else {
-                return new ResponseEntity<>(new ErrorResponse("Invalid Token"), HttpStatus.BAD_REQUEST);
-            }
+            CompletableFuture.runAsync(() -> disableUserProfile(String.valueOf(finalUser.getId())));
+
+            return new ResponseEntity<>(new CustomException("Account deleted", OK), OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
-    public ResponseEntity<?> isUserAdmin(long userId) {
+    public ResponseEntity<?> isUserAdmin(Long userId) {
         Users user = usersRepo.findById(userId)
                 .orElseThrow(() -> new CustomException("User with id  not found", HttpStatus.BAD_REQUEST));
         return new ResponseEntity<>(new SuccessResponse("IsUserAdmin", user.isAdmin()), HttpStatus.OK);
@@ -257,7 +278,7 @@ public class UserServiceImpl implements UserService {
             List<Users> users = new ArrayList<Users>();
             rolesRepo.findAll().forEach(role -> {
                 usersRepo.findAll().forEach(user -> {
-                    user.getRolesList().forEach(uRole -> {
+                    user.getRoleList().forEach(uRole -> {
                         if (uRole.getName().equals(roleName)) {
                             users.add(user);
                         }
@@ -275,13 +296,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserRoleUpdateRequest UpdateUser(UserRoleUpdateRequest user) {
         try {
-            return usersRepo.findById(user.getId()).map(mUser -> {
+            return usersRepo.findById(user.getUserId()).map(mUser -> {
                 for (Integer i : user.getRolesList()) {
-                    Optional<Roles> mRole = rolesRepo.findById(Long.parseLong(String.valueOf(i)));
+                    Optional<Role> mRole = rolesRepo.findById(Long.parseLong(String.valueOf(i)));
                     if (mRole.isPresent()) {
-                        if (mUser.getRolesList().contains(mRole.get()))
+                        if (mUser.getRoleList().contains(mRole.get()))
                             continue;
-                        mUser.getRolesList().add(mRole.get());
+                        mUser.getRoleList().add(mRole.get());
                     }
                 }
                 usersRepo.save(mUser);
@@ -291,6 +312,21 @@ public class UserServiceImpl implements UserService {
             log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
             throw new CustomException(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
         }
+    }
+
+    @Override
+    public UserEditPojo UpdateUserDetails(UserEditPojo userEditPojo) {
+       Users user = usersRepo.findById(userEditPojo.getId()).orElseThrow(() -> new CustomException("", HttpStatus.UNPROCESSABLE_ENTITY));
+        user.setCorporate(userEditPojo.isCorporate());
+        user.setEmail(userEditPojo.getEmail());
+        user.setFirstName(userEditPojo.getFirstName());
+        user.setPhoneNumber(userEditPojo.getPhoneNumber());
+        user.setPhoneVerified(userEditPojo.isPhoneVerified());
+        user.setPinCreated(userEditPojo.isPinCreated());
+        user.setReferenceCode(userEditPojo.getReferenceCode());
+        user.setSurname(userEditPojo.getSurname());
+        user = usersRepo.save(user);
+        return new UserEditPojo(user.getId(), user.getEmail(), user.getPhoneNumber(), user.getReferenceCode(), user.getFirstName(), user.getSurname(), user.isPhoneVerified(), user.isEmailVerified(), user.isPinCreated(), user.isCorporate(), (List<Role>) user.getRoleList());
     }
 
     @Override
@@ -306,7 +342,7 @@ public class UserServiceImpl implements UserService {
                 us.setPhoneVerified(user.isPhoneVerified());
                 us.setPinCreated(user.isPinCreated());
                 us.setReferenceCode(user.getReferenceCode());
-                us.setRolesList(new ArrayList<>(user.getRolesList()));
+                us.setRoleList(new ArrayList<>(user.getRoleList()));
                 us.setSurname(user.getSurname());
                 us.setEmailVerified(user.isEmailVerified());
                 return us;
@@ -317,50 +353,22 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private void disableUserProfile(String token, String userId) {
+    private void disableUserProfile(String userId) {
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-            headers.set("authorization", token);
-            Map<String, Object> map = new HashMap<>();
-            map.put("userId", userId);
-            map.put("deleteType", "DELETE");
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
-            ResponseEntity<String> response = restClient.postForEntity(applicationConfig.getDeleteProfileUrl(), entity,
-                    String.class);
-            if (response.getStatusCode() == OK) {
-                log.info("User deleted {}", response.getBody());
-            } else {
-                log.info("User not deleted :: {}", response.getStatusCode());
-            }
+            // Profile Service Delete Call
+            DeleteRequest deleteRequest = DeleteRequest.builder()
+                    .userId(userId)
+                    .deleteType(DeleteType.DELETE)
+                    .build();
+            var returnValue = this.profileService.toggleDelete(deleteRequest);
+            log.info("Profile Deleted: {} {}", returnValue.getBody().getCode(), returnValue.getBody().getMessage());
+
+            // Wallet Delete Account Call
+
+
+
         } catch (Exception e) {
             log.error("Error deleting user: ", e);
-        }
-    }
-
-    private boolean validateUser(String token) {
-        try {
-            log.info("validating user token ... {}", token);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-            headers.set("authorization", token);
-
-            Map<String, Object> map = new HashMap<>();
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
-            ResponseEntity<String> response = restClient.postForEntity(applicationConfig.getValidateUser(), entity,
-                    String.class);
-            if (response.getStatusCode() == OK) {
-                log.info("User verified with body {}", response.getBody());
-                return true;
-            } else {
-                log.info("user not verified :: {}", response.getStatusCode());
-                return false;
-            }
-        } catch (Exception e) {
-            log.error("Error verifying user: ", e);
-            return false;
         }
     }
 
@@ -369,13 +377,14 @@ public class UserServiceImpl implements UserService {
         if (user == null)
             return null;
 
-        Set<String> roles = user.getRolesList().stream().map(u -> u.getName()).collect(Collectors.toSet());
+        Set<String> roles = user.getRoleList().stream().map(u -> u.getName()).collect(Collectors.toSet());
         Set<String> permits = new HashSet<>();
-        user.getRolesList().forEach(u -> {
-            permits.addAll(u.getPermissions().stream().map(p -> p.getName()).collect(Collectors.toSet()));
+        user.getRoleList().forEach(u -> {
+            permits.addAll(u.getPrivileges().stream().map(p -> p.getName()).collect(Collectors.toSet()));
         });
 
-        UserProfileResponsePojo userDto = UserProfileResponsePojo.builder().email(user.getEmail()).id(user.getId())
+        UserProfileResponsePojo userDto = UserProfileResponsePojo.builder().email(user.getEmail())
+                .id(user.getId()).referenceCode(user.getReferenceCode())
                 .isEmailVerified(user.isEmailVerified()).phoneNumber(user.getPhoneNumber())
                 .firstName(user.getFirstName()).lastName(user.getSurname()).isAdmin(user.isAdmin())
                 .isPhoneVerified(user.isPhoneVerified()).isAccountDeleted(user.isDeleted())
@@ -426,13 +435,13 @@ public class UserServiceImpl implements UserService {
                 if (existingTelephone != null)
                     continue;
 
-                Roles merchRole = rolesRepo.findByName("ROLE_MERCH")
+                Role merchRole = rolesRepo.findByName("ROLE_MERCH")
                         .orElseThrow(() -> new CustomException("Merchant Role Not Available", HttpStatus.BAD_REQUEST));
 
-                Roles userRole = rolesRepo.findByName("ROLE_USER")
+                Role userRole = rolesRepo.findByName("ROLE_USER")
                         .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
 
-                List<Roles> roleList = new ArrayList<>();
+                List<Role> roleList = new ArrayList<>();
                 roleList.addAll(Arrays.asList(userRole, merchRole));
 
                 // Generate and Save Random Password
@@ -441,8 +450,12 @@ public class UserServiceImpl implements UserService {
                 log.info("Password for {} is {}", mUser.getEmail(), randomPassword);
 
                 Users user = new Users();
-                user.setAdmin(mUser.isAdmin());
                 user.setId(0L);
+//                String publicUserId = HelperUtils.generateRandomPassword();
+//                while (usersRepo.existsByUserId(publicUserId)) {
+//                    publicUserId = HelperUtils.generateRandomPassword();
+//                }
+//                user.setUserId(publicUserId);
                 user.setCorporate(true);
                 user.setAccountStatus(-1);
                 user.setDateCreated(LocalDateTime.now());
@@ -452,7 +465,7 @@ public class UserServiceImpl implements UserService {
                 user.setPassword(passwordEncoder.encode(mUser.getPassword()));
                 user.setDateOfActivation(LocalDateTime.now());
                 user.setActive(true);
-                user.setRolesList(roleList);
+                user.setRoleList(roleList);
                 user.setEmail(mUser.getEmail().trim());
                 user.setEmailVerified(false);
                 user.setFirstName(mUser.getFirstName());
@@ -468,7 +481,7 @@ public class UserServiceImpl implements UserService {
                     continue;
 
                 String token = this.authService.generateToken(regUser);
-                this.authService.createCorporateUser(mUser, regUser.getId(), token);
+                this.authService.createCorporateUser(mUser, regUser.getId(), token, getBaseUrl(request));
                 sendEmailNewPassword(randomPassword, regUser.getEmail(), regUser.getFirstName());
                 ++count;
             }
@@ -479,7 +492,6 @@ public class UserServiceImpl implements UserService {
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
-
     @Override
     public ResponseEntity<?> createUsers(BulkPrivateUserCreationDTO userList, HttpServletRequest request,
                                          Device device) {
@@ -503,13 +515,13 @@ public class UserServiceImpl implements UserService {
                 if (existingTelephone != null)
                     continue;
 
-                List<Roles> roleList = new ArrayList<>();
+                List<Role> roleList = new ArrayList<>();
 
-                Roles userRole = rolesRepo.findByName("ROLE_USER")
+                Role userRole = rolesRepo.findByName("ROLE_USER")
                         .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
                 roleList.add(userRole);
                 if (mUser.isAdmin()) {
-                    Roles adminRole = rolesRepo.findByName("ROLE_ADMIN")
+                    Role adminRole = rolesRepo.findByName("ROLE_ADMIN")
                             .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
                     roleList.add(adminRole);
                 }
@@ -521,6 +533,11 @@ public class UserServiceImpl implements UserService {
 
                 Users user = new Users();
                 user.setId(0L);
+//                String publicUserId = HelperUtils.generateRandomPassword();
+//                while (usersRepo.existsByUserId(publicUserId)) {
+//                    publicUserId = HelperUtils.generateRandomPassword();
+//                }
+//                user.setUserId(publicUserId);
                 user.setAdmin(mUser.isAdmin());
                 user.setAccountStatus(-1);
                 user.setEmail(mUser.getEmail().trim());
@@ -537,12 +554,12 @@ public class UserServiceImpl implements UserService {
                 user.setDateOfActivation(LocalDateTime.now());
                 user.setActive(true);
                 user.setPassword(passwordEncoder.encode(mUser.getPassword()));
-                user.setRolesList(roleList);
+                user.setRoleList(roleList);
 
                 Users regUser = usersRepo.save(user);
                 if (regUser == null)
                     continue;
-                this.authService.createPrivateUser(regUser);
+                this.authService.createPrivateUser(regUser, getBaseUrl(request));
                 sendEmailNewPassword(randomPassword, regUser.getEmail(), regUser.getFirstName());
                 ++count;
             }

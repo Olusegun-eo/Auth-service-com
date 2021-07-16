@@ -29,33 +29,20 @@ public class UserProfileResponsePojo extends RepresentationModel<UserProfileResp
 	
 	@JsonProperty("userId")
     private Long id;
-    
     private String email;
-    
     private boolean isEmailVerified;
-    
     private String phoneNumber;
-    
     private String firstName;
-    
     private String lastName;
-    
     private boolean isAdmin;
-	
 	private boolean isPhoneVerified;
-	
 	private boolean isAccountLocked;
-	
 	private boolean isAccountExpired;
-	
 	private boolean isCredentialsExpired;
-	
 	private boolean isActive;
-	
 	private boolean isAccountDeleted;
-	
+	private String referenceCode;
 	private boolean pinCreated;
-
 	private boolean isCorporate;
 	
 	@Builder.Default
@@ -63,6 +50,4 @@ public class UserProfileResponsePojo extends RepresentationModel<UserProfileResp
 	
 	@Builder.Default
 	private Set<String> permits = new HashSet<>();
-
-
 }

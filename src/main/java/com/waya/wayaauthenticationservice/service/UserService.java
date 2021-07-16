@@ -10,14 +10,12 @@ import org.springframework.mobile.device.Device;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.ContactPojoReq;
-import com.waya.wayaauthenticationservice.pojo.UserEditPojo;
+import com.waya.wayaauthenticationservice.pojo.others.ContactPojoReq;
+import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
-import com.waya.wayaauthenticationservice.pojo.UserRoleUpdateRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
 
 public interface UserService {
-
-	ResponseEntity<?> getUser(Long userId);
 
 	ResponseEntity<?> getUsers();
 
@@ -29,7 +27,7 @@ public interface UserService {
 
 	ResponseEntity<?> getUserById(Long id);
 
-	ResponseEntity<?> deleteUser(Long id, String token);
+	ResponseEntity<?> deleteUser(Long id);
 
 	ResponseEntity<?> wayaContactCheck(ContactPojoReq contacts);
 
@@ -39,10 +37,12 @@ public interface UserService {
 
 	UserRoleUpdateRequest UpdateUser(UserRoleUpdateRequest user);
 
+	UserEditPojo UpdateUserDetails(UserEditPojo userEditPojo);
+
 	// Get user details for Roles service
 	UserEditPojo getUserForRole(Long id);
 
-	public ResponseEntity<?> isUserAdmin(long userId);
+	ResponseEntity<?> isUserAdmin(Long userId);
 
 	UserProfileResponsePojo toModelDTO(Users user);
 

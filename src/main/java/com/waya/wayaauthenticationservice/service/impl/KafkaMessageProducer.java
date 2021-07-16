@@ -1,19 +1,15 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import com.google.gson.Gson;
+import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.kafka.core.KafkaProducerException;
-//import org.springframework.kafka.core.KafkaSendCallback;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.ListenableFutureCallback;
-
-import com.google.gson.Gson;
-import com.waya.wayaauthenticationservice.pojo.ProfilePojo2;
-import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
 
 @Service
 public class KafkaMessageProducer implements MessageQueueProducer {
@@ -21,7 +17,7 @@ public class KafkaMessageProducer implements MessageQueueProducer {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final KafkaTemplate<String, Object> template;
     private final Gson gson;
-    
+
 
 //
 //    @Autowired
@@ -45,25 +41,25 @@ public class KafkaMessageProducer implements MessageQueueProducer {
 
     /**
      * Non Blocking (Async), sends data to kafka
+     *
      * @param topic
      * @param data
      */
     @SuppressWarnings("unused")
-	@Override
+    @Override
     public void send(String topic, Object data) {
-    	ProfilePojo2 creds = null;
-    	logger.info(String.format("#### -> Producing message -> %s", data.toString()));
-		/*
-		 * try { creds = new ObjectMapper().readValue(gson.toJson(data),
-		 * ProfilePojo2.class); } catch (JsonMappingException e1) {
-		 * log.error("An error has occured {}", e1.getMessage()); } catch
-		 * (JsonProcessingException e1) { log.error("An error has occured {}",
-		 * e1.getMessage()); }
-		 */
+        //ProfilePojo2 creds = null;
+        logger.info(String.format("#### -> Producing message -> %s", data.toString()));
+        /*
+         * try { creds = new ObjectMapper().readValue(gson.toJson(data),
+         * ProfilePojo2.class); } catch (JsonMappingException e1) {
+         * log.error("An error has occurred {}", e1.getMessage()); } catch
+         * (JsonProcessingException e1) { log.error("An error has occurred {}",
+         * e1.getMessage()); }
+         */
         ListenableFuture<SendResult<String, Object>> future = template.send(topic, gson.toJson(data));
         //future.addCallback(new KafkaSendCallback<>() {
         future.addCallback(new ListenableFutureCallback<SendResult<String, Object>>() {
-
             /**
              * Called when the {@link ListenableFuture} completes with success.
              * <p>Note that Exceptions raised by this method are ignored.
@@ -73,7 +69,7 @@ public class KafkaMessageProducer implements MessageQueueProducer {
             @Override
             public void onSuccess(SendResult<String, Object> result) {
                 //persist in app event as a successful event
-            	logger.info("Sent message=[" + data.toString() + 
+                logger.info("Sent message=[" + data.toString() +
                         "] with offset=[" + result.getRecordMetadata().offset() + "]");
                 logger.info("notification sent to the event queue");
             }
@@ -90,25 +86,20 @@ public class KafkaMessageProducer implements MessageQueueProducer {
                         + data + "] due to : " + ex.getMessage());
                 logger.error("failed to send notification", ex);
             }*/
+            @Override
+            public void onFailure(Throwable ex) {
+                //persist in app event as a failed even
+                logger.error("Unable to send message=["
+                        + data + "] due to : {}", ex.getMessage());
+                logger.error("Full Error: {}", ex);
 
-			@Override
-			public void onFailure(Throwable ex) {
-				//persist in app event as a failed even
-            	logger.error("Unable to send message=[" 
-                        + data + "] due to : " + ex.getMessage());
-                logger.error("failed to send notification", ex.getMessage());
-                logger.error("Full Error", ex);
-				
-			}
+            }
         });
 //        Optional<Users> foundUser = userRepo.findByEmail(creds.getEmail());
 //
 //        foundUser.ifPresent(users -> CompletableFuture.runAsync(() -> createProfile(users)));
 
     }
-    
-
-
 
 //    private void createProfile(Users user){
 //        try{

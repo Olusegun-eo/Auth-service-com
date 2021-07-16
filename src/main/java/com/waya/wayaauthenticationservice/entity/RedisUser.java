@@ -24,5 +24,5 @@ public class RedisUser implements Serializable {
     private String surname;
     private String email;
     private String phoneNumber;
-    private List<Roles> roles;
+    private List<Role> roles;
 }

@@ -1,11 +1,7 @@
 package com.waya.wayaauthenticationservice.exception;
 
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -220,7 +216,7 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
         Map<String, Object> response = new HashMap<>();
         response.put("message", ex.getMessage());
         response.put("status", false);
-        response.put("timeStamp", ZonedDateTime.now());
+        response.put("timestamp", new Date());
         response.put("data", null);
         return response;
     }
@@ -229,7 +225,7 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
         Map<String, Object> response = new HashMap<>();
         response.put("message", message);
         response.put("status", false);
-        response.put("timeStamp", ZonedDateTime.now());
+        response.put("timestamp", new Date());
         response.put("data", null);
 
         return response;
@@ -239,7 +235,7 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
         Map<String, Object> response = new HashMap<>();
         response.put("message", message);
         response.put("status", false);
-        response.put("timeStamp", ZonedDateTime.now());
+        response.put("timestamp", new Date());
         response.put("data", data);
 
         return response;

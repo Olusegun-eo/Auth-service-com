@@ -6,10 +6,12 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.waya.wayaauthenticationservice.util.CustomValidator;
-import com.waya.wayaauthenticationservice.util.Type;
+import com.waya.wayaauthenticationservice.enums.Type;
 import com.waya.wayaauthenticationservice.util.ValidPhone;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class BaseUserPojo {
 
 	@NotNull(message = "Email Cannot be Null")
@@ -18,7 +20,7 @@ public class BaseUserPojo {
 
 	@NotBlank(message = "Phone Number Cannot be blank")
 	@ValidPhone
-	@CustomValidator(message = "Phone Number must be at least 13 characters", type = Type.SIZE, min = 13, max = 15)
+	@CustomValidator(message = "Phone Number must be 13 characters", type = Type.SIZE, min = 13, max = 13)
 	private String phoneNumber;
 
 	private String referenceCode;

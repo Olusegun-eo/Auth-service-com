@@ -1,20 +1,15 @@
 package com.waya.wayaauthenticationservice.entity;
 
 import java.io.Serializable;
+import java.util.Collection;
 
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
@@ -22,35 +17,47 @@ import lombok.Setter;
 @Getter
 @Table(name = "m_privilege")
 @JsonIgnoreType
-public class Privilege implements Serializable {
-	
-    private static final long serialVersionUID = 1L;
+@AllArgsConstructor
+@NoArgsConstructor
+public class Privilege extends AuditModel implements Serializable {
+    private static final long serialVersionUID = -2675537776836756234L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
     private String name;
     private String description;
 
-    @ManyToOne(
-            fetch = FetchType.LAZY,
-            optional = false
-    )
-    @JoinColumn(
-            name = "role_id",
-            nullable = false,
-            referencedColumnName = "id"
-    )
-    @JsonIgnore
-    private Roles role;
-    
-    public Privilege(long id) {
-        this.id =id;
+    @ManyToMany(mappedBy = "privileges")
+    private Collection<Role> roles;
+
+    public Privilege(String name){
+        this.name = name;
     }
 
-    public Privilege(){}
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        return result;
+    }
 
-	public Privilege(String name) {
-		this.name = name;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Privilege other = (Privilege) obj;
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+        return true;
+    }
 }

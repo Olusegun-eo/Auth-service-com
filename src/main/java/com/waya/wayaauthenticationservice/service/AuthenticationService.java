@@ -1,60 +1,40 @@
 package com.waya.wayaauthenticationservice.service;
 
-import java.util.concurrent.CompletableFuture;
-
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
+import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.EmailPojo;
+import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.VirtualAccountPojo;
+import com.waya.wayaauthenticationservice.pojo.others.WalletPojo;
+import com.waya.wayaauthenticationservice.pojo.others.WayagramPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
-import com.waya.wayaauthenticationservice.pojo.EmailPojo;
-import com.waya.wayaauthenticationservice.pojo.OTPPojo;
-import com.waya.wayaauthenticationservice.pojo.PasswordPojo;
-import com.waya.wayaauthenticationservice.pojo.PasswordPojo2;
-import com.waya.wayaauthenticationservice.pojo.PinPojo;
-import com.waya.wayaauthenticationservice.pojo.PinPojo2;
-import com.waya.wayaauthenticationservice.pojo.ProfilePojo;
-import com.waya.wayaauthenticationservice.pojo.ProfilePojo2;
-import com.waya.wayaauthenticationservice.pojo.VirtualAccountPojo;
-import com.waya.wayaauthenticationservice.pojo.WalletPojo;
-import com.waya.wayaauthenticationservice.pojo.WayagramPojo;
+
 
 public interface AuthenticationService {
 
 	ResponseEntity<?> createUser(BaseUserPojo userPojo, HttpServletRequest request, Device device, boolean adminAction);
 
 	ResponseEntity<?> createCorporateUser(CorporateUserPojo corporateUserPojo, HttpServletRequest request,
-			Device device, boolean adminAction);
+										  Device device, boolean adminAction);
 
-	ResponseEntity<?> createPin(PinPojo pinPojo);
+	ResponseEntity<?> resendOTPPhone(String phoneNumber);
+
+	ResponseEntity<?> resendVerificationMail(String email, String baseUrl);
 
 	ResponseEntity<?> verifyAccountCreation(OTPPojo otpPojo);
 
 	ResponseEntity<?> verifyPhoneUsingOTP(OTPPojo otpPojo);
 
-	ResponseEntity<?> verifyEmail(EmailPojo emailPojo);
-
-	ResponseEntity<?> changePassword(PasswordPojo passwordPojo);
-
-	ResponseEntity<?> forgotPassword(PasswordPojo2 passwordPojo);
-
-	ResponseEntity<?> changePin(PinPojo2 pinPojo);
-
-	ResponseEntity<?> forgotPin(PinPojo pinPojo);
-
-	ResponseEntity<?> resendOTPPhone(String phoneNumber);
-
-	ResponseEntity<?> resendVerificationMail(String email);
-
 	ResponseEntity<?> validateUser();
 
-	ResponseEntity<?> validatePin(Long userId, int pin);
-
-	ResponseEntity<?> validatePinFromUser(int pin);
+	ResponseEntity<?> verifyEmail(OTPPojo otpPojo);
 
 	ResponseEntity<?> userByPhone(String phone);
 
@@ -64,16 +44,14 @@ public interface AuthenticationService {
 
 	ResponseEntity<?> createWayagramAccount(WayagramPojo wayagramPojo);
 
-	ResponseEntity<?> createProfileAccount(ProfilePojo profilePojo);
+	ResponseEntity<?> createProfileAccount(PersonalProfileRequest profilePojo, String baseUrl);
 
-	ResponseEntity<?> createCorporateProfileAccount(ProfilePojo2 profilePojo2);
+	ResponseEntity<?> createCorporateProfileAccount(CorporateProfileRequest profilePojo, String baseUrl);
 
 	String generateToken(Users regUser);
 	
-	CompletableFuture<HttpEntity<String>> postProfile(ProfilePojo profilePojo);
+	void createCorporateUser(CorporateUserPojo mUser, Long id, String token, String baseUrl);
 
-	void createCorporateUser(CorporateUserPojo mUser, Long id, String token);
-
-	void createPrivateUser(Users regUser);
+	void createPrivateUser(Users regUser, String baseUrl);
 
 }

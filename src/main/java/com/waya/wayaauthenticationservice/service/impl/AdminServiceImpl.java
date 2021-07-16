@@ -1,6 +1,6 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import com.waya.wayaauthenticationservice.entity.Roles;
+import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
@@ -26,7 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.ByteArrayInputStream;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -48,18 +48,16 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public Page<Users> getCorporateUsers(boolean isCorporate, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<Users> usersSet = userRepository.findUserByIsCorporate(isCorporate, pageable);
-        return usersSet;
+        return userRepository.findUserByIsCorporate(isCorporate, pageable);
     }
 
     @Override
     public Page<Users> getUsersByRole(long roleId, int page, int size) {
-        Roles role = rolesRepository.findById(roleId).orElse(null);
+        Role role = rolesRepository.findById(roleId).orElse(null);
         if (role == null) throw new
                 CustomException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage(), HttpStatus.BAD_REQUEST);
         Pageable pageable = PageRequest.of(page, size);
-        Page<Users> usersPage = userRepository.findByRolesListIn(Arrays.asList(role), pageable);
-        return usersPage;
+        return userRepository.findByRoleListIn(Collections.singletonList(role), pageable);
     }
 
     @Override
@@ -68,14 +66,13 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public ResponseEntity<?> createUser(CorporateUserPojo userPojo, HttpServletRequest request, Device device) {
+    public ResponseEntity<?> createUser(@Valid CorporateUserPojo userPojo, HttpServletRequest request, Device device) {
         return authenticationService.createCorporateUser(userPojo, request, device, true);
     }
 
     @Override
     public ResponseEntity<?> createBulkUser(MultipartFile file, boolean isCorporate, HttpServletRequest request, Device device) {
-        String message = "";
-
+        String message;
         if (ExcelHelper.hasExcelFormat(file)) {
             ResponseEntity<?> responseEntity;
             try {
@@ -98,9 +95,7 @@ public class AdminServiceImpl implements AdminService {
     public ByteArrayInputStream createExcelSheet(boolean isCorporate) {
         List<String> HEADERS = isCorporate ? ExcelHelper.CORPORATE_USER_HEADERS :
                 ExcelHelper.PRIVATE_USER_HEADERS;
-        ByteArrayInputStream in = ExcelHelper.createExcelSheet(HEADERS);
-        return in;
+        return ExcelHelper.createExcelSheet(HEADERS);
     }
-
 
 }

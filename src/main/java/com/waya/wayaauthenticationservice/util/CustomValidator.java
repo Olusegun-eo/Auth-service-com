@@ -1,5 +1,7 @@
 package com.waya.wayaauthenticationservice.util;
 
+import com.waya.wayaauthenticationservice.enums.Type;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;
