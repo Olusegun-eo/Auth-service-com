@@ -546,7 +546,7 @@ class ProfileControllerTest {
         profile.setCorporate(false);
         profile.setUserId("1234");
         profile.setDeleted(false);
-        profile.setReferral("102kkdjeurw2");
+        profile.setReferral("102kidder2");
         Optional<Profile> profile1 = null;
         if (!profileRepository.existsByEmail(profile.getEmail())){
             profile = profileRepository.save(profile);
@@ -556,10 +556,10 @@ class ProfileControllerTest {
         }
 
         referralCode = new ReferralCode();
-        referralCode.setReferralCode("102kkdjeurw2");
+        referralCode.setReferralCode("102kidder2");
         referralCode.setProfile(profile);
         referralCode.setUserId("123");
-        if(!referralCodeRepository.existsByEmail("102kkdjeurw2", "123"))
+        if(!referralCodeRepository.existsByUserIdOrRefCode("102kidder2", "123"))
             referralCodeRepository.save(referralCode);
 
         //corporate profile 1
@@ -571,7 +571,7 @@ class ProfileControllerTest {
         Profile corporate = new Profile();
         corporate.setOrganisationName("name");
         corporate.setCity("city");
-        corporate.setReferral("102kkdjeurw2");
+        corporate.setReferral("102kidder2");
         corporate.setUserId("42");
         corporate.setCorporate(true);
         corporate.setDeleted(false);

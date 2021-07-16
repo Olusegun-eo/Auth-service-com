@@ -40,14 +40,12 @@ public class EmailServiceImpl implements EmailService {
     /**
      * generates a 6 digit OTP code and send code to email topic
      * in kafka
-     *
-     * @param email    request
+     * @param  baseUrl    url to redirect to
+     * @param  profile    userProfile
      */
     @Override
-    public boolean sendAcctVerificationEmailToken(String baseUrl, @Valid @Email String email) {
+    public boolean sendAcctVerificationEmailToken(String baseUrl, Profile profile) {
         try {
-            Profile profile = profileRepository.findByEmail(false, email)
-                    .orElseThrow(() -> new CustomException("profile does not exist", HttpStatus.NOT_FOUND));
             //generate the token
             OTPBase otp = generateEmailToken(profile.getEmail());
             AccountVerificationEmailContext emailContext = new AccountVerificationEmailContext();

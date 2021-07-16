@@ -1,10 +1,12 @@
 package com.waya.wayaauthenticationservice.pojo.others;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.waya.wayaauthenticationservice.util.CustomValidator;
 import com.waya.wayaauthenticationservice.enums.Type;
 import lombok.Data;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class LoginDetailsPojo {
 
     //private boolean admin = false;

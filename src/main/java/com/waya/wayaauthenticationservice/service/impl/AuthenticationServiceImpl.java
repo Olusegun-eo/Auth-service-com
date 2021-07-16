@@ -19,6 +19,8 @@ import java.util.regex.Matcher;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -89,8 +91,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private RedisUserDao redisUserDao;
     @Autowired
     private AuthenticatedUserFacade authenticatedUserFacade;
-    //@Autowired
-    //private CorporateUserRepository corporateUserRepository;
+    @Autowired
+    private ProfileRepository profileRepository;
     @Autowired
     private WalletProxy walletProxy;
     @Autowired
@@ -461,7 +463,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private boolean pushEMailToken(String baseUrl, String email) {
-        return emailService.sendAcctVerificationEmailToken(baseUrl, email);
+        Profile profile = profileRepository.findByEmail(false, email)
+                .orElseThrow(() -> new CustomException("User Profile with email: " + email + "does not exist", HttpStatus.NOT_FOUND));
+        return emailService.sendAcctVerificationEmailToken(baseUrl, profile);
     }
 
     @Override

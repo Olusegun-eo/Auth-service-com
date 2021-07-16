@@ -88,8 +88,6 @@ class ReferralCodeControllerTest {
         if (!referralCode1.isPresent())
             referralCode = referralCodeRepository.save(referralCode);
         System.out.println("This is the saved {} ::" + referralCode);
-        //        if (!referralCodeRepository.existsByEmail(referralCode.getReferralCode(), referralCode.getUserId()))
-//            referralCodeRepository.save(referralCode);
     }
 
     @Test

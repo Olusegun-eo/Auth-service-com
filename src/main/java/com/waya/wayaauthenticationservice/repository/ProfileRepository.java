@@ -19,7 +19,7 @@ public interface ProfileRepository extends JpaRepository<Profile, UUID> {
     @Query(value = "update m_user_profile set deleted =:deleted where user_id=:userId", nativeQuery = true)
     Optional<Profile> deleteProfileByUserId(boolean deleted, String userId);
 
-    @Query(value = "select * from m_user_profile where email =:email and deleted=:deleted", nativeQuery = true)
+    @Query(value = "select * from m_user_profile where upper(email) = upper(:email) and deleted = :deleted", nativeQuery = true)
     Optional<Profile> findByEmail(boolean deleted, String email);
 
     @Query(value = "select * from m_user_profile where user_id =:userId and deleted =:deleted", nativeQuery = true)

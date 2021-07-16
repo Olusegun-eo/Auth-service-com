@@ -217,7 +217,7 @@ public class ProfileServiceImpl implements ProfileService {
 
                 // send email otp
                 CompletableFuture.runAsync(() -> emailService.sendAcctVerificationEmailToken(
-                        baseUrl, savedProfile.getEmail()));
+                        baseUrl, savedProfile));
 
                 //create waya gram profile
                 CompletableFuture.runAsync(() -> createWayagramProfile(savedProfile.getUserId(), savedProfile.getSurname(), fullName));
@@ -283,7 +283,7 @@ public class ProfileServiceImpl implements ProfileService {
 
                 // send email otp
                 CompletableFuture.runAsync(() -> emailService.sendAcctVerificationEmailToken(
-                        baseUrl, newCorporateProfile.getEmail()));
+                        baseUrl, newCorporateProfile));
 
                 return new ApiResponse<>(null,
                         CREATE_PROFILE_SUCCESS_MSG, true, OK);
@@ -649,8 +649,6 @@ public class ProfileServiceImpl implements ProfileService {
 
         // get referralCodeValue for this user
         Optional<ReferralCode> referralCode;
-        // Introduced referralCodeValue field
-
         String referralCodeValue = null;
         if (profile.getUserId() !=null) {
             referralCode = referralCodeRepository.findByUserId(profile.getUserId());
@@ -664,9 +662,6 @@ public class ProfileServiceImpl implements ProfileService {
         boolean isSMSAlertActive = false;
         if (profile.getUserId() !=null) {
             smsAlertConfig = smsAlertConfigRepository.findByPhoneNumber(profile.getPhoneNumber());
-            //if (smsAlertConfig.get().isActive()){
-            //     isSMSAlertActive = true;
-            // }
             if(smsAlertConfig.isPresent()){
                 isSMSAlertActive = smsAlertConfig.get().isActive();
             }
@@ -789,7 +784,7 @@ public class ProfileServiceImpl implements ProfileService {
             }
 
         } catch (Exception e) {
-            log.error("Error while calling toggle delete ", e);
+            log.error("Error while calling toggle delete:: {}", e);
             deleteResponse.setCode("400");
             deleteResponse.setError("Error while performing operation");
             return ResponseEntity.ok(deleteResponse);

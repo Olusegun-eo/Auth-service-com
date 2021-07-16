@@ -1,5 +1,6 @@
 package com.waya.wayaauthenticationservice.pojo.notification;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.waya.wayaauthenticationservice.util.CustomValidator;
 import com.waya.wayaauthenticationservice.enums.Type;
 import lombok.Getter;
@@ -11,6 +12,7 @@ import javax.validation.constraints.NotBlank;
 @Getter
 @Setter
 @ToString
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OTPPojo {
 
     @NotBlank(message = "PhoneNumber or Email Cannot be blank")
