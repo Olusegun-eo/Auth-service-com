@@ -17,6 +17,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
 @CrossOrigin
 @RestController
@@ -37,37 +38,37 @@ public class KafkaPushController {
 
     @ApiOperation(value = "Push Profile Creation to Kafka (Service consumption only. Do not Use)", notes = "This endpoint is to create a profile account after auth with Kafka events", tags = { "KAFKA" })
     @PostMapping("/create-profile-push")
-    public ResponseEntity<?> createProfilePush(@RequestBody PersonalProfileRequest profilePojo, final HttpServletRequest request) {
+    public ResponseEntity<?> createProfilePush(@Valid @RequestBody PersonalProfileRequest profilePojo, final HttpServletRequest request) {
         return authenticationService.createProfileAccount(profilePojo, getBaseUrl(request));
     }
 
     @ApiOperation(value = "Push Corporate Profile Creation to Kafka (Service consumption only. Do not Use)", notes = "This endpoint is to create a profile account after auth with Kafka events" , tags = { "KAFKA" })
     @PostMapping("/create-corporate-profile-push")
-    public ResponseEntity<?> createCorporateProfilePush(@RequestBody CorporateProfileRequest profilePojo, final HttpServletRequest request) {
+    public ResponseEntity<?> createCorporateProfilePush(@Valid @RequestBody CorporateProfileRequest profilePojo, final HttpServletRequest request) {
         return authenticationService.createCorporateProfileAccount(profilePojo, getBaseUrl(request));
     }
 
     @ApiOperation(value = "Push Wallet Creation to Kafka (Service consumption only. Do not Use)", notes = "This endpoint is to create a wallet account after auth with Kafka events" , tags = { "KAFKA" })
     @PostMapping("/create-wallet-push")
-    public ResponseEntity<?> createWalletPush(@RequestBody WalletPojo walletPojo) {
+    public ResponseEntity<?> createWalletPush(@Valid @RequestBody WalletPojo walletPojo) {
         return authenticationService.createWalletAccount(walletPojo);
     }
 
     @ApiOperation(value = "Push Third Party Account Creation to Kafka (Service consumption only. Do not Use)", notes = "This endpoint is to create a Third Party Account after auth with Kafka events" , tags = { "KAFKA" })
     @PostMapping("/create-virtual-account")
-    public ResponseEntity<?> create3rdPartyPush(@RequestBody VirtualAccountPojo virtualAccountPojo) {
+    public ResponseEntity<?> create3rdPartyPush(@Valid @RequestBody VirtualAccountPojo virtualAccountPojo) {
         return authenticationService.createVirtualAccount(virtualAccountPojo);
     }
 
     @ApiOperation(value = "Push Wayagram Profile Creation to Kafka (Service consumption only. Do not Use)", notes = "This endpoint is to create a Wayagram Account after auth with Kafka events" , tags = { "KAFKA" })
     @PostMapping("/create-wayagram-account")
-    public ResponseEntity<?> createWayagramPush(@RequestBody WayagramPojo wayagramPojo) {
+    public ResponseEntity<?> createWayagramPush(@Valid @RequestBody WayagramPojo wayagramPojo) {
         return authenticationService.createWayagramAccount(wayagramPojo);
     }
 
     @ApiOperation(value = "Push Wayagram Chats (Service consumption only. Do not Use)", notes = "This endpoint pushes chat to kafka for delayed persistence" , tags = { "KAFKA" })
     @PostMapping("/post-chat")
-    public ResponseEntity<?> postChat(@RequestBody ChatPojo chatPojo) {
+    public ResponseEntity<?> postChat(@Valid @RequestBody ChatPojo chatPojo) {
         return kafkaPushService.postChat(chatPojo);
     }
 

@@ -598,7 +598,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         ApiResponse<String> response = profileService.createProfile(profilePojo, baseUrl);
         //kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC, profilePojo2);
         return new ResponseEntity<>(new SuccessResponse(response.getData(), null), HttpStatus.OK);
-
     }
 
     public boolean pinIs4Digit(int pin) {

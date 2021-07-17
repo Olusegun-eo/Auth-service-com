@@ -26,6 +26,8 @@ import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.waya.wayaauthenticationservice.entity.*;
+import com.waya.wayaauthenticationservice.repository.*;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,10 +46,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.waya.wayaauthenticationservice.entity.OtherDetails;
-import com.waya.wayaauthenticationservice.entity.Profile;
-import com.waya.wayaauthenticationservice.entity.ReferralCode;
-import com.waya.wayaauthenticationservice.entity.SMSAlertConfig;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
@@ -60,10 +58,6 @@ import com.waya.wayaauthenticationservice.pojo.others.ToggleSMSRequest;
 import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
 import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
 import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
-import com.waya.wayaauthenticationservice.repository.OtherDetailsRepository;
-import com.waya.wayaauthenticationservice.repository.ProfileRepository;
-import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
-import com.waya.wayaauthenticationservice.repository.SMSAlertConfigRepository;
 import com.waya.wayaauthenticationservice.response.ApiResponse;
 import com.waya.wayaauthenticationservice.response.DeleteResponse;
 import com.waya.wayaauthenticationservice.response.OtherdetailsResponse;
@@ -86,6 +80,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final ModelMapper modelMapper;
     private final ProfileRepository profileRepository;
+    private final UserRepository userRepository;
     private final SMSTokenService smsTokenService;
     private final EmailService emailService;
     private final FileResourceServiceFeignClient fileResourceServiceFeignClient;
@@ -106,6 +101,7 @@ public class ProfileServiceImpl implements ProfileService {
     @Autowired
     public ProfileServiceImpl(ModelMapper modelMapper,
                               ProfileRepository profileRepository,
+                              UserRepository userRepository,
                               SMSTokenService smsTokenService,
                               FileResourceServiceFeignClient fileResourceServiceFeignClient,
                               OtherDetailsRepository otherDetailsRepository,
@@ -123,6 +119,7 @@ public class ProfileServiceImpl implements ProfileService {
         this.emailService = emailService;
         this.mailService = mailService;
         this.referralCodeRepository = referralCodeRepository;
+        this.userRepository = userRepository;
     }
 
     private static SearchProfileResponse apply(Profile profilePersonal) {
@@ -180,6 +177,8 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ApiResponse<String> createProfile(PersonalProfileRequest request, String baseUrl) {
         try {
+            Users user = this.userRepository.findById(Long.valueOf(request.getUserId())).orElse(null);
+            if(user == null) throw new CustomException("Base User with Provided ID not Found", HttpStatus.BAD_REQUEST);
 
             if(request.getReferralCode() != null && !request.getReferralCode().isBlank()){
                 ReferralCode referralCode1 = referralCodeRepository.getReferralCodeByUserId(request.getReferralCode());
@@ -236,8 +235,8 @@ public class ProfileServiceImpl implements ProfileService {
         } catch (Exception exception) {
             log.error(CATCH_EXCEPTION_MSG, exception);
             return new ApiResponse<>(null,
-                    COULD_NOT_PROCESS_REQUEST,
-                    false, HttpStatus.UNPROCESSABLE_ENTITY);
+                    exception.getMessage(),
+                    false, HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -250,6 +249,9 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ApiResponse<String> createProfile(CorporateProfileRequest profileRequest, String baseUrl) {
         try {
+            Users user = this.userRepository.findById(Long.valueOf(profileRequest.getUserId())).orElse(null);
+            if(user == null) throw new CustomException("Base User with Provided ID not Found", HttpStatus.BAD_REQUEST);
+
             if(profileRequest.getReferralCode() != null && !profileRequest.getReferralCode().isBlank()){
                 ReferralCode referralCode1 = referralCodeRepository.getReferralCodeByUserId(profileRequest.getReferralCode());
                 if(referralCode1 == null)
@@ -260,8 +262,6 @@ public class ProfileServiceImpl implements ProfileService {
                     false, profileRequest.getEmail().trim());
             //check if the user exist in the referral table
             // now this check will extend to the referral service
-
-//          ReferralCodePojo referralCodePojo = referralProxy.getUserByReferralCode(profileRequest.getUserId());
 
             Optional<ReferralCode> referralCode = referralCodeRepository
                     .findByUserId(profileRequest.getUserId());
@@ -300,8 +300,8 @@ public class ProfileServiceImpl implements ProfileService {
         } catch (Exception exception) {
             log.error(CATCH_EXCEPTION_MSG, exception.getMessage());
             return new ApiResponse<>(null,
-                    COULD_NOT_PROCESS_REQUEST,
-                    false, HttpStatus.UNPROCESSABLE_ENTITY);
+                    exception.getMessage(),
+                    false, HttpStatus.BAD_REQUEST);
         }
     }
 

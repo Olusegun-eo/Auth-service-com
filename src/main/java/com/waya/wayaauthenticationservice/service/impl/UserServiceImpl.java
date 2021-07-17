@@ -84,7 +84,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     ProfileService profileService;
     @Autowired
-    private UserRepository usersRepo;
+    private UserRepository usersRepository;
     @Autowired
     private AuthenticatedUserFacade authenticatedUserFacade;
     @Autowired
@@ -116,7 +116,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<?> getUserById(Long id) {
         try {
-            Users user = usersRepo.findById(id).orElse(null);
+            Users user = usersRepository.findById(id).orElse(null);
 
             UserProfileResponsePojo userDto = this.toModelDTO(user);
             if (userDto == null) {
@@ -135,7 +135,7 @@ public class UserServiceImpl implements UserService {
 		if (!validateAdmin(user)) {
 			return new ResponseEntity<>(new ErrorResponse("Invalid Access"), HttpStatus.BAD_REQUEST);
 		}
-        List<UserProfileResponsePojo> users = usersRepo.findAll().stream().map(u -> this.toModelDTO(u))
+        List<UserProfileResponsePojo> users = usersRepository.findAll().stream().map(u -> this.toModelDTO(u))
                 .collect(Collectors.toList());
         return new ResponseEntity<>(new SuccessResponse("User info fetched", users), HttpStatus.OK);
     }
@@ -165,7 +165,7 @@ public class UserServiceImpl implements UserService {
         }
         List<UserProfileResponsePojo> userList = new ArrayList<>();
         rolesRepo.findAll().forEach(roles -> {
-            usersRepo.findAll().forEach(us -> {
+            usersRepository.findAll().forEach(us -> {
                 us.getRoleList().forEach(usRole -> {
                     if (usRole.getId().equals(roleId)) {
                         UserProfileResponsePojo u = this.toModelDTO(us);
@@ -179,7 +179,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<?> getUserByEmail(String email) {
-        Users user = usersRepo.findByEmailIgnoreCase(email).orElse(null);
+        Users user = usersRepository.findByEmailIgnoreCase(email).orElse(null);
         if (user == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid email"), HttpStatus.NOT_FOUND);
         } else {
@@ -190,7 +190,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<?> getUserByPhone(String phone) {
-        Users user = usersRepo.findByPhoneNumber(phone).orElse(null);
+        Users user = usersRepository.findByPhoneNumber(phone).orElse(null);
         if (user == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.NOT_FOUND);
         }
@@ -200,7 +200,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<?> getUserAndWalletByPhoneOrEmail(String value) {
-        Users user = usersRepo.findByEmailOrPhoneNumber(value).orElse(null);
+        Users user = usersRepository.findByEmailOrPhoneNumber(value).orElse(null);
         if (user == null)
             return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.NOT_FOUND);
         UserProfileResponsePojo userDtO = toModelDTO(user);
@@ -215,7 +215,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<?> getUserAndWalletByUserId(Long id) {
-        Users user = usersRepo.findById(id).orElse(null);
+        Users user = usersRepository.findById(id).orElse(null);
         if (user == null)
             return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.NOT_FOUND);
         UserProfileResponsePojo userDtO = toModelDTO(user);
@@ -232,7 +232,7 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<?> wayaContactCheck(ContactPojoReq contacts) {
         List<ContactPojo> contactPojos = new ArrayList<>();
         for (ContactPojo c : contacts.getContacts()) {
-            if (usersRepo.findByPhoneNumber(c.getPhone()).orElse(null) != null) {
+            if (usersRepository.findByPhoneNumber(c.getPhone()).orElse(null) != null) {
                 c.setWayaUser(true);
             }
             contactPojos.add(c);
@@ -251,23 +251,23 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<?> deleteUser(Long id) {
         try {
             //if (validateUser(token)) {
-            Users user = usersRepo.findById(id)
+            Users user = usersRepository.findById(id)
                     .orElseThrow(() -> new CustomException("User with id " + id + " not found", HttpStatus.NOT_FOUND));
             user.setActive(false);
             user.setDeleted(true);
             user.setDateOfActivation(LocalDateTime.now());
-            Users finalUser = usersRepo.saveAndFlush(user);
+            Users finalUser = usersRepository.saveAndFlush(user);
 
             CompletableFuture.runAsync(() -> disableUserProfile(String.valueOf(finalUser.getId())));
 
-            return new ResponseEntity<>(new CustomException("Account deleted", OK), OK);
+            return new ResponseEntity<>(new SuccessResponse("Account deleted", OK), OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
     public ResponseEntity<?> isUserAdmin(Long userId) {
-        Users user = usersRepo.findById(userId)
+        Users user = usersRepository.findById(userId)
                 .orElseThrow(() -> new CustomException("User with id  not found", HttpStatus.BAD_REQUEST));
         return new ResponseEntity<>(new SuccessResponse("IsUserAdmin", user.isAdmin()), HttpStatus.OK);
     }
@@ -277,7 +277,7 @@ public class UserServiceImpl implements UserService {
         try {
             List<Users> users = new ArrayList<Users>();
             rolesRepo.findAll().forEach(role -> {
-                usersRepo.findAll().forEach(user -> {
+                usersRepository.findAll().forEach(user -> {
                     user.getRoleList().forEach(uRole -> {
                         if (uRole.getName().equals(roleName)) {
                             users.add(user);
@@ -296,7 +296,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserRoleUpdateRequest UpdateUser(UserRoleUpdateRequest user) {
         try {
-            return usersRepo.findById(user.getUserId()).map(mUser -> {
+            return usersRepository.findById(user.getUserId()).map(mUser -> {
                 for (Integer i : user.getRolesList()) {
                     Optional<Role> mRole = rolesRepo.findById(Long.parseLong(String.valueOf(i)));
                     if (mRole.isPresent()) {
@@ -305,7 +305,7 @@ public class UserServiceImpl implements UserService {
                         mUser.getRoleList().add(mRole.get());
                     }
                 }
-                usersRepo.save(mUser);
+                usersRepository.save(mUser);
                 return user;
             }).orElseThrow(() -> new CustomException("User Id provided not found", HttpStatus.NOT_FOUND));
         } catch (Exception e) {
@@ -316,7 +316,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserEditPojo UpdateUserDetails(UserEditPojo userEditPojo) {
-       Users user = usersRepo.findById(userEditPojo.getId()).orElseThrow(() -> new CustomException("", HttpStatus.UNPROCESSABLE_ENTITY));
+       Users user = usersRepository.findById(userEditPojo.getId()).orElseThrow(() -> new CustomException("", HttpStatus.UNPROCESSABLE_ENTITY));
         user.setCorporate(userEditPojo.isCorporate());
         user.setEmail(userEditPojo.getEmail());
         user.setFirstName(userEditPojo.getFirstName());
@@ -325,14 +325,14 @@ public class UserServiceImpl implements UserService {
         user.setPinCreated(userEditPojo.isPinCreated());
         user.setReferenceCode(userEditPojo.getReferenceCode());
         user.setSurname(userEditPojo.getSurname());
-        user = usersRepo.save(user);
+        user = usersRepository.save(user);
         return new UserEditPojo(user.getId(), user.getEmail(), user.getPhoneNumber(), user.getReferenceCode(), user.getFirstName(), user.getSurname(), user.isPhoneVerified(), user.isEmailVerified(), user.isPinCreated(), user.isCorporate(), (List<Role>) user.getRoleList());
     }
 
     @Override
     public UserEditPojo getUserForRole(Long id) {
         try {
-            return usersRepo.findById(id).map(user -> {
+            return usersRepository.findById(id).map(user -> {
                 UserEditPojo us = new UserEditPojo();
                 us.setCorporate(user.isCorporate());
                 us.setEmail(user.getEmail());
@@ -402,7 +402,7 @@ public class UserServiceImpl implements UserService {
         Pageable pageableRequest = PageRequest.of(page, size);
         Page<Users> userPage;
         try {
-            userPage = usersRepo.findAll(pageableRequest);
+            userPage = usersRepository.findAll(pageableRequest);
             if (userPage == null) {
                 userPage = Page.empty(pageableRequest);
             }
@@ -425,13 +425,13 @@ public class UserServiceImpl implements UserService {
             for (CorporateUserPojo mUser : userList.getUsersList()) {
                 // Check if email exists
                 Users existingEmail = mUser.getEmail() == null ? null
-                        : usersRepo.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
+                        : usersRepository.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
                 if (existingEmail != null)
                     continue;
 
                 // Check if Phone exists
                 Users existingTelephone = mUser.getPhoneNumber() == null ? null
-                        : usersRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
+                        : usersRepository.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
                 if (existingTelephone != null)
                     continue;
 
@@ -476,7 +476,7 @@ public class UserServiceImpl implements UserService {
                 user.setSurname(mUser.getSurname());
                 String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
                 user.setName(fullName);
-                Users regUser = usersRepo.save(user);
+                Users regUser = usersRepository.save(user);
                 if (regUser == null)
                     continue;
 
@@ -505,13 +505,13 @@ public class UserServiceImpl implements UserService {
             for (BaseUserPojo mUser : userList.getUsersList()) {
                 // Check if email exists
                 Users existingEmail = mUser.getEmail() == null ? null
-                        : usersRepo.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
+                        : usersRepository.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
                 if (existingEmail != null)
                     continue;
 
                 // Check if Phone exists
                 Users existingTelephone = mUser.getPhoneNumber() == null ? null
-                        : usersRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
+                        : usersRepository.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
                 if (existingTelephone != null)
                     continue;
 
@@ -556,7 +556,7 @@ public class UserServiceImpl implements UserService {
                 user.setPassword(passwordEncoder.encode(mUser.getPassword()));
                 user.setRoleList(roleList);
 
-                Users regUser = usersRepo.save(user);
+                Users regUser = usersRepository.save(user);
                 if (regUser == null)
                     continue;
                 this.authService.createPrivateUser(regUser, getBaseUrl(request));
