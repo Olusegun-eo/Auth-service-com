@@ -143,8 +143,7 @@ public class AuthenticationController {
             "AUTH"})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
-    @RequestMapping(value = "/validate-user", method = RequestMethod.POST, consumes = {MediaType.APPLICATION_JSON_VALUE,
-            MediaType.MULTIPART_FORM_DATA_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PostMapping("/validate-user")
     public ResponseEntity<?> validateUser() {
         return authenticationServiceImpl.validateUser();
     }
