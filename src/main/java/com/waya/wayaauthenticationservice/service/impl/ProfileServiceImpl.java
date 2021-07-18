@@ -90,13 +90,12 @@ public class ProfileServiceImpl implements ProfileService {
     private final MailService mailService;
     private final ReferralCodeRepository referralCodeRepository;
 
-    @Value("${app.config.wayagram-profile.base-url}")
+    @Value("${app.config.wayagram-profile-create.base-url}")
     private String getAddUrl;
     @Value("${app.config.auto.follow.base-url}")
     private String getAutoFollowUrl;
     @Value("${app.config.auto.follow.base-url}")
     private String getProfileUrl;
-
 
     @Autowired
     public ProfileServiceImpl(ModelMapper modelMapper,

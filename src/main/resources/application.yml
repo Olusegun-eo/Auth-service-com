@@ -126,9 +126,8 @@ app:
         base-url: http://157.245.84.14:1000/graph/friend/waya-auto-follow
     wayagram-profile:
       base-url: http://157.245.84.14:1000/main/profile
-#    main:
-#      profile:
-#        base-url: http://157.245.84.14:1000/main/profile/create
+    wayagram-profile-create:
+      base-url: http://157.245.84.14:1000/main/profile/create
     file-resource:
       base-url: http://46.101.41.187:9098/file-resource/api
     virtual-account:
