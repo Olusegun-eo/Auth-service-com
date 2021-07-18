@@ -23,8 +23,8 @@ public interface UserRepository extends JpaRepository<Users, Long> {
 	@Query("SELECT u FROM Users u WHERE u.phoneNumber LIKE CONCAT('%', ?1)" + " AND u.isDeleted = false")
 	Optional<Users> findByPhoneNumber(String phoneNumber);
 
-	@Query(value = "SELECT u FROM Users u " + "WHERE UPPER(u.email) = UPPER(:value) OR "
-			+ "u.phoneNumber LIKE CONCAT('%', :value) AND u.isDeleted = false")
+	@Query(value = "SELECT u FROM Users u " + "WHERE (UPPER(u.email) = UPPER(:value) OR "
+			+ "u.phoneNumber LIKE CONCAT('%', :value)) AND u.isDeleted = false")
 	Optional<Users> findByEmailOrPhoneNumber(@Param("value") String value);
 
 	Page<Users> findByRoleListIn(Collection<Role> roles, Pageable pageable);
