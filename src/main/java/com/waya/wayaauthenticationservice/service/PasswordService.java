@@ -1,9 +1,6 @@
 package com.waya.wayaauthenticationservice.service;
 
-import com.waya.wayaauthenticationservice.pojo.password.PasswordPojo;
-import com.waya.wayaauthenticationservice.pojo.password.NewPinPojo;
-import com.waya.wayaauthenticationservice.pojo.password.ChangePINPojo;
-import com.waya.wayaauthenticationservice.pojo.password.ResetPasswordPojo;
+import com.waya.wayaauthenticationservice.pojo.password.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -24,7 +21,7 @@ public interface PasswordService {
 
     ResponseEntity<?> changePin(ChangePINPojo pinPojo);
 
-    ResponseEntity<?> changeForgotPIN(NewPinPojo pinPojo);
+    ResponseEntity<?> changeForgotPIN(ForgotPINPojo pinPojo);
 
     @PreAuthorize(value = "hasRole('APP_ADMIN')")
     ResponseEntity<?> validatePin(Long userId, int pin);

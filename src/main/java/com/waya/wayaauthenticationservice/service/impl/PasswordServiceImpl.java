@@ -6,6 +6,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 
 import com.waya.wayaauthenticationservice.pojo.mail.context.PinResetContext;
+import com.waya.wayaauthenticationservice.pojo.password.*;
 import com.waya.wayaauthenticationservice.response.*;
 import com.waya.wayaauthenticationservice.service.SMSTokenService;
 import org.springframework.http.HttpStatus;
@@ -19,10 +20,6 @@ import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordResetContext;
-import com.waya.wayaauthenticationservice.pojo.password.PasswordPojo;
-import com.waya.wayaauthenticationservice.pojo.password.NewPinPojo;
-import com.waya.wayaauthenticationservice.pojo.password.ChangePINPojo;
-import com.waya.wayaauthenticationservice.pojo.password.ResetPasswordPojo;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
@@ -195,7 +192,7 @@ public class PasswordServiceImpl implements PasswordService {
     }
 
     @Override
-    public ResponseEntity<?> changeForgotPIN(NewPinPojo pinPojo) {
+    public ResponseEntity<?> changeForgotPIN(ForgotPINPojo pinPojo) {
         try {
             if(pinPojo.getOtp().isBlank())
                 return new ResponseEntity<>(new ErrorResponse("Kindly pass in a Pin"), HttpStatus.BAD_REQUEST);

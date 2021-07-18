@@ -8,9 +8,6 @@ import com.waya.wayaauthenticationservice.enums.Type;
 
 public class NewPinPojo {
 
-    @CustomValidator(message = "Input has to be Numeric", type = Type.NUMERIC_STRING)
-    private String otp;
-
     @NotBlank(message = "newPin cannot be blank or null")
     @Size(message = "Should be of size {}", min = 4, max = 4)
     private String pin;
@@ -33,13 +30,5 @@ public class NewPinPojo {
 
     public void setPhoneOrEmail(String phoneOrEmail) {
         this.phoneOrEmail = phoneOrEmail.replaceAll("\\s+", "").trim();
-    }
-
-    public String getOtp() {
-        return otp;
-    }
-
-    public void setOtp(String otp) {
-        this.otp = otp.replaceAll("\\s+", "").trim();
     }
 }

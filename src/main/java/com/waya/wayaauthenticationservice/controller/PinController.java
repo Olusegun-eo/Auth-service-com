@@ -1,6 +1,7 @@
 package com.waya.wayaauthenticationservice.controller;
 
 import com.waya.wayaauthenticationservice.pojo.password.ChangePINPojo;
+import com.waya.wayaauthenticationservice.pojo.password.ForgotPINPojo;
 import com.waya.wayaauthenticationservice.pojo.password.NewPinPojo;
 import com.waya.wayaauthenticationservice.service.PasswordService;
 import com.waya.wayaauthenticationservice.util.ValidPhone;
@@ -70,7 +71,7 @@ public class PinController {
     @ApiOperation(value = "Forgot pin post Request", tags = {"PIN RESOURCE"}, notes = "Forgot pin post Request")
     @PostMapping("/forgot-pin")
     @CrossOrigin
-    public ResponseEntity<?> changeForgotPin(@Valid @RequestBody NewPinPojo changePinPojo) {
+    public ResponseEntity<?> changeForgotPin(@Valid @RequestBody ForgotPINPojo changePinPojo) {
         return passwordService.changeForgotPIN(changePinPojo);
     }
 
