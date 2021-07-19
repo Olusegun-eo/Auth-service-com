@@ -365,7 +365,7 @@ public class UserServiceImpl implements UserService {
 
             // Wallet Delete Account Call
 
-
+            // Wayagram delete Account call
 
         } catch (Exception e) {
             log.error("Error deleting user: ", e);

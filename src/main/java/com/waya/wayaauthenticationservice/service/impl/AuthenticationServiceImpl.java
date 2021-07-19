@@ -448,6 +448,29 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
+    @Override
+    public ResponseEntity<?> verifyEmail(OTPPojo otpPojo) {
+        // Implementation for internal call
+        Users user = userRepo.findByEmailIgnoreCase(otpPojo.getPhoneOrEmail()).orElse(null);
+        if (user == null) {
+            return new ResponseEntity<>(new ErrorResponse("Invalid Email Passed"), HttpStatus.BAD_REQUEST);
+        }
+        if (user.isActive() && user.isEmailVerified())
+            return new ResponseEntity<>(new SuccessResponse("Account and Phone been Verified already.", null),
+                    HttpStatus.CREATED);
+
+        log.info("Verify Email starts {}", otpPojo);
+        OTPVerificationResponse emailResponse = verifyEmail(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
+        if (emailResponse != null && emailResponse.isValid()) {
+            user.setEmailVerified(true);
+            userRepo.save(user);
+            //user.setActive(true);
+            return new ResponseEntity<>(new SuccessResponse(emailResponse.getMessage()), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
     private OTPVerificationResponse verifyOTP(String phoneNumber, Integer otp) {
         OTPVerificationResponse verify = smsTokenService.verifySMSOTP(phoneNumber, otp);
         return verify;
@@ -466,28 +489,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Profile profile = profileRepository.findByEmail(false, email)
                 .orElseThrow(() -> new CustomException("User Profile with email: " + email + "does not exist", HttpStatus.NOT_FOUND));
         return emailService.sendAcctVerificationEmailToken(baseUrl, profile);
-    }
-
-    @Override
-    public ResponseEntity<?> verifyEmail(OTPPojo otpPojo) {
-        // Implementation for internal call
-        Users user = userRepo.findByEmailIgnoreCase(otpPojo.getPhoneOrEmail()).orElse(null);
-        if (user == null) {
-            return new ResponseEntity<>(new ErrorResponse("Invalid Email Passed"), HttpStatus.BAD_REQUEST);
-        }
-        if (user.isActive() && user.isEmailVerified())
-            return new ResponseEntity<>(new SuccessResponse("Account and Phone been Verified already.", null),
-                    HttpStatus.CREATED);
-
-        log.info("Verify Email starts {}", otpPojo);
-        OTPVerificationResponse emailResponse = verifyEmail(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
-        if (emailResponse != null && emailResponse.isValid()) {
-            user.setEmailVerified(true);
-            user.setActive(true);
-            return new ResponseEntity<>(new SuccessResponse(emailResponse.getMessage()), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()), HttpStatus.BAD_REQUEST);
-        }
     }
 
     @Override
