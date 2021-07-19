@@ -4,6 +4,8 @@ import java.util.*;
 
 import javax.transaction.Transactional;
 
+import com.waya.wayaauthenticationservice.entity.BusinessType;
+import com.waya.wayaauthenticationservice.repository.BusinessTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -23,6 +25,9 @@ public class SetUpLoader implements ApplicationListener<ContextRefreshedEvent> {
 	private RolesRepository roleRepository;
 
 	@Autowired
+	private BusinessTypeRepository bizRepository;
+
+	@Autowired
 	private PrivilegeRepository privilegeRepository;
 
 	@Override
@@ -31,6 +36,18 @@ public class SetUpLoader implements ApplicationListener<ContextRefreshedEvent> {
 
 		if (alreadySetup)
 			return;
+
+		List<String> businessTypes = Arrays.asList("Catering and Food", "Cakes and Pastries",
+		"Event Planning", "Music and DJ", "Event Courier and Logistics", "Health and Skin Care",
+		"Fashion", "Clothing, Accessories, and Shoes", "Makeup", "Hairs", "Computer, Accessories, and Services",
+		"Babies and Kids", "Art, Crafts, and Collectibles", "Home and Gardens", "Groceries", "Transportation",
+		"Pharmacy/Hospitals", "Aggregator", "Agent", "Agency banking", "Financial institution", "Church",
+		"Mosque", "School", "Supermarket", "E-Commerce", "Consulting");
+		for(String type : businessTypes){
+			if(!bizRepository.existsByBusinessTypeIgnoreCase(type)){
+				bizRepository.save(new BusinessType(type));
+			}
+		}
 
 		Privilege readPrivilege = createPrivilegeIfNotFound("READ_USER", "READ");
 		Privilege updatePrivilege = createPrivilegeIfNotFound("UPDATE_USER", "UPDATE");

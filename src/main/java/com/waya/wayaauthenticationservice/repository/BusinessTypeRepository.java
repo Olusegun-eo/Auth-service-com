@@ -8,4 +8,5 @@ import com.waya.wayaauthenticationservice.entity.BusinessType;
 @Repository
 public interface BusinessTypeRepository extends JpaRepository<BusinessType, Long> {
 
+    boolean existsByBusinessTypeIgnoreCase(String businessType);
 }

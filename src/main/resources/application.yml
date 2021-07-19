@@ -150,8 +150,94 @@ app:
       - myandroidapp://oauth2/redirect
       - myiosapp://oauth2/redirect
 api:
+  validations:
+    phone:
+      prefix: 234
+      value: Ensure phone number is valid, 13 characters in length and starts with 234
   server:
     deployed: 46.101.41.187 #Change per Environment
+  pin:
+    create-pin-by-email:
+      description: Send OTP to email, this is for Create PIN `create-pin` post Request
+      notes: |
+        # Normal Response
+        If the request passes all validation, it will Send OTP to email, this is for Create PIN post Request
+        # Error Response
+        returns with a detailed response about the error.
+    create-pin-by-phone:
+      description: Send OTP to PhoneNumber, this is for Create PIN `create-pin` post Request
+      notes: |
+        # Normal Response
+        If the request passes all validation, it will Send OTP to PhoneNumber, this is for Create PIN post Request
+        # Error Response
+        returns with a detailed response about the error.
+    create-pin:
+      description: Pin Creation Request
+      notes: |
+        # Normal Response
+        This endpoint helps a signed in user create transaction PIN, Authentication Token should be passed on the Request Header
+        # Error Response
+        Returns with a detailed response about the error.
+    validate-pin-by-userId:
+      description: Validate a User PIN by the UserId
+      notes: |
+        # Normal Response
+        This endpoint help validate user by Pin and UserId and is meant for service consumption only
+        # Error Response
+        Returns with a detailed response about the error.
+    validate-pin:
+      description: Validate a User PIN
+      notes: |
+        # Normal Response
+        This endpoint help validate a signed in user by Pin
+        # Error Response
+        Returns with a detailed response about the error.
+    forgot-pin-by-phone:
+      description: Send OTP to Phone, this is for forgot pin post Request
+      notes: |
+        # Normal Response
+        If the request passes all validation, it will Send OTP to PhoneNumber, this is for forgot pin post Request
+        # Error Response
+        returns with a detailed response about the error.
+    forgot-pin-by-email:
+      description: Send OTP to email, this is for forgot pin Post Request
+      notes: |
+        # Normal Response
+        This endpoint Sends OTP to an email, this is for forgot pin post Request
+        # Error Response
+        Returns with a detailed response about the error.
+    forgot-pin:
+      description: Forgot pin Post Request
+      notes: |
+        # Normal Response
+        This endpoint is used to reset PIN request
+        # Error Response
+        Returns with a detailed response about the error.
+
+    change-pin-by-phone:
+      description: Send OTP to phone, this is for Change PIN POST Request
+      notes: |
+        # Normal Response
+        If the request passes all validation, it will Send OTP to PhoneNumber, this is for Change PIN POST Request
+        # Error Response
+        returns with a detailed response about the error.
+    change-pin-by-email:
+      description: Send OTP to email, this is for Change PIN POST Request
+      notes: |
+        # Normal Response
+        This endpoint Sends OTP to an email, this is for Change PIN POST Request
+        # Error Response
+        Returns with a detailed response about the error.
+    change-pin:
+      description: Change pin POST Request
+      notes: |
+        # Normal Response
+        This endpoint is used to Change Users PIN, OTP is needed from `/change-pin/byPhone` or `/change-pin/byEmail` GET methods
+        # Error Response
+        Returns with a detailed response about the error.
+
+
+
 
   auth:
     create:
@@ -318,3 +404,4 @@ api:
         if the request passes all validation, it will return various search result for a user,
         # Error Response
         returns with a detailed response about the error.
+

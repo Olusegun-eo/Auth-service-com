@@ -7,6 +7,7 @@ import static com.waya.wayaauthenticationservice.util.Constant.VIRTUAL_ACCOUNT_T
 import static com.waya.wayaauthenticationservice.util.Constant.WALLET_ACCOUNT_TOPIC;
 import static com.waya.wayaauthenticationservice.util.Constant.WAYAGRAM_PROFILE_TOPIC;
 import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,6 +21,8 @@ import java.util.regex.Matcher;
 import javax.servlet.http.HttpServletRequest;
 
 import com.waya.wayaauthenticationservice.entity.Profile;
+
+import com.waya.wayaauthenticationservice.enums.OTPRequestType;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -472,23 +475,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private OTPVerificationResponse verifyOTP(String phoneNumber, Integer otp) {
-        OTPVerificationResponse verify = smsTokenService.verifySMSOTP(phoneNumber, otp);
+        OTPVerificationResponse verify = smsTokenService.verifySMSOTP(phoneNumber, otp, PHONE_VERIFICATION);
         return verify;
     }
 
-    private OTPVerificationResponse verifyEmail(String email, Integer token) {
-        OTPVerificationResponse verifyEmail = emailService.verifyEmailToken(email, token);
-        return verifyEmail;
+    private OTPVerificationResponse verifyEmail(String email, Integer otp) {
+        return emailService.verifyEmailToken(email, otp, EMAIL_VERIFICATION);
     }
 
     private boolean sendOTP(String phoneNumber, String fullName) {
-        return smsTokenService.sendSMSOTP(phoneNumber, fullName);
+        return smsTokenService.sendSMSOTP(phoneNumber, fullName, PHONE_VERIFICATION);
     }
 
     private boolean pushEMailToken(String baseUrl, String email) {
         Profile profile = profileRepository.findByEmail(false, email)
                 .orElseThrow(() -> new CustomException("User Profile with email: " + email + "does not exist", HttpStatus.NOT_FOUND));
-        return emailService.sendAcctVerificationEmailToken(baseUrl, profile);
+        return emailService.sendAcctVerificationEmailToken(baseUrl, profile, EMAIL_VERIFICATION);
     }
 
     @Override

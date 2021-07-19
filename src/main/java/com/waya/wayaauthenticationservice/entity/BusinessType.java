@@ -31,4 +31,8 @@ public class BusinessType {
 	@NotNull(message = "Business Type cannot be Null")
 	@CustomValidator(message = "Business Type cannot contain Numeric characters", type = Type.TEXT_STRING)
 	private String businessType;
+
+	public BusinessType(String type) {
+		this.businessType = type;
+	}
 }

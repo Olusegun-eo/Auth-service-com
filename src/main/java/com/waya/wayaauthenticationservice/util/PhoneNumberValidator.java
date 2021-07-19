@@ -1,12 +1,17 @@
 package com.waya.wayaauthenticationservice.util;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 import static com.waya.wayaauthenticationservice.util.HelperUtils.numericPattern;
 
 //@Configurable
+
 public class PhoneNumberValidator implements ConstraintValidator<ValidPhone, String> {
+
 
     @Override
     public void initialize(ValidPhone validPhone) {

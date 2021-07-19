@@ -17,13 +17,13 @@ public class ResponsePojo {
         this.code = code;
     }
 
-    public ResponsePojo(boolean error, String message) {
-        this.status = error;
+    public ResponsePojo(boolean status, String message) {
+        this.status = status;
         this.message = message;
     }
 
-    public static ResponsePojo response(boolean error, String message) {
-        return new ResponsePojo(error, message);
+    public static ResponsePojo response(boolean status, String message) {
+        return new ResponsePojo(status, message);
     }
 
     public static ResponsePojo response(boolean status, String message, int code) {

@@ -18,13 +18,15 @@ public class BusinessTypeService {
     @Autowired
     private BusinessTypeRepository businessTypeRepo;
 
-
     public ResponsePojo createBusinessType(BusinessType businessType) {
         try {
-            BusinessType mBusinesstype = new BusinessType();
-            mBusinesstype.setBusinessType(businessType.getBusinessType());
-            mBusinesstype.setId(0L);
-            businessTypeRepo.save(mBusinesstype);
+            if(businessTypeRepo.existsByBusinessTypeIgnoreCase(businessType.getBusinessType()))
+                return ResponsePojo.response(false, "Business Type Exists Already");
+
+            BusinessType business = new BusinessType();
+            business.setBusinessType(business.getBusinessType());
+            business.setId(0L);
+            businessTypeRepo.save(business);
             return ResponsePojo.response(true, "Created Successfully");
         } catch (Exception e) {
             log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);

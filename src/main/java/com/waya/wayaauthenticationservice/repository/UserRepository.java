@@ -29,7 +29,8 @@ public interface UserRepository extends JpaRepository<Users, Long> {
 
 	Page<Users> findByRoleListIn(Collection<Role> roles, Pageable pageable);
 
-    Page<Users> findUserByIsCorporate(boolean value, Pageable pageable);
+	@Query(value = "SELECT u FROM Users u WHERE u.isCorporate = :value AND u.isDeleted = false ORDER BY id")
+    Page<Users> findUserByIsCorporate(@Param("value") boolean value, Pageable pageable);
 
 	@Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM Users u " +
 			"WHERE UPPER(u.email) = UPPER(:email) AND u.isDeleted = false")
@@ -44,10 +45,14 @@ public interface UserRepository extends JpaRepository<Users, Long> {
 			+ "u.phoneNumber LIKE CONCAT('%', :value) AND u.isDeleted = false")
 	boolean existsByEmailOrPhoneNumber(String value);
 
-    //@Query("SELECT u FROM Users u WHERE UPPER(u.userId) = UPPER(:userId)" +
-    //        " AND u.isDeleted = false")
-    //Optional<Users> findByUserId(@Param("userId") String userId);
+	@Override
+	@Query(value = "SELECT u FROM Users u WHERE u.id =:userId AND u.isDeleted = false")
+    Optional<Users> findById(@Param("userId") Long userId);
 
 	@Query(value = "update m_users set is_deleted =:deleted where id=:userId", nativeQuery = true)
 	Optional<Users> deleteAccountByUserId(boolean deleted, Long userId);
+
+	@Override
+	@Query(value = "SELECT u FROM Users u WHERE u.isDeleted = false ORDER BY id")
+	Page<Users> findAll(Pageable pageable);
 }

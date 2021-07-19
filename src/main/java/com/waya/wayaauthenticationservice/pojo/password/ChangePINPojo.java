@@ -13,11 +13,11 @@ public class ChangePINPojo {
     private String otp;
 
     @NotBlank(message = "oldPin cannot be blank or null")
-    @Size(message = "Should be of size {}", min = 4, max = 4)
+    @Size(message = "Length of PIN Should be 4", min = 4, max = 4)
     private String oldPin;
 
     @NotBlank(message = "newPin cannot be blank or null")
-    @Size(message = "Should be of size {}", min = 4, max = 4)
+    @Size(message = "Length of PIN Should be 4", min = 4, max = 4)
     private String newPin;
 
     @NotBlank(message = "Field cannot be blank or Null")

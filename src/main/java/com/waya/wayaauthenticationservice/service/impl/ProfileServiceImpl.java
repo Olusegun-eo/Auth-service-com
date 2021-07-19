@@ -1,5 +1,6 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.*;
 import static com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient.uploadImage;
 import static com.waya.wayaauthenticationservice.util.Constant.CATCH_EXCEPTION_MSG;
 import static com.waya.wayaauthenticationservice.util.Constant.COULD_NOT_PROCESS_REQUEST;
@@ -74,9 +75,6 @@ import com.waya.wayaauthenticationservice.service.SMSTokenService;
 @Service
 public class ProfileServiceImpl implements ProfileService {
 
-    //    private static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
-//    private static final String SECRET_TOKEN = "wayas3cr3t";
-//    private static final String TOKEN_PREFIX = "serial ";
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final ModelMapper modelMapper;
     private final ProfileRepository profileRepository;
@@ -211,14 +209,15 @@ public class ProfileServiceImpl implements ProfileService {
 
                 //send otp
                 CompletableFuture.runAsync(() -> smsTokenService.sendSMSOTP(
-                        savedProfile.getPhoneNumber(), fullName));
+                        savedProfile.getPhoneNumber(), fullName, PHONE_VERIFICATION));
 
                 // send email otp
                 CompletableFuture.runAsync(() -> emailService.sendAcctVerificationEmailToken(
-                        baseUrl, savedProfile));
+                        baseUrl, savedProfile, EMAIL_VERIFICATION));
 
                 //create waya gram profile
                 CompletableFuture.runAsync(() -> createWayagramProfile(savedProfile.getUserId(), savedProfile.getSurname(), fullName));
+
                 return new ApiResponse<>(null,
                         CREATE_PROFILE_SUCCESS_MSG, true, OK);
             } else {
@@ -275,14 +274,14 @@ public class ProfileServiceImpl implements ProfileService {
 
                 String fullName = String.format("%s %s", newCorporateProfile.getFirstName(),
                         newCorporateProfile.getSurname());
-                //String message = VERIFY_EMAIL_TOKEN_MESSAGE + "placeholder" + MESSAGE_2;
+
                 //send sms otp
                 CompletableFuture.runAsync(() -> smsTokenService.sendSMSOTP(
-                        newCorporateProfile.getPhoneNumber(), fullName));
+                        newCorporateProfile.getPhoneNumber(), fullName, PHONE_VERIFICATION));
 
                 // send email otp
                 CompletableFuture.runAsync(() -> emailService.sendAcctVerificationEmailToken(
-                        baseUrl, newCorporateProfile));
+                        baseUrl, newCorporateProfile, EMAIL_VERIFICATION));
 
                 return new ApiResponse<>(null,
                         CREATE_PROFILE_SUCCESS_MSG, true, OK);

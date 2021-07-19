@@ -44,26 +44,28 @@ public class PasswordController {
 
     @ApiOperation(value = "Send OTP to email, this is for forgot password post Request", notes = "Send OTP to email, this is for forgot password post Request")
     @GetMapping("/forgot-password/byEmail")
-    public ResponseEntity<?> sendPasswordResetOTPEmail(@RequestParam("email") @Email String email, @RequestParam("redirectUrl") final String redirectUrl) {
+    public ResponseEntity<?> sendPasswordResetOTPEmail(@RequestParam("email") @Email String email,
+                                                       @RequestParam(name = "redirectUrl", required = false) String redirectUrl) {
         return passwordService.sendPasswordResetOTPByEmail(email, redirectUrl);
     }
 
     @ApiOperation(value = "Send OTP to PhoneNumber, this is for forgot password post Request", notes = "Send OTP to Phone, this is for forgot password post Request")
     @GetMapping("/forgot-password/byPhone")
     public ResponseEntity<?> sendPasswordResetOTPPhone(@RequestParam("phoneNumber") @ValidPhone String phoneNumber) {
-        return passwordService.sendResetOTPByPhoneNumber(phoneNumber);
+        return passwordService.sendPasswordResetOTPByPhoneNumber(phoneNumber);
     }
 
     @ApiOperation(value = "Send OTP to email, this is for Change password post Request", notes = "Send OTP to email, this is for Change password post Request")
     @GetMapping("/change-password/byEmail")
-    public ResponseEntity<?> sendPasswordForgotOTPEmail(@RequestParam("email") @Email String email, @RequestParam("redirectUrl") final String redirectUrl) {
+    public ResponseEntity<?> sendPasswordForgotOTPEmail(@RequestParam("email") @Email String email,
+                                                        @RequestParam(name = "redirectUrl", required = false) String redirectUrl) {
         return passwordService.sendPasswordResetOTPByEmail(email, redirectUrl);
     }
 
     @ApiOperation(value = "Send OTP to PhoneNumber, this is for Change password post Request", notes = "Send OTP to Phone, this is for Change password post Request")
     @GetMapping("/change-password/byPhone")
     public ResponseEntity<?> sendPasswordForgotOTPPhone(@RequestParam("phoneNumber") @ValidPhone String phoneNumber) {
-        return passwordService.sendResetOTPByPhoneNumber(phoneNumber);
+        return passwordService.sendPasswordResetOTPByPhoneNumber(phoneNumber);
     }
 
     @ApiOperation(value = "Change password post Request", notes = "Change password post Request")

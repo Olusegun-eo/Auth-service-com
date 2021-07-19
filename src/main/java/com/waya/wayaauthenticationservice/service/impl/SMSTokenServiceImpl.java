@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Optional;
 
+import com.waya.wayaauthenticationservice.enums.OTPRequestType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,6 @@ import com.waya.wayaauthenticationservice.entity.OTPBase;
 import com.waya.wayaauthenticationservice.enums.StreamsEventType;
 import com.waya.wayaauthenticationservice.repository.OTPRepository;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
 import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
 import com.waya.wayaauthenticationservice.service.SMSTokenService;
@@ -56,17 +56,18 @@ public class SMSTokenServiceImpl implements SMSTokenService {
      * @return OTPBase
      */
     @Override
-    public OTPBase generateSMSOTP(String phoneNumber) {
+    public OTPBase generateSMSOTP(String phoneNumber, OTPRequestType otpRequestType) {
         OTPBase otp = new OTPBase();
         otp.setCode(generateCode());
         otp.setPhoneNumber(phoneNumber);
         otp.setValid(true);
+        otp.setRequestType(otpRequestType);
         otp.setExpiryDate(10);
 
         //update previous token expiry dates and isValid fields
         LocalDateTime newExpiryDate = LocalDateTime.now().minusHours(1);
 
-        otpRepository.invalidatePreviousRecords(phoneNumber, newExpiryDate, false);
+        otpRepository.invalidatePreviousRecords(phoneNumber, newExpiryDate, false, String.valueOf(otpRequestType));
         otpRepository.save(otp);
         return otp;
     }
@@ -79,9 +80,9 @@ public class SMSTokenServiceImpl implements SMSTokenService {
      * @param name        user Name
      */
     @Override
-    public boolean sendSMSOTP(String phoneNumber, String name) {
+    public boolean sendSMSOTP(String phoneNumber, String name, OTPRequestType otpRequestType) {
         try {
-            OTPBase otp = generateSMSOTP(phoneNumber);
+            OTPBase otp = generateSMSOTP(phoneNumber, otpRequestType);
 
             StreamPayload<StreamDataSMS> post = new StreamPayload<>();
             post.setEventType(StreamsEventType.SMS.toString());
@@ -114,14 +115,14 @@ public class SMSTokenServiceImpl implements SMSTokenService {
      */
     //@CachePut(cacheNames = "OTPBase", key = "#phoneNumber")
     @Override
-    public OTPVerificationResponse verifySMSOTP(String phoneNumber, Integer otp) {
+    public OTPVerificationResponse verifySMSOTP(String phoneNumber, Integer otp, OTPRequestType otpRequestType) {
         try {
-            Optional<OTPBase> otpBase = otpRepository.getOtpDetailsViaPhoneNumber(phoneNumber, otp);
+            Optional<OTPBase> otpBase = otpRepository.getOtpDetailsViaPhoneNumber(phoneNumber, otp, String.valueOf(otpRequestType));
             if (otpBase.isPresent()) {
                 OTPBase token = otpBase.get();
                 LocalDateTime newTokenExpiryDate = token.getExpiryDate().minusHours(1);
                 if (token.isValid()) {
-                    otpRepository.updateToken(phoneNumber, token.getId(), newTokenExpiryDate, false);
+                    otpRepository.updateToken(phoneNumber, token.getId(), newTokenExpiryDate, false, String.valueOf(otpRequestType));
                     return new OTPVerificationResponse(true,
                             OTP_SUCCESS_MESSAGE);
                 } else {

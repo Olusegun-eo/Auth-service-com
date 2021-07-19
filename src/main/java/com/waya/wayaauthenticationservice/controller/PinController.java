@@ -1,7 +1,6 @@
 package com.waya.wayaauthenticationservice.controller;
 
 import com.waya.wayaauthenticationservice.pojo.password.ChangePINPojo;
-import com.waya.wayaauthenticationservice.pojo.password.ForgotPINPojo;
 import com.waya.wayaauthenticationservice.pojo.password.NewPinPojo;
 import com.waya.wayaauthenticationservice.service.PasswordService;
 import com.waya.wayaauthenticationservice.util.ValidPhone;
@@ -27,7 +26,23 @@ public class PinController {
     @Autowired
     private PasswordService passwordService;
 
-    @ApiOperation(value = "Pin Creation", notes = "This endpoint help user create transaction PIN", tags = {"PIN RESOURCE"})
+    @ApiOperation(value = "${api.pin.create-pin-by-email.description}",
+            notes = "${api.pin.create-pin-by-email.notes}", tags = {"PIN RESOURCE"})
+    @GetMapping("/create-pin/byEmail")
+    public ResponseEntity<?> sendPinCreationOTPEmail(@RequestParam("email") @Email String email,
+                                                        @RequestParam(name = "redirectUrl", required = false) String redirectUrl) {
+        return passwordService.sendPinCreationOTPEmail(email, redirectUrl);
+    }
+
+    @ApiOperation(value = "${api.pin.create-pin-by-phone.description}",
+            notes = "${api.pin.create-pin-by-phone.notes}", tags = {"PIN RESOURCE"})
+    @GetMapping("/create-pin/byPhone")
+    public ResponseEntity<?> sendPinCreationOTPPhone(@RequestParam("phoneNumber") @ValidPhone String phoneNumber) {
+        return passwordService.sendPinCreationOTPPhone(phoneNumber);
+    }
+
+    @ApiOperation(value = "${api.pin.create-pin.description}",
+            notes = "${api.pin.create-pin.notes}", tags = {"PIN RESOURCE"})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
     @PostMapping("/create-pin")
@@ -35,15 +50,15 @@ public class PinController {
         return passwordService.createPin(pinPojo);
     }
 
-    @ApiOperation(value = "PIN verification (Service consumption only. Do not Use)", notes = "This endpoint help validate user by Pin and is meant for service consumption only", tags = {
-            "PIN RESOURCE"})
+    @ApiOperation(value = "${api.pin.validate-pin-by-userId.description}",
+            notes = "${api.pin.validate-pin-by-userId.notes}", tags = {"PIN RESOURCE"})
     @GetMapping("/validate-pin/{userId}/{pin}")
     public ResponseEntity<?> validateUserByPin(@PathVariable Long userId, @PathVariable int pin) {
         return passwordService.validatePin(userId, pin);
     }
 
-    @ApiOperation(value = "PIN verification for user consumption", notes = "This endpoint help validate user by Pin by Authorisation token", tags = {
-            "PIN RESOURCE"})
+    @ApiOperation(value = "${api.pin.validate-pin.description}",
+            notes = "${api.pin.validate-pin.notes}", tags = {"PIN RESOURCE"})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
     @GetMapping("/validate-pin/{pin}")
@@ -52,47 +67,55 @@ public class PinController {
     }
 
     @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
-    @ApiOperation(value = "Send OTP to email, this is for forgot pin Post Request", tags = {"PIN RESOURCE"}, notes = "Send OTP to email, this is for forgot pin post Request")
+    @ApiOperation(value = "${api.pin.forgot-pin-by-email.description}",
+            notes = "${api.pin.forgot-pin-by-email.notes}", tags = {"PIN RESOURCE"})
     @GetMapping("/forgot-pin/byEmail")
     @CrossOrigin
-    public ResponseEntity<?> forgotPinRequestEmail(@RequestParam("email") @Email String email, @RequestParam("redirectUrl") String redirectUrl) {
+    public ResponseEntity<?> forgotPinRequestEmail(@RequestParam("email") @Email String email,
+                                                   @RequestParam(name = "redirectUrl", required = false) String redirectUrl) {
         return passwordService.sendPinResetOTPByEmail(email, redirectUrl);
     }
 
     @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
-    @ApiOperation(value = "Send OTP to Phone, this is for forgot pin post Request", tags = {"PIN RESOURCE"}, notes = "Send OTP to PhoneNumber, this is for forgot pin post Request")
+    @ApiOperation(value = "${api.pin.forgot-pin-by-phone.description}",
+            notes = "${api.pin.forgot-pin-by-phone.notes}", tags = {"PIN RESOURCE"})
     @GetMapping("/forgot-pin/byPhone")
     @CrossOrigin
     public ResponseEntity<?> forgotPinRequestPhone(@RequestParam("phoneNumber") @ValidPhone String phoneNumber) {
-        return passwordService.sendResetOTPByPhoneNumber(phoneNumber);
+        return passwordService.sendPINResetOTPByPhoneNumber(phoneNumber);
     }
 
     @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
-    @ApiOperation(value = "Forgot pin post Request", tags = {"PIN RESOURCE"}, notes = "Forgot pin post Request")
+    @ApiOperation(value = "${api.pin.forgot-pin.description}",
+            notes = "${api.pin.forgot-pin.notes}", tags = {"PIN RESOURCE"})
     @PostMapping("/forgot-pin")
     @CrossOrigin
-    public ResponseEntity<?> changeForgotPin(@Valid @RequestBody ForgotPINPojo changePinPojo) {
+    public ResponseEntity<?> changeForgotPin(@Valid @RequestBody NewPinPojo changePinPojo) {
         return passwordService.changeForgotPIN(changePinPojo);
     }
 
     @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
-    @ApiOperation(value = "Send OTP to email, this is for Change pin post Request", tags = {"PIN RESOURCE"}, notes = "Send OTP to email, this is for Change pin post Request")
+    @ApiOperation(value = "${api.pin.change-pin-by-email.description}",
+            notes = "${api.pin.change-pin-by-email.notes}", tags = {"PIN RESOURCE"})
     @GetMapping("/change-pin/byEmail")
     @CrossOrigin
-    public ResponseEntity<?> requestChangePinEmail(@RequestParam("email") @Email String email, @RequestParam("redirectUrl") String redirectUrl) {
-        return passwordService.sendPinResetOTPByEmail(email, redirectUrl);
+    public ResponseEntity<?> requestChangePinEmail(@RequestParam("email") @Email String email,
+                                                   @RequestParam(name = "redirectUrl", required = false) String redirectUrl) {
+        return passwordService.sendPinChangeOTPByEmail(email, redirectUrl);
     }
 
     @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
-    @ApiOperation(value = "Send OTP to email, this is for Change pin post Request", tags = {"PIN RESOURCE"}, notes = "Send OTP to email, this is for Change pin post Request")
+    @ApiOperation(value = "${api.pin.change-pin-by-phone.description}",
+            notes = "${api.pin.change-pin-by-phone.notes}", tags = {"PIN RESOURCE"})
     @GetMapping("/change-pin/byPhone")
     @CrossOrigin
     public ResponseEntity<?> requestChangePinPhone(@RequestParam("phoneNumber") @ValidPhone String phoneNumber) {
-        return passwordService.sendResetOTPByPhoneNumber(phoneNumber);
+        return passwordService.sendPINChangeOTPByPhoneNumber(phoneNumber);
     }
 
     @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
-    @ApiOperation(value = "Change pin post Request", tags = {"PIN RESOURCE"}, notes = "Change pin post Request")
+    @ApiOperation(value = "${api.pin.change-pin.description}",
+            notes = "${api.pin.change-pin.notes}", tags = {"PIN RESOURCE"})
     @PostMapping("/change-pin")
     @CrossOrigin
     public ResponseEntity<?> changePin(@Valid @RequestBody ChangePINPojo pinPojo) {

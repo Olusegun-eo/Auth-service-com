@@ -3,12 +3,10 @@ package com.waya.wayaauthenticationservice.entity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
+import com.waya.wayaauthenticationservice.enums.OTPRequestType;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -34,6 +32,9 @@ public class OTPBase implements Serializable {
 	private boolean valid;
 
     private String phoneNumber;
+
+    @Enumerated(EnumType.STRING)
+    private OTPRequestType requestType;
 
     private LocalDateTime expiryDate;
 
