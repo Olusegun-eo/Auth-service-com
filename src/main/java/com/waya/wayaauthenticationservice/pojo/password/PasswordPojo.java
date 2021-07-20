@@ -12,12 +12,13 @@ import lombok.Setter;
 public class PasswordPojo {
 
     @NotBlank(message = "otp cannot be blank")
+    @CustomValidator(message = "OTP Has to contain Numeric characters only", type = Type.NUMERIC_STRING)
     private String otp;
 
     @NotBlank(message = "NewPassword cannot be blank")
     private String newPassword;
 
-    @NotBlank(message = "Field cannot be blank or Null")
+    @NotBlank(message = "phoneOrEmail Field cannot be blank or Null")
     @CustomValidator(message = "phoneOrEmail field has to be either a Phone or an Email", type = Type.EMAIL_OR_PHONE)
     private String phoneOrEmail;
 

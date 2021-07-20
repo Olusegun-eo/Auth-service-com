@@ -1,6 +1,9 @@
 package com.waya.wayaauthenticationservice.pojo.others;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.waya.wayaauthenticationservice.enums.Type;
+import com.waya.wayaauthenticationservice.util.CustomValidator;
+import com.waya.wayaauthenticationservice.util.ValidPhone;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,10 +14,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class UpdateCorporateProfileRequest {
-
-    @JsonIgnore
-    private UUID id;
+public class UpdateCorporateProfileRequest extends UpdatePersonalProfileRequest {
 
     @NotBlank(message = "please enter your organisation name")
     private String organisationName;
@@ -25,19 +25,8 @@ public class UpdateCorporateProfileRequest {
     @NotBlank(message = "please enter your business type")
     private String businessType;
 
-    @NotBlank(message = "please enter your email")
-    @Email(message = "please enter a valid email")
-    @Column(unique = true)
+    @Email(message = "please enter a valid Organization email")
     private String organisationEmail;
-
-    @NotBlank(message = "please enter your phone number")
-    private String phoneNumber;
-
-    @NotBlank(message = "please enter your surname")
-    private String surname;
-
-    @NotBlank(message = "please enter your firstname")
-    private String firstName;
 
     private String state;
 
@@ -45,5 +34,4 @@ public class UpdateCorporateProfileRequest {
 
     private String officeAddress;
 
-    private String gender;
 }

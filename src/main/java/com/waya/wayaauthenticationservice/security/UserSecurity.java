@@ -30,7 +30,7 @@ public class UserSecurity {
 		if (user.getId() == id)
 			return true;
 
-		Users returnObj = this.userRepo.findById(id)
+		Users returnObj = this.userRepo.findById(false, id)
 				.orElseThrow(() -> new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + id));
 
 		boolean isOga = compareRoles(returnObj, user) > 0;

@@ -1,9 +1,12 @@
 package com.waya.wayaauthenticationservice.controller;
 
+import com.waya.wayaauthenticationservice.enums.Type;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.response.*;
 import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.util.CustomValidator;
+import com.waya.wayaauthenticationservice.util.ValidPhone;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponses;
@@ -13,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,12 +34,14 @@ import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_422;
 @CrossOrigin
 @RestController
 @RequestMapping("/api/v1/profile")
+@Validated
 public class ProfileController {
 
     private final ProfileService profileService;
 
     @Value("${api.server.deployed}")
     private String urlRedirect;
+    private String userId;
 
     @Autowired
     public ProfileController(ProfileService profileService) {
@@ -104,7 +110,6 @@ public class ProfileController {
         return profileService.createProfile(corporateProfileRequest, getBaseUrl(request));
     }
 
-
     /**
      * endpoint to update personal profile.
      *
@@ -122,7 +127,8 @@ public class ProfileController {
     @PutMapping("update-personal-profile/{userId}")
     ResponseEntity<ApiResponse<Object>> updateProfile(
             @Valid @RequestBody UpdatePersonalProfileRequest updatePersonalProfileRequest,
-            @PathVariable String userId){
+            @PathVariable @CustomValidator(message = "UserId must be numeric", type = Type.NUMERIC_STRING) String userId){
+        this.userId = userId;
         UserProfileResponse profileResponse =
                 profileService.updateProfile(updatePersonalProfileRequest, userId);
         return new ResponseEntity<>(new ApiResponse<>(profileResponse,
@@ -146,7 +152,7 @@ public class ProfileController {
     @PutMapping("update-corporate-profile/{userId}")
     ResponseEntity<ApiResponse<UserProfileResponse>> updateCorporateProfile(
             @Valid @RequestBody UpdateCorporateProfileRequest updateCorporateProfileRequest,
-            @PathVariable String userId){
+            @PathVariable @CustomValidator(message = "UserId must be numeric", type = Type.NUMERIC_STRING) String userId){
 
         UserProfileResponse corporateProfileResponse =
                 profileService.updateProfile(updateCorporateProfileRequest, userId);
@@ -175,9 +181,9 @@ public class ProfileController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     CompletableFuture<ApiResponse<ProfileImageResponse>> updateProfileImage(
-            @RequestPart MultipartFile file, @PathVariable String userId) throws MaxUploadSizeExceededException
-  {
-
+            @RequestPart MultipartFile file,
+            @PathVariable @CustomValidator(message = "UserId must be numeric", type = Type.NUMERIC_STRING) String userId) throws MaxUploadSizeExceededException
+    {
         return profileService.updateProfileImage(userId, file);
     }
     /**
@@ -197,7 +203,8 @@ public class ProfileController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("user-referrals/{userId}")
     ResponseEntity<?> getAllUsersReferrals(
-            @RequestParam(required = false, defaultValue = "0") String page, @PathVariable String userId) {
+            @RequestParam(required = false, defaultValue = "0") String page,
+            @PathVariable @CustomValidator(message = "UserId must be numeric", type = Type.NUMERIC_STRING) String userId) {
         return new ResponseEntity<>(profileService.findAllUserReferral(userId, page), HttpStatus.OK);
     }
 
@@ -210,7 +217,7 @@ public class ProfileController {
     })
     @PutMapping("delete-restore")
     ResponseEntity<DeleteResponse> toggleDelete(@Valid @RequestBody DeleteRequest deleteRequest){
-        return profileService.toggleDelete(deleteRequest);
+        return new ResponseEntity<>(profileService.toggleDelete(deleteRequest), HttpStatus.OK);
     }
 
     @ApiOperation(
@@ -237,14 +244,13 @@ public class ProfileController {
     })
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/sms-alert/status/{phoneNumber}")
-    ResponseEntity<ApiResponse<ToggleSMSResponse>> getSMSAlertStatus(@Valid @ApiParam(example = "2348054354344") @PathVariable String phoneNumber){
+    ResponseEntity<ApiResponse<ToggleSMSResponse>> getSMSAlertStatus(@Valid @ApiParam(example = "2348054354344") @PathVariable @ValidPhone String phoneNumber){
 
         ToggleSMSResponse toggleSMSResponse = profileService.getSMSAlertStatus(phoneNumber);
         System.out.println(" ### back from service class smsCharges: :::: " + toggleSMSResponse);
         ApiResponse<ToggleSMSResponse> response = new ApiResponse<>(toggleSMSResponse, "Data created successfully", true);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
 
     @ApiOperation(
             value = "Get Profile By Referral Code", tags = {"PROFILE RESOURCE"},

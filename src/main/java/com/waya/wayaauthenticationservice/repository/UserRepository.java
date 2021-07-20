@@ -49,6 +49,9 @@ public interface UserRepository extends JpaRepository<Users, Long> {
 	@Query(value = "SELECT u FROM Users u WHERE u.id =:userId AND u.isDeleted = false")
     Optional<Users> findById(@Param("userId") Long userId);
 
+	@Query(value = "SELECT u FROM Users u WHERE u.id =:userId AND u.isDeleted =:deleted")
+	Optional<Users> findById(@Param("deleted") boolean deleted, @Param("userId") Long userId);
+
 	@Query(value = "update m_users set is_deleted =:deleted where id=:userId", nativeQuery = true)
 	Optional<Users> deleteAccountByUserId(boolean deleted, Long userId);
 

@@ -1,16 +1,15 @@
 package com.waya.wayaauthenticationservice.config;
 
+import feign.codec.Encoder;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.cloud.openfeign.support.SpringEncoder;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
-import feign.codec.Encoder;
-
 public class AuthClientConfiguration {
 
-	public Encoder feignEncoder() {
+    public Encoder feignEncoder() {
 
         HttpMessageConverter<?> jacksonConverter = new MappingJackson2HttpMessageConverter();
 

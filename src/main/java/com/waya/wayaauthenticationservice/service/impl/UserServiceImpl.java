@@ -1,22 +1,32 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-import static org.springframework.http.HttpStatus.OK;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-
-import javax.servlet.http.HttpServletRequest;
-
+import com.waya.wayaauthenticationservice.controller.UserController;
+import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
+import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.enums.DeleteType;
+import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.exception.ErrorMessages;
+import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
+import com.waya.wayaauthenticationservice.pojo.notification.NamesPojo;
+import com.waya.wayaauthenticationservice.pojo.notification.NotificationResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.pojo.userDTO.*;
+import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
+import com.waya.wayaauthenticationservice.proxy.WalletProxy;
+import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
+import com.waya.wayaauthenticationservice.repository.RolesRepository;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.response.ErrorResponse;
+import com.waya.wayaauthenticationservice.response.SuccessResponse;
+import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
+import com.waya.wayaauthenticationservice.service.AuthenticationService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.service.UserService;
+import com.waya.wayaauthenticationservice.util.HelperUtils;
+import com.waya.wayaauthenticationservice.util.ReqIPUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,44 +40,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.waya.wayaauthenticationservice.controller.UserController;
-import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
-import com.waya.wayaauthenticationservice.entity.Role;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.enums.DeleteType;
-import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.exception.ErrorMessages;
-import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
-import com.waya.wayaauthenticationservice.pojo.notification.NamesPojo;
-import com.waya.wayaauthenticationservice.pojo.notification.NotificationResponsePojo;
-import com.waya.wayaauthenticationservice.pojo.others.ContactPojo;
-import com.waya.wayaauthenticationservice.pojo.others.ContactPojoReq;
-import com.waya.wayaauthenticationservice.pojo.others.DeleteRequest;
-import com.waya.wayaauthenticationservice.pojo.others.DevicePojo;
-import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
-import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UserWalletPojo;
-import com.waya.wayaauthenticationservice.pojo.others.WalletAccount;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
-import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
-import com.waya.wayaauthenticationservice.proxy.WalletProxy;
-import com.waya.wayaauthenticationservice.repository.RolesRepository;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
-import com.waya.wayaauthenticationservice.response.ErrorResponse;
-import com.waya.wayaauthenticationservice.response.SuccessResponse;
-import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
-import com.waya.wayaauthenticationservice.service.AuthenticationService;
-import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.service.UserService;
-import com.waya.wayaauthenticationservice.util.HelperUtils;
-import com.waya.wayaauthenticationservice.util.ReqIPUtils;
+import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
-import lombok.extern.slf4j.Slf4j;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+import static org.springframework.http.HttpStatus.OK;
 
 @Service
 @Slf4j
@@ -91,12 +72,12 @@ public class UserServiceImpl implements UserService {
     private RolesRepository rolesRepo;
     @Autowired
     private WalletProxy walletProxy;
-    
-	/*
-	 * @Autowired private RestTemplate restClient;
-	 * @Autowired private ApplicationConfig applicationConfig;
-	 */
-    
+
+    /*
+     * @Autowired private RestTemplate restClient;
+     * @Autowired private ApplicationConfig applicationConfig;
+     */
+
     @Autowired
     private ReqIPUtils reqUtil;
     @Autowired
@@ -105,6 +86,8 @@ public class UserServiceImpl implements UserService {
     private AuthenticationService authService;
     @Autowired
     private NotificationProxy notificationProxy;
+    @Autowired
+    private WayagramProxy wayagramProxy;
 
     @Value("${api.server.deployed}")
     private String urlRedirect;
@@ -116,7 +99,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<?> getUserById(Long id) {
         try {
-            Users user = usersRepository.findById(id).orElse(null);
+            Users user = usersRepository.findById(false, id).orElse(null);
 
             UserProfileResponsePojo userDto = this.toModelDTO(user);
             if (userDto == null) {
@@ -131,27 +114,27 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<?> getUsers() {
-		Users user = authenticatedUserFacade.getUser();
-		if (!validateAdmin(user)) {
-			return new ResponseEntity<>(new ErrorResponse("Invalid Access"), HttpStatus.BAD_REQUEST);
-		}
+        Users user = authenticatedUserFacade.getUser();
+        if (!validateAdmin(user)) {
+            return new ResponseEntity<>(new ErrorResponse("Invalid Access"), HttpStatus.BAD_REQUEST);
+        }
         List<UserProfileResponsePojo> users = usersRepository.findAll().stream().map(u -> this.toModelDTO(u))
                 .collect(Collectors.toList());
         return new ResponseEntity<>(new SuccessResponse("User info fetched", users), HttpStatus.OK);
     }
 
-	private boolean validateAdmin(Users user) {
-		if (user == null) {
-			return false;
-		}
-		Role adminRole = rolesRepo.findByName("ROLE_ADMIN")
-				.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
-		Optional<Collection<Role>> roles = Optional.ofNullable(user.getRoleList());
-		if (!roles.isPresent())
-			return false;
+    private boolean validateAdmin(Users user) {
+        if (user == null) {
+            return false;
+        }
+        Role adminRole = rolesRepo.findByName("ROLE_ADMIN")
+                .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+        Optional<Collection<Role>> roles = Optional.ofNullable(user.getRoleList());
+        if (!roles.isPresent())
+            return false;
 
-		return roles.get().contains(adminRole);
-	}
+        return roles.get().contains(adminRole);
+    }
 
     @Override
     public ResponseEntity<?> getUsersByRole(long roleId) {
@@ -215,7 +198,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<?> getUserAndWalletByUserId(Long id) {
-        Users user = usersRepository.findById(id).orElse(null);
+        Users user = usersRepository.findById(false, id).orElse(null);
         if (user == null)
             return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.NOT_FOUND);
         UserProfileResponsePojo userDtO = toModelDTO(user);
@@ -251,14 +234,16 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<?> deleteUser(Long id) {
         try {
             //if (validateUser(token)) {
-            Users user = usersRepository.findById(id)
+            Users user = usersRepository.findById(false, id)
                     .orElseThrow(() -> new CustomException("User with id " + id + " not found", HttpStatus.NOT_FOUND));
             user.setActive(false);
             user.setDeleted(true);
             user.setDateOfActivation(LocalDateTime.now());
-            Users finalUser = usersRepository.saveAndFlush(user);
 
-            CompletableFuture.runAsync(() -> disableUserProfile(String.valueOf(finalUser.getId())));
+            // Deactivates other Services tied to the UserId
+            String token = this.authService.generateToken(authenticatedUserFacade.getUser());
+            CompletableFuture.runAsync(() -> disableUserProfile(String.valueOf(user.getId()), token))
+                    .thenApply(v -> usersRepository.saveAndFlush(user));
 
             return new ResponseEntity<>(new SuccessResponse("Account deleted", OK), OK);
         } catch (Exception e) {
@@ -266,8 +251,31 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public ResponseEntity<?> unDeleteUser(Long id) {
+        try {
+            Users user = usersRepository.findById(true, id)
+                    .orElseThrow(() -> new CustomException("User with deleted id " + id + " not found", HttpStatus.NOT_FOUND));
+
+            if (usersRepository.existsByEmail(user.getEmail()) || usersRepository.existsByPhoneNumber(user.getPhoneNumber()))
+                throw new CustomException("Account Un-deletion Failed: Another User exists with same details", HttpStatus.EXPECTATION_FAILED);
+
+            user.setDeleted(false);
+            user.setDateOfActivation(LocalDateTime.now());
+
+            // Reactivates other Services tied to the UserId
+            String token = this.authService.generateToken(authenticatedUserFacade.getUser());
+            CompletableFuture.runAsync(() -> enableUserProfile(String.valueOf(user.getId()), token))
+                    .thenApply(v -> usersRepository.saveAndFlush(user));
+
+            return new ResponseEntity<>(new SuccessResponse("Account Undeleted", OK), OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
     public ResponseEntity<?> isUserAdmin(Long userId) {
-        Users user = usersRepository.findById(userId)
+        Users user = usersRepository.findById(false, userId)
                 .orElseThrow(() -> new CustomException("User with id  not found", HttpStatus.BAD_REQUEST));
         return new ResponseEntity<>(new SuccessResponse("IsUserAdmin", user.isAdmin()), HttpStatus.OK);
     }
@@ -296,7 +304,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserRoleUpdateRequest UpdateUser(UserRoleUpdateRequest user) {
         try {
-            return usersRepository.findById(user.getUserId()).map(mUser -> {
+            return usersRepository.findById(false, user.getUserId()).map(mUser -> {
                 for (Integer i : user.getRolesList()) {
                     Optional<Role> mRole = rolesRepo.findById(Long.parseLong(String.valueOf(i)));
                     if (mRole.isPresent()) {
@@ -316,7 +324,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserEditPojo UpdateUserDetails(UserEditPojo userEditPojo) {
-       Users user = usersRepository.findById(userEditPojo.getId()).orElseThrow(() -> new CustomException("", HttpStatus.UNPROCESSABLE_ENTITY));
+        Users user = usersRepository.findById(false, userEditPojo.getId()).orElseThrow(() -> new CustomException("", HttpStatus.UNPROCESSABLE_ENTITY));
         user.setCorporate(userEditPojo.isCorporate());
         user.setEmail(userEditPojo.getEmail());
         user.setFirstName(userEditPojo.getFirstName());
@@ -332,7 +340,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserEditPojo getUserForRole(Long id) {
         try {
-            return usersRepository.findById(id).map(user -> {
+            return usersRepository.findById(false, id).map(user -> {
                 UserEditPojo us = new UserEditPojo();
                 us.setCorporate(user.isCorporate());
                 us.setEmail(user.getEmail());
@@ -353,7 +361,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private void disableUserProfile(String userId) {
+    private void disableUserProfile(String userId, String token) {
         try {
             // Profile Service Delete Call
             DeleteRequest deleteRequest = DeleteRequest.builder()
@@ -361,16 +369,41 @@ public class UserServiceImpl implements UserService {
                     .deleteType(DeleteType.DELETE)
                     .build();
             var returnValue = this.profileService.toggleDelete(deleteRequest);
-            log.info("Profile Deleted: {} {}", returnValue.getBody().getCode(), returnValue.getBody().getMessage());
+            log.info("Profile Deleted: {} {}", returnValue.getCode(), returnValue.getMessage());
 
             // Wallet Delete Account Call
 
             // Wayagram delete Account call
+            UserIDPojo idPojo = new UserIDPojo(userId);
 
+            var resp = this.wayagramProxy.toggleActivation(idPojo, token);
+            log.info("Wayagram Account Activation: {} - {}", resp.getBody(), resp.getStatusCode());
         } catch (Exception e) {
-            log.error("Error deleting user: ", e);
+            log.error("Error deleting user: {}", e.getMessage());
         }
     }
+
+    private void enableUserProfile(String userId, String token) {
+        try {
+            // Profile Service Un-Delete Call
+            DeleteRequest deleteRequest = DeleteRequest.builder()
+                    .userId(userId)
+                    .deleteType(DeleteType.RESTORE)
+                    .build();
+            var returnValue = this.profileService.toggleDelete(deleteRequest);
+            log.info("Profile Deleted: {} {}", returnValue.getCode(), returnValue.getMessage());
+
+            // Wallet Un-Delete Account Call
+
+            // Wayagram Activate Account call
+            UserIDPojo idPojo = new UserIDPojo(userId);
+            var resp = this.wayagramProxy.toggleActivation(idPojo, token);
+            log.info("Wayagram Account Activation: {} - {}", resp.getBody(), resp.getStatusCode());
+        } catch (Exception e) {
+            log.error("Error deleting user: {}", e.getMessage());
+        }
+    }
+
 
     @Override
     public UserProfileResponsePojo toModelDTO(Users user) {
@@ -492,6 +525,7 @@ public class UserServiceImpl implements UserService {
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
+
     @Override
     public ResponseEntity<?> createUsers(BulkPrivateUserCreationDTO userList, HttpServletRequest request,
                                          Device device) {
@@ -571,7 +605,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private void sendEmailNewPassword(String randomPassword, String email, String firstName){
+    private void sendEmailNewPassword(String randomPassword, String email, String firstName) {
         //Email Sending of new Password Here
         NotificationResponsePojo notification = new NotificationResponsePojo();
         NamesPojo name = new NamesPojo();

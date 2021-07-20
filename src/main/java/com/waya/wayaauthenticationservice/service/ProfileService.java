@@ -103,7 +103,7 @@ public interface ProfileService {
      * @param deleteRequest deleteRequest
      * @return DeleteResponse
      */
-    ResponseEntity<DeleteResponse> toggleDelete(DeleteRequest deleteRequest);
+    DeleteResponse toggleDelete(DeleteRequest deleteRequest);
 
     ToggleSMSResponse toggleSMSAlert(ToggleSMSRequest toggleSMSRequest);
 

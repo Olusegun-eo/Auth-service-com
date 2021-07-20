@@ -1,6 +1,9 @@
 package com.waya.wayaauthenticationservice.pojo.others;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.waya.wayaauthenticationservice.enums.Type;
+import com.waya.wayaauthenticationservice.util.CustomValidator;
+import com.waya.wayaauthenticationservice.util.ValidPhone;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,6 +22,7 @@ public class UpdatePersonalProfileRequest {
     @Email(message = "please enter a valid email")
     private String email;
 
+    @CustomValidator(message = "firstName must not contain numeric", type = Type.TEXT_STRING)
     @NotBlank(message = "please provide your first name")
     private String firstName;
 
@@ -26,8 +30,10 @@ public class UpdatePersonalProfileRequest {
     private String surname;
 
     @NotBlank(message = "please provide your phone number")
+    @ValidPhone
     private String phoneNumber;
 
+    @CustomValidator(message = "middleName must not contain numeric", type = Type.TEXT_STRING)
     private String middleName;
 
     private String dateOfBirth;

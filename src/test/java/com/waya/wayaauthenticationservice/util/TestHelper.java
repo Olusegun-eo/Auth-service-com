@@ -37,7 +37,7 @@ public class TestHelper {
         user.setEmail("mike@app.com");
         user.setFirstName("Mike");
         user.setPassword("test@123");
-        user.setPhoneNumber("0029934");
+        user.setPhoneNumber("2345100302445");
         user.setReferenceCode("CRT");
         user.setSurname("Ang");
         user.setDateCreated(LocalDateTime.now());

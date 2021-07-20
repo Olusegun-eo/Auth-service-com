@@ -55,4 +55,6 @@ public interface UserService {
 	ResponseEntity<?> createUsers(@Valid BulkCorporateUserCreationDTO userList, HttpServletRequest request, Device device);
 
 	ResponseEntity<?> createUsers(@Valid BulkPrivateUserCreationDTO userList, HttpServletRequest request, Device device);
+
+	ResponseEntity<?> unDeleteUser(Long id);
 }

@@ -91,7 +91,7 @@ public class PasswordServiceImpl implements PasswordService {
             Users user = usersRepo.findByEmailOrPhoneNumber(passPojo.getPhoneOrEmail()).orElse(null);
             if (user == null) {
                 return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
-                        + " For User with email: " + passPojo.getPhoneOrEmail(), null), HttpStatus.BAD_REQUEST);
+                        + " For User with email/phoneNumber: " + passPojo.getPhoneOrEmail(), null), HttpStatus.BAD_REQUEST);
             }
             Matcher matcher = emailPattern.matcher(passPojo.getPhoneOrEmail());
             boolean isEmail = matcher.matches();
@@ -340,19 +340,14 @@ public class PasswordServiceImpl implements PasswordService {
         String message;
         boolean success;
         Map<String, Object> map = new HashMap<>();
+        OTPVerificationResponse otpResponse;
         if (isEmail) {
-            OTPVerificationResponse emailVerificationResponse =
-                    this.emailService.verifyEmailToken(phoneOrEmail, Integer.parseInt(otp), otpRequestType);
-
-            success = emailVerificationResponse.isValid();
-            message = emailVerificationResponse.getMessage();
+            otpResponse = this.emailService.verifyEmailToken(phoneOrEmail, Integer.parseInt(otp), otpRequestType);
         } else {
-            OTPVerificationResponse profileResponse =
-                    this.smsTokenService.verifySMSOTP(phoneOrEmail, Integer.parseInt(otp), otpRequestType);
-
-            success = profileResponse.isValid();
-            message = profileResponse.getMessage();
+            otpResponse = this.smsTokenService.verifySMSOTP(phoneOrEmail, Integer.parseInt(otp), otpRequestType);
         }
+        success = otpResponse != null ? otpResponse.isValid() : false;
+        message = otpResponse != null ? otpResponse.getMessage() : "Failure";
         map.put("success", success);
         map.put("message", message);
         return map;
@@ -435,7 +430,7 @@ public class PasswordServiceImpl implements PasswordService {
 
     @Override
     public ResponseEntity<?> validatePin(Long userId, int pin) {
-        Users users = usersRepo.findById(userId).orElse(null);
+        Users users = usersRepo.findById(false, userId).orElse(null);
         if (users == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.BAD_REQUEST);
         }

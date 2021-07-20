@@ -47,5 +47,9 @@ public interface OTPRepository extends JpaRepository<OTPBase, Long> {
     void updateTokenForEmail(@Param("email") String email, @Param("id") Long id, @Param("expiryDate") LocalDateTime expiryDate,
                              @Param("isValid") Boolean isValid, @Param("requestType") String requestType);
 
+    @Modifying
+    @Query("delete from OTPBase t where t.expiryDate < ?1")
+    void deleteAllExpiredOTPs(LocalDateTime time);
 
+    Integer deleteByExpiryDateLessThan(LocalDateTime time);
 }

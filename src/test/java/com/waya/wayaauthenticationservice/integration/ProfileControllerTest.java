@@ -89,11 +89,9 @@ class ProfileControllerTest {
     final MockMultipartFile file = new MockMultipartFile("files",
             "snapshot.png", MediaType.IMAGE_JPEG_VALUE, "content".getBytes(StandardCharsets.UTF_8));
 
-
 //    final String setUpUserId = "749";
 //    private final String EMAIL = "app@app.com";
 //    private final String EMAIL2 = "cpd@app.com";
-
 
     @Autowired
     private RolesRepository rolesRepository;
@@ -116,19 +114,15 @@ class ProfileControllerTest {
         Optional<Profile> profile = profileRepository
                 .findByUserId(false, user.getId().toString());
         if (profile.isPresent()){
-            System.out.println("profile {} :::::::: " + profile.get());
+            System.out.println("profile :::::::: " + profile.get());
             profileRepository.delete(profile.get());
-            System.out.println("profile {} :::::::: " + profile.get());
         }
         Optional<Profile> profile2 = profileRepository
-                .findByUserId(false, user.getId().toString());
+                .findByUserId(false, user2.getId().toString());
         if (profile2.isPresent()){
-            System.out.println("profile 2{} :::::::: " + profile2.get());
+            System.out.println("profile 2 :::::::: " + profile2.get());
             profileRepository.delete(profile.get());
-            System.out.println("profile 2 {} :::::::: " + profile2.get());
         }
-
-        seedData();
     }
 
     @Order(1)
@@ -136,7 +130,7 @@ class ProfileControllerTest {
     @DisplayName("create personal profile successfully 💯")
     void createPersonalProfile() throws Exception {
         final PersonalProfileRequest personalProfileRequest = setPersonalProfileData(
-                "kola@app.com", user.getId().toString());
+                "kola@app.com", user.getId().toString(), "2340291838294");
 
         createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
                 "profile created. An OTP has been sent to your phone",
@@ -148,18 +142,18 @@ class ProfileControllerTest {
     @DisplayName("create personal profile when email already exist 🔥")
     void createPersonalProfileWhenProfileWithEmailExist() throws Exception {
         final PersonalProfileRequest personalProfileRequest = setPersonalProfileData(
-                "kola@app.com", user.getId().toString());
+                "kola@app.com", user.getId().toString(), "2340291838294");
 
         createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
                 "profile created. An OTP has been sent to your phone",
                 "$.httpStatus", "OK");
 
         final PersonalProfileRequest newPersonalProfileRequest = setPersonalProfileData(
-                "app@app.com", user.getId().toString());
+                "app@app.com", user.getId().toString(), "2340291838294");
 
         createAndVerifyPersonalProfile(newPersonalProfileRequest, "$.message",
-                "user id already exists",
-                "$.httpStatus", "UNPROCESSABLE_ENTITY");
+                "Profile with Provided User ID already Exists",
+                "$.httpStatus", "BAD_REQUEST");
     }
 
     @Order(3)
@@ -168,18 +162,18 @@ class ProfileControllerTest {
     void createPersonalProfileWhenUserIdExist() throws Exception {
 
         final PersonalProfileRequest personalProfileRequest = setPersonalProfileData(
-                "kola@app.com", user.getId().toString());
+                "kola@app.com", user.getId().toString(), "2340291838294");
 
         createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
                 "profile created. An OTP has been sent to your phone",
                 "$.httpStatus", "OK");
 
         final PersonalProfileRequest newPersonalProfileRequest = setPersonalProfileData(
-                "app@app12.com", user.getId().toString());
+                "app@app12.com", user.getId().toString(), "2340291838294");
 
         createAndVerifyPersonalProfile(newPersonalProfileRequest, "$.message",
-                "user id already exists",
-                "$.httpStatus", "UNPROCESSABLE_ENTITY");
+                "Profile with Provided User ID already Exists",
+                "$.httpStatus", "BAD_REQUEST");
     }
 
     @Order(4)
@@ -187,7 +181,7 @@ class ProfileControllerTest {
     @DisplayName("create corporate profile successfully 💯")
     void createCorporateProfile() throws Exception {
         final CorporateProfileRequest corporateProfileRequest = setCorporateProfileData(
-                "rt@app.com", user2.getId().toString());
+                "rt@app.com", user2.getId().toString(),"2349870928349");
 
         createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
                 "profile created. An OTP has been sent to your phone",
@@ -199,7 +193,7 @@ class ProfileControllerTest {
     @DisplayName("create corporate profile when User Id does not exist 💯")
     void createCorporateProfileWhenUserIdDoesNotExist() throws Exception {
         final CorporateProfileRequest corporateProfileRequest = setCorporateProfileData(
-                "app@app.com", "5432");
+                "app@app.com", "5432","2349870928349");
 
         createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
                 "Base User with Provided ID not Found",
@@ -211,18 +205,18 @@ class ProfileControllerTest {
     @DisplayName("create corporate profile when user id exist 💯")
     void createCorporateProfileWhenUserIdExist() throws Exception {
         final CorporateProfileRequest corporateProfileRequest = setCorporateProfileData(
-                "rt@app.com", user2.getId().toString());
+                "rt@app.com", user2.getId().toString(),"2349870928349");
 
         createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
                 "profile created. An OTP has been sent to your phone",
                 "$.httpStatus", "OK");
 
         final CorporateProfileRequest newCorporateProfileRequest = setCorporateProfileData(
-                "app@app.com", user2.getId().toString());
+                "app@app.com", user2.getId().toString(),"2349870928349");
 
         createAndVerifyCorporateProfile(newCorporateProfileRequest, "$.message",
-                "user id already exists",
-                "$.httpStatus", "UNPROCESSABLE_ENTITY");
+                "Profile with Provided User ID already Exists",
+                "$.httpStatus", "BAD_REQUEST");
     }
 
     @Order(7)
@@ -230,7 +224,7 @@ class ProfileControllerTest {
     @DisplayName("get a users profile")
     void getPersonalProfile() throws Exception {
         final PersonalProfileRequest personalProfileRequest = setPersonalProfileData(
-                "kola@app.com", user.getId().toString());
+                "kola@app.com", user.getId().toString(),"2349870928349");
 
         createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
                 "profile created. An OTP has been sent to your phone",
@@ -245,7 +239,7 @@ class ProfileControllerTest {
     @DisplayName("get a corporate users profile")
     void getCorporateProfile() throws Exception {
         final CorporateProfileRequest corporateProfileRequest = setCorporateProfileData(
-                "rt@app.com", user2.getId().toString());
+                "rt@app.com", user2.getId().toString(),"2349870928349");
 
         createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
                 "profile created. An OTP has been sent to your phone",
@@ -269,13 +263,14 @@ class ProfileControllerTest {
     void updatePersonalProfile() throws Exception {
 
         final PersonalProfileRequest personalProfileRequest = setPersonalProfileData(
-                "kola@app.com", user.getId().toString());
+                "kola@app.com", user.getId().toString(),"2349870928349");
 
         createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
                 "profile created. An OTP has been sent to your phone",
                 "$.httpStatus", "OK");
 
-        final UpdatePersonalProfileRequest updatePersonalProfileRequest = setUpdatePersonalProfileRequest();
+        final UpdatePersonalProfileRequest updatePersonalProfileRequest =
+                setUpdatePersonalProfileRequest("kola@app.com","2349870928349");
 
         updateAndVerifyPersonalProfile(updatePersonalProfileRequest, user.getId().toString(), "$.message",
                 "profile updated successfully", status().isCreated());
@@ -286,7 +281,8 @@ class ProfileControllerTest {
     @DisplayName("update a personal profile when user id is invalid")
     void updatePersonalProfileWithInValidUserId() throws Exception {
 
-        final UpdatePersonalProfileRequest updatePersonalProfileRequest = setUpdatePersonalProfileRequest();
+        final UpdatePersonalProfileRequest updatePersonalProfileRequest =
+                setUpdatePersonalProfileRequest("kola@app.com","2349870928349");
 
         updateAndVerifyPersonalProfile(updatePersonalProfileRequest, "121233", "$.message",
                 Constant.PROFILE_NOT_EXIST, status().isBadRequest());
@@ -297,13 +293,14 @@ class ProfileControllerTest {
     @DisplayName("update a corporate profile successfully")
     void updateCorporateProfile() throws Exception {
         final CorporateProfileRequest corporateProfileRequest = setCorporateProfileData(
-                "rt@app.com", user2.getId().toString());
+                "rt@app.com", user2.getId().toString(),"2349870928349");
 
         createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
                 "profile created. An OTP has been sent to your phone",
                 "$.httpStatus", "OK");
 
-        final UpdateCorporateProfileRequest updateCorporateProfileRequest = setUpdateCorporateProfileRequest();
+        final UpdateCorporateProfileRequest updateCorporateProfileRequest =
+                setUpdateCorporateProfileRequest("kola@app.com","2349870928349");
 
         updateAndVerifyCorporateProfile(updateCorporateProfileRequest, user2.getId().toString(), "$.message",
                 "profile updated successfully", status().isCreated());
@@ -313,7 +310,8 @@ class ProfileControllerTest {
     @Test
     @DisplayName("update a corporate profile when user id is not found")
     void updateCorporateProfileWithInvalidUserId() throws Exception {
-        final UpdateCorporateProfileRequest updateCorporateProfileRequest = setUpdateCorporateProfileRequest();
+        final UpdateCorporateProfileRequest updateCorporateProfileRequest =
+                setUpdateCorporateProfileRequest("kola@app.com","2349870928349");
 
         updateAndVerifyCorporateProfile(updateCorporateProfileRequest, "4242", "$.message",
                 "user with that id not found", status().isUnprocessableEntity());
@@ -324,7 +322,7 @@ class ProfileControllerTest {
     @DisplayName("get all users referrals successfully")
     void getAllUsersReferral() throws Exception {
         final CorporateProfileRequest corporateProfileRequest = setCorporateProfileData(
-                "rt@app.com", user2.getId().toString());
+                "rt@app.com", user2.getId().toString(),"2349870928349");
 
         createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
                 "profile created. An OTP has been sent to your phone",
@@ -339,7 +337,7 @@ class ProfileControllerTest {
     void deleteProfile() throws Exception {
 
         final PersonalProfileRequest personalProfileRequest = setPersonalProfileData(
-                "tella@app.com", user.getId().toString());
+                "tella@app.com", user.getId().toString(), "2340291838294");
 
         createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
                 "profile created. An OTP has been sent to your phone",
@@ -359,7 +357,7 @@ class ProfileControllerTest {
     void invalidDeleteProfile() throws Exception {
 
         final PersonalProfileRequest personalProfileRequest = setPersonalProfileData(
-                "youtbue@app.com", user.getId().toString());
+                "youtbue@app.com", user.getId().toString(), "2340291838294");
 
         createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
                 "profile created. An OTP has been sent to your phone",
@@ -379,7 +377,7 @@ class ProfileControllerTest {
     void restoreProfile() throws Exception {
 
         final PersonalProfileRequest personalProfileRequest = setPersonalProfileData(
-                "benthly@app.com", user.getId().toString());
+                "benthly@app.com", user.getId().toString(), "2340291838294");
 
         createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
                 "profile created. An OTP has been sent to your phone",
@@ -517,7 +515,7 @@ class ProfileControllerTest {
     }
 
     private PersonalProfileRequest setPersonalProfileData(
-            final String email, String userId
+            final String email, String userId, String phoneNumber
     ) {
         final PersonalProfileRequest personalProfileRequest
                 = new PersonalProfileRequest();
@@ -525,13 +523,13 @@ class ProfileControllerTest {
         personalProfileRequest.setSurname("Bawa");
         personalProfileRequest.setEmail(email);
         personalProfileRequest.setUserId(userId);
-        personalProfileRequest.setPhoneNumber("2340291838294");
+        personalProfileRequest.setPhoneNumber(phoneNumber);
 
         return personalProfileRequest;
     }
 
     private CorporateProfileRequest setCorporateProfileData(
-            final String email, final String userId
+            final String email, final String userId, String phoneNumber
     ) {
 
         final CorporateProfileRequest corporateProfileRequest
@@ -543,35 +541,36 @@ class ProfileControllerTest {
         corporateProfileRequest.setEmail(email);
         corporateProfileRequest.setOrganisationEmail("app20@app.com");
         corporateProfileRequest.setOrganisationName("organisation name");
-        corporateProfileRequest.setPhoneNumber("2349870928349");
+        corporateProfileRequest.setPhoneNumber(phoneNumber);
         corporateProfileRequest.setUserId(userId);
 
         return corporateProfileRequest;
     }
 
-    private UpdatePersonalProfileRequest setUpdatePersonalProfileRequest() {
+    private UpdatePersonalProfileRequest setUpdatePersonalProfileRequest(String email, String phoneNumber) {
         final UpdatePersonalProfileRequest updatePersonalProfileRequest =
                 new UpdatePersonalProfileRequest();
 
-        updatePersonalProfileRequest.setEmail("app@app.com");
+        updatePersonalProfileRequest.setEmail(email);
         updatePersonalProfileRequest.setFirstName("updated first name");
         updatePersonalProfileRequest.setSurname("updated surname");
-        updatePersonalProfileRequest.setPhoneNumber("update number");
+        updatePersonalProfileRequest.setPhoneNumber(phoneNumber);
         updatePersonalProfileRequest.setMiddleName("update middle name");
 
         return updatePersonalProfileRequest;
     }
 
-    private UpdateCorporateProfileRequest setUpdateCorporateProfileRequest() {
+    private UpdateCorporateProfileRequest setUpdateCorporateProfileRequest(String email, String phoneNumber) {
         final UpdateCorporateProfileRequest updateCorporateProfileRequest =
                 new UpdateCorporateProfileRequest();
 
         updateCorporateProfileRequest.setBusinessType("updated business type");
         updateCorporateProfileRequest.setCity("city");
         updateCorporateProfileRequest.setFirstName("first name updated");
-        updateCorporateProfileRequest.setPhoneNumber("2347034001983");
+        updateCorporateProfileRequest.setPhoneNumber(phoneNumber);
         updateCorporateProfileRequest.setSurname("surname updated");
         updateCorporateProfileRequest.setGender("Male");
+        updateCorporateProfileRequest.setEmail(email);
         updateCorporateProfileRequest.setOrganisationName("organisation name updated");
         updateCorporateProfileRequest.setOrganisationType("organisation type");
         updateCorporateProfileRequest.setBusinessType("business type");
@@ -580,68 +579,6 @@ class ProfileControllerTest {
 
         return updateCorporateProfileRequest;
     }
-
-    private void seedData() {
-
-       /* profilePersonal.setEmail("mikey@app.com");
-        profilePersonal.setFirstName("Mike");
-        profilePersonal.setSurname("Ang");
-        profilePersonal.setPhoneNumber("2340110299343");
-        profilePersonal.setUserId("123");
-        profilePersonal.setDeleted(false);
-
-        if (!profileRepository.existsByEmail(profilePersonal.getEmail()))
-            profileRepository.save(profilePersonal);
-
-        //personal profile 1
-        profile.setGender("male");
-        profile.setPhoneNumber("2341111109123");
-        profile.setEmail("app@app.com");
-        profile.setFirstName("app");
-        profile.setSurname("app");
-        profile.setState("state");
-        profile.setCorporate(false);
-        profile.setUserId("1234");
-        profile.setDeleted(false);
-        profile.setReferral("102kidder2");
-        Optional<Profile> profile1 = null;
-        if (!profileRepository.existsByEmail(profile.getEmail())){
-            profile = profileRepository.save(profile);
-        }else{
-            profile1 = profileRepository.findByUserId(false,profile.getUserId());
-            profile = profile1.get();
-        }
-
-        referralCode = new ReferralCode();
-        referralCode.setReferralCode("102kidder2");
-        referralCode.setProfile(profile);
-        referralCode.setUserId("123");
-        if(!referralCodeRepository.existsByUserIdOrRefCode("102kidder2", "123"))
-            referralCodeRepository.save(referralCode);
-
-        //corporate profile 1
-        OtherDetails otherDetails = new OtherDetails();
-        otherDetails.setOrganisationType("organisationType");
-        otherDetails.setBusinessType("businessType");
-        otherDetails.setOrganisationName("organisation name");
-
-        Profile corporate = new Profile();
-        corporate.setOrganisationName("name");
-        corporate.setCity("city");
-        corporate.setReferral("102kidder2");
-        corporate.setUserId("42");
-        corporate.setCorporate(true);
-        corporate.setDeleted(false);
-        corporate.setSurname("surname");
-        corporate.setFirstName("first name");
-        corporate.setEmail("cpd@app.com");
-        corporate.setPhoneNumber("23401010110109");
-        corporate.setOtherDetails(otherDetails);
-
-        if (!profileRepository.existsByEmail(corporate.getEmail()))
-            profileRepository.save(corporate);*/
-    }
-
 
     private Users createCorporateUser() {
         Users user = new Users();

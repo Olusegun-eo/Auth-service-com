@@ -118,6 +118,15 @@ public class UserController {
         return userService.deleteUser(id);
     }
 
+    @ApiOperation(value = "To Reverse Delete User profiles", notes = "Enables user's accounts", tags = {"USER SERVICE"})
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
+    @PostMapping("/reverse-delete/{id}")
+    public ResponseEntity<?> reverseDelete(@PathVariable Long id) {
+        return userService.unDeleteUser(id);
+    }
+
     @ApiOperation(value = "Edit User Details", notes = "This endpoint is used update user details", tags = {
             "USER SERVICE"})
     @ApiImplicitParams({
@@ -148,15 +157,14 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserForRole(id));
     }
 
-    @ApiOperation(value = "Admin Update User Details", notes = "This endpoint is used to Update user details", tags = {
-            "USER SERVICE"})
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
-    @PutMapping("/update-user-details")
-    public ResponseEntity<UserEditPojo> UpdateUserDetails(@Valid @RequestBody UserEditPojo userEditPojo) {
-        return ResponseEntity.ok(userService.UpdateUserDetails(userEditPojo));
-    }
-
+//    @ApiOperation(value = "Admin Update User Details", notes = "This endpoint is used to Update user details", tags = {
+//            "USER SERVICE"})
+//    @ApiImplicitParams({
+//            @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
+//    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
+//    @PutMapping("/update-user-details")
+//    public ResponseEntity<UserEditPojo> UpdateUserDetails(@Valid @RequestBody UserEditPojo userEditPojo) {
+//        return ResponseEntity.ok(userService.UpdateUserDetails(userEditPojo));
+//    }
 
 }

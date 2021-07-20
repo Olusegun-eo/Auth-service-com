@@ -1,53 +1,33 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import static com.waya.wayaauthenticationservice.util.Constant.INVALID_OTP;
-import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE;
-import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_2;
-import static com.waya.wayaauthenticationservice.util.Constant.OTP_ERROR_MESSAGE;
-import static com.waya.wayaauthenticationservice.util.Constant.OTP_SUCCESS_MESSAGE;
-import static com.waya.wayaauthenticationservice.util.Constant.SMS_TOPIC;
-import static com.waya.wayaauthenticationservice.util.Constant.TWILIO_PROVIDER;
-import static com.waya.wayaauthenticationservice.util.Constant.WAYAPAY;
-import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateCode;
-
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Optional;
-
-import com.waya.wayaauthenticationservice.enums.OTPRequestType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.entity.OTPBase;
+import com.waya.wayaauthenticationservice.enums.OTPRequestType;
 import com.waya.wayaauthenticationservice.enums.StreamsEventType;
 import com.waya.wayaauthenticationservice.repository.OTPRepository;
-import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
 import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
 import com.waya.wayaauthenticationservice.service.SMSTokenService;
 import com.waya.wayaauthenticationservice.streams.RecipientsSMS;
 import com.waya.wayaauthenticationservice.streams.StreamDataSMS;
 import com.waya.wayaauthenticationservice.streams.StreamPayload;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
-@Component
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.Optional;
+
+import static com.waya.wayaauthenticationservice.util.Constant.*;
+import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateCode;
+
+@Service
+@Slf4j
+@AllArgsConstructor
 public class SMSTokenServiceImpl implements SMSTokenService {
-
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final OTPRepository otpRepository;
     private final MessageQueueProducer messageQueueProducer;
-
-    @Autowired
-    public SMSTokenServiceImpl(OTPRepository otpRepository,
-                               MessageQueueProducer messageQueueProducer,
-                               ProfileRepository profileRepository, Gson gson
-    ) {
-        this.otpRepository = otpRepository;
-        this.messageQueueProducer = messageQueueProducer;
-    }
 
     /**
      * generate otp for sms

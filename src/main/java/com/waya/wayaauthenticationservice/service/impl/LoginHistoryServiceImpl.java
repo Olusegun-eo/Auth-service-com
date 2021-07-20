@@ -32,7 +32,7 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
 
     @Override
     public ResponseEntity<?> saveHistory(LoginHistoryPojo loginHistoryPojo) {
-        Users user = userRepository.findById(loginHistoryPojo.getUserId()).orElse(null);
+        Users user = userRepository.findById(false, loginHistoryPojo.getUserId()).orElse(null);
         if (user == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid User"), HttpStatus.BAD_REQUEST);
         }
@@ -45,7 +45,7 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
 
     @Override
     public ResponseEntity<?> getHistoryByUserId(long userId) {
-        Users user = userRepository.findById(userId).orElse(null);
+        Users user = userRepository.findById(false, userId).orElse(null);
         if (user == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid User"), HttpStatus.BAD_REQUEST);
         }
@@ -66,7 +66,7 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
 
     @Override
     public ResponseEntity<?> getLastHistoryByUserId(long userId) {
-        Users user = userRepository.findById(userId).orElse(null);
+        Users user = userRepository.findById(false, userId).orElse(null);
         if (user == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid User"), HttpStatus.BAD_REQUEST);
         }

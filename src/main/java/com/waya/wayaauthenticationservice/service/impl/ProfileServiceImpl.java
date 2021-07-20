@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 
 import com.waya.wayaauthenticationservice.entity.*;
+import com.waya.wayaauthenticationservice.exception.UserServiceException;
 import com.waya.wayaauthenticationservice.repository.*;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -174,14 +175,18 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ApiResponse<String> createProfile(PersonalProfileRequest request, String baseUrl) {
         try {
-            Users user = this.userRepository.findById(Long.valueOf(request.getUserId())).orElse(null);
+            Users user = this.userRepository.findById(false, Long.valueOf(request.getUserId())).orElse(null);
             if(user == null) throw new CustomException("Base User with Provided ID not Found", HttpStatus.BAD_REQUEST);
+
+            Optional<Profile> profileWithUserId = profileRepository.findByUserId(false, request.getUserId());
+            if(profileWithUserId.isPresent()) throw new CustomException("Profile with Provided User ID already Exists", HttpStatus.BAD_REQUEST);
 
             if(request.getReferralCode() != null && !request.getReferralCode().isBlank()){
                 ReferralCode referralCode1 = referralCodeRepository.getReferralCodeByUserId(request.getReferralCode());
                 if(referralCode1 == null)
                     request.setReferralCode(null);
             }
+
             //check if the user exist in the profile table
             Optional<Profile> profile = profileRepository.findByEmail(
                     false, request.getEmail().trim());
@@ -247,8 +252,11 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ApiResponse<String> createProfile(CorporateProfileRequest profileRequest, String baseUrl) {
         try {
-            Users user = this.userRepository.findById(Long.valueOf(profileRequest.getUserId())).orElse(null);
+            Users user = this.userRepository.findById(false, Long.valueOf(profileRequest.getUserId())).orElse(null);
             if(user == null) throw new CustomException("Base User with Provided ID not Found", HttpStatus.BAD_REQUEST);
+
+            Optional<Profile> profileWithUserId = profileRepository.findByUserId(false, profileRequest.getUserId());
+            if(profileWithUserId.isPresent()) throw new CustomException("Profile with Provided User ID already Exists", HttpStatus.BAD_REQUEST);
 
             if(profileRequest.getReferralCode() != null && !profileRequest.getReferralCode().isBlank()){
                 ReferralCode referralCode1 = referralCodeRepository.getReferralCodeByUserId(profileRequest.getReferralCode());
@@ -426,28 +434,46 @@ public class ProfileServiceImpl implements ProfileService {
             UpdatePersonalProfileRequest updatePersonalProfileRequest, String userId) {
 
         try {
-            Optional<Profile> profile = profileRepository.findByUserId(false, userId);
+            Optional<Users> user = userRepository.findById(false, Long.parseLong(userId));
+            if (user.isPresent()) {
+                Optional<Profile> profile = profileRepository.findByUserId(false, userId);
 
-            if (profile.isPresent()) {
-                Profile personalProfile = processPersonalProfileUpdateRequest(
-                        updatePersonalProfileRequest, profile.get(), userId);
+                if (profile.isPresent()) {
+                    updateUserAccount(user.get(), updatePersonalProfileRequest);
 
-                return setProfileResponse(personalProfile);
+                    Profile personalProfile = processPersonalProfileUpdateRequest(
+                            updatePersonalProfileRequest, profile.get(), userId);
 
-            } else {
-                throw new CustomException(PROFILE_NOT_EXIST, HttpStatus.NOT_FOUND);
+                    return setProfileResponse(personalProfile);
+                } else {
+                    throw new CustomException(PROFILE_NOT_EXIST, HttpStatus.NOT_FOUND);
+                }
             }
-
-        } catch (IllegalArgumentException illegalArgumentException) {
-            throw new CustomException(PROFILE_NOT_EXIST, HttpStatus.BAD_REQUEST);
-
-        } catch (DataIntegrityViolationException dve) {
-            throw new CustomException(PROFILE_NOT_EXIST, dve, HttpStatus.UNPROCESSABLE_ENTITY);
-
+            throw new CustomException(PROFILE_NOT_EXIST, HttpStatus.NOT_FOUND);
         } catch (Exception exception) {
-
             throw new CustomException(exception.getMessage(), HttpStatus.BAD_REQUEST);
         }
+    }
+
+    private void updateUserAccount(Users users, UpdatePersonalProfileRequest newProfile) {
+        if(userRepository.existsByEmail(newProfile.getEmail().trim()) && !compareTwoString(users.getEmail(), newProfile.getEmail()))
+            throw new UserServiceException("Email for Update already Belongs to another User");
+        users.setEmail(newProfile.getEmail());
+        if(userRepository.existsByPhoneNumber(newProfile.getPhoneNumber().trim()) && !compareTwoString(users.getPhoneNumber(), newProfile.getPhoneNumber()))
+            throw new UserServiceException("Phone Number for Update already Belongs to another User");
+        users.setPhoneNumber(newProfile.getPhoneNumber());
+        users.setSurname(newProfile.getSurname());
+        users.setFirstName(newProfile.getFirstName());
+        String name = String.format("%s %s %s", newProfile.getFirstName(),
+                newProfile.getMiddleName(), newProfile.getSurname()).replaceAll("\\s+", " ").trim();
+        users.setName(name);
+        userRepository.save(users);
+    }
+
+    private boolean compareTwoString(String str1, String str2){
+        if(str1 == null && str2 == null) return true;
+        if(str1 == null || str2 == null) return false;
+        return str1.trim().equalsIgnoreCase(str2.trim());
     }
 
     private Profile processPersonalProfileUpdateRequest(
@@ -477,27 +503,35 @@ public class ProfileServiceImpl implements ProfileService {
             UpdateCorporateProfileRequest corporateProfileRequest, String userId
     ) {
         try {
-            Optional<Profile> profile = profileRepository.findByUserId(false, userId);
+            Optional<Users> user = userRepository.findById(false, Long.parseLong(userId));
+            if (user.isPresent()) {
+                Optional<Profile> profile = profileRepository.findByUserId(false, userId);
+                if (profile.isPresent()) {
 
-            if (profile.isPresent()) {
-                //process corporate request
-                Profile savedProfile = processCorporateProfileUpdateRequest(profile.get(),
-                        corporateProfileRequest);
+                    // Update Base User
+                    updateUserAccount(user.get(), corporateProfileRequest);
 
-                OtherDetailsRequest otherDetailsRequest = new OtherDetailsRequest();
-                otherDetailsRequest.setOtherDetailsId(profile.get().getOtherDetails().getId());
-                otherDetailsRequest.setBusinessType(corporateProfileRequest.getBusinessType());
-                otherDetailsRequest.setOrganisationType(corporateProfileRequest.getOrganisationType());
-                otherDetailsRequest.setOrganisationName(corporateProfileRequest.getOrganisationName());
+                    //process corporate request
+                    Profile savedProfile = processCorporateProfileUpdateRequest(profile.get(),
+                            corporateProfileRequest);
 
-                saveOtherDetails(otherDetailsRequest);
+                    OtherDetailsRequest otherDetailsRequest = new OtherDetailsRequest();
+                    otherDetailsRequest.setOtherDetailsId(profile.get().getOtherDetails().getId());
+                    otherDetailsRequest.setBusinessType(corporateProfileRequest.getBusinessType());
+                    otherDetailsRequest.setOrganisationType(corporateProfileRequest.getOrganisationType());
+                    otherDetailsRequest.setOrganisationName(corporateProfileRequest.getOrganisationName());
 
-                return setProfileResponse(savedProfile);
+                    saveOtherDetails(otherDetailsRequest);
 
-            } else {
-                throw new CustomException("user with that id not found",
-                        HttpStatus.NOT_FOUND);
+                    return setProfileResponse(savedProfile);
+
+                } else {
+                    throw new CustomException("user with that id not found",
+                            HttpStatus.NOT_FOUND);
+                }
             }
+            throw new CustomException("user with that id not found",
+                    HttpStatus.NOT_FOUND);
         } catch (Exception exception) {
             throw new CustomException(exception.getMessage(), exception,
                     HttpStatus.UNPROCESSABLE_ENTITY);
@@ -747,7 +781,7 @@ public class ProfileServiceImpl implements ProfileService {
      * @param deleteRequest deleteRequest
      * @return
      */
-    public ResponseEntity<DeleteResponse> toggleDelete(DeleteRequest deleteRequest) {
+    public DeleteResponse toggleDelete(DeleteRequest deleteRequest) {
         DeleteResponse deleteResponse = new DeleteResponse();
         try {
             if (deleteRequest.getDeleteType().equals(DeleteType.DELETE)) {
@@ -771,7 +805,6 @@ public class ProfileServiceImpl implements ProfileService {
                     profileRepository.saveAndFlush(profile);
                     deleteResponse.setCode("200");
                     deleteResponse.setMessage("Profile has been restored");
-
                 } else {
                     deleteResponse.setCode("300");
                     deleteResponse.setError("Profile with userId do not exist or already restored");
@@ -785,10 +818,9 @@ public class ProfileServiceImpl implements ProfileService {
             log.error("Error while calling toggle delete:: {}", e);
             deleteResponse.setCode("400");
             deleteResponse.setError("Error while performing operation");
-            return ResponseEntity.ok(deleteResponse);
-
+            return deleteResponse;
         }
-        return ResponseEntity.ok(deleteResponse);
+        return deleteResponse;
     }
 
     public ToggleSMSResponse toggleSMSAlert(ToggleSMSRequest toggleSMSRequest) {
