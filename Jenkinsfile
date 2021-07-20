@@ -92,8 +92,8 @@ pipeline {
 		stage ('Starting the deployment job') {
 			steps {
                 		build job: 'waya-2.0-auth-service-deploy-dev', 
-				//parameters: [[$class: 'StringParameterValue', name: 'FROM_BUILD', value: "${BUILD_NUMBER}"]
-	        			    //]
+				parameters: [[$class: 'StringParameterValue', name: 'FROM_BUILD', value: "${BUILD_NUMBER}"]
+	        			    ]
 	    		}	    
     		}	  
        
