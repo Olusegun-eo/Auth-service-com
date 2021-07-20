@@ -62,6 +62,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				.antMatchers("/api/v1/auth/resend-otp**/**", "/api/v1/auth/verify-otp").permitAll()
 				.antMatchers("/api/v1/business/type/find/all", "/api/v1/password/forgot-password").permitAll()
 				.antMatchers("/api/v1/auth/verify**", "/api/v1/password/forgot-password**/**").permitAll()
+				.antMatchers("/api/v1/password/change-password**/**").permitAll()
 				// all other requests need to be authenticated
 				.anyRequest().authenticated().and()
 				// make sure we use stateLess session; session won't be used to
