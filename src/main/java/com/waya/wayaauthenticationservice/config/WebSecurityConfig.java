@@ -80,10 +80,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	}
 
 	protected AuthenticationFilter getAuthenticationFilter() throws Exception {
-		// JwtRequestFilter filter = new JwtRequestFilter(authenticationManager());
 		final AuthenticationFilter filter = new AuthenticationFilter(authenticationManager());
 		filter.setFilterProcessesUrl("/api/v1/auth/login");
 		return filter;
+		// JwtRequestFilter filter = new JwtRequestFilter(authenticationManager());
 	}
 
 	@Bean
