@@ -16,12 +16,7 @@ import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil
 import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.validateNum;
 import static org.springframework.http.HttpStatus.OK;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -341,7 +336,8 @@ public class ProfileServiceImpl implements ProfileService {
      */
     private OtherDetails saveOtherDetails(OtherDetailsRequest otherDetailsRequest) {
         OtherDetails otherDetails = new OtherDetails();
-        otherDetails.setId(otherDetailsRequest.getOtherDetailsId());
+        UUID id = otherDetailsRequest.getOtherDetailsId() == null ? UUID.randomUUID() : otherDetailsRequest.getOtherDetailsId();
+        otherDetails.setId(id);
         otherDetails.setBusinessType(otherDetailsRequest.getBusinessType());
         otherDetails.setOrganisationName(otherDetailsRequest.getOrganisationName());
         otherDetails.setOrganisationType(otherDetailsRequest.getOrganisationType());
@@ -457,10 +453,10 @@ public class ProfileServiceImpl implements ProfileService {
 
     private void updateUserAccount(Users users, UpdatePersonalProfileRequest newProfile) {
         if(userRepository.existsByEmail(newProfile.getEmail().trim()) && !compareTwoString(users.getEmail(), newProfile.getEmail()))
-            throw new UserServiceException("Email for Update already Belongs to another User");
+            throw new CustomException("Email for Update already Belongs to another User", HttpStatus.BAD_REQUEST);
         users.setEmail(newProfile.getEmail());
         if(userRepository.existsByPhoneNumber(newProfile.getPhoneNumber().trim()) && !compareTwoString(users.getPhoneNumber(), newProfile.getPhoneNumber()))
-            throw new UserServiceException("Phone Number for Update already Belongs to another User");
+            throw new CustomException("Phone Number for Update already Belongs to another User", HttpStatus.BAD_REQUEST);
         users.setPhoneNumber(newProfile.getPhoneNumber());
         users.setSurname(newProfile.getSurname());
         users.setFirstName(newProfile.getFirstName());
@@ -479,16 +475,20 @@ public class ProfileServiceImpl implements ProfileService {
     private Profile processPersonalProfileUpdateRequest(
             UpdatePersonalProfileRequest updatePersonalProfileRequest,
             Profile profile, String userId) {
+        try{
+            Profile updatedProfile = modelMapper
+                    .map(updatePersonalProfileRequest, Profile.class);
 
-        Profile updatedProfile = modelMapper
-                .map(updatePersonalProfileRequest, Profile.class);
+            updatedProfile.setId(profile.getId());
+            updatedProfile.setUserId(userId);
+            updatedProfile.setProfileImage(profile.getProfileImage());
 
-        updatedProfile.setId(profile.getId());
-        updatedProfile.setUserId(userId);
-        updatedProfile.setProfileImage(profile.getProfileImage());
-
-        log.info("updating  user profile ::: {}", updatedProfile);
-        return profileRepository.save(updatedProfile);
+            log.info("updating  user profile ::: {}", updatedProfile);
+            return profileRepository.save(updatedProfile);
+        }catch(Exception e){
+            throw new CustomException(e.getMessage(),
+                    HttpStatus.UNPROCESSABLE_ENTITY);
+        }
     }
 
     /**
@@ -504,9 +504,9 @@ public class ProfileServiceImpl implements ProfileService {
     ) {
         try {
             Optional<Users> user = userRepository.findById(false, Long.parseLong(userId));
-            if (user.isPresent()) {
+            if (user.isPresent() && user.get().isCorporate()) {
                 Optional<Profile> profile = profileRepository.findByUserId(false, userId);
-                if (profile.isPresent()) {
+                if (profile.isPresent() && profile.get().isCorporate()) {
 
                     // Update Base User
                     updateUserAccount(user.get(), corporateProfileRequest);
@@ -516,7 +516,8 @@ public class ProfileServiceImpl implements ProfileService {
                             corporateProfileRequest);
 
                     OtherDetailsRequest otherDetailsRequest = new OtherDetailsRequest();
-                    otherDetailsRequest.setOtherDetailsId(profile.get().getOtherDetails().getId());
+                    UUID id = profile.get().getOtherDetails() == null ? null : profile.get().getOtherDetails().getId();
+                    otherDetailsRequest.setOtherDetailsId(id);
                     otherDetailsRequest.setBusinessType(corporateProfileRequest.getBusinessType());
                     otherDetailsRequest.setOrganisationType(corporateProfileRequest.getOrganisationType());
                     otherDetailsRequest.setOrganisationName(corporateProfileRequest.getOrganisationName());
@@ -524,13 +525,12 @@ public class ProfileServiceImpl implements ProfileService {
                     saveOtherDetails(otherDetailsRequest);
 
                     return setProfileResponse(savedProfile);
-
                 } else {
-                    throw new CustomException("user with that id not found",
+                    throw new CustomException("user with that id not found or is not a Corporate User",
                             HttpStatus.NOT_FOUND);
                 }
             }
-            throw new CustomException("user with that id not found",
+            throw new CustomException("user with that id not found or is not a Corporate User",
                     HttpStatus.NOT_FOUND);
         } catch (Exception exception) {
             throw new CustomException(exception.getMessage(), exception,
@@ -541,18 +541,23 @@ public class ProfileServiceImpl implements ProfileService {
     private Profile processCorporateProfileUpdateRequest(
             Profile profile, UpdateCorporateProfileRequest corporateProfileRequest
     ) {
-        profile.setSurname(corporateProfileRequest.getSurname());
-        profile.setFirstName(corporateProfileRequest.getFirstName());
-        profile.setEmail(corporateProfileRequest.getOrganisationEmail());
-        profile.setPhoneNumber(corporateProfileRequest.getPhoneNumber());
-        profile.setAddress(corporateProfileRequest.getOfficeAddress());
-        profile.setOrganisationName(corporateProfileRequest.getOrganisationName());
-        profile.setCity(corporateProfileRequest.getCity());
-        profile.setState(corporateProfileRequest.getState());
-        profile.setGender(corporateProfileRequest.getGender());
+        try{
+            profile.setSurname(corporateProfileRequest.getSurname());
+            profile.setFirstName(corporateProfileRequest.getFirstName());
+            profile.setEmail(corporateProfileRequest.getOrganisationEmail());
+            profile.setPhoneNumber(corporateProfileRequest.getPhoneNumber());
+            profile.setAddress(corporateProfileRequest.getOfficeAddress());
+            profile.setOrganisationName(corporateProfileRequest.getOrganisationName());
+            profile.setCity(corporateProfileRequest.getCity());
+            profile.setState(corporateProfileRequest.getState());
+            profile.setGender(corporateProfileRequest.getGender());
 
-        log.info("updating  user profile with values ::: {}", profile);
-        return profileRepository.save(profile);
+            log.info("updating  user profile with values ::: {}", profile);
+            return profileRepository.save(profile);
+        }catch(Exception ex){
+            throw new CustomException(ex.getMessage(),
+                    HttpStatus.UNPROCESSABLE_ENTITY);
+        }
     }
 
     /**

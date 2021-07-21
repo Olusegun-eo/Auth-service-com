@@ -314,7 +314,7 @@ class ProfileControllerTest {
                 setUpdateCorporateProfileRequest("kola@app.com","2349870928349");
 
         updateAndVerifyCorporateProfile(updateCorporateProfileRequest, "4242", "$.message",
-                "user with that id not found", status().isUnprocessableEntity());
+                "user with that id not found or is not a Corporate User", status().isUnprocessableEntity());
     }
 
     @Order(13)

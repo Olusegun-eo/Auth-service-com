@@ -469,7 +469,7 @@ public class UserServiceImpl implements UserService {
                     continue;
 
                 Role userRole = rolesRepo.findByName("ROLE_USER")
-                        .orElseThrow(() -> new CustomException("Merchant Role Not Available", HttpStatus.BAD_REQUEST));
+                        .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
 
                 Role merchRole = rolesRepo.findByName("ROLE_CORP")
                         .orElseThrow(() -> new CustomException("User Corp Role Not Available", HttpStatus.BAD_REQUEST));

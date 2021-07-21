@@ -174,7 +174,7 @@ public class AdminController {
             @Valid @RequestBody UpdateCorporateProfileRequest updateCorporateProfileRequest,
             @PathVariable String userId){
         UserProfileResponse corporateProfileResponse = profileService.updateProfile(updateCorporateProfileRequest, userId);
-        com.waya.wayaauthenticationservice.response.ApiResponse<UserProfileResponse> response =  new com.waya.wayaauthenticationservice.response.ApiResponse<UserProfileResponse>(corporateProfileResponse,
+        com.waya.wayaauthenticationservice.response.ApiResponse<UserProfileResponse> response = new com.waya.wayaauthenticationservice.response.ApiResponse<>(corporateProfileResponse,
                 "profile updated successfully", true);
         return new ResponseEntity<>(response,HttpStatus.CREATED);
     }
