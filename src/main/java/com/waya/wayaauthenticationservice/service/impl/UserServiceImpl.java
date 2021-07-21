@@ -468,14 +468,18 @@ public class UserServiceImpl implements UserService {
                 if (existingTelephone != null)
                     continue;
 
-                Role merchRole = rolesRepo.findByName("ROLE_MERCH")
+                Role userRole = rolesRepo.findByName("ROLE_USER")
                         .orElseThrow(() -> new CustomException("Merchant Role Not Available", HttpStatus.BAD_REQUEST));
 
-                Role userRole = rolesRepo.findByName("ROLE_USER")
-                        .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+                Role merchRole = rolesRepo.findByName("ROLE_CORP")
+                        .orElseThrow(() -> new CustomException("User Corp Role Not Available", HttpStatus.BAD_REQUEST));
 
-                List<Role> roleList = new ArrayList<>();
-                roleList.addAll(Arrays.asList(userRole, merchRole));
+                List<Role> roleList = new ArrayList<>(Arrays.asList(userRole, merchRole));
+                if (mUser.isAdmin()) {
+                    Role corpAdminRole = rolesRepo.findByName("ROLE_CORP_ADMIN")
+                            .orElseThrow(() -> new CustomException("User Corp Admin Role Not Available", HttpStatus.BAD_REQUEST));
+                    roleList.add(corpAdminRole);
+                }
 
                 // Generate and Save Random Password
                 String randomPassword = HelperUtils.generateRandomPassword();
@@ -490,7 +494,6 @@ public class UserServiceImpl implements UserService {
 //                }
 //                user.setUserId(publicUserId);
                 user.setCorporate(true);
-                user.setAccountStatus(-1);
                 user.setDateCreated(LocalDateTime.now());
                 user.setRegDeviceIP(ip);
                 user.setRegDevicePlatform(dev.getPlatform());
@@ -498,6 +501,7 @@ public class UserServiceImpl implements UserService {
                 user.setPassword(passwordEncoder.encode(mUser.getPassword()));
                 user.setDateOfActivation(LocalDateTime.now());
                 user.setActive(true);
+                user.setAccountStatus(-1);
                 user.setRoleList(roleList);
                 user.setEmail(mUser.getEmail().trim());
                 user.setEmailVerified(false);
@@ -513,9 +517,10 @@ public class UserServiceImpl implements UserService {
                 if (regUser == null)
                     continue;
 
+                CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
+
                 String token = this.authService.generateToken(regUser);
                 this.authService.createCorporateUser(mUser, regUser.getId(), token, getBaseUrl(request));
-                sendEmailNewPassword(randomPassword, regUser.getEmail(), regUser.getFirstName());
                 ++count;
             }
             String message = String.format("%s  Corporate Account Created Successfully and Sub-account creation in process.", count);
@@ -554,9 +559,10 @@ public class UserServiceImpl implements UserService {
                 Role userRole = rolesRepo.findByName("ROLE_USER")
                         .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
                 roleList.add(userRole);
+
                 if (mUser.isAdmin()) {
-                    Role adminRole = rolesRepo.findByName("ROLE_ADMIN")
-                            .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+                    Role adminRole = rolesRepo.findByName("ROLE_APP_ADMIN")
+                            .orElseThrow(() -> new CustomException("User App Admin Role Not Available", HttpStatus.BAD_REQUEST));
                     roleList.add(adminRole);
                 }
 
@@ -594,7 +600,7 @@ public class UserServiceImpl implements UserService {
                 if (regUser == null)
                     continue;
                 this.authService.createPrivateUser(regUser, getBaseUrl(request));
-                sendEmailNewPassword(randomPassword, regUser.getEmail(), regUser.getFirstName());
+                CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
                 ++count;
             }
             String message = String.format("%s Private Accounts Created Successfully and Sub-account creation in process.", count);
