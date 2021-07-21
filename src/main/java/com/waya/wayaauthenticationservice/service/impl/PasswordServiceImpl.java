@@ -6,6 +6,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 
 import com.waya.wayaauthenticationservice.enums.OTPRequestType;
+import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordChangeEmailContext;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PinResetContext;
 import com.waya.wayaauthenticationservice.pojo.password.*;
 import com.waya.wayaauthenticationservice.response.*;
@@ -82,6 +83,57 @@ public class PasswordServiceImpl implements PasswordService {
             return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);
         } catch (Exception ex) {
             return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> sendPasswordChangeOTPByEmail(String email, String baseUrl) {
+        try {
+            Users user = usersRepo.findByEmailIgnoreCase(email).orElse(null);
+            if (user == null)
+                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
+                        + " For User with email: " + email, null), HttpStatus.BAD_REQUEST);
+
+            Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
+            if (profile == null)
+                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
+                        + " For Profile with userId: " + user.getId(), null), HttpStatus.BAD_REQUEST);
+
+            PasswordChangeEmailContext emailContext = new PasswordChangeEmailContext();
+            Integer otpToken = generateEmailOTP(email, PASSWORD_CHANGE_EMAIL);
+            emailContext.init(profile);
+            emailContext.redirectTo(baseUrl);
+            emailContext.setToken(String.valueOf(otpToken));
+            // Send the Mail
+            CompletableFuture.runAsync(() -> this.mailService.sendMail(emailContext));
+
+            return new ResponseEntity<>(new SuccessResponse("Email for Password Reset has been sent"), HttpStatus.OK);
+        } catch (Exception ex) {
+            log.error("An Error Occurred: {}", ex.getMessage());
+            throw new CustomException(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> sendPasswordChangeOTPByPhoneNumber(String phoneNumber) {
+        try {
+            Users user = usersRepo.findByPhoneNumber(phoneNumber).orElse(null);
+            if (user == null)
+                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
+                        + " For User with phoneNumber: " + phoneNumber, null), HttpStatus.BAD_REQUEST);
+
+            Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
+            if (profile == null)
+                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
+                        + " For Profile with userId: " + user.getId(), null), HttpStatus.BAD_REQUEST);
+
+            // Send the Phone Number
+            CompletableFuture.runAsync(() -> this.smsTokenService.sendSMSOTP(phoneNumber, user.getName(), PASSWORD_CHANGE_PHONE));
+
+            return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
+        } catch (Exception ex) {
+            log.error("An Error Occurred: {}", ex.getMessage());
+            throw new CustomException(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }
 

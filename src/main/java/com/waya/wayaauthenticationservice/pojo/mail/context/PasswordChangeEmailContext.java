@@ -25,12 +25,8 @@ public class PasswordChangeEmailContext extends AbstractEmailContext {
 		put("token", token);
 	}
 
-	public void buildURL(final String baseURL, String pathFromUrl, final String token) {
-		final String url = UriComponentsBuilder.fromHttpUrl(baseURL)
-				.path(pathFromUrl)
-				.queryParam("token", token)
-				.toUriString();
-		put("url", url);
+	public void redirectTo(final String baseURL){
+		put("url", baseURL);
 	}
 
 }
