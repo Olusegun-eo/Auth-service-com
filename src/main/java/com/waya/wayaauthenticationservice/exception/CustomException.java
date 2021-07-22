@@ -10,7 +10,7 @@ public class CustomException extends RuntimeException {
      * serialversionID
      */
     private static final long serialVersionUID = 1L;
-    private Date timestamp = new Date();
+    private Date timestamp;
     private final String message;
     private final HttpStatus status;
     private Throwable cause;

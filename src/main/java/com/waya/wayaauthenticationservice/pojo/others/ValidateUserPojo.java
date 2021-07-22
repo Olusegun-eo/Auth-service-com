@@ -4,7 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -22,6 +23,7 @@ public class ValidateUserPojo {
     private boolean emailVerified = false;
     private boolean pinCreated = false;
     private boolean isCorporate = false;
-    private List<String> roles;
+    private Set<String> roles = new HashSet<>();
+    private Set<String> permits = new HashSet<>();
 
 }

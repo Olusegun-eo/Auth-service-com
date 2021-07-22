@@ -1,15 +1,15 @@
 package com.waya.wayaauthenticationservice.entity;
 
-import java.io.Serializable;
-import java.util.Collection;
-
-import javax.persistence.*;
-import javax.validation.constraints.Size;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import javax.persistence.*;
+import javax.validation.constraints.Size;
+import java.io.Serializable;
+import java.util.Collection;
 
 @Entity
 @Getter
@@ -31,6 +31,7 @@ public class Role extends AuditModel implements Serializable {
 
 	private String description;
 
+	@JsonIgnore
 	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(
 			name = "m_roles_privileges",

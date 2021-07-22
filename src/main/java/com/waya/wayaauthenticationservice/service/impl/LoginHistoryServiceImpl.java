@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -49,7 +50,11 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
         if (user == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid User"), HttpStatus.BAD_REQUEST);
         }
-        List<LoginHistory> loginHistory = loginHistoryRepository.findByUser(user);
+        List<LoginHistoryPojo> loginHistory = loginHistoryRepository.findByUser(user)
+                .stream()
+                .map(this::toPojo)
+                .collect(Collectors.toList());
+
         return new ResponseEntity<>(new SuccessResponse("Result Fetched", loginHistory), HttpStatus.OK);
     }
 
@@ -59,7 +64,11 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
         if (user == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid User"), HttpStatus.BAD_REQUEST);
         }
-        List<LoginHistory> loginHistory = loginHistoryRepository.findByUser(user);
+        List<LoginHistoryPojo> loginHistory = loginHistoryRepository.findByUser(user)
+                .stream()
+                .map(this::toPojo)
+                .collect(Collectors.toList());
+
         return new ResponseEntity<>(new SuccessResponse("Result Fetched", loginHistory), HttpStatus.OK);
 
     }
@@ -71,7 +80,8 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
             return new ResponseEntity<>(new ErrorResponse("Invalid User"), HttpStatus.BAD_REQUEST);
         }
         LoginHistory loginHistory = loginHistoryRepository.findTop1ByUserOrderByLoginDateDesc(user);
-        return new ResponseEntity<>(new SuccessResponse("Result Fetched", loginHistory), HttpStatus.OK);
+        LoginHistoryPojo historyPojo = this.toPojo(loginHistory);
+        return new ResponseEntity<>(new SuccessResponse("Result Fetched", historyPojo), HttpStatus.OK);
 
     }
 
@@ -82,14 +92,25 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
             return new ResponseEntity<>(new ErrorResponse("Invalid User"), HttpStatus.BAD_REQUEST);
         }
         LoginHistory loginHistory = loginHistoryRepository.findTop1ByUserOrderByLoginDateDesc(user);
-        return new ResponseEntity<>(new SuccessResponse("Result Fetched", loginHistory), HttpStatus.OK);
+        LoginHistoryPojo historyPojo = this.toPojo(loginHistory);
+
+        return new ResponseEntity<>(new SuccessResponse("Result Fetched", historyPojo), HttpStatus.OK);
     }
 
     @Override
     public ResponseEntity<?> getAllHistoryByAdmin() {
-        List<LoginHistory> loginHistory = loginHistoryRepository.findAll();
-        return new ResponseEntity<>(new SuccessResponse("Result Fetched", loginHistory), HttpStatus.OK);
+        List<LoginHistoryPojo> loginHistory = loginHistoryRepository.findAll()
+                .stream()
+                .map(this::toPojo)
+                .collect(Collectors.toList());
 
+        return new ResponseEntity<>(new SuccessResponse("Result Fetched", loginHistory), HttpStatus.OK);
+    }
+
+    private LoginHistoryPojo toPojo(LoginHistory entity){
+        LoginHistoryPojo pojo = new ModelMapper().map(entity, LoginHistoryPojo.class);
+        pojo.setUserId(entity.getUser().getId());
+        return pojo;
     }
 
 
