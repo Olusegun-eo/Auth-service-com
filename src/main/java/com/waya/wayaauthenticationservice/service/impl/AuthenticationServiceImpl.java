@@ -496,21 +496,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public ResponseEntity<?> resendVerificationMail(String email, String baseUrl) {
-        Users user = userRepo.findByEmailIgnoreCase(email).orElse(null);
-        if (user == null)
-            return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
-                    HttpStatus.NOT_FOUND);
+        try{
+            Users user = userRepo.findByEmailIgnoreCase(email).orElse(null);
+            if (user == null)
+                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
+                        HttpStatus.NOT_FOUND);
 
-        // Implementation for internal call
-        log.info("Resend Verification Mail starts for {}", email);
-        boolean check = pushEMailToken(baseUrl, email);
-        log.info("Response From Verification Mail {}", check);
+            // Implementation for internal call
+            log.info("Resend Verification Mail starts for {}", email);
+            boolean check = pushEMailToken(baseUrl, email);
+            log.info("Response From Verification Mail {}", check);
 
-        if (check) {
-            return new ResponseEntity<>(new SuccessResponse("Verification email sent successfully.", null),
-                    HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(new ErrorResponse("Error"), HttpStatus.BAD_REQUEST);
+            if (check) {
+                return new ResponseEntity<>(new SuccessResponse("Verification email sent successfully.", null),
+                        HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(new ErrorResponse("Error"), HttpStatus.BAD_REQUEST);
+            }
+        }catch(Exception ex){
+            throw new CustomException(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }
 
