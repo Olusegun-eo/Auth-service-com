@@ -1,9 +1,10 @@
 package com.waya.wayaauthenticationservice.pojo.others;
 
 
-import javax.validation.constraints.NotNull;
-
 import lombok.Data;
+
+import javax.validation.constraints.NotNull;
+import java.util.Date;
 
 @Data
 public class LoginHistoryPojo {
@@ -14,6 +15,7 @@ public class LoginHistoryPojo {
     private String city;
     private String province;
     private String country;
+    private Date loginDate;
 
     @NotNull
     private long userId;
