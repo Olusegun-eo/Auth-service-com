@@ -141,7 +141,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
                 roleList.add(adminRole);
             }
-            if (mUser.isWayaAdmin()) {
+            if (mUser.isWayaAdmin() && adminAction) {
                 Users signedInUser = authenticatedUserFacade.getUser();
                 Role ownerRole = rolesRepo.findByName("ROLE_OWNER_ADMIN")
                         .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
