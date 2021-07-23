@@ -35,6 +35,7 @@ import javax.validation.Valid;
 import java.io.ByteArrayInputStream;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static com.waya.wayaauthenticationservice.enums.OTPRequestType.ADMIN_VERIFICATION;
@@ -172,6 +173,29 @@ public class AdminServiceImpl implements AdminService {
             return new ResponseEntity<>(new ErrorResponse("Error Validating OTP", resp), HttpStatus.BAD_REQUEST);
 
         return new ResponseEntity<>(new SuccessResponse("OTP Verified Successfully.", resp), HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<?> manageUserRole(Long userId, boolean add, String roleName) {
+        Users user = userRepository.findById(false, userId).orElseThrow(() ->
+                new CustomException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage(), HttpStatus.NOT_FOUND));
+        try {
+            Optional<Role> mRole = rolesRepository.findByName(roleName);
+            if (mRole.isPresent()) {
+                if(add){
+                    if (!user.getRoleList().contains(mRole.get()))
+                        user.getRoleList().add(mRole.get());
+                }else{
+                    if (user.getRoleList().contains(mRole.get()))
+                        user.getRoleList().remove(mRole.get());
+                }
+                userRepository.save(user);
+            }
+            return new ResponseEntity<>(new SuccessResponse("User Roles Updated", null), HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("An Error has Occurred :: {}", e.getMessage());
+            throw new CustomException("An Error Occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     private Integer generateEmailOTP(String email, OTPRequestType otpRequestType) {

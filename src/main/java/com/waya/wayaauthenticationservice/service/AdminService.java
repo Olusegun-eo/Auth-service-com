@@ -29,4 +29,6 @@ public interface AdminService {
     ResponseEntity<?> sendAdminOTP();
 
     ResponseEntity<?> verifyAdminOTP(Integer otp);
+
+    ResponseEntity<?> manageUserRole(Long userId, boolean add, String roleName);
 }

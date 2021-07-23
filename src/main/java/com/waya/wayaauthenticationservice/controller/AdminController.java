@@ -196,6 +196,18 @@ public class AdminController {
         return adminService.verifyAdminOTP(otp);
     }
 
+    @ApiOperation(value = "Manage Users Role and Permissions",
+            notes = "To Alter roles and Permission from a User", tags = {"ADMIN"})
+    @PostMapping("/manage-user/{userId}/roles/{add}/{roleName}")
+    @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN')")
+    public ResponseEntity<?> manageRoles(@PathVariable Long userId,
+                                         @PathVariable boolean add,
+                                         @PathVariable String roleName) {
+
+        return adminService.manageUserRole(userId, add, roleName);
+    }
+
+
     public  ResponseEntity<?> deactivateUserAccount(){
 
         return new ResponseEntity<>(null, HttpStatus.OK);
