@@ -44,7 +44,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
@@ -54,6 +56,7 @@ import static com.waya.wayaauthenticationservice.enums.OTPRequestType.EMAIL_VERI
 import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PHONE_VERIFICATION;
 import static com.waya.wayaauthenticationservice.util.Constant.*;
 import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
+import static com.waya.wayaauthenticationservice.util.HelperUtils.generateRandomNumber;
 
 @Service
 @Slf4j
@@ -96,17 +99,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private String urlRedirect;
 
     private String getBaseUrl(HttpServletRequest request) {
-        try{
+        try {
             StringBuffer url = request.getRequestURL();
             String uri = request.getRequestURI();
             int idx = (((uri != null) && (uri.length() > 0)) ? url.indexOf(uri) : url.length());
             String host = url.substring(0, idx); //base url
             idx = host.indexOf("://");
-            if(idx > 0) {
+            if (idx > 0) {
                 host = host.substring(idx); //remove scheme if present
                 log.info("Servers Host is {}", host);
             }
-        }catch(Exception ex){
+        } catch (Exception ex) {
             log.error("An Error has Occurred:: {}", ex.getMessage());
         }
         return "http://" + urlRedirect + ":" + request.getServerPort() + request.getContextPath();
@@ -137,6 +140,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 Role adminRole = rolesRepo.findByName("ROLE_APP_ADMIN")
                         .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
                 roleList.add(adminRole);
+            }
+            if (mUser.isWayaAdmin()) {
+                Users signedInUser = authenticatedUserFacade.getUser();
+                Role ownerRole = rolesRepo.findByName("ROLE_OWNER_ADMIN")
+                        .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+                if (signedInUser != null && signedInUser.getRoleList().contains(ownerRole)) {
+                    Role superAdminRole = rolesRepo.findByName("ROLE_SUPER_ADMIN")
+                            .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+                    roleList.add(superAdminRole);
+                }
             }
 
             final String ip = reqUtil.getClientIP(request);
@@ -178,7 +191,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user.setAccountStatus(-1);
                 CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
             }
-            createPrivateUser(regUser, getBaseUrl(request));
+            String token = generateToken(regUser);
+            createPrivateUser(mUser, regUser.getId(), token, getBaseUrl(request));
 
             return new ResponseEntity<>(new SuccessResponse(
                     "User Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
@@ -286,13 +300,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 //        coopUser = corporateUserRepository.save(coopUser);
 
         CreateAccountPojo createAccount = new CreateAccountPojo();
-        createAccount.setEmailAddress(mUser.getEmail());
-        createAccount.setExternalId(Id);
+        createAccount.setUserId(userId);
+        // Default Debit Limit SetUp
+        createAccount.setCustDebitLimit(new BigDecimal("50000.00"));
+        // Default Account Expiration Date
+        createAccount.setCustExpIssueDate(LocalDateTime.of(2099, Month.DECEMBER, 30, 12, 50));
+        createAccount.setCustIssueId(generateRandomNumber(9));
         createAccount.setFirstName(mUser.getFirstName());
         createAccount.setLastName(mUser.getSurname());
+        createAccount.setEmailId(mUser.getEmail());
         createAccount.setMobileNo(mUser.getPhoneNumber());
-        createAccount.setSavingsProductId(1);
-        CompletableFuture.runAsync(() -> walletProxy.createCorporateAccount(createAccount));
+        createAccount.setCustSex(mUser.getGender().substring(0, 1));
+        String custTitle = mUser.getGender().equals("MALE") ? "MR" : "MRS";
+        createAccount.setCustTitleCode(custTitle);
+        // Default Branch SOL ID
+        createAccount.setSolId("0000");
+        createAccount.setDob(mUser.getDateOfBirth());
+        CompletableFuture.runAsync(() -> walletProxy.createCorporateAccount(createAccount))
+                .thenAccept(p -> log.debug("Response from Call to Create Corporate Wallet is: {}", p));
 
         // Implementation for internal calls begin here
         CorporateProfileRequest corporateProfileRequest = new CorporateProfileRequest();
@@ -319,15 +344,34 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         CompletableFuture.runAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token));
     }
 
-    public void createPrivateUser(Users user, String baseUrl) {
-        String id = String.valueOf(user.getId());
+    public void createPrivateUser(BaseUserPojo user, Long userId, String token, String baseUrl) {
+        String id = String.valueOf(userId);
 
         VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
         virtualAccountPojo.setAccountName(user.getFirstName() + " " + user.getSurname());
         virtualAccountPojo.setUserId(id);
 
-        String token = generateToken(user);
         CompletableFuture.runAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token));
+
+        CreateAccountPojo createAccount = new CreateAccountPojo();
+        createAccount.setUserId(userId);
+        // Default Debit Limit SetUp
+        createAccount.setCustDebitLimit(new BigDecimal("50000.00"));
+        // Default Account Expiration Date
+        createAccount.setCustExpIssueDate(LocalDateTime.of(2099, Month.DECEMBER, 30, 12, 50));
+        createAccount.setCustIssueId(generateRandomNumber(9));
+        createAccount.setFirstName(user.getFirstName());
+        createAccount.setLastName(user.getSurname());
+        createAccount.setEmailId(user.getEmail());
+        createAccount.setMobileNo(user.getPhoneNumber());
+        createAccount.setCustSex(user.getGender().substring(0, 1));
+        String custTitle = user.getGender().equals("MALE") ? "MR" : "MRS";
+        createAccount.setCustTitleCode(custTitle);
+        // Default Branch SOL ID
+        createAccount.setSolId("0000");
+        createAccount.setDob(user.getDateOfBirth());
+        CompletableFuture.runAsync(() -> walletProxy.createUserAccount(createAccount))
+                .thenAccept(p -> log.debug("Response from Call to Create Private User Wallet is: {}", p));
 
         PersonalProfileRequest personalProfileRequest = new PersonalProfileRequest();
         personalProfileRequest.setEmail(user.getEmail());
@@ -379,7 +423,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             } else {
                 otpResponse = verifyOTP(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
             }
-            String message= otpResponse.getMessage();
+            String message = otpResponse.getMessage();
             boolean success = otpResponse.isValid();
 
             if (success) {
@@ -496,7 +540,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public ResponseEntity<?> resendVerificationMail(String email, String baseUrl) {
-        try{
+        try {
             Users user = userRepo.findByEmailIgnoreCase(email).orElse(null);
             if (user == null)
                 return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
@@ -513,7 +557,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             } else {
                 return new ResponseEntity<>(new ErrorResponse("Error"), HttpStatus.BAD_REQUEST);
             }
-        }catch(Exception ex){
+        } catch (Exception ex) {
             throw new CustomException(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }

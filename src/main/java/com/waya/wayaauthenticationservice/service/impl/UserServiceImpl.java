@@ -17,7 +17,6 @@ import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
@@ -181,33 +180,27 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<?> getUserAndWalletByPhoneOrEmail(String value) {
+    public ResponseEntity<?> getUserInfoByPhoneOrEmailForServiceConsumption(String value) {
         Users user = usersRepository.findByEmailOrPhoneNumber(value).orElse(null);
         if (user == null)
             return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.NOT_FOUND);
         UserProfileResponsePojo userDtO = toModelDTO(user);
-        ApiResponse<List<WalletAccount>> walletResponse = walletProxy.getUsersWallet(user.getId());
-        if (walletResponse != null) {
-            UserWalletPojo userWalletPojo = new UserWalletPojo(userDtO, walletResponse.getData(),
-                    walletResponse.getMessage());
-            return new ResponseEntity<>(new SuccessResponse("User info fetched", userWalletPojo), HttpStatus.OK);
+        if (userDtO != null) {
+            return new ResponseEntity<>(new SuccessResponse("User info fetched", userDtO), HttpStatus.OK);
         }
-        return new ResponseEntity<>(new ErrorResponse(), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ErrorResponse("Account information is not Existing"), HttpStatus.BAD_REQUEST);
     }
 
     @Override
-    public ResponseEntity<?> getUserAndWalletByUserId(Long id) {
+    public ResponseEntity<?> getUserInfoByUserIdForServiceConsumption(Long id) {
         Users user = usersRepository.findById(false, id).orElse(null);
         if (user == null)
             return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.NOT_FOUND);
         UserProfileResponsePojo userDtO = toModelDTO(user);
-        ApiResponse<List<WalletAccount>> walletResponse = walletProxy.getUsersWallet(user.getId());
-        if (walletResponse != null) {
-            UserWalletPojo userWalletPojo = new UserWalletPojo(userDtO, walletResponse.getData(),
-                    walletResponse.getMessage());
-            return new ResponseEntity<>(new SuccessResponse("User info fetched", userWalletPojo), HttpStatus.OK);
+        if (userDtO != null) {
+            return new ResponseEntity<>(new SuccessResponse("User info fetched", userDtO), HttpStatus.OK);
         }
-        return new ResponseEntity<>(new ErrorResponse(), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ErrorResponse("Account information is not Existing"), HttpStatus.BAD_REQUEST);
     }
 
     @Override
@@ -598,7 +591,9 @@ public class UserServiceImpl implements UserService {
                 Users regUser = usersRepository.save(user);
                 if (regUser == null)
                     continue;
-                this.authService.createPrivateUser(regUser, getBaseUrl(request));
+
+                String token = this.authService.generateToken(authenticatedUserFacade.getUser());
+                this.authService.createPrivateUser(mUser, regUser.getId(), token, getBaseUrl(request));
                 CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
                 ++count;
             }

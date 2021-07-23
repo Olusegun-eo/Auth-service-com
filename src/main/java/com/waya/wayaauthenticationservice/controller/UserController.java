@@ -68,25 +68,25 @@ public class UserController {
         return userService.getUserByPhone(phone);
     }
 
-    @ApiOperation(value = "Get User and Wallet Details by Phone (In-app use only)", tags = {"USER SERVICE"})
+    @ApiOperation(value = "Get User by Phone (In-app use only)", tags = {"USER SERVICE"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("walletByPhone")
-    public ResponseEntity<?> getUserAndWalletByPhone(@RequestParam("phone") String phone) {
-        return userService.getUserAndWalletByPhoneOrEmail(phone.trim());
+    public ResponseEntity<?> getUserByPhoneForService(@RequestParam("phone") String phone) {
+        return userService.getUserInfoByPhoneOrEmailForServiceConsumption(phone.trim());
     }
 
-    @ApiOperation(value = "Get User and Wallet Details by Email (In-app use only)", tags = {"USER SERVICE"})
+    @ApiOperation(value = "Get User by Email (In-app use only)", tags = {"USER SERVICE"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("walletByEmail")
-    public ResponseEntity<?> getUserAndWalletByEmail(@RequestParam("email") String email) {
-        return userService.getUserAndWalletByPhoneOrEmail(email.trim());
+    public ResponseEntity<?> getUserByEmailForService(@RequestParam("email") String email) {
+        return userService.getUserInfoByPhoneOrEmailForServiceConsumption(email.trim());
     }
 
-    @ApiOperation(value = "Get User and Wallet Details by UserId (In-app use only)", tags = {"USER SERVICE"})
+    @ApiOperation(value = "Get User Details by UserId (In-app use only)", tags = {"USER SERVICE"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("walletByUserId")
-    public ResponseEntity<?> getUserAndWalletById(@RequestParam("id") Long userId) {
-        return userService.getUserAndWalletByUserId(userId);
+    public ResponseEntity<?> getUserByIdForService(@RequestParam("id") Long userId) {
+        return userService.getUserInfoByUserIdForServiceConsumption(userId);
     }
 
     @ApiOperation(value = "Phone Contact check  (Service consumption only. Do not Use)", tags = {"USER SERVICE"})

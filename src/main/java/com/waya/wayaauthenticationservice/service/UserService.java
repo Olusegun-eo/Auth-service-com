@@ -48,9 +48,9 @@ public interface UserService {
 
 	Page<Users> getAllUsers(int page, int size);
 
-	ResponseEntity<?> getUserAndWalletByPhoneOrEmail(String phone);
+	ResponseEntity<?> getUserInfoByPhoneOrEmailForServiceConsumption(String phone);
 
-	ResponseEntity<?> getUserAndWalletByUserId(Long id);
+	ResponseEntity<?> getUserInfoByUserIdForServiceConsumption(Long id);
 
 	ResponseEntity<?> createUsers(@Valid BulkCorporateUserCreationDTO userList, HttpServletRequest request, Device device);
 

@@ -88,17 +88,20 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public ResponseEntity<?> createUser(@Valid BaseUserPojo userPojo, HttpServletRequest request, Device device) {
+    public ResponseEntity<?> createUser(@Valid BaseUserPojo userPojo,
+                                        HttpServletRequest request, Device device) {
         return authenticationService.createUser(userPojo, request, device, true);
     }
 
     @Override
-    public ResponseEntity<?> createUser(@Valid CorporateUserPojo userPojo, HttpServletRequest request, Device device) {
+    public ResponseEntity<?> createUser(@Valid CorporateUserPojo userPojo,
+                                        HttpServletRequest request, Device device) {
         return authenticationService.createCorporateUser(userPojo, request, device, true);
     }
 
     @Override
-    public ResponseEntity<?> createBulkUser(MultipartFile file, boolean isCorporate, HttpServletRequest request, Device device) {
+    public ResponseEntity<?> createBulkUser(MultipartFile file, boolean isCorporate,
+                                            HttpServletRequest request, Device device) {
         String message;
         if (ExcelHelper.hasExcelFormat(file)) {
             ResponseEntity<?> responseEntity;

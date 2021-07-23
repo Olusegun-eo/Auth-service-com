@@ -1,15 +1,25 @@
 package com.waya.wayaauthenticationservice.pojo.userDTO;
 
-import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+import com.waya.wayaauthenticationservice.enums.Gender;
+import com.waya.wayaauthenticationservice.enums.Type;
+import com.waya.wayaauthenticationservice.util.CustomValidator;
+import com.waya.wayaauthenticationservice.util.EnumValue;
+import com.waya.wayaauthenticationservice.util.ValidPhone;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.time.LocalDate;
+import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.waya.wayaauthenticationservice.util.CustomValidator;
-import com.waya.wayaauthenticationservice.enums.Type;
-import com.waya.wayaauthenticationservice.util.ValidPhone;
+import static com.waya.wayaauthenticationservice.enums.Gender.MALE;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BaseUserPojo {
@@ -40,6 +50,17 @@ public class BaseUserPojo {
 	private String password;
 
 	private boolean isAdmin = false;
+
+	@JsonIgnore
+	private boolean isWayaAdmin = false;
+
+	@JsonDeserialize(using = LocalDateDeserializer.class)
+	@JsonSerialize(using = LocalDateSerializer.class)
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+	private LocalDate dateOfBirth = LocalDate.now();
+
+	@EnumValue(enumClass = Gender.class)
+	private String gender = MALE.name();
 
 	public String getEmail() {
 		return email;
@@ -95,6 +116,30 @@ public class BaseUserPojo {
 
 	public void setAdmin(boolean admin) {
 		isAdmin = admin;
+	}
+
+	public boolean isWayaAdmin() {
+		return isWayaAdmin;
+	}
+
+	public void setWayaAdmin(boolean wayaAdmin) {
+		isWayaAdmin = wayaAdmin;
+	}
+
+	public LocalDate getDateOfBirth() {
+		return dateOfBirth;
+	}
+
+	public void setDateOfBirth(LocalDate dateOfBirth) {
+		this.dateOfBirth = dateOfBirth;
+	}
+
+	public String getGender() {
+		return gender;
+	}
+
+	public void setGender(String gender) {
+		this.gender = gender;
 	}
 
 	@Override

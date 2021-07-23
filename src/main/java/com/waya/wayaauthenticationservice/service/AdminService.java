@@ -31,4 +31,6 @@ public interface AdminService {
     ResponseEntity<?> verifyAdminOTP(Integer otp);
 
     ResponseEntity<?> manageUserRole(Long userId, boolean add, String roleName);
+
+    //ResponseEntity<?> createWayaUser(BaseUserPojo userPojo, HttpServletRequest request, Device device);
 }
