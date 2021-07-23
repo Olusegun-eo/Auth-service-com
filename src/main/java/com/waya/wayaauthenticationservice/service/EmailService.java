@@ -3,7 +3,6 @@ package com.waya.wayaauthenticationservice.service;
 import com.waya.wayaauthenticationservice.entity.OTPBase;
 import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.enums.OTPRequestType;
-import com.waya.wayaauthenticationservice.response.EmailVerificationResponse;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
 
 import javax.validation.Valid;
@@ -16,4 +15,6 @@ public interface EmailService {
     OTPVerificationResponse verifyEmailToken(@Valid @Email String email, Integer otp, OTPRequestType otpRequestType);
 
     OTPBase generateEmailToken(@Valid @Email String email, OTPRequestType otpRequestType);
+
+    void invalidateOldToken(String email, OTPRequestType otpRequestType);
 }

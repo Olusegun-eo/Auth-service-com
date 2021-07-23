@@ -1,18 +1,16 @@
 package com.waya.wayaauthenticationservice.service;
 
-import java.io.ByteArrayInputStream;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import java.io.ByteArrayInputStream;
 
 public interface AdminService {
 
@@ -28,4 +26,7 @@ public interface AdminService {
 
     ByteArrayInputStream createExcelSheet(boolean isCorporate);
 
+    ResponseEntity<?> sendAdminOTP();
+
+    ResponseEntity<?> verifyAdminOTP(Integer otp);
 }

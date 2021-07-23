@@ -180,6 +180,22 @@ public class AdminController {
                 "profile updated successfully", true), HttpStatus.CREATED);
     }
 
+    @ApiOperation(value = "Send OTP to email and phoneNumber for Waya Account Viewing",
+            notes = "Send OTP to email and phoneNumber for Waya Account Viewing", tags = {"ADMIN"})
+    @GetMapping("/authenticate-waya/otp-send")
+    @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN')")
+    public ResponseEntity<?> sendAdminOTP() {
+        return adminService.sendAdminOTP();
+    }
+
+    @ApiOperation(value = "Send OTP to email and phoneNumber for Waya Account Viewing",
+            notes = "Send OTP to email and phoneNumber for Waya Account Viewing", tags = {"ADMIN"})
+    @PostMapping("/authenticate-waya/otp-verify/{otp}")
+    @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN')")
+    public ResponseEntity<?> verifyAdminOTP(@PathVariable Integer otp) {
+        return adminService.verifyAdminOTP(otp);
+    }
+
     public  ResponseEntity<?> deactivateUserAccount(){
 
         return new ResponseEntity<>(null, HttpStatus.OK);

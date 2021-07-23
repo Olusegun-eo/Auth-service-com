@@ -118,4 +118,18 @@ public class SMSTokenServiceImpl implements SMSTokenService {
         }
     }
 
+    /**
+     * verify opt and cache result
+     *
+     * @param phoneNumber phone number
+     * @param otpRequestType  OTPRequestType
+     * @return void
+     */
+    @Override
+    public void invalidateOldToken(String phoneNumber, OTPRequestType otpRequestType){
+        //update previous token expiry dates and isValid fields
+        LocalDateTime newExpiryDate = LocalDateTime.now().minusHours(1);
+        otpRepository.invalidatePreviousRecords(phoneNumber, newExpiryDate, false, String.valueOf(otpRequestType));
+    }
+
 }

@@ -18,8 +18,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static com.waya.wayaauthenticationservice.util.Constant.EMAIL_VERIFICATION_MSG;
-import static com.waya.wayaauthenticationservice.util.Constant.EMAIL_VERIFICATION_MSG_ERROR;
+import static com.waya.wayaauthenticationservice.util.Constant.*;
 import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateCode;
 
 @Service
@@ -77,7 +76,7 @@ public class EmailServiceImpl implements EmailService {
                 if (token.isValid()) {
                     LocalDateTime newTokenExpiryDate = token.getExpiryDate().minusHours(2);
                     otpRepository.updateTokenForEmail(email, token.getId(), newTokenExpiryDate, false, String.valueOf(otpRequestType));
-                    return new OTPVerificationResponse(true, EMAIL_VERIFICATION_MSG);
+                    return new OTPVerificationResponse(true, OTP_SUCCESS_MESSAGE);
                 } else {
                     return new OTPVerificationResponse(false, EMAIL_VERIFICATION_MSG_ERROR);
                 }
@@ -112,6 +111,13 @@ public class EmailServiceImpl implements EmailService {
         otpRepository.invalidatePreviousRecordsViaEmail(email, newExpiryDate, false, String.valueOf(otpRequestType));
         otp = otpRepository.save(otp);
         return otp;
+    }
+
+    @Override
+    public void invalidateOldToken(String email, OTPRequestType otpRequestType){
+        //update previous otp expiry dates and isValid fields
+        LocalDateTime newExpiryDate = LocalDateTime.now().minusHours(12);
+        otpRepository.invalidatePreviousRecordsViaEmail(email, newExpiryDate, false, String.valueOf(otpRequestType));
     }
 
 }
