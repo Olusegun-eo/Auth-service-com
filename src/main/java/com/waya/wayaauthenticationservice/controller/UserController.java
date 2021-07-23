@@ -9,7 +9,6 @@ import com.waya.wayaauthenticationservice.service.UserService;
 import io.swagger.annotations.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -45,7 +44,7 @@ public class UserController {
         return dao.findAll();
     }
 
-    @ApiOperation(value = "Get User Details and Roles by ID from Redis (In-app use only)", tags = {"USER SERVICE"})
+    @ApiOperation(value = "Get User Details and Roles by ID (In-app use only)", tags = {"USER SERVICE"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/{id}")
     @PreAuthorize(value = "@userSecurity.useHierarchy(#id, authentication)")
@@ -98,7 +97,7 @@ public class UserController {
         return userService.wayaContactCheck(contacts);
     }
 
-    @ApiOperation(value = "Get my Info change", notes = "This endpointis used by logged in users to fetch their info", tags = {
+    @ApiOperation(value = "Get my Info change", notes = "This endpoint is used by logged in users to fetch their info", tags = {
             "USER SERVICE"})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
@@ -126,7 +125,7 @@ public class UserController {
         return userService.unDeleteUser(id);
     }
 
-    @ApiOperation(value = "Edit User Details", notes = "This endpoint is used update user details", tags = {
+    @ApiOperation(value = "Edit User Role Details (Service consumption only. Do not Use)", notes = "This endpoint is used update user details", tags = {
             "USER SERVICE"})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
