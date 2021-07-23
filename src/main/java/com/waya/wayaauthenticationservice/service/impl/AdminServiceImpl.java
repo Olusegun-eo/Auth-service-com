@@ -27,6 +27,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,6 +40,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static com.waya.wayaauthenticationservice.enums.OTPRequestType.ADMIN_VERIFICATION;
+import static com.waya.wayaauthenticationservice.util.HelperUtils.generateRandomPassword;
 
 
 @Service
@@ -65,6 +67,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Autowired
     SMSTokenService smsTokenService;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     @Autowired
     MailService mailService;
@@ -180,15 +185,16 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<?> manageUserRole(Long userId, boolean add, String roleName) {
-        Users user = userRepository.findById(false, userId).orElseThrow(() ->
-                new CustomException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage(), HttpStatus.NOT_FOUND));
         try {
+            Users user = userRepository.findById(false, userId).orElseThrow(() ->
+                    new CustomException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage(), HttpStatus.NOT_FOUND));
+
             Optional<Role> mRole = rolesRepository.findByName(roleName);
             if (mRole.isPresent()) {
-                if(add){
+                if (add) {
                     if (!user.getRoleList().contains(mRole.get()))
                         user.getRoleList().add(mRole.get());
-                }else{
+                } else {
                     if (user.getRoleList().contains(mRole.get()))
                         user.getRoleList().remove(mRole.get());
                 }
@@ -197,7 +203,30 @@ public class AdminServiceImpl implements AdminService {
             return new ResponseEntity<>(new SuccessResponse("User Roles Updated", null), HttpStatus.OK);
         } catch (Exception e) {
             log.error("An Error has Occurred :: {}", e.getMessage());
-            throw new CustomException("An Error Occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new CustomException("An Error Occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> manageUserPass(Long userId) {
+        try {
+            Users user = userRepository.findById(false, userId).orElseThrow(() ->
+                    new CustomException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage(), HttpStatus.NOT_FOUND));
+
+            Users adminUser = authenticatedUserFacade.getUser();
+            if (adminUser == null)
+                throw new CustomException("Error in Fetching Admin User", HttpStatus.INTERNAL_SERVER_ERROR);
+            String newPassword = generateRandomPassword();
+            user.setPassword(passwordEncoder.encode(newPassword));
+            user.setAccountStatus(-1);
+            userRepository.save(user);
+
+            CompletableFuture.runAsync(() -> this.authenticationService.sendEmailNewPassword(newPassword, user.getEmail(), user.getFirstName()));
+
+            return new ResponseEntity<>(new SuccessResponse("User Password Reset Completed", null), HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("An Error has Occurred :: {}", e.getMessage());
+            throw new CustomException("An Error Occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

@@ -190,7 +190,6 @@ public class AdminController {
     @ApiOperation(value = "Send OTP to email and phoneNumber for Waya Account Viewing",
             notes = "Send OTP to email and phoneNumber for Waya Account Viewing", tags = {"ADMIN"})
     @GetMapping("/authenticate-waya/otp-send")
-    @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN')")
     public ResponseEntity<?> sendAdminOTP() {
         return adminService.sendAdminOTP();
     }
@@ -198,7 +197,6 @@ public class AdminController {
     @ApiOperation(value = "Send OTP to email and phoneNumber for Waya Account Viewing",
             notes = "Send OTP to email and phoneNumber for Waya Account Viewing", tags = {"ADMIN"})
     @PostMapping("/authenticate-waya/otp-verify/{otp}")
-    @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN')")
     public ResponseEntity<?> verifyAdminOTP(@PathVariable Integer otp) {
         return adminService.verifyAdminOTP(otp);
     }
@@ -214,6 +212,13 @@ public class AdminController {
         return adminService.manageUserRole(userId, add, roleName);
     }
 
+    @ApiOperation(value = "Manage and Reset Users Password",
+            notes = "To Alter Password of a User", tags = {"ADMIN"})
+    @PostMapping("/reset/{userId}/password")
+    @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN')")
+    public ResponseEntity<?> manageUserPass(@PathVariable Long userId) {
+        return adminService.manageUserPass(userId);
+    }
 
     public  ResponseEntity<?> deactivateUserAccount(){
 

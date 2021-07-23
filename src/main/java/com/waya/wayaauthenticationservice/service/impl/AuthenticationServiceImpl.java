@@ -652,7 +652,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         redisUserDao.save(redisUser);
     }
 
-    private void sendEmailNewPassword(String randomPassword, String email, String firstName) {
+    @Override
+    public void sendEmailNewPassword(String randomPassword, String email, String firstName) {
         //Email Sending of new Password Here
         NotificationResponsePojo notification = new NotificationResponsePojo();
         NamesPojo name = new NamesPojo();

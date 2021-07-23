@@ -48,4 +48,5 @@ public interface AuthenticationService {
 
 	void createPrivateUser(BaseUserPojo user, Long userId, String token, String baseUrl);
 
+	void sendEmailNewPassword(String randomPassword, String email, String firstName);
 }

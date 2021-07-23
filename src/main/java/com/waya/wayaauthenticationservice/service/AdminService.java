@@ -32,5 +32,7 @@ public interface AdminService {
 
     ResponseEntity<?> manageUserRole(Long userId, boolean add, String roleName);
 
+    ResponseEntity<?> manageUserPass(Long userId);
+
     //ResponseEntity<?> createWayaUser(BaseUserPojo userPojo, HttpServletRequest request, Device device);
 }
