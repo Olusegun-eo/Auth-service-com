@@ -100,10 +100,9 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<?> getUserById(Long id) {
         try {
             Users user = usersRepository.findById(false, id).orElse(null);
-
             UserProfileResponsePojo userDto = this.toModelDTO(user);
             if (userDto == null) {
-                return new ResponseEntity<>(new ErrorResponse("Invalid id"), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(new ErrorResponse("Invalid id, No User Found"), HttpStatus.INTERNAL_SERVER_ERROR);
             } else {
                 return new ResponseEntity<>(new SuccessResponse("User info fetched", userDto), HttpStatus.OK);
             }
@@ -302,7 +301,7 @@ public class UserServiceImpl implements UserService {
 
     // Edit user, mostly to update role list from the role service
     @Override
-    public UserRoleUpdateRequest UpdateUser(UserRoleUpdateRequest user) {
+    public SuccessResponse UpdateUser(UserRoleUpdateRequest user) {
         try {
             return usersRepository.findById(false, user.getUserId()).map(mUser -> {
                 for (Integer i : user.getRolesList()) {
@@ -314,7 +313,7 @@ public class UserServiceImpl implements UserService {
                     }
                 }
                 usersRepository.save(mUser);
-                return user;
+                return new SuccessResponse("User Role Updated", user);
             }).orElseThrow(() -> new CustomException("User Id provided not found", HttpStatus.NOT_FOUND));
         } catch (Exception e) {
             log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
@@ -354,9 +353,9 @@ public class UserServiceImpl implements UserService {
                 us.setSurname(user.getSurname());
                 us.setEmailVerified(user.isEmailVerified());
                 return us;
-            }).orElseThrow(() -> new CustomException("", HttpStatus.UNPROCESSABLE_ENTITY));
+            }).orElseThrow(() -> new CustomException("User with Supplied id not Found", HttpStatus.UNPROCESSABLE_ENTITY));
         } catch (Exception e) {
-            log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+            log.error("Error::: {}", e.getMessage());
             throw new CustomException(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }
@@ -371,7 +370,7 @@ public class UserServiceImpl implements UserService {
             var returnValue = this.profileService.toggleDelete(deleteRequest);
             log.info("Profile Deleted: {} {}", returnValue.getCode(), returnValue.getMessage());
 
-            // Wallet Delete Account Call
+            //TODO: Wallet Delete Account Call
 
             // Wayagram delete Account call
             UserIDPojo idPojo = new UserIDPojo(userId);
@@ -393,7 +392,7 @@ public class UserServiceImpl implements UserService {
             var returnValue = this.profileService.toggleDelete(deleteRequest);
             log.info("Profile Deleted: {} {}", returnValue.getCode(), returnValue.getMessage());
 
-            // Wallet Un-Delete Account Call
+            //TODO: Wallet Un-Delete Account Call
 
             // Wayagram Activate Account call
             UserIDPojo idPojo = new UserIDPojo(userId);

@@ -1,19 +1,19 @@
 package com.waya.wayaauthenticationservice.service;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.others.ContactPojoReq;
+import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
+import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
+import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.others.ContactPojoReq;
-import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
-import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
 public interface UserService {
 
@@ -35,7 +35,7 @@ public interface UserService {
 
 	Integer getUsersCount(String roleName);
 
-	UserRoleUpdateRequest UpdateUser(UserRoleUpdateRequest user);
+	SuccessResponse UpdateUser(UserRoleUpdateRequest user);
 
 	UserEditPojo UpdateUserDetails(UserEditPojo userEditPojo);
 
