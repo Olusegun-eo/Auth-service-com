@@ -30,23 +30,23 @@ public class BaseUserPojo {
 
 	@NotBlank(message = "Phone Number Cannot be blank")
 	@ValidPhone
-	@CustomValidator(message = "Phone Number must be 13 characters", type = Type.SIZE, min = 13, max = 13)
+	@CustomValidator(message = "Phone Number must be {max} characters", type = Type.SIZE, min = 13, max = 13)
 	private String phoneNumber;
 
 	private String referenceCode;
 
 	@NotNull(message = "First Name Cannot be Null")
-	@CustomValidator(message = "First Name must be at least 2 characters", type = Type.SIZE, min = 2)
+	@CustomValidator(message = "First Name must be at least {min} characters", type = Type.SIZE, min = 2)
 	@CustomValidator(message = "First Name cannot Contain Non Alphabets", type = Type.TEXT_STRING)
 	private String firstName;
 
 	@NotNull(message = "SurName Cannot be Null")
-	@Size(min = 2, message = "SurName must be at least 2 characters")
+	@Size(min = 2, message = "SurName must be at least {min} characters")
 	@CustomValidator(message = "SurName cannot Contain Non Alphabets", type = Type.TEXT_STRING)
 	private String surname;
 
 	@NotNull(message = "Password Cannot be null")
-	@Size(min = 8, message = "Password must be at least 8 characters Long")
+	@Size(min = 8, message = "Password must be at least {min} characters Long")
 	private String password;
 
 	private boolean isAdmin = false;
@@ -59,7 +59,7 @@ public class BaseUserPojo {
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
 	private LocalDate dateOfBirth = LocalDate.now();
 
-	@EnumValue(enumClass = Gender.class)
+	@EnumValue(enumClass = Gender.class, message = "Must be either of type MALE or FEMALE")
 	private String gender = MALE.name();
 
 	public String getEmail() {

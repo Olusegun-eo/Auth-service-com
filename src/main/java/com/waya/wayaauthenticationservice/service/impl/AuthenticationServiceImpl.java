@@ -1,10 +1,8 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
 import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
-import com.waya.wayaauthenticationservice.entity.Profile;
-import com.waya.wayaauthenticationservice.entity.RedisUser;
-import com.waya.wayaauthenticationservice.entity.Role;
-import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.entity.*;
+import com.waya.wayaauthenticationservice.enums.WalletAccountType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
@@ -17,10 +15,7 @@ import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
-import com.waya.wayaauthenticationservice.repository.ProfileRepository;
-import com.waya.wayaauthenticationservice.repository.RedisUserDao;
-import com.waya.wayaauthenticationservice.repository.RolesRepository;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.repository.*;
 import com.waya.wayaauthenticationservice.response.ApiResponse;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
@@ -70,6 +65,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private UserRepository userRepo;
     @Autowired
     private RolesRepository rolesRepo;
+    @Autowired
+    private UserWalletRepository userWalletRepository;
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
     @Autowired
@@ -290,34 +287,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     public void createCorporateUser(CorporateUserPojo mUser, Long userId, String token, String baseUrl) {
-
         String Id = String.valueOf(userId);
-
 //        CorporateUser coopUser = mapper.map(mUser, CorporateUser.class);
 //        coopUser.setBusinessType(mUser.getBusinessType());
 //        coopUser.setPassword(passwordEncoder.encode(mUser.getPassword()));
 //        coopUser.setUserId(Id);
 //        coopUser = corporateUserRepository.save(coopUser);
-
-        CreateAccountPojo createAccount = new CreateAccountPojo();
-        createAccount.setUserId(userId);
-        // Default Debit Limit SetUp
-        createAccount.setCustDebitLimit(new BigDecimal("50000.00"));
-        // Default Account Expiration Date
-        createAccount.setCustExpIssueDate(LocalDateTime.of(2099, Month.DECEMBER, 30, 12, 50));
-        createAccount.setCustIssueId(generateRandomNumber(9));
-        createAccount.setFirstName(mUser.getFirstName());
-        createAccount.setLastName(mUser.getSurname());
-        createAccount.setEmailId(mUser.getEmail());
-        createAccount.setMobileNo(mUser.getPhoneNumber());
-        createAccount.setCustSex(mUser.getGender().substring(0, 1));
-        String custTitle = mUser.getGender().equals("MALE") ? "MR" : "MRS";
-        createAccount.setCustTitleCode(custTitle);
-        // Default Branch SOL ID
-        createAccount.setSolId("0000");
-        createAccount.setDob(mUser.getDateOfBirth());
-        CompletableFuture.runAsync(() -> walletProxy.createCorporateAccount(createAccount))
-                .thenAccept(p -> log.debug("Response from Call to Create Corporate Wallet is: {}", p));
 
         // Implementation for internal calls begin here
         CorporateProfileRequest corporateProfileRequest = new CorporateProfileRequest();
@@ -337,41 +312,59 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         ApiResponse<String> corporateResponse = profileService.createProfile(corporateProfileRequest, baseUrl);
         log.info("CorporateProfile account creation ends: " + corporateResponse);
 
+        // Create External Virtual Accounts
         VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
         virtualAccountPojo.setAccountName(mUser.getFirstName() + " " + mUser.getSurname());
         virtualAccountPojo.setUserId(String.valueOf(userId));
-
         CompletableFuture.runAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token));
+
+        // Create Internal Wallet Accounts and Save the AccountNumber
+        CreateAccountPojo createAccount = formAccountCreationPojo(userId, mUser);
+        CompletableFuture.supplyAsync(() -> walletProxy.createCorporateAccount(createAccount))
+                .thenAccept(p -> {
+                    try{
+                        log.info("Response from Call to Create Corporate Wallet is: {}", p.getBody().getData());
+                        Users savedUser = userRepo.getOne(userId);
+                        UserWallet wallet = UserWallet.builder()
+                                .accountName(savedUser.getName())
+                                .accountId(p.getBody().getData().getId())
+                                .accountNumber(p.getBody().getData().getAccountNo())
+                                .accountType(WalletAccountType.INTERNAL)
+                                .user(savedUser).build();
+                        userWalletRepository.save(wallet);
+                    }catch(Exception ex){
+                        log.error("An error Occurred while processing :: {}", ex.getMessage());
+                    }
+                });
     }
 
     public void createPrivateUser(BaseUserPojo user, Long userId, String token, String baseUrl) {
         String id = String.valueOf(userId);
 
+        // Create External Virtual Accounts
         VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
         virtualAccountPojo.setAccountName(user.getFirstName() + " " + user.getSurname());
         virtualAccountPojo.setUserId(id);
-
         CompletableFuture.runAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token));
 
-        CreateAccountPojo createAccount = new CreateAccountPojo();
-        createAccount.setUserId(userId);
-        // Default Debit Limit SetUp
-        createAccount.setCustDebitLimit(new BigDecimal("50000.00"));
-        // Default Account Expiration Date
-        createAccount.setCustExpIssueDate(LocalDateTime.of(2099, Month.DECEMBER, 30, 12, 50));
-        createAccount.setCustIssueId(generateRandomNumber(9));
-        createAccount.setFirstName(user.getFirstName());
-        createAccount.setLastName(user.getSurname());
-        createAccount.setEmailId(user.getEmail());
-        createAccount.setMobileNo(user.getPhoneNumber());
-        createAccount.setCustSex(user.getGender().substring(0, 1));
-        String custTitle = user.getGender().equals("MALE") ? "MR" : "MRS";
-        createAccount.setCustTitleCode(custTitle);
-        // Default Branch SOL ID
-        createAccount.setSolId("0000");
-        createAccount.setDob(user.getDateOfBirth());
-        CompletableFuture.runAsync(() -> walletProxy.createUserAccount(createAccount))
-                .thenAccept(p -> log.debug("Response from Call to Create Private User Wallet is: {}", p));
+        // Create Internal Wallet Accounts
+        CreateAccountPojo createAccount = formAccountCreationPojo(userId, user);
+        CompletableFuture.supplyAsync(() -> walletProxy.createUserAccount(createAccount))
+            .thenAccept(p -> {
+                try{
+                    log.info("Response from Call to Create Private User Wallet is: {}", p.getBody().getData());
+                    Users savedUser = userRepo.getOne(userId);
+                    UserWallet wallet = UserWallet.builder()
+                            .accountName(savedUser.getName())
+                            .accountId(p.getBody().getData().getId())
+                            .accountNumber(p.getBody().getData().getAccountNo())
+                            .accountType(WalletAccountType.INTERNAL)
+                            .user(savedUser).build();
+                    userWalletRepository.save(wallet);
+                }catch(Exception ex){
+                    log.error("An error Occurred while processing :: {}", ex.getMessage());
+                }
+            });
 
         PersonalProfileRequest personalProfileRequest = new PersonalProfileRequest();
         personalProfileRequest.setEmail(user.getEmail());
@@ -671,6 +664,30 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         notification.setEventType("EMAIL");
         notification.setInitiator(email);
         CompletableFuture.runAsync(() -> notificationProxy.sendEmail(notification));
+    }
+
+    private CreateAccountPojo formAccountCreationPojo(Long userId, BaseUserPojo mUser){
+        CreateAccountPojo createAccount = new CreateAccountPojo();
+
+        // Default Debit Limit SetUp
+        createAccount.setCustDebitLimit(new BigDecimal("50000.00"));
+        // Default Account Expiration Date
+        createAccount.setCustExpIssueDate(LocalDateTime.of(2099, Month.DECEMBER, 30, 12, 50));
+
+        createAccount.setUserId(userId);
+        createAccount.setCustIssueId(generateRandomNumber(9));
+        createAccount.setFirstName(mUser.getFirstName());
+        createAccount.setLastName(mUser.getSurname());
+        createAccount.setEmailId(mUser.getEmail());
+        createAccount.setMobileNo(mUser.getPhoneNumber());
+        createAccount.setCustSex(mUser.getGender().substring(0, 1));
+        String custTitle = mUser.getGender().equals("MALE") ? "MR" : "MRS";
+        createAccount.setCustTitleCode(custTitle);
+        createAccount.setDob(mUser.getDateOfBirth());
+        // Default Branch SOL ID
+        createAccount.setSolId("0000");
+
+        return createAccount;
     }
 
 }

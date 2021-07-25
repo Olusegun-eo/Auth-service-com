@@ -1,33 +1,18 @@
 package com.waya.wayaauthenticationservice.entity;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Objects;
-
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-import javax.validation.constraints.NotNull;
-
-import org.hibernate.annotations.CreationTimestamp;
-
 import com.waya.wayaauthenticationservice.model.AuthProvider;
-
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.ToString;
+import org.hibernate.annotations.CreationTimestamp;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 
 @Data
 @Entity
@@ -134,9 +119,16 @@ public class Users extends AuditModel implements Serializable {
     @Column(name = "password_never_expires", nullable = false)
     private boolean passwordNeverExpires;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.MERGE )
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "m_users_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private Collection<Role> roleList;
+
+    // The 'mappedBy = "user"' attribute specifies that
+    // the 'private Users user;' field in UserWallet owns the
+    // relationship (i.e. contains the foreign key for the query to
+    // find all userWallets for a user.)
+    @OneToMany(mappedBy = "user")
+    private List<UserWallet> userAccounts;
 
     @CreationTimestamp
     @ApiModelProperty(hidden = true)

@@ -9,6 +9,6 @@ import lombok.*;
 @ToString
 public class CreateAccountResponse {
 
-	private Long id;
-    private String accountNo;
+	private String id = "";
+    private String accountNo = "";
 }

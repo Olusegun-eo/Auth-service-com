@@ -13,6 +13,7 @@ import com.waya.wayaauthenticationservice.pojo.notification.NotificationResponse
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.pojo.userDTO.*;
 import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
+import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
@@ -71,12 +72,8 @@ public class UserServiceImpl implements UserService {
     private RolesRepository rolesRepo;
     @Autowired
     private WalletProxy walletProxy;
-
-    /*
-     * @Autowired private RestTemplate restClient;
-     * @Autowired private ApplicationConfig applicationConfig;
-     */
-
+    @Autowired
+    VirtualAccountProxy virtualAccountProxy;
     @Autowired
     private ReqIPUtils reqUtil;
     @Autowired
@@ -234,6 +231,14 @@ public class UserServiceImpl implements UserService {
 
             // Deactivates other Services tied to the UserId
             String token = this.authService.generateToken(authenticatedUserFacade.getUser());
+
+            // Delete Virtual Account Call
+            CompletableFuture.runAsync(() -> virtualAccountProxy.deleteAccountByUserId(id, token));
+
+            //TODO: Internal Wallet Delete Account Call
+            // Waiting on Emmanuel Njoku to provide API for this Service
+
+            // Disables User Profile and Wayagram Services
             CompletableFuture.runAsync(() -> disableUserProfile(String.valueOf(user.getId()), token))
                     .thenApply(v -> usersRepository.saveAndFlush(user));
 
@@ -362,8 +367,6 @@ public class UserServiceImpl implements UserService {
                     .build();
             var returnValue = this.profileService.toggleDelete(deleteRequest);
             log.info("Profile Deleted: {} {}", returnValue.getCode(), returnValue.getMessage());
-
-            //TODO: Wallet Delete Account Call
 
             // Wayagram delete Account call
             UserIDPojo idPojo = new UserIDPojo(userId);
