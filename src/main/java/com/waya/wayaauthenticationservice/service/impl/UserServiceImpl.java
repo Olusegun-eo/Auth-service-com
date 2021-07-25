@@ -240,7 +240,7 @@ public class UserServiceImpl implements UserService {
 
             // Disables User Profile and Wayagram Services
             CompletableFuture.runAsync(() -> disableUserProfile(String.valueOf(user.getId()), token))
-                    .thenApply(v -> usersRepository.saveAndFlush(user));
+                    .thenRun(() -> usersRepository.saveAndFlush(user));
 
             return new ResponseEntity<>(new SuccessResponse("Account deleted", OK), OK);
         } catch (Exception e) {
@@ -263,12 +263,32 @@ public class UserServiceImpl implements UserService {
             // Reactivates other Services tied to the UserId
             String token = this.authService.generateToken(authenticatedUserFacade.getUser());
             CompletableFuture.runAsync(() -> enableUserProfile(String.valueOf(user.getId()), token))
-                    .thenApply(v -> usersRepository.saveAndFlush(user));
+                    .thenRun(() -> usersRepository.saveAndFlush(user));
 
             return new ResponseEntity<>(new SuccessResponse("Account Undeleted", OK), OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @Override
+    public ResponseEntity<?> deactivateAccounts(BulkPrivateUserCreationDTO bulkUpload) {
+        if(bulkUpload != null && !bulkUpload.getUsersList().isEmpty()){
+            try{
+                bulkUpload.getUsersList().forEach(user -> {
+                    Users dbUser = usersRepository.findByEmailIgnoreCase(user.getEmail()).orElse(null);
+                    if(dbUser != null && dbUser.isActive()){
+                        dbUser.setActive(false);
+                        usersRepository.saveAndFlush(dbUser);
+                    }
+                });
+                return new ResponseEntity<>(new SuccessResponse("Accounts Deactivated", OK), OK);
+            }catch(Exception e){
+                log.error("An Exception Occurred :: {}", e.getMessage());
+                return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+            }
+        }
+        return new ResponseEntity<>(new ErrorResponse("Excel contains no Data"), HttpStatus.BAD_REQUEST);
     }
 
     public ResponseEntity<?> isUserAdmin(Long userId) {

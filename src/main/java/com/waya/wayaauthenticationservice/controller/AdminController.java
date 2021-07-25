@@ -220,6 +220,29 @@ public class AdminController {
         return adminService.manageUserPass(userId);
     }
 
+    @ApiOperation(value = "Download Template for Bulk User Deactivation ", tags = {"ADMIN"})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
+    @GetMapping("/deactivation/download/bulk-user-excel")
+    public ResponseEntity<Resource> getFile() {
+        String filename = "bulk-user-excel.xlsx";
+        InputStreamResource file = new InputStreamResource(adminService.createDeactivationExcelSheet());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                //.contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(file);
+    }
+
+    @ApiOperation(value = "Deactivate Users via Excel Upload",
+            notes = "To deactivate bulk accounts via excel upload", tags = {"ADMIN"})
+    @PostMapping(path = "/deactivation/bulk-account",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN')")
+    public ResponseEntity<?> bulkDeactivation(@RequestPart("file") MultipartFile file) {
+        return adminService.bulkDeactivation(file);
+    }
+
     public  ResponseEntity<?> deactivateUserAccount(){
 
         return new ResponseEntity<>(null, HttpStatus.OK);
@@ -229,6 +252,7 @@ public class AdminController {
 
         return new ResponseEntity<>(null, HttpStatus.OK);
     }
+
     public  ResponseEntity<?> signOutUser(){
 
         return new ResponseEntity<>(null, HttpStatus.OK);

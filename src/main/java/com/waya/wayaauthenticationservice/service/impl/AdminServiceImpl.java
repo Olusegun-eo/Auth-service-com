@@ -34,6 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -228,6 +229,26 @@ public class AdminServiceImpl implements AdminService {
             log.error("An Error has Occurred :: {}", e.getMessage());
             throw new CustomException("An Error Occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @Override
+    public InputStream createDeactivationExcelSheet() {
+        return ExcelHelper.createExcelSheet(ExcelHelper.PRIVATE_USER_HEADERS);
+    }
+
+    @Override
+    public ResponseEntity<?> bulkDeactivation(MultipartFile file) {
+        String message;
+        if (ExcelHelper.hasExcelFormat(file)) {
+            try {
+                return userService.deactivateAccounts(ExcelHelper.excelToPrivateUserPojo(file.getInputStream(),
+                            file.getOriginalFilename()));
+            } catch (Exception e) {
+                throw new CustomException("failed to Parse excel data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+            }
+        }
+        message = "Please upload an excel file!";
+        return new ResponseEntity<>(new ErrorResponse(message), HttpStatus.BAD_REQUEST);
     }
 
     private Integer generateEmailOTP(String email, OTPRequestType otpRequestType) {

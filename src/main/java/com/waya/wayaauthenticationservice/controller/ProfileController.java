@@ -4,7 +4,6 @@ import com.waya.wayaauthenticationservice.enums.Type;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.response.*;
 import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
 import com.waya.wayaauthenticationservice.util.CustomValidator;
 import com.waya.wayaauthenticationservice.util.ValidPhone;
 import io.swagger.annotations.ApiOperation;
@@ -23,7 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_400;
@@ -47,6 +45,7 @@ public class ProfileController {
     public ProfileController(ProfileService profileService) {
         this.profileService = profileService;
     }
+
     /**
      * endpoint to get a users profile
      *
@@ -144,7 +143,8 @@ public class ProfileController {
      */
     @ApiOperation(
             value = "${api.corporate-profile.update-corporate-profile.description}",
-            notes = "${api.corporate-profile.update-corporate-profile.notes}", tags = {"PROFILE RESOURCE"})
+            notes = "${api.corporate-profile.update-corporate-profile.notes}",
+            tags = {"PROFILE RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)

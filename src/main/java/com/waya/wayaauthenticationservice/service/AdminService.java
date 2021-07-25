@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 
 public interface AdminService {
 
@@ -33,6 +34,10 @@ public interface AdminService {
     ResponseEntity<?> manageUserRole(Long userId, boolean add, String roleName);
 
     ResponseEntity<?> manageUserPass(Long userId);
+
+    InputStream createDeactivationExcelSheet();
+
+    ResponseEntity<?> bulkDeactivation(MultipartFile file);
 
     //ResponseEntity<?> createWayaUser(BaseUserPojo userPojo, HttpServletRequest request, Device device);
 }
