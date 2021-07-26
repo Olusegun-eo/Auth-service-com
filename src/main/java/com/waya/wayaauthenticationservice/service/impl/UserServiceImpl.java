@@ -240,7 +240,7 @@ public class UserServiceImpl implements UserService {
 
             List<WalletAccount> wallets = fetchUsersWallet(userId, token).get();
             BigDecimal clrBalAmt = new BigDecimal("0.00");
-            wallets.stream().forEach(account -> {
+            wallets.stream().filter(account -> !account.isAcctClsFlg()).forEach(account -> {
                 clrBalAmt.add(account.getClrBalAmt());
             });
             int moreOrNegativeBalance = clrBalAmt.compareTo(new BigDecimal("0.00"));
@@ -296,7 +296,7 @@ public class UserServiceImpl implements UserService {
 
     private void deleteUserWallet(Long userId, String token) {
         fetchUsersWallet(userId, token).thenAccept(p -> {
-            p.forEach(account -> {
+            p.stream().filter(account -> !account.isAcctClsFlg()).forEach(account -> {
                 WalletAccessPojo pojo = new WalletAccessPojo();
                 pojo.setAcctClosed(true);
                 pojo.setFreezCode("");
