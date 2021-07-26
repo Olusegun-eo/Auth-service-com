@@ -133,7 +133,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
             roleList.add(userRole);
 
-            if (mUser.isAdmin()) {
+            if (mUser.isAdmin() && adminAction) {
                 Role adminRole = rolesRepo.findByName("ROLE_APP_ADMIN")
                         .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
                 roleList.add(adminRole);
@@ -306,6 +306,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         corporateProfileRequest.setUserId(Id);
         corporateProfileRequest.setPhoneNumber(mUser.getPhoneNumber());
         corporateProfileRequest.setFirstName(mUser.getFirstName());
+        corporateProfileRequest.setGender(mUser.getGender());
+        corporateProfileRequest.setDateOfBirth(mUser.getDateOfBirth().toString());
 
         // Implementation for internal call
         log.info("CorporateProfile account creation starts: " + corporateProfileRequest);
@@ -316,7 +318,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
         virtualAccountPojo.setAccountName(mUser.getFirstName() + " " + mUser.getSurname());
         virtualAccountPojo.setUserId(String.valueOf(userId));
-        CompletableFuture.runAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token));
+        CompletableFuture.supplyAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token))
+                .thenAccept(p -> {
+                    try{
+                        log.info("Response from Call to Create Virtual Account is: {}", p.getBody().getData());
+                        Users savedUser = userRepo.getOne(userId);
+                        UserWallet wallet = UserWallet.builder()
+                                .accountName(savedUser.getName())
+                                .accountBank(p.getBody().getData().getBankName())
+                                .accountId(p.getBody().getData().getId().toString())
+                                .accountNumber(p.getBody().getData().getAccountNumber())
+                                .accountType(WalletAccountType.VIRTUAL)
+                                .user(savedUser).build();
+                        userWalletRepository.save(wallet);
+                    }catch(Exception ex){
+                        log.error("An error Occurred while processing :: {}", ex.getMessage());
+                    }
+                });
 
         // Create Internal Wallet Accounts and Save the AccountNumber
         CreateAccountPojo createAccount = formAccountCreationPojo(userId, mUser);
@@ -327,6 +345,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         Users savedUser = userRepo.getOne(userId);
                         UserWallet wallet = UserWallet.builder()
                                 .accountName(savedUser.getName())
+                                .accountBank("WAYA PAY")
                                 .accountId(p.getBody().getData().getId())
                                 .accountNumber(p.getBody().getData().getAccountNo())
                                 .accountType(WalletAccountType.INTERNAL)
@@ -341,11 +360,40 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public void createPrivateUser(BaseUserPojo user, Long userId, String token, String baseUrl) {
         String id = String.valueOf(userId);
 
+        PersonalProfileRequest personalProfileRequest = new PersonalProfileRequest();
+        personalProfileRequest.setEmail(user.getEmail());
+        personalProfileRequest.setFirstName(user.getFirstName());
+        personalProfileRequest.setPhoneNumber(user.getPhoneNumber());
+        personalProfileRequest.setSurname(user.getSurname());
+        personalProfileRequest.setUserId(id);
+        personalProfileRequest.setGender(user.getGender());
+        personalProfileRequest.setDateOfBirth(user.getDateOfBirth().toString());
+
+        log.info("PersonalProfile account creation starts: " + personalProfileRequest);
+        ApiResponse<String> personalResponse = profileService.createProfile(personalProfileRequest, baseUrl);
+        log.info("PersonalProfile account creation ends: " + personalResponse);
+
         // Create External Virtual Accounts
         VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
         virtualAccountPojo.setAccountName(user.getFirstName() + " " + user.getSurname());
         virtualAccountPojo.setUserId(id);
-        CompletableFuture.runAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token));
+        CompletableFuture.supplyAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token))
+                .thenAccept(p -> {
+                    try{
+                        log.info("Response from Call to Create Virtual Account is: {}", p.getBody().getData());
+                        Users savedUser = userRepo.getOne(userId);
+                        UserWallet wallet = UserWallet.builder()
+                                .accountName(savedUser.getName())
+                                .accountBank(p.getBody().getData().getBankName())
+                                .accountId(p.getBody().getData().getId().toString())
+                                .accountNumber(p.getBody().getData().getAccountNumber())
+                                .accountType(WalletAccountType.VIRTUAL)
+                                .user(savedUser).build();
+                        userWalletRepository.save(wallet);
+                    }catch(Exception ex){
+                        log.error("An error Occurred while processing :: {}", ex.getMessage());
+                    }
+                });
 
         // Create Internal Wallet Accounts
         CreateAccountPojo createAccount = formAccountCreationPojo(userId, user);
@@ -356,6 +404,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     Users savedUser = userRepo.getOne(userId);
                     UserWallet wallet = UserWallet.builder()
                             .accountName(savedUser.getName())
+                            .accountBank("WAYA PAY")
                             .accountId(p.getBody().getData().getId())
                             .accountNumber(p.getBody().getData().getAccountNo())
                             .accountType(WalletAccountType.INTERNAL)
@@ -365,17 +414,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     log.error("An error Occurred while processing :: {}", ex.getMessage());
                 }
             });
-
-        PersonalProfileRequest personalProfileRequest = new PersonalProfileRequest();
-        personalProfileRequest.setEmail(user.getEmail());
-        personalProfileRequest.setFirstName(user.getFirstName());
-        personalProfileRequest.setPhoneNumber(user.getPhoneNumber());
-        personalProfileRequest.setSurname(user.getSurname());
-        personalProfileRequest.setUserId(id);
-
-        log.info("PersonalProfile account creation starts: " + personalProfileRequest);
-        ApiResponse<String> personalResponse = profileService.createProfile(personalProfileRequest, baseUrl);
-        log.info("PersonalProfile account creation ends: " + personalResponse);
     }
 
     public String generateToken(Users userResponse) {
@@ -602,11 +640,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
     }
 
-    @Override
-    public ResponseEntity<?> createWalletAccount(WalletPojo walletPojo) {
-        kafkaMessageProducer.send(WALLET_ACCOUNT_TOPIC, walletPojo);
-        return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
-    }
+//    @Override
+//    public ResponseEntity<?> createWalletAccount(WalletPojo walletPojo) {
+//        kafkaMessageProducer.send(WALLET_ACCOUNT_TOPIC, walletPojo);
+//        return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
+//    }
 
     @Override
     public ResponseEntity<?> createWayagramAccount(WayagramPojo wayagramPojo) {
@@ -626,11 +664,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         ApiResponse<String> response = profileService.createProfile(profilePojo, baseUrl);
         //kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC, profilePojo2);
         return new ResponseEntity<>(new SuccessResponse(response.getData(), null), HttpStatus.OK);
-    }
-
-    public boolean pinIs4Digit(int pin) {
-        String p = String.valueOf(pin);
-        return p.length() == 4;
     }
 
     @SuppressWarnings("unused")

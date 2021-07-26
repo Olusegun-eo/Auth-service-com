@@ -20,9 +20,13 @@ public class UserWallet {
 
     private String accountNumber;
 
+    private String accountBank;
+
     private String accountName;
 
     @Enumerated(EnumType.STRING)
+    @Basic(optional = false)
+    @Column(columnDefinition = "enum('INTERNAL','VIRTUAL')")
     private WalletAccountType accountType;
 
     private String accountId;

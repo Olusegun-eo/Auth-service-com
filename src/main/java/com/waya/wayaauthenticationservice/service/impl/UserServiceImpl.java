@@ -1,10 +1,13 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.controller.UserController;
 import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
 import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.UserWallet;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
+import com.waya.wayaauthenticationservice.enums.WalletAccountType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
@@ -18,6 +21,8 @@ import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.repository.UserWalletRepository;
+import com.waya.wayaauthenticationservice.response.ApiResponse;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
@@ -41,9 +46,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -65,15 +72,17 @@ public class UserServiceImpl implements UserService {
     @Autowired
     ProfileService profileService;
     @Autowired
+    VirtualAccountProxy virtualAccountProxy;
+    @Autowired
     private UserRepository usersRepository;
+    @Autowired
+    private UserWalletRepository userWalletRepository;
     @Autowired
     private AuthenticatedUserFacade authenticatedUserFacade;
     @Autowired
     private RolesRepository rolesRepo;
     @Autowired
     private WalletProxy walletProxy;
-    @Autowired
-    VirtualAccountProxy virtualAccountProxy;
     @Autowired
     private ReqIPUtils reqUtil;
     @Autowired
@@ -220,32 +229,120 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<?> deleteUser(Long id) {
+    public ResponseEntity<?> deleteUser(Long userId) {
         try {
             //if (validateUser(token)) {
-            Users user = usersRepository.findById(false, id)
-                    .orElseThrow(() -> new CustomException("User with id " + id + " not found", HttpStatus.NOT_FOUND));
-            user.setActive(false);
-            user.setDeleted(true);
-            user.setDateOfActivation(LocalDateTime.now());
+            Users user = usersRepository.findById(false, userId)
+                    .orElseThrow(() -> new CustomException("User with id " + userId + " not found", HttpStatus.NOT_FOUND));
 
-            // Deactivates other Services tied to the UserId
+            // Generate token to use for deactivation of other Services tied to the UserId
             String token = this.authService.generateToken(authenticatedUserFacade.getUser());
 
-            // Delete Virtual Account Call
-            CompletableFuture.runAsync(() -> virtualAccountProxy.deleteAccountByUserId(id, token));
+            List<WalletAccount> wallets = fetchUsersWallet(userId, token).get();
+            BigDecimal clrBalAmt = new BigDecimal("0.00");
+            wallets.stream().forEach(account -> {
+                clrBalAmt.add(account.getClrBalAmt());
+            });
+            int moreOrNegativeBalance = clrBalAmt.compareTo(new BigDecimal("0.00"));
+            if(moreOrNegativeBalance != 0)
+                return new ResponseEntity<>(new ErrorResponse("User needs to nil off Balance in Wallet"), HttpStatus.BAD_REQUEST);
 
-            //TODO: Internal Wallet Delete Account Call
-            // Waiting on Emmanuel Njoku to provide API for this Service
-
-            // Disables User Profile and Wayagram Services
-            CompletableFuture.runAsync(() -> disableUserProfile(String.valueOf(user.getId()), token))
-                    .thenRun(() -> usersRepository.saveAndFlush(user));
+            CompletableFuture.runAsync(() -> deactivationServices(user, token));
 
             return new ResponseEntity<>(new SuccessResponse("Account deleted", OK), OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         }
+    }
+
+    public void deactivationServices(Users user, String token){
+        // De-activate and Delete Existing Accounts
+        user.setActive(false);
+        user.setDeleted(true);
+        user.setDateOfActivation(LocalDateTime.now());
+
+        // Disables User Profile and Wayagram Services
+        // Delete Virtual Account Call
+        // Delete All User's Wallets
+        CompletableFuture.runAsync(() -> disableUserProfile(String.valueOf(user.getId()), token))
+                .thenRun(() -> this.deleteUsersVirtualAccount(user.getId(), token))
+                .thenRun(() ->  this.deleteUserWallet(user.getId(), token))
+                .thenRun(() -> usersRepository.saveAndFlush(user));
+    }
+
+    private CompletableFuture<List<WalletAccount>> fetchUsersWallet(Long userId, String token) {
+        return CompletableFuture.supplyAsync(() -> walletProxy.fetchUsersWallets(userId, token))
+                .orTimeout(2, TimeUnit.MINUTES)
+                .handle((res, ex) -> {
+                    if (ex != null) {
+                        log.error("Error Fetching Accounts, {}", ex.getMessage());
+                        return Collections.emptyList();
+                    }
+                    return res.getData();
+                });
+    }
+
+    private CompletableFuture<ApiResponse<WalletAccount>> modifyUserWallet(WalletAccessPojo pojo, String token) {
+        return CompletableFuture.supplyAsync(() -> walletProxy.modifyUserWallet(pojo, token))
+                .orTimeout(3, TimeUnit.MINUTES)
+                .handle((res, ex) -> {
+                    if (ex != null) {
+                        log.error("An Error has Occurred::: {}", ex.getMessage());
+                        return new ApiResponse<>(null, "An Error Occurred", false);
+                    }
+                    return res.getBody();
+                });
+    }
+
+    private void deleteUserWallet(Long userId, String token) {
+        fetchUsersWallet(userId, token).thenAccept(p -> {
+            p.forEach(account -> {
+                WalletAccessPojo pojo = new WalletAccessPojo();
+                pojo.setAcctClosed(true);
+                pojo.setFreezCode("");
+                pojo.setFreezReason("");
+                pojo.setLienAmount(new BigDecimal("0.00"));
+                pojo.setLienReason("");
+                pojo.setCustomerAccountNumber(account.getAccountNo());
+                log.info("Request Object sent for Account Deletion:: {}", new Gson().toJson(pojo));
+                this.modifyUserWallet(pojo, token).thenAccept(resp -> {
+                    log.info("Response of Delete Call for account: {} is {}", account.getAccountNo(), resp.getMessage());
+                });
+            });
+        }).thenRun(() -> {
+            try {
+                List<UserWallet> wallets = userWalletRepository.findByUser_IdAndAccountType(userId, WalletAccountType.INTERNAL);
+                wallets.forEach(wallet -> {
+                    wallet.setDeleted(true);
+                    userWalletRepository.save(wallet);
+                });
+            } catch (Exception ex) {
+                log.error("An error Occurred while processing :: {}", ex.getMessage());
+            }
+        });
+    }
+
+    private void deleteUsersVirtualAccount(Long id, String token) {
+        CompletableFuture.supplyAsync(() -> virtualAccountProxy.deleteAccountByUserId(id, token))
+                .orTimeout(3, TimeUnit.MINUTES)
+                .handle((res, ex) -> {
+                    if (ex != null) {
+                        log.error("Error Fetching Accounts, {}", ex.getMessage());
+                        return new ApiResponse<>("An error has occurred", false);
+                    }
+                    return res.getBody();
+                }).thenAccept(p -> {
+                    log.info("Response from API Call to Delete Virtual Account is: {}, status is: {}", p.getMessage(), p.getStatus());
+                    try {
+                        List<UserWallet> wallets = userWalletRepository.findByUser_IdAndAccountType(id, WalletAccountType.VIRTUAL);
+                        wallets.forEach(wallet -> {
+                            wallet.setDeleted(true);
+                            userWalletRepository.save(wallet);
+                        });
+                    } catch (Exception ex) {
+                        log.error("An error Occurred while processing :: {}", ex.getMessage());
+                    }
+                });
     }
 
     @Override
@@ -273,17 +370,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<?> deactivateAccounts(BulkPrivateUserCreationDTO bulkUpload) {
-        if(bulkUpload != null && !bulkUpload.getUsersList().isEmpty()){
-            try{
+        if (bulkUpload != null && !bulkUpload.getUsersList().isEmpty()) {
+            try {
                 bulkUpload.getUsersList().forEach(user -> {
                     Users dbUser = usersRepository.findByEmailIgnoreCase(user.getEmail()).orElse(null);
-                    if(dbUser != null && dbUser.isActive()){
+                    if (dbUser != null && dbUser.isActive()) {
                         dbUser.setActive(false);
                         usersRepository.saveAndFlush(dbUser);
                     }
                 });
                 return new ResponseEntity<>(new SuccessResponse("Accounts Deactivated", OK), OK);
-            }catch(Exception e){
+            } catch (Exception e) {
                 log.error("An Exception Occurred :: {}", e.getMessage());
                 return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
             }

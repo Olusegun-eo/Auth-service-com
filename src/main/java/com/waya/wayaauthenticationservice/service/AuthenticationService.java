@@ -34,8 +34,6 @@ public interface AuthenticationService {
 
 	ResponseEntity<?> createVirtualAccount(VirtualAccountPojo virtualAccountPojo);
 
-	ResponseEntity<?> createWalletAccount(WalletPojo walletPojo);
-
 	ResponseEntity<?> createWayagramAccount(WayagramPojo wayagramPojo);
 
 	ResponseEntity<?> createProfileAccount(PersonalProfileRequest profilePojo, String baseUrl);

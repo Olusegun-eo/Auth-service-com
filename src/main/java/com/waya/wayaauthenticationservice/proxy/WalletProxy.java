@@ -3,6 +3,7 @@ package com.waya.wayaauthenticationservice.proxy;
 import com.waya.wayaauthenticationservice.config.AuthClientConfiguration;
 import com.waya.wayaauthenticationservice.pojo.others.CreateAccountPojo;
 import com.waya.wayaauthenticationservice.pojo.others.CreateAccountResponse;
+import com.waya.wayaauthenticationservice.pojo.others.WalletAccessPojo;
 import com.waya.wayaauthenticationservice.pojo.others.WalletAccount;
 import com.waya.wayaauthenticationservice.response.ApiResponse;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -22,8 +23,8 @@ public interface WalletProxy {
 	ResponseEntity<ApiResponse<CreateAccountResponse>> createUserAccount(@RequestBody CreateAccountPojo createAccountPojo);
 
 	@GetMapping("/accounts/{userId}")
-	ResponseEntity<ApiResponse<List<WalletAccount>>> fetchUsersWallets(@PathVariable("userId") Long userId, @RequestHeader("Authorization") String token);
+	ApiResponse<List<WalletAccount>> fetchUsersWallets(@PathVariable("userId") Long userId, @RequestHeader("Authorization") String token);
 
-	@DeleteMapping("/account/deleteAccount/{userId}")
-	ResponseEntity<ApiResponse<String>> deleteAccountAccountByUserId(@PathVariable("userId") Long userId, @RequestHeader("Authorization") String token);
+	@PostMapping("/user/account/access")
+	ResponseEntity<ApiResponse<WalletAccount>> modifyUserWallet(@RequestBody WalletAccessPojo pojo, @RequestHeader("Authorization") String token);
 }

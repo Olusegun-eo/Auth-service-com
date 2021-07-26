@@ -118,7 +118,7 @@ jwt:
 job:
   cron:
     5amED: 0 0 5 * * ? #5am every day
-    5min1318: 0 0-5 13,18 * * ? #Every minute starting at 1pm and 6pm and ending after 5 minutes, and every day
+    5min1318: 0 0-5 13-18 * * ? #Every minute starting at 1pm and 6pm and ending after 5 minutes, and every day
 
 app:
   config:

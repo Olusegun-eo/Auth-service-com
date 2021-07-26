@@ -56,7 +56,9 @@ public interface UserService {
 
 	ResponseEntity<?> createUsers(@Valid BulkPrivateUserCreationDTO userList, HttpServletRequest request, Device device);
 
-	ResponseEntity<?> unDeleteUser(Long id);
+    void deactivationServices(Users user, String token);
+
+    ResponseEntity<?> unDeleteUser(Long id);
 
     ResponseEntity<?> deactivateAccounts(BulkPrivateUserCreationDTO excelToPrivateUserPojo);
 }

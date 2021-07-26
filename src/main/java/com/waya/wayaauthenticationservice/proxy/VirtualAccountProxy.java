@@ -12,8 +12,11 @@ import org.springframework.web.bind.annotation.*;
 public interface VirtualAccountProxy {
 	
 	@PostMapping("/account/createVirtualAccount")
-	ResponseEntity<String> createVirtualAccount(@RequestBody VirtualAccountPojo virtualAccountPojo, @RequestHeader("Authorization") String token);
+	ResponseEntity<ApiResponse<VirtualAccountResponse>> createVirtualAccount(@RequestBody VirtualAccountPojo virtualAccountPojo, @RequestHeader("Authorization") String token);
 
 	@DeleteMapping("/account/deleteAccount/{userId}")
 	ResponseEntity<ApiResponse<VirtualAccountResponse>> deleteAccountByUserId(@PathVariable("userId") Long userId, @RequestHeader("Authorization") String token);
+
+	@GetMapping("/account/getAccounts/{userId}")
+	ResponseEntity<ApiResponse<VirtualAccountResponse>> fetchAccountByUserId(@PathVariable("userId") Long userId, @RequestHeader("Authorization") String token);
 }

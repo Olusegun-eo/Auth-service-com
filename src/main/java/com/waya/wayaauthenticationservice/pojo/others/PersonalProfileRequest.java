@@ -31,6 +31,10 @@ public class PersonalProfileRequest {
     @ValidPhone
     private String phoneNumber;
 
+    private String dateOfBirth;
+
+    private String gender;
+
     @NotBlank(message = "please provide the userId")
     @CustomValidator(type= Type.NUMERIC_STRING, message = "userId Passed must be Numeric")
     private String userId;

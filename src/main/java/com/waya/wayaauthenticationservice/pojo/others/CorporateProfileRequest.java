@@ -8,7 +8,6 @@ import lombok.Setter;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 
 @Getter
 @Setter
@@ -32,6 +31,10 @@ public class CorporateProfileRequest {
     @NotBlank(message = "please enter your phone number")
     @ValidPhone
     private String phoneNumber;
+
+    private String dateOfBirth;
+
+    private String gender;
 
     @NotBlank(message = "please enter your firstName")
     @CustomValidator(type= Type.TEXT_STRING, message = "FirstName Passed must be Valid and not contain numerals")

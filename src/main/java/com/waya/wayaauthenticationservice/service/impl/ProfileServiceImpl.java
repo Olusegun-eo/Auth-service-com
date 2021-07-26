@@ -1,30 +1,17 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import static com.waya.wayaauthenticationservice.enums.OTPRequestType.*;
-import static com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient.uploadImage;
-import static com.waya.wayaauthenticationservice.util.Constant.CATCH_EXCEPTION_MSG;
-import static com.waya.wayaauthenticationservice.util.Constant.COULD_NOT_PROCESS_REQUEST;
-import static com.waya.wayaauthenticationservice.util.Constant.CREATE_PROFILE_SUCCESS_MSG;
-import static com.waya.wayaauthenticationservice.util.Constant.DUPLICATE_KEY;
-import static com.waya.wayaauthenticationservice.util.Constant.ID_IS_REQUIRED;
-import static com.waya.wayaauthenticationservice.util.Constant.ID_IS_UNKNOWN;
-import static com.waya.wayaauthenticationservice.util.Constant.LIMIT;
-import static com.waya.wayaauthenticationservice.util.Constant.PHONE_NUMBER_REQUIRED;
-import static com.waya.wayaauthenticationservice.util.Constant.PROFILE_NOT_EXIST;
-import static com.waya.wayaauthenticationservice.util.Constant.REFERRAL_CODE_LENGHT;
-import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateReferralCode;
-import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.validateNum;
-import static org.springframework.http.HttpStatus.OK;
-
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-
-import javax.servlet.http.HttpServletRequest;
-
 import com.waya.wayaauthenticationservice.entity.*;
-import com.waya.wayaauthenticationservice.exception.UserServiceException;
+import com.waya.wayaauthenticationservice.enums.DeleteType;
+import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
+import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
 import com.waya.wayaauthenticationservice.repository.*;
+import com.waya.wayaauthenticationservice.response.*;
+import com.waya.wayaauthenticationservice.service.EmailService;
+import com.waya.wayaauthenticationservice.service.MailService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.service.SMSTokenService;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,41 +19,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.waya.wayaauthenticationservice.enums.DeleteType;
-import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
-import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.DeleteRequest;
-import com.waya.wayaauthenticationservice.pojo.others.OtherDetailsRequest;
-import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.SMSChargeFeeRequest;
-import com.waya.wayaauthenticationservice.pojo.others.ToggleSMSRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
-import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
-import com.waya.wayaauthenticationservice.response.DeleteResponse;
-import com.waya.wayaauthenticationservice.response.OtherdetailsResponse;
-import com.waya.wayaauthenticationservice.response.ProfileImageResponse;
-import com.waya.wayaauthenticationservice.response.SMSChargeResponse;
-import com.waya.wayaauthenticationservice.response.SearchProfileResponse;
-import com.waya.wayaauthenticationservice.response.ToggleSMSResponse;
-import com.waya.wayaauthenticationservice.response.UserProfileResponse;
-import com.waya.wayaauthenticationservice.service.EmailService;
-import com.waya.wayaauthenticationservice.service.MailService;
-import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.service.SMSTokenService;
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.EMAIL_VERIFICATION;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PHONE_VERIFICATION;
+import static com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient.uploadImage;
+import static com.waya.wayaauthenticationservice.util.Constant.*;
+import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateReferralCode;
+import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.validateNum;
+import static org.springframework.http.HttpStatus.OK;
 
 @Service
 public class ProfileServiceImpl implements ProfileService {
@@ -316,6 +287,8 @@ public class ProfileServiceImpl implements ProfileService {
         OtherDetails otherDetails = saveOtherDetails(otherDetailsRequest);
         Profile profile = new Profile();
         profile.setCorporate(true);
+        profile.setDateOfBirth(profileRequest.getDateOfBirth());
+        profile.setGender(profileRequest.getGender());
         profile.setEmail(profileRequest.getEmail());
         profile.setFirstName(profileRequest.getFirstName());
         profile.setSurname(profileRequest.getSurname());
