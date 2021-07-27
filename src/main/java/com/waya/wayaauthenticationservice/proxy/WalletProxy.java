@@ -7,7 +7,6 @@ import com.waya.wayaauthenticationservice.pojo.others.WalletAccessPojo;
 import com.waya.wayaauthenticationservice.pojo.others.WalletAccount;
 import com.waya.wayaauthenticationservice.response.ApiResponse;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,15 +15,15 @@ import java.util.List;
 @FeignClient(name = "TEMPORAL-WALLET-SERVICE", url = "${app.config.wallet-service.base-url}", configuration = AuthClientConfiguration.class)
 public interface WalletProxy {
 	
-	@PostMapping("/create/cooperate/user")
-	ResponseEntity<ApiResponse<CreateAccountResponse>> createCorporateAccount(@RequestBody CreateAccountPojo createAccountPojo, @RequestHeader("Authorization") String token);
+	@RequestMapping(method = RequestMethod.POST, value = "/create/cooperate/user")
+	ApiResponse<CreateAccountResponse> createCorporateAccount(@RequestBody CreateAccountPojo createAccountPojo);
 
-	@PostMapping("/user/account")
-	ResponseEntity<ApiResponse<CreateAccountResponse>> createUserAccount(@RequestBody CreateAccountPojo createAccountPojo, @RequestHeader("Authorization") String token);
+	@RequestMapping(method = RequestMethod.POST, value = "/user/account")
+	ApiResponse<CreateAccountResponse> createUserAccount(@RequestBody CreateAccountPojo createAccountPojo);
 
 	@GetMapping("/accounts/{userId}")
 	ApiResponse<List<WalletAccount>> fetchUsersWallets(@PathVariable("userId") Long userId, @RequestHeader("Authorization") String token);
 
-	@PostMapping("/user/account/access")
-	ResponseEntity<ApiResponse<WalletAccount>> modifyUserWallet(@RequestBody WalletAccessPojo pojo, @RequestHeader("Authorization") String token);
+	@RequestMapping(method = RequestMethod.POST, value = "/user/account/access")
+	ApiResponse<WalletAccount> modifyUserWallet(@RequestBody WalletAccessPojo pojo, @RequestHeader("Authorization") String token);
 }

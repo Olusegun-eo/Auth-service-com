@@ -1,27 +1,25 @@
 package com.waya.wayaauthenticationservice.pojo.others;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CreateAccountPojo {
 
 	private Long userId;
 	private BigDecimal custDebitLimit;
-	private LocalDateTime custExpIssueDate;
+	private String custExpIssueDate;
 	private String custIssueId;
 	private String custSex;
 	private String custTitleCode;
-    private LocalDate dob;
+    private String dob;
     private String emailId;
 	private String firstName;
     private String lastName;

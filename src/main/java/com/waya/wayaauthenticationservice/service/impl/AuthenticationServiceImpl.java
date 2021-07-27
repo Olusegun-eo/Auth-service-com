@@ -180,19 +180,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setRegDeviceType(dev.getDeviceType());
             user.setPassword(passwordEncoder.encode(mUser.getPassword()));
             user.setRoleList(roleList);
-
+            if (adminAction) {
+                user.setActive(true);
+                user.setAccountStatus(-1);
+            }
             Users regUser = userRepo.saveAndFlush(user);
 
             if (regUser == null)
                 return new ResponseEntity<>(new ErrorResponse(ErrorMessages.COULD_NOT_INSERT_RECORD.getErrorMessage()),
                         HttpStatus.INTERNAL_SERVER_ERROR);
-            // As soon as User is created by Admin Send email advising new Password
-            if (adminAction) {
-                regUser.setActive(true);
-                regUser.setAccountStatus(-1);
-                regUser = userRepo.save(regUser);
-                CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
-            }
+
+            if(adminAction) CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
+
             String token = generateToken(regUser);
             createPrivateUser(mUser, regUser.getId(), token, getBaseUrl(request));
 
@@ -266,18 +265,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             user.setSurname(mUser.getSurname());
             String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
             user.setName(fullName);
+            if (adminAction) {
+                user.setActive(true);
+                user.setAccountStatus(-1);
+            }
             Users regUser = userRepo.saveAndFlush(user);
 
             if (regUser == null)
                 return new ResponseEntity<>(new ErrorResponse(ErrorMessages.COULD_NOT_INSERT_RECORD.getErrorMessage()),
                         HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if (adminAction) {
-                regUser.setActive(true);
-                regUser.setAccountStatus(-1);
-                regUser = userRepo.save(regUser);
-                CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
-            }
+            if(adminAction) CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
 
             String token = generateToken(regUser);
 
@@ -325,7 +323,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
         virtualAccountPojo.setAccountName(mUser.getFirstName() + " " + mUser.getSurname());
         virtualAccountPojo.setUserId(String.valueOf(userId));
-        CompletableFuture.supplyAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token))
+        CompletableFuture.supplyAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo))
                 .orTimeout(3, TimeUnit.MINUTES)
                 .handle((res, ex) -> {
                     if (ex != null) {
@@ -334,22 +332,29 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     }
                     return res.getBody();
                 })
-                .thenAccept(p -> log.debug("Response from Call to Create Corporate Virtual Account is: {}",
+                .thenAccept(p -> log.info("Response from Call to Create Corporate Virtual Account is: {}",
                         p.getData()));
 
         // Create Internal Wallet Accounts and Save the AccountNumber
         CreateAccountPojo createAccount = formAccountCreationPojo(userId, mUser);
-        CompletableFuture.supplyAsync(() -> walletProxy.createCorporateAccount(createAccount, token))
-                .orTimeout(3, TimeUnit.MINUTES)
-                .handle((res, ex) -> {
-                    if (ex != null) {
-                        log.error("Error Creating Internal Wallets Account, {}", ex.getMessage());
-                        return new ApiResponse<>("An error has occurred", false);
-                    }
-                    return res.getBody();
-                })
-                .thenAccept(p -> log.debug("Response from Call to Create Corporate Wallet is: {}",
-                                p.getData()));
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                TimeUnit.MINUTES.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+                return walletProxy.createCorporateAccount(createAccount);
+            })
+            .orTimeout(3, TimeUnit.MINUTES)
+            .handle((res, ex) -> {
+                if (ex != null) {
+                    log.error("Error Creating Internal Wallets Account, {}", ex.getMessage());
+                    return new ApiResponse<>("An error has occurred", false);
+                }
+                return res;
+            })
+            .thenAccept(p -> log.info("Response from Call to Create Corporate Wallet is: {}",
+                            p));
     }
 
     public void createPrivateUser(BaseUserPojo user, Long userId, String token, String baseUrl) {
@@ -373,7 +378,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
         virtualAccountPojo.setAccountName(user.getFirstName() + " " + user.getSurname());
         virtualAccountPojo.setUserId(id);
-        CompletableFuture.supplyAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token))
+        CompletableFuture.supplyAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo))
             .orTimeout(3, TimeUnit.MINUTES)
             .handle((res, ex) -> {
                 if (ex != null) {
@@ -382,22 +387,30 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 }
                 return res.getBody();
             })
-            .thenAccept(p -> log.debug("Response from Call to Create User Wallet is: {}",
+            .thenAccept(p -> log.info("Response from Call to Create User Wallet is: {}",
                     p.getData()));
 
         // Create Internal Wallet Accounts
         CreateAccountPojo createAccount = formAccountCreationPojo(userId, user);
-        CompletableFuture.supplyAsync(() -> walletProxy.createUserAccount(createAccount, token))
+        //ApiResponse<CreateAccountResponse> accountResp = walletProxy.createUserAccount(createAccount);
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                TimeUnit.MINUTES.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+                return walletProxy.createUserAccount(createAccount);
+            })
             .orTimeout(3, TimeUnit.MINUTES)
             .handle((res, ex) -> {
                 if (ex != null) {
                     log.error("Error Creating Wallet Account, {}", ex.getMessage());
                     return new ApiResponse<>("An error has occurred", false);
                 }
-                return res.getBody();
+                return res;
             })
-            .thenAccept(p -> log.debug("Response from Call to Create User Wallet is: {}",
-                    p.getData()));
+            .thenAccept(p -> log.info("Response from Call to Create User Wallet is: {}",
+                    p));
     }
 
     public String generateToken(Users userResponse) {
@@ -688,8 +701,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         // Default Debit Limit SetUp
         createAccount.setCustDebitLimit(new BigDecimal("50000.00"));
         // Default Account Expiration Date
-        createAccount.setCustExpIssueDate(LocalDateTime.of(2099, Month.DECEMBER, 30, 12, 50));
-
+        LocalDateTime time = LocalDateTime.of(2099, Month.DECEMBER, 30, 0, 0);
+        createAccount.setCustExpIssueDate(time.toString());
         createAccount.setUserId(userId);
         createAccount.setCustIssueId(generateRandomNumber(9));
         createAccount.setFirstName(mUser.getFirstName());
@@ -699,9 +712,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         createAccount.setCustSex(mUser.getGender().substring(0, 1));
         String custTitle = mUser.getGender().equals("MALE") ? "MR" : "MRS";
         createAccount.setCustTitleCode(custTitle);
-
         LocalDate dateOfBirth = mUser.getDateOfBirth() == null ? LocalDate.now() : mUser.getDateOfBirth();
-        createAccount.setDob(dateOfBirth);
+        createAccount.setDob(dateOfBirth.toString());
         // Default Branch SOL ID
         createAccount.setSolId("0000");
 

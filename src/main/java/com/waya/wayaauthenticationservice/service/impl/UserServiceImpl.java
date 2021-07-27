@@ -295,7 +295,7 @@ public class UserServiceImpl implements UserService {
                         log.error("An Error has Occurred::: {}", ex.getMessage());
                         return new ApiResponse<>(null, "An Error Occurred", false);
                     }
-                    return res.getBody();
+                    return res;
                 });
     }
 

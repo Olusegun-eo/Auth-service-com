@@ -29,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.waya.wayaauthenticationservice.enums.OTPRequestType.EMAIL_VERIFICATION;
@@ -152,15 +153,14 @@ public class ProfileServiceImpl implements ProfileService {
                 if(referralCode1 == null)
                     request.setReferralCode(null);
             }
-
             //check if the user exist in the profile table
             Optional<Profile> profile = profileRepository.findByEmail(
                     false, request.getEmail().trim());
+
             //check if the user exist in the referral table
-            ///get-user-by-referral-code/{userId}
-//            ReferralCodePojo referralCodePojo = referralProxy.getUserByReferralCode(request.getUserId());
             Optional<ReferralCode> referralCode = referralCodeRepository
                     .findByUserId(request.getUserId());
+
             //validation check
             ApiResponse<String> validationCheck = validationCheckOnProfile(profile, referralCode);
             if (validationCheck.getStatus()) {
@@ -173,7 +173,6 @@ public class ProfileServiceImpl implements ProfileService {
                 log.info("saving new personal profile ::: {}", newProfile);
                 //save referral code
                 saveReferralCode(savedProfile, request.getUserId());
-                // CompletableFuture.runAsync(() -> saveReferralCode(savedProfile, request.getUserId()));
 
                 String fullName = String.format("%s %s", savedProfile.getFirstName(),
                         savedProfile.getSurname());
@@ -187,7 +186,13 @@ public class ProfileServiceImpl implements ProfileService {
                         baseUrl, savedProfile, EMAIL_VERIFICATION));
 
                 //create waya gram profile
-                CompletableFuture.runAsync(() -> createWayagramProfile(savedProfile.getUserId(), savedProfile.getSurname(), fullName));
+                CompletableFuture.runAsync(() -> createWayagramProfile(savedProfile.getUserId(), savedProfile.getSurname(), fullName))
+                .orTimeout(3, TimeUnit.MINUTES).handle((res, ex) -> {
+                   if(ex != null){
+                       log.error("Error With Setting up Wayagram Profile:: {}", ex.getMessage());
+                   }
+                   return res;
+                });
 
                 return new ApiResponse<>(null,
                         CREATE_PROFILE_SUCCESS_MSG, true, OK);
@@ -746,7 +751,14 @@ public class ProfileServiceImpl implements ProfileService {
                 log.info("creating auto follow.....");
                 //make call to auto follow makeAutoFollow
                 //  Executor delayed = CompletableFuture.delayedExecutor(5L, TimeUnit.SECONDS);
-                CompletableFuture.runAsync(() -> makeAutoFollow(userId));
+                CompletableFuture.runAsync(() -> makeAutoFollow(userId))
+                    .orTimeout(3, TimeUnit.MINUTES)
+                    .handle((res, ex) -> {
+                        if(ex != null){
+                            log.error("Error With Setting up Wayagram Auto-follow:: {}", ex.getMessage());
+                        }
+                        return res;
+                    });
             } else {
                 log.info("Wayagram profile Request Failed with body:: {}", response.getStatusCode());
             }
