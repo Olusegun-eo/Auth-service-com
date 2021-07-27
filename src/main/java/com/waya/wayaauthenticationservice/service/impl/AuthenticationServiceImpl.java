@@ -1,8 +1,10 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
 import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
-import com.waya.wayaauthenticationservice.entity.*;
-import com.waya.wayaauthenticationservice.enums.WalletAccountType;
+import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.entity.RedisUser;
+import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
@@ -40,10 +42,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
@@ -184,8 +188,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         HttpStatus.INTERNAL_SERVER_ERROR);
             // As soon as User is created by Admin Send email advising new Password
             if (adminAction) {
-                user.setActive(true);
-                user.setAccountStatus(-1);
+                regUser.setActive(true);
+                regUser.setAccountStatus(-1);
+                regUser = userRepo.save(regUser);
                 CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
             }
             String token = generateToken(regUser);
@@ -268,8 +273,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         HttpStatus.INTERNAL_SERVER_ERROR);
 
             if (adminAction) {
-                user.setActive(true);
-                user.setAccountStatus(-1);
+                regUser.setActive(true);
+                regUser.setAccountStatus(-1);
+                regUser = userRepo.save(regUser);
                 CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
             }
 
@@ -307,7 +313,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         corporateProfileRequest.setPhoneNumber(mUser.getPhoneNumber());
         corporateProfileRequest.setFirstName(mUser.getFirstName());
         corporateProfileRequest.setGender(mUser.getGender());
-        corporateProfileRequest.setDateOfBirth(mUser.getDateOfBirth().toString());
+        String dateOfBirth = mUser.getDateOfBirth() == null ? LocalDate.now().toString() : mUser.getDateOfBirth().toString();
+        corporateProfileRequest.setDateOfBirth(dateOfBirth);
 
         // Implementation for internal call
         log.info("CorporateProfile account creation starts: " + corporateProfileRequest);
@@ -319,42 +326,30 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         virtualAccountPojo.setAccountName(mUser.getFirstName() + " " + mUser.getSurname());
         virtualAccountPojo.setUserId(String.valueOf(userId));
         CompletableFuture.supplyAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token))
-                .thenAccept(p -> {
-                    try{
-                        log.info("Response from Call to Create Virtual Account is: {}", p.getBody().getData());
-                        Users savedUser = userRepo.getOne(userId);
-                        UserWallet wallet = UserWallet.builder()
-                                .accountName(savedUser.getName())
-                                .accountBank(p.getBody().getData().getBankName())
-                                .accountId(p.getBody().getData().getId().toString())
-                                .accountNumber(p.getBody().getData().getAccountNumber())
-                                .accountType(WalletAccountType.VIRTUAL)
-                                .user(savedUser).build();
-                        userWalletRepository.save(wallet);
-                    }catch(Exception ex){
-                        log.error("An error Occurred while processing :: {}", ex.getMessage());
+                .orTimeout(3, TimeUnit.MINUTES)
+                .handle((res, ex) -> {
+                    if (ex != null) {
+                        log.error("Error Creating Virtual Account, {}", ex.getMessage());
+                        return new ApiResponse<>("An error has occurred", false);
                     }
-                });
+                    return res.getBody();
+                })
+                .thenAccept(p -> log.debug("Response from Call to Create Corporate Virtual Account is: {}",
+                        p.getData()));
 
         // Create Internal Wallet Accounts and Save the AccountNumber
         CreateAccountPojo createAccount = formAccountCreationPojo(userId, mUser);
-        CompletableFuture.supplyAsync(() -> walletProxy.createCorporateAccount(createAccount))
-                .thenAccept(p -> {
-                    try{
-                        log.info("Response from Call to Create Corporate Wallet is: {}", p.getBody().getData());
-                        Users savedUser = userRepo.getOne(userId);
-                        UserWallet wallet = UserWallet.builder()
-                                .accountName(savedUser.getName())
-                                .accountBank("WAYA PAY")
-                                .accountId(p.getBody().getData().getId())
-                                .accountNumber(p.getBody().getData().getAccountNo())
-                                .accountType(WalletAccountType.INTERNAL)
-                                .user(savedUser).build();
-                        userWalletRepository.save(wallet);
-                    }catch(Exception ex){
-                        log.error("An error Occurred while processing :: {}", ex.getMessage());
+        CompletableFuture.supplyAsync(() -> walletProxy.createCorporateAccount(createAccount, token))
+                .orTimeout(3, TimeUnit.MINUTES)
+                .handle((res, ex) -> {
+                    if (ex != null) {
+                        log.error("Error Creating Internal Wallets Account, {}", ex.getMessage());
+                        return new ApiResponse<>("An error has occurred", false);
                     }
-                });
+                    return res.getBody();
+                })
+                .thenAccept(p -> log.debug("Response from Call to Create Corporate Wallet is: {}",
+                                p.getData()));
     }
 
     public void createPrivateUser(BaseUserPojo user, Long userId, String token, String baseUrl) {
@@ -367,7 +362,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         personalProfileRequest.setSurname(user.getSurname());
         personalProfileRequest.setUserId(id);
         personalProfileRequest.setGender(user.getGender());
-        personalProfileRequest.setDateOfBirth(user.getDateOfBirth().toString());
+        String dateOfBirth = user.getDateOfBirth() == null ? LocalDate.now().toString() : user.getDateOfBirth().toString();
+        personalProfileRequest.setDateOfBirth(dateOfBirth);
 
         log.info("PersonalProfile account creation starts: " + personalProfileRequest);
         ApiResponse<String> personalResponse = profileService.createProfile(personalProfileRequest, baseUrl);
@@ -378,42 +374,30 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         virtualAccountPojo.setAccountName(user.getFirstName() + " " + user.getSurname());
         virtualAccountPojo.setUserId(id);
         CompletableFuture.supplyAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo, token))
-                .thenAccept(p -> {
-                    try{
-                        log.info("Response from Call to Create Virtual Account is: {}", p.getBody().getData());
-                        Users savedUser = userRepo.getOne(userId);
-                        UserWallet wallet = UserWallet.builder()
-                                .accountName(savedUser.getName())
-                                .accountBank(p.getBody().getData().getBankName())
-                                .accountId(p.getBody().getData().getId().toString())
-                                .accountNumber(p.getBody().getData().getAccountNumber())
-                                .accountType(WalletAccountType.VIRTUAL)
-                                .user(savedUser).build();
-                        userWalletRepository.save(wallet);
-                    }catch(Exception ex){
-                        log.error("An error Occurred while processing :: {}", ex.getMessage());
-                    }
-                });
+            .orTimeout(3, TimeUnit.MINUTES)
+            .handle((res, ex) -> {
+                if (ex != null) {
+                    log.error("Error Creating Virtual Account, Message is: {}", ex.getMessage());
+                    return new ApiResponse<>("An error has occurred", false);
+                }
+                return res.getBody();
+            })
+            .thenAccept(p -> log.debug("Response from Call to Create User Wallet is: {}",
+                    p.getData()));
 
         // Create Internal Wallet Accounts
         CreateAccountPojo createAccount = formAccountCreationPojo(userId, user);
-        CompletableFuture.supplyAsync(() -> walletProxy.createUserAccount(createAccount))
-            .thenAccept(p -> {
-                try{
-                    log.info("Response from Call to Create Private User Wallet is: {}", p.getBody().getData());
-                    Users savedUser = userRepo.getOne(userId);
-                    UserWallet wallet = UserWallet.builder()
-                            .accountName(savedUser.getName())
-                            .accountBank("WAYA PAY")
-                            .accountId(p.getBody().getData().getId())
-                            .accountNumber(p.getBody().getData().getAccountNo())
-                            .accountType(WalletAccountType.INTERNAL)
-                            .user(savedUser).build();
-                    userWalletRepository.save(wallet);
-                }catch(Exception ex){
-                    log.error("An error Occurred while processing :: {}", ex.getMessage());
+        CompletableFuture.supplyAsync(() -> walletProxy.createUserAccount(createAccount, token))
+            .orTimeout(3, TimeUnit.MINUTES)
+            .handle((res, ex) -> {
+                if (ex != null) {
+                    log.error("Error Creating Wallet Account, {}", ex.getMessage());
+                    return new ApiResponse<>("An error has occurred", false);
                 }
-            });
+                return res.getBody();
+            })
+            .thenAccept(p -> log.debug("Response from Call to Create User Wallet is: {}",
+                    p.getData()));
     }
 
     public String generateToken(Users userResponse) {
@@ -432,7 +416,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public ResponseEntity<?> verifyAccountCreation(OTPPojo otpPojo) {
-
         try {
             log.info("Verify Account Creation starts {}", otpPojo);
             Users user = userRepo.findByEmailOrPhoneNumber(otpPojo.getPhoneOrEmail()).orElse(null);
@@ -716,7 +699,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         createAccount.setCustSex(mUser.getGender().substring(0, 1));
         String custTitle = mUser.getGender().equals("MALE") ? "MR" : "MRS";
         createAccount.setCustTitleCode(custTitle);
-        createAccount.setDob(mUser.getDateOfBirth());
+
+        LocalDate dateOfBirth = mUser.getDateOfBirth() == null ? LocalDate.now() : mUser.getDateOfBirth();
+        createAccount.setDob(dateOfBirth);
         // Default Branch SOL ID
         createAccount.setSolId("0000");
 

@@ -51,12 +51,14 @@ public class UserPrincipal implements OAuth2User, UserDetails {
 
 	@Override
 	public boolean isCredentialsNonExpired() {
-		return this.user.isCredentialsNonExpired();
+		//return this.user.getAccountStatus() == 1 && this.user.isCredentialsNonExpired();
+		return true;
 	}
 
 	@Override
 	public boolean isEnabled() {
-		return this.user.isActive();
+		//return this.user.isActive();
+		return true;
 	}
 
 	@Override

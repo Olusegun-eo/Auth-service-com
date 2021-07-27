@@ -4,10 +4,8 @@ import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.controller.UserController;
 import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
 import com.waya.wayaauthenticationservice.entity.Role;
-import com.waya.wayaauthenticationservice.entity.UserWallet;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
-import com.waya.wayaauthenticationservice.enums.WalletAccountType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
@@ -238,15 +236,6 @@ public class UserServiceImpl implements UserService {
             // Generate token to use for deactivation of other Services tied to the UserId
             String token = this.authService.generateToken(authenticatedUserFacade.getUser());
 
-            List<WalletAccount> wallets = fetchUsersWallet(userId, token).get();
-            BigDecimal clrBalAmt = new BigDecimal("0.00");
-            wallets.stream().filter(account -> !account.isAcctClsFlg()).forEach(account -> {
-                clrBalAmt.add(account.getClrBalAmt());
-            });
-            int moreOrNegativeBalance = clrBalAmt.compareTo(new BigDecimal("0.00"));
-            if(moreOrNegativeBalance != 0)
-                return new ResponseEntity<>(new ErrorResponse("User needs to nil off Balance in Wallet"), HttpStatus.BAD_REQUEST);
-
             CompletableFuture.runAsync(() -> deactivationServices(user, token));
 
             return new ResponseEntity<>(new SuccessResponse("Account deleted", OK), OK);
@@ -255,19 +244,35 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    public void deactivationServices(Users user, String token){
-        // De-activate and Delete Existing Accounts
-        user.setActive(false);
-        user.setDeleted(true);
-        user.setDateOfActivation(LocalDateTime.now());
+    public void deactivationServices(Users user, String token) {
 
-        // Disables User Profile and Wayagram Services
-        // Delete Virtual Account Call
-        // Delete All User's Wallets
-        CompletableFuture.runAsync(() -> disableUserProfile(String.valueOf(user.getId()), token))
-                .thenRun(() -> this.deleteUsersVirtualAccount(user.getId(), token))
-                .thenRun(() ->  this.deleteUserWallet(user.getId(), token))
-                .thenRun(() -> usersRepository.saveAndFlush(user));
+        try {
+            List<WalletAccount> wallets = fetchUsersWallet(user.getId(), token).get();
+            BigDecimal clrBalAmt = new BigDecimal("0.00");
+            wallets.stream().filter(account -> !account.isAcctClsFlg()).forEach(account -> {
+                clrBalAmt.add(account.getClrBalAmt());
+            });
+            int moreOrNegativeBalance = clrBalAmt.compareTo(new BigDecimal("0.00"));
+            if (moreOrNegativeBalance != 0)
+                throw new CustomException("User needs to nil off Balance in Wallet", HttpStatus.BAD_REQUEST);
+
+            // De-activate and Delete Existing Accounts
+            user.setActive(false);
+            user.setDeleted(true);
+            user.setDateOfActivation(LocalDateTime.now());
+
+            // Disables User Profile and Wayagram Services
+            // Delete Virtual Account Call
+            // Delete All User's Wallets
+            CompletableFuture.runAsync(() -> disableUserProfile(String.valueOf(user.getId()), token))
+                    .thenRun(() -> this.deleteUsersVirtualAccount(user.getId(), token))
+                    .thenRun(() -> wallets.stream()
+                            .filter(account -> !account.isAcctClsFlg())
+                            .forEach(account -> this.deleteUserWallet(account.getAccountNo(), token)))
+                    .thenRun(() -> usersRepository.saveAndFlush(user));
+        } catch (Exception e) {
+            log.error("An error has Occurred ::: {}", e.getMessage());
+        }
     }
 
     private CompletableFuture<List<WalletAccount>> fetchUsersWallet(Long userId, String token) {
@@ -294,31 +299,18 @@ public class UserServiceImpl implements UserService {
                 });
     }
 
-    private void deleteUserWallet(Long userId, String token) {
-        fetchUsersWallet(userId, token).thenAccept(p -> {
-            p.stream().filter(account -> !account.isAcctClsFlg()).forEach(account -> {
-                WalletAccessPojo pojo = new WalletAccessPojo();
-                pojo.setAcctClosed(true);
-                pojo.setFreezCode("");
-                pojo.setFreezReason("");
-                pojo.setLienAmount(new BigDecimal("0.00"));
-                pojo.setLienReason("");
-                pojo.setCustomerAccountNumber(account.getAccountNo());
-                log.info("Request Object sent for Account Deletion:: {}", new Gson().toJson(pojo));
-                this.modifyUserWallet(pojo, token).thenAccept(resp -> {
-                    log.info("Response of Delete Call for account: {} is {}", account.getAccountNo(), resp.getMessage());
-                });
-            });
-        }).thenRun(() -> {
-            try {
-                List<UserWallet> wallets = userWalletRepository.findByUser_IdAndAccountType(userId, WalletAccountType.INTERNAL);
-                wallets.forEach(wallet -> {
-                    wallet.setDeleted(true);
-                    userWalletRepository.save(wallet);
-                });
-            } catch (Exception ex) {
-                log.error("An error Occurred while processing :: {}", ex.getMessage());
-            }
+    private void deleteUserWallet(String accountNumber, String token) {
+        WalletAccessPojo pojo = new WalletAccessPojo();
+        pojo.setAcctClosed(true);
+        pojo.setFreezCode("");
+        pojo.setFreezReason("");
+        pojo.setLienAmount(new BigDecimal("0.00"));
+        pojo.setLienReason("");
+        pojo.setCustomerAccountNumber(accountNumber);
+
+        log.debug("Request Object sent for Account Deletion:: {}", new Gson().toJson(pojo));
+        this.modifyUserWallet(pojo, token).thenAccept(resp -> {
+            log.debug("Response of Delete Call for account: {} is {}", accountNumber, resp.getMessage());
         });
     }
 
@@ -332,17 +324,18 @@ public class UserServiceImpl implements UserService {
                     }
                     return res.getBody();
                 }).thenAccept(p -> {
-                    log.info("Response from API Call to Delete Virtual Account is: {}, status is: {}", p.getMessage(), p.getStatus());
-                    try {
-                        List<UserWallet> wallets = userWalletRepository.findByUser_IdAndAccountType(id, WalletAccountType.VIRTUAL);
-                        wallets.forEach(wallet -> {
-                            wallet.setDeleted(true);
-                            userWalletRepository.save(wallet);
-                        });
-                    } catch (Exception ex) {
-                        log.error("An error Occurred while processing :: {}", ex.getMessage());
-                    }
-                });
+                    log.debug("Response from API Call to Delete Virtual Account is: {}, status is: {} data is {}",
+                            p.getMessage(), p.getStatus(), p.getData());
+//            try {
+//                List<UserWallet> wallets = userWalletRepository.findByUser_IdAndAccountType(id, WalletAccountType.VIRTUAL);
+//                wallets.forEach(wallet -> {
+//                    wallet.setDeleted(true);
+//                    userWalletRepository.save(wallet);
+//                });
+//            } catch (Exception ex) {
+//                log.error("An error Occurred while processing :: {}", ex.getMessage());
+//            }
+        });
     }
 
     @Override

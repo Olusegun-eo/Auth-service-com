@@ -1,36 +1,39 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.regex.Matcher;
-
+import com.waya.wayaauthenticationservice.entity.OTPBase;
+import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.OTPRequestType;
+import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordChangeEmailContext;
+import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordResetContext;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PinResetContext;
-import com.waya.wayaauthenticationservice.pojo.password.*;
-import com.waya.wayaauthenticationservice.response.*;
+import com.waya.wayaauthenticationservice.pojo.password.ChangePINPojo;
+import com.waya.wayaauthenticationservice.pojo.password.NewPinPojo;
+import com.waya.wayaauthenticationservice.pojo.password.PasswordPojo;
+import com.waya.wayaauthenticationservice.pojo.password.ResetPasswordPojo;
+import com.waya.wayaauthenticationservice.repository.ProfileRepository;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.response.ErrorResponse;
+import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
+import com.waya.wayaauthenticationservice.response.SuccessResponse;
+import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
+import com.waya.wayaauthenticationservice.service.EmailService;
+import com.waya.wayaauthenticationservice.service.MailService;
+import com.waya.wayaauthenticationservice.service.PasswordService;
 import com.waya.wayaauthenticationservice.service.SMSTokenService;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.waya.wayaauthenticationservice.entity.OTPBase;
-import com.waya.wayaauthenticationservice.entity.Profile;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.exception.ErrorMessages;
-import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordResetContext;
-import com.waya.wayaauthenticationservice.repository.ProfileRepository;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
-import com.waya.wayaauthenticationservice.service.EmailService;
-import com.waya.wayaauthenticationservice.service.MailService;
-import com.waya.wayaauthenticationservice.service.PasswordService;
-
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
 
 import static com.waya.wayaauthenticationservice.enums.OTPRequestType.*;
 import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
@@ -78,6 +81,7 @@ public class PasswordServiceImpl implements PasswordService {
             }
             String newPassword = passwordEncoder.encode(passPojo.getNewPassword());
             user.setPassword(newPassword);
+            user.setCredentialsNonExpired(true);
             user.setAccountStatus(1);
             usersRepo.save(user);
             return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);

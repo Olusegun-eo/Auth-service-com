@@ -16,7 +16,7 @@ import java.util.Objects;
 
 @Data
 @Entity
-@ToString
+@ToString(exclude = "userAccounts")
 @Table(name = "m_users", uniqueConstraints = {
         @UniqueConstraint(name = "UniqueEmailAndPhoneNumberAndDelFlg", columnNames = {"id", "phone_number", "email", "is_deleted"})})
 public class Users extends AuditModel implements Serializable {

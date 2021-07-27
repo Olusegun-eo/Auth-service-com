@@ -17,10 +17,10 @@ import java.util.List;
 public interface WalletProxy {
 	
 	@PostMapping("/create/cooperate/user")
-	ResponseEntity<ApiResponse<CreateAccountResponse>> createCorporateAccount(@RequestBody CreateAccountPojo createAccountPojo);
+	ResponseEntity<ApiResponse<CreateAccountResponse>> createCorporateAccount(@RequestBody CreateAccountPojo createAccountPojo, @RequestHeader("Authorization") String token);
 
 	@PostMapping("/user/account")
-	ResponseEntity<ApiResponse<CreateAccountResponse>> createUserAccount(@RequestBody CreateAccountPojo createAccountPojo);
+	ResponseEntity<ApiResponse<CreateAccountResponse>> createUserAccount(@RequestBody CreateAccountPojo createAccountPojo, @RequestHeader("Authorization") String token);
 
 	@GetMapping("/accounts/{userId}")
 	ApiResponse<List<WalletAccount>> fetchUsersWallets(@PathVariable("userId") Long userId, @RequestHeader("Authorization") String token);
