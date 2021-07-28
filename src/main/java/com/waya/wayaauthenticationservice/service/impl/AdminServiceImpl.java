@@ -251,6 +251,21 @@ public class AdminServiceImpl implements AdminService {
         return new ResponseEntity<>(new ErrorResponse(message), HttpStatus.BAD_REQUEST);
     }
 
+    @Override
+    public ResponseEntity<?> bulkActivation(MultipartFile file) {
+        String message;
+        if (ExcelHelper.hasExcelFormat(file)) {
+            try {
+                return userService.activateAccounts(ExcelHelper.excelToPrivateUserPojo(file.getInputStream(),
+                        file.getOriginalFilename()));
+            } catch (Exception e) {
+                throw new CustomException("failed to Parse excel data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+            }
+        }
+        message = "Please upload an excel file!";
+        return new ResponseEntity<>(new ErrorResponse(message), HttpStatus.BAD_REQUEST);
+    }
+
     private Integer generateEmailOTP(String email, OTPRequestType otpRequestType) {
         OTPBase otpBase = this.emailService.generateEmailToken(email, otpRequestType);
         return otpBase.getCode();

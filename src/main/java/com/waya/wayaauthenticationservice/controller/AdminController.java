@@ -243,10 +243,17 @@ public class AdminController {
         return adminService.bulkDeactivation(file);
     }
 
-    public  ResponseEntity<?> activateUserAccount(){
-
-        return new ResponseEntity<>(null, HttpStatus.OK);
+    @ApiOperation(value = "Deactivate Users via Excel Upload",
+            notes = "To deactivate bulk accounts via excel upload", tags = {"ADMIN"})
+    @PostMapping(path = "/account-deactivation",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN')")
+    public ResponseEntity<?> bulkActivation(@RequestPart("file") MultipartFile file) {
+        return adminService.bulkActivation(file);
     }
+
+
 
 
 }

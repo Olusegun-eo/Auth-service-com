@@ -42,6 +42,8 @@ public interface UserService {
 	// Get user details for Roles service
 	UserEditPojo getUserForRole(Long id);
 
+	ResponseEntity<?> activateAccount(Long userId);
+
 	ResponseEntity<?> isUserAdmin(Long userId);
 
 	UserProfileResponsePojo toModelDTO(Users user);
@@ -61,4 +63,6 @@ public interface UserService {
     ResponseEntity<?> unDeleteUser(Long id);
 
     ResponseEntity<?> deactivateAccounts(BulkPrivateUserCreationDTO excelToPrivateUserPojo);
+
+    ResponseEntity<?> activateAccounts(BulkPrivateUserCreationDTO excelToPrivateUserPojo);
 }

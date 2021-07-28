@@ -10,6 +10,7 @@ import io.swagger.annotations.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -166,4 +167,14 @@ public class UserController {
 //        return ResponseEntity.ok(userService.UpdateUserDetails(userEditPojo));
 //    }
 
+    @ApiOperation(value = "To Activate Users Account by UserId (For In App service consumption)",
+            notes = "To Activate Users Account by UserId (For In App service consumption)", tags = {
+            "USER SERVICE"})
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
+    @PostMapping("activate/{userId}")
+    public  ResponseEntity<?> activateUserAccount(@PathVariable("userId") Long id){
+        return new ResponseEntity<>(userService.activateAccount(id), HttpStatus.OK);
+    }
 }

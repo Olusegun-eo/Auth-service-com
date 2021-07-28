@@ -53,6 +53,7 @@ import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.OK;
 
 @Service
@@ -110,7 +111,7 @@ public class UserServiceImpl implements UserService {
                 return new ResponseEntity<>(new SuccessResponse("User info fetched", userDto), HttpStatus.OK);
             }
         } catch (Exception e) {
-            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
         }
     }
 
@@ -118,7 +119,7 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<?> getUsers() {
         Users user = authenticatedUserFacade.getUser();
         if (!validateAdmin(user)) {
-            return new ResponseEntity<>(new ErrorResponse("Invalid Access"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse("Invalid Access"), BAD_REQUEST);
         }
         List<UserProfileResponsePojo> users = usersRepository.findAll().stream().map(u -> this.toModelDTO(u))
                 .collect(Collectors.toList());
@@ -130,7 +131,7 @@ public class UserServiceImpl implements UserService {
             return false;
         }
         Role adminRole = rolesRepo.findByName("ROLE_ADMIN")
-                .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+                .orElseThrow(() -> new CustomException("User Role Not Available", BAD_REQUEST));
         Optional<Collection<Role>> roles = Optional.ofNullable(user.getRoleList());
         if (!roles.isPresent())
             return false;
@@ -146,7 +147,7 @@ public class UserServiceImpl implements UserService {
 //		}
         Role role = rolesRepo.findById(roleId).orElse(null);
         if (role == null) {
-            return new ResponseEntity<>(new ErrorResponse("Invalid Role"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse("Invalid Role"), BAD_REQUEST);
         }
         List<UserProfileResponsePojo> userList = new ArrayList<>();
         rolesRepo.findAll().forEach(roles -> {
@@ -192,7 +193,7 @@ public class UserServiceImpl implements UserService {
         if (userDtO != null) {
             return new ResponseEntity<>(new SuccessResponse("User info fetched", userDtO), HttpStatus.OK);
         }
-        return new ResponseEntity<>(new ErrorResponse("Account information is not Existing"), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ErrorResponse("Account information is not Existing"), BAD_REQUEST);
     }
 
     @Override
@@ -204,7 +205,7 @@ public class UserServiceImpl implements UserService {
         if (userDtO != null) {
             return new ResponseEntity<>(new SuccessResponse("User info fetched", userDtO), HttpStatus.OK);
         }
-        return new ResponseEntity<>(new ErrorResponse("Account information is not Existing"), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ErrorResponse("Account information is not Existing"), BAD_REQUEST);
     }
 
     @Override
@@ -240,7 +241,7 @@ public class UserServiceImpl implements UserService {
 
             return new ResponseEntity<>(new SuccessResponse("Account deleted", OK), OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
         }
     }
 
@@ -254,7 +255,7 @@ public class UserServiceImpl implements UserService {
             });
             int moreOrNegativeBalance = clrBalAmt.compareTo(new BigDecimal("0.00"));
             if (moreOrNegativeBalance != 0)
-                throw new CustomException("User needs to nil off Balance in Wallet", HttpStatus.BAD_REQUEST);
+                throw new CustomException("User needs to nil off Balance in Wallet", BAD_REQUEST);
 
             // De-activate and Delete Existing Accounts
             user.setActive(false);
@@ -357,7 +358,7 @@ public class UserServiceImpl implements UserService {
 
             return new ResponseEntity<>(new SuccessResponse("Account Undeleted", OK), OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
         }
     }
 
@@ -375,15 +376,51 @@ public class UserServiceImpl implements UserService {
                 return new ResponseEntity<>(new SuccessResponse("Accounts Deactivated", OK), OK);
             } catch (Exception e) {
                 log.error("An Exception Occurred :: {}", e.getMessage());
-                return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
             }
         }
-        return new ResponseEntity<>(new ErrorResponse("Excel contains no Data"), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ErrorResponse("Excel contains no Data"), BAD_REQUEST);
+    }
+
+    @Override
+    public ResponseEntity<?> activateAccounts(BulkPrivateUserCreationDTO bulkUpload) {
+        if (bulkUpload != null && !bulkUpload.getUsersList().isEmpty()) {
+            try {
+                bulkUpload.getUsersList().forEach(user -> {
+                    Users dbUser = usersRepository.findByEmailIgnoreCase(user.getEmail()).orElse(null);
+                    if (dbUser != null && !dbUser.isActive()) {
+                        dbUser.setActive(true);
+                        usersRepository.saveAndFlush(dbUser);
+                    }
+                });
+                return new ResponseEntity<>(new SuccessResponse("Accounts Activated", OK), OK);
+            } catch (Exception e) {
+                log.error("An Exception Occurred :: {}", e.getMessage());
+                return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
+            }
+        }
+        return new ResponseEntity<>(new ErrorResponse("Excel contains no Data"), BAD_REQUEST);
+    }
+
+    @Override
+    public ResponseEntity<?> activateAccount(Long id){
+        try {
+            Users dbUser = usersRepository.findById(false, id).orElse(null);
+            if (dbUser != null && !dbUser.isActive()) {
+                dbUser.setActive(true);
+                usersRepository.saveAndFlush(dbUser);
+                return new ResponseEntity<>(new SuccessResponse("Account Activated"), OK);
+            }
+            return new ResponseEntity<>(new ErrorResponse("User Does not exists or is still Active"), BAD_REQUEST);
+        } catch (Exception e) {
+            log.error("An Exception Occurred :: {}", e.getMessage());
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
+        }
     }
 
     public ResponseEntity<?> isUserAdmin(Long userId) {
         Users user = usersRepository.findById(false, userId)
-                .orElseThrow(() -> new CustomException("User with id  not found", HttpStatus.BAD_REQUEST));
+                .orElseThrow(() -> new CustomException("User with id  not found", BAD_REQUEST));
         return new ResponseEntity<>(new SuccessResponse("IsUserAdmin", user.isAdmin()), HttpStatus.OK);
     }
 
@@ -481,7 +518,7 @@ public class UserServiceImpl implements UserService {
             // Wayagram delete Account call
             UserIDPojo idPojo = new UserIDPojo(userId);
 
-            var resp = this.wayagramProxy.toggleActivation(idPojo, token);
+            var resp = this.wayagramProxy.deleteWayagramAccount(idPojo, token);
             log.info("Wayagram Account Activation: {} - {}", resp.getBody(), resp.getStatusCode());
         } catch (Exception e) {
             log.error("Error deleting user: {}", e.getMessage());
@@ -502,7 +539,7 @@ public class UserServiceImpl implements UserService {
 
             // Wayagram Activate Account call
             UserIDPojo idPojo = new UserIDPojo(userId);
-            var resp = this.wayagramProxy.toggleActivation(idPojo, token);
+            var resp = this.wayagramProxy.undeleteAccount(idPojo, token);
             log.info("Wayagram Account Activation: {} - {}", resp.getBody(), resp.getStatusCode());
         } catch (Exception e) {
             log.error("Error deleting user: {}", e.getMessage());
@@ -574,15 +611,15 @@ public class UserServiceImpl implements UserService {
                     continue;
 
                 Role userRole = rolesRepo.findByName("ROLE_USER")
-                        .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+                        .orElseThrow(() -> new CustomException("User Role Not Available", BAD_REQUEST));
 
                 Role merchRole = rolesRepo.findByName("ROLE_CORP")
-                        .orElseThrow(() -> new CustomException("User Corp Role Not Available", HttpStatus.BAD_REQUEST));
+                        .orElseThrow(() -> new CustomException("User Corp Role Not Available", BAD_REQUEST));
 
                 List<Role> roleList = new ArrayList<>(Arrays.asList(userRole, merchRole));
                 if (mUser.isAdmin()) {
                     Role corpAdminRole = rolesRepo.findByName("ROLE_CORP_ADMIN")
-                            .orElseThrow(() -> new CustomException("User Corp Admin Role Not Available", HttpStatus.BAD_REQUEST));
+                            .orElseThrow(() -> new CustomException("User Corp Admin Role Not Available", BAD_REQUEST));
                     roleList.add(corpAdminRole);
                 }
 
@@ -632,7 +669,7 @@ public class UserServiceImpl implements UserService {
             return new ResponseEntity<>(new SuccessResponse(message), HttpStatus.CREATED);
         } catch (Exception e) {
             log.error("Error in Creating Bulk Account:: {}", e.getMessage());
-            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
         }
     }
 
@@ -642,7 +679,7 @@ public class UserServiceImpl implements UserService {
         int count = 0;
         try {
             if (userList == null || userList.getUsersList().isEmpty())
-                return new ResponseEntity<>(new ErrorResponse("User List cannot be null or Empty"), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(new ErrorResponse("User List cannot be null or Empty"), BAD_REQUEST);
 
             DevicePojo dev = reqUtil.GetDevice(device);
             final String ip = reqUtil.getClientIP(request);
@@ -662,12 +699,12 @@ public class UserServiceImpl implements UserService {
                 List<Role> roleList = new ArrayList<>();
 
                 Role userRole = rolesRepo.findByName("ROLE_USER")
-                        .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+                        .orElseThrow(() -> new CustomException("User Role Not Available", BAD_REQUEST));
                 roleList.add(userRole);
 
                 if (mUser.isAdmin()) {
                     Role adminRole = rolesRepo.findByName("ROLE_APP_ADMIN")
-                            .orElseThrow(() -> new CustomException("User App Admin Role Not Available", HttpStatus.BAD_REQUEST));
+                            .orElseThrow(() -> new CustomException("User App Admin Role Not Available", BAD_REQUEST));
                     roleList.add(adminRole);
                 }
 
@@ -714,7 +751,7 @@ public class UserServiceImpl implements UserService {
             return new ResponseEntity<>(new SuccessResponse(message), HttpStatus.OK);
         } catch (Exception e) {
             log.error("Error in Creating Bulk Account:: {}", e.getMessage());
-            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
         }
     }
 

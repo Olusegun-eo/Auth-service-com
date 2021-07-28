@@ -39,5 +39,7 @@ public interface AdminService {
 
     ResponseEntity<?> bulkDeactivation(MultipartFile file);
 
+    ResponseEntity<?> bulkActivation(MultipartFile file);
+
     //ResponseEntity<?> createWayaUser(BaseUserPojo userPojo, HttpServletRequest request, Device device);
 }
