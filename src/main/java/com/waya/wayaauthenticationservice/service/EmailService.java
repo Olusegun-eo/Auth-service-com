@@ -10,7 +10,9 @@ import javax.validation.constraints.Email;
 
 public interface EmailService {
 
-    boolean sendAcctVerificationEmailToken(String baseUrl, Profile profile, OTPRequestType otpRequestType);
+    boolean sendVerificationEmailToken(String baseUrl, Profile profile, OTPRequestType otpRequestType);
+
+    boolean sendAccountVerificationEmailToken(OTPBase otp, String baseUrl, Profile profile);
 
     OTPVerificationResponse verifyEmailToken(@Valid @Email String email, Integer otp, OTPRequestType otpRequestType);
 

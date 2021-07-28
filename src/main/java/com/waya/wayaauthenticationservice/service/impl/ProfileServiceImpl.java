@@ -20,7 +20,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.*;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -182,7 +181,7 @@ public class ProfileServiceImpl implements ProfileService {
                         savedProfile.getPhoneNumber(), fullName, PHONE_VERIFICATION));
 
                 // send email otp
-                CompletableFuture.runAsync(() -> emailService.sendAcctVerificationEmailToken(
+                CompletableFuture.runAsync(() -> emailService.sendVerificationEmailToken(
                         baseUrl, savedProfile, EMAIL_VERIFICATION));
 
                 //create waya gram profile
@@ -259,7 +258,7 @@ public class ProfileServiceImpl implements ProfileService {
                         newCorporateProfile.getPhoneNumber(), fullName, PHONE_VERIFICATION));
 
                 // send email otp
-                CompletableFuture.runAsync(() -> emailService.sendAcctVerificationEmailToken(
+                CompletableFuture.runAsync(() -> emailService.sendVerificationEmailToken(
                         baseUrl, newCorporateProfile, EMAIL_VERIFICATION));
 
                 return new ApiResponse<>(null,
@@ -544,28 +543,48 @@ public class ProfileServiceImpl implements ProfileService {
      * @param userId       user id
      * @param profileImage request
      */
-    @Async
+    //@Async
     @Override
-    public CompletableFuture<ApiResponse<ProfileImageResponse>> updateProfileImage(
+    public ApiResponse<String> updateProfileImage(
             String userId, MultipartFile profileImage
     ) {
         try {
-            CompletableFuture<Profile> profile = profileRepository
-                    .findByUserIdAsync(false, userId);
+            Optional<Profile> profile = profileRepository
+                    .findByUserId(false, userId);
+            if(profile.isPresent()){
+                Profile item = profile.get();
 
-            return profile.thenApply(item -> {
-                if (item == null) throw new CustomException(
-                        PROFILE_NOT_EXIST, HttpStatus.NOT_FOUND);
-                //call file resource service with feign client to upload and return image url
-                ApiResponse<ProfileImageResponse> apiResponse = uploadImage(
-                        fileResourceServiceFeignClient, profileImage, userId, log);
-                //update the profile image
-                item.setProfileImage(apiResponse.getData().getImageUrl());
-                //save back to the database
-                profileRepository.save(item);
-                return apiResponse;
-            });
+                ApiResponse<ProfileImageResponse> response
+                        = uploadImage(fileResourceServiceFeignClient, profileImage, userId, log);
+                if(response != null && response.getStatus()){
+                    //update the profile image
+                    item.setProfileImage(response.getData().getImageUrl());
+                    //save back to the database
+                    profileRepository.save(item);
+                }
+//                CompletableFuture.supplyAsync(() ->  uploadImage(fileResourceServiceFeignClient, profileImage, userId, log))
+//                        .handle((res, ex) -> {
+//                            if (ex != null) {
+//                                log.error("Error Uploading Image, Message is: {}", ex.getMessage());
+//                            }
+//                            return res.getData();
+//                        }).thenAccept(p -> {
+//                    if(p != null){
+//                        //update the profile image
+//                        item.setProfileImage(p.getImageUrl());
+//                        //save back to the database
+//                        profileRepository.save(item);
+//                    }
+//                });
+                return new ApiResponse<>("", "Uploaded Successfully", true);
+            }
+
+           throw new CustomException(PROFILE_NOT_EXIST, HttpStatus.NOT_FOUND);
         } catch (Exception exception) {
+            if (exception instanceof CustomException) {
+                CustomException ex = (CustomException) exception;
+                throw new CustomException(ex.getMessage(), ex.getStatus());
+            }
             throw new CustomException(exception.getMessage(),
                     HttpStatus.BAD_REQUEST);
         }

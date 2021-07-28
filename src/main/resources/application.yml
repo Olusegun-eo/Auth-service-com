@@ -17,10 +17,16 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        show-sql: true
         jdbc:
           time_zone: UTC
     open-in-view: false #this config disables database queries which  may be performed during view rendering
+
+  servlet:
+    multipart:
+      enabled: true
+      file-size-threshold: 2KB
+      max-file-size: 2MB
+      max-request-size: 2MB
 
   cache:
     type: redis
@@ -48,11 +54,6 @@ spring:
     consumer:
       group-id: waya
       auto-offset-reset: earliest
-
-  servlet:
-    multipart:
-      max-file-size: 2MB
-      max-request-size: 2MB
 
   security:
     oauth2:
@@ -92,15 +93,6 @@ server:
   servlet:
     context-path: /
 
-logging:
-  level:
-    org:
-      hibernate:
-        SQL: DEBUG
-        type:
-          descriptor:
-            sql:
-              BasicBinder: TRACE
 
 eureka:
   client:
@@ -242,9 +234,6 @@ api:
         This endpoint is used to Change Users PIN, OTP is needed from `/change-pin/byPhone` or `/change-pin/byEmail` GET methods
         # Error Response
         Returns with a detailed response about the error.
-
-
-
 
   auth:
     create:

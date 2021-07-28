@@ -37,10 +37,40 @@ public class EmailServiceImpl implements EmailService {
      * @param profile userProfile
      */
     @Override
-    public boolean sendAcctVerificationEmailToken(String baseUrl, Profile profile, OTPRequestType otpRequestType) {
+    public boolean sendVerificationEmailToken(String baseUrl, Profile profile, OTPRequestType otpRequestType) {
         try {
             //generate the token
             OTPBase otp = generateEmailToken(profile.getEmail(), otpRequestType);
+            AccountVerificationEmailContext emailContext = new AccountVerificationEmailContext();
+            emailContext.init(profile);
+            emailContext.buildURL(baseUrl);
+            emailContext.setToken(String.valueOf(otp.getCode()));
+            try {
+                mailService.sendMail(emailContext);
+            } catch (Exception e) {
+                log.error("An Error Occurred:: {}", e.getMessage());
+            }
+            // mailService.sendMail(user.getEmail(), message);
+            log.info("Activation email sent!! \n");
+            return true;
+        } catch (Exception exception) {
+            log.error("could not process data ", exception);
+        }
+        return false;
+    }
+
+    /**
+     * generates a 6 digit OTP code and send code to email topic
+     * in kafka
+     *
+     * @param baseUrl url to redirect to
+     * @param otp OTPBase
+     * @param profile userProfile
+     */
+    @Override
+    public boolean sendAccountVerificationEmailToken(OTPBase otp, String baseUrl, Profile profile) {
+        try {
+            //generate the token
             AccountVerificationEmailContext emailContext = new AccountVerificationEmailContext();
             emailContext.init(profile);
             emailContext.buildURL(baseUrl);

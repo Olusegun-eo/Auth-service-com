@@ -16,6 +16,14 @@ public interface OTPRepository extends JpaRepository<OTPBase, Long> {
     @Transactional
     @Modifying
     @Query(value = "update m_otp_base set expiry_date =:newExpiryDate, valid =:isValid where " +
+            "phone_number =:phoneNumber and email =:email and request_type =:requestType", nativeQuery = true)
+    void invalidatePreviousRecords(@Param("phoneNumber") String phoneNumber, @Param("email") String email,
+                                   @Param("newExpiryDate") LocalDateTime newExpiryDate,
+                                   @Param("isValid") Boolean isValid, @Param("requestType") String requestType);
+
+    @Transactional
+    @Modifying
+    @Query(value = "update m_otp_base set expiry_date =:newExpiryDate, valid =:isValid where " +
             "phone_number =:phoneNumber and request_type =:requestType", nativeQuery = true)
     void invalidatePreviousRecords(@Param("phoneNumber") String phoneNumber, @Param("newExpiryDate") LocalDateTime newExpiryDate,
                                    @Param("isValid") Boolean isValid, @Param("requestType") String requestType);

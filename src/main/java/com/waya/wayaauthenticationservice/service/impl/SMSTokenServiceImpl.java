@@ -53,6 +53,64 @@ public class SMSTokenServiceImpl implements SMSTokenService {
     }
 
     /**
+     * generate otp for sms
+     *
+     * @param phoneNumber user phone number
+     * @param email user email address
+     * @return OTPBase
+     */
+    @Override
+    public OTPBase generateOTP(String phoneNumber, String email, OTPRequestType otpRequestType) {
+        OTPBase otp = new OTPBase();
+        otp.setCode(generateCode());
+        otp.setPhoneNumber(phoneNumber);
+        otp.setEmail(email);
+        otp.setValid(true);
+        otp.setRequestType(otpRequestType);
+        otp.setExpiryDate(10);
+
+        //update previous token expiry dates and isValid fields
+        LocalDateTime newExpiryDate = LocalDateTime.now().minusHours(1);
+
+        otpRepository.invalidatePreviousRecords(phoneNumber, email, newExpiryDate,
+                false, String.valueOf(otpRequestType));
+        otpRepository.save(otp);
+        return otp;
+    }
+
+    /**
+     * generates a 6 digit OTP code and send code to sms topic
+     * in kafka
+     * @param name        user Name
+     * @param otp OTPBase Object
+     */
+    @Override
+    public boolean sendSMSOTP(String name, OTPBase otp) {
+        try {
+            StreamPayload<StreamDataSMS> post = new StreamPayload<>();
+            post.setEventType(StreamsEventType.SMS.toString());
+            post.setInitiator(WAYAPAY);
+            post.setToken(null);
+            post.setKey(TWILIO_PROVIDER);
+
+            StreamDataSMS data = new StreamDataSMS();
+            data.setMessage(MESSAGE + otp.getCode() + MESSAGE_2);
+            data.setRecipients(Collections.singletonList(new RecipientsSMS(name, "+".concat(otp.getPhoneNumber()))));
+
+            post.setData(data);
+
+            messageQueueProducer.send(SMS_TOPIC, post);
+            log.info("otp sent to kafka message queue::: {}", post);
+            return true;
+        } catch (Exception exception) {
+            log.error("could not process data {}", exception.getMessage());
+        }
+        return false;
+    }
+
+
+
+    /**
      * generates a 6 digit OTP code and send code to sms topic
      * in kafka
      *

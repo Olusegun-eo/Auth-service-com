@@ -1,10 +1,7 @@
 package com.waya.wayaauthenticationservice.config;
 
 import com.waya.wayaauthenticationservice.enums.ERole;
-import com.waya.wayaauthenticationservice.security.AuthenticationFilter;
-import com.waya.wayaauthenticationservice.security.AuthorizationFilter;
-import com.waya.wayaauthenticationservice.security.JwtAuthenticationEntryPoint;
-import com.waya.wayaauthenticationservice.security.UserPrincipalDetailsService;
+import com.waya.wayaauthenticationservice.security.*;
 import com.waya.wayaauthenticationservice.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +18,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.FilterInvocation;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler;
 import org.springframework.security.web.firewall.DefaultHttpFirewall;
 import org.springframework.security.web.firewall.HttpFirewall;
@@ -134,4 +132,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		return new JwtAuthenticationEntryPoint();
 	}
 
+	@Bean
+	public AccessDeniedHandler accessDeniedHandler(){
+		return new CustomAccessDeniedHandler();
+	}
 }

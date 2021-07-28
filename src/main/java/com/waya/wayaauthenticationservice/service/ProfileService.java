@@ -2,13 +2,10 @@ package com.waya.wayaauthenticationservice.service;
 
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.response.*;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 public interface ProfileService {
 
@@ -57,7 +54,7 @@ public interface ProfileService {
      * @param userId              user id
      * @param profileImageRequest request
      */
-    CompletableFuture<ApiResponse<ProfileImageResponse>> updateProfileImage(final String userId,
+    ApiResponse<String> updateProfileImage(final String userId,
                                                                             MultipartFile profileImageRequest);
 
     /**

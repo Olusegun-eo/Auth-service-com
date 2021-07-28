@@ -26,9 +26,21 @@ spring:
     username: sa
     password: sa
     driver-class-name: org.h2.Driver
-  h2:
-    console:
-      enabled: true
-security:
-  basic:
-    enabled: false
+
+h2:
+  console:
+    enabled: true
+
+  security:
+    basic:
+      enabled: false
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE

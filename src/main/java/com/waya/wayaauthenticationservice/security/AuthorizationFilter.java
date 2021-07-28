@@ -1,12 +1,11 @@
 package com.waya.wayaauthenticationservice.security;
 
-import java.io.IOException;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import com.waya.wayaauthenticationservice.SpringApplicationContext;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.util.SecurityConstants;
+import io.jsonwebtoken.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,22 +13,15 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.util.StringUtils;
 
-import com.waya.wayaauthenticationservice.SpringApplicationContext;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.util.SecurityConstants;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureException;
-import io.jsonwebtoken.UnsupportedJwtException;
-
-
+@Slf4j
 public class AuthorizationFilter extends BasicAuthenticationFilter {
 
-    //private static final Logger LOGGER= LoggerFactory.getLogger(AuthorizationFilter.class);
-    
     public AuthorizationFilter(AuthenticationManager authManager) {
         super(authManager);
     }
@@ -38,10 +30,8 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
             throws IOException, ServletException {
     	
-    	System.out.println(":::::REQUEST:::::"+req.getAuthType());
         String header = req.getHeader(SecurityConstants.HEADER_STRING);
 
-        System.out.println("::::::::::auth::::::::");
         if (header == null || !header.startsWith(SecurityConstants.TOKEN_PREFIX)) {
             chain.doFilter(req, res);
             return;
@@ -52,7 +42,6 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
     }
 
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
-    	System.out.println(":::::::Authorization filter:::::");
         String token = parseJwt(request);
         String userToken;
         if (token != null && validateToken(token)) {
@@ -60,7 +49,7 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
             UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
 
             Users user = userLoginRepo.findByEmailOrPhoneNumber(userToken).orElse(null);
-                        // .orElseThrow(() -> new BadCredentialsException("User Does not exist"));
+
             if (user != null) {
                 UserPrincipal userPrincipal = new UserPrincipal(user);
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
@@ -81,15 +70,15 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
             Jwts.parser().setSigningKey(SecurityConstants.getSecret()).parseClaimsJws(authToken);
             return true;
         } catch (SignatureException ex) {
-            logger.error("Invalid JWT signature");
+            log.error("Invalid JWT signature");
         } catch (MalformedJwtException ex) {
-            logger.error("Invalid JWT token");
+            log.error("Invalid JWT token");
         } catch (ExpiredJwtException ex) {
-            logger.error("Expired JWT token");
+            log.error("Expired JWT token");
         } catch (UnsupportedJwtException ex) {
-            logger.error("Unsupported JWT token");
+            log.error("Unsupported JWT token");
         } catch (IllegalArgumentException ex) {
-            logger.error("JWT claims string is empty.");
+            log.error("JWT claims string is empty.");
         }
         return false;
     }

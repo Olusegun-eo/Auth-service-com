@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.util.concurrent.CompletableFuture;
 
 import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_400;
 import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_422;
@@ -169,7 +167,6 @@ public class ProfileController {
      * @return Object
      * @throws MaxUploadSizeExceededException exception
      */
-    @ResponseStatus(HttpStatus.CREATED)
     @ApiOperation(
             value = "${api.profile.update-user-profile-image.description}",
             notes = "${api.profile.update-user-profile-image.notes}", tags = {"PROFILE RESOURCE"})
@@ -177,14 +174,12 @@ public class ProfileController {
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
     })
-    @PutMapping(value = "update-profile-image/{userId}",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    CompletableFuture<ApiResponse<ProfileImageResponse>> updateProfileImage(
+    @PostMapping("/update-profile-image/{userId}")
+    public ResponseEntity<ApiResponse<String>> updateProfileImage(
             @RequestPart MultipartFile file,
             @PathVariable @CustomValidator(message = "UserId must be numeric", type = Type.NUMERIC_STRING) String userId) throws MaxUploadSizeExceededException
     {
-        return profileService.updateProfileImage(userId, file);
+        return ResponseEntity.ok(profileService.updateProfileImage(userId, file));
     }
     /**
      * get all users referrals   referals

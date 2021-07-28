@@ -1,7 +1,6 @@
 package com.waya.wayaauthenticationservice;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationConfig;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.waya.wayaauthenticationservice.config.LoggableDispatcherServlet;
@@ -102,6 +101,9 @@ public class WayaAuthenticationServiceApplication {
 	public CommonsMultipartResolver createMultipartResolver() {
 		CommonsMultipartResolver resolver=new CommonsMultipartResolver();
 		resolver.setDefaultEncoding("utf-8");
+		resolver.setMaxUploadSize(100000000);
+		resolver.setMaxInMemorySize(10240000);
+
 		return resolver;
 	}
 

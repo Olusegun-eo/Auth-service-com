@@ -112,6 +112,7 @@ public class UserController {
             @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize(value = "@userSecurity.useHierarchy(#id, authentication)")
     public ResponseEntity<?> remove(@PathVariable Long id) {
         return userService.deleteUser(id);
     }

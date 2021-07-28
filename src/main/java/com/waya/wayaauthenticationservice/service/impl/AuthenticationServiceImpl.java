@@ -540,7 +540,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private boolean pushEMailToken(String baseUrl, String email) {
         Profile profile = profileRepository.findByEmail(false, email)
                 .orElseThrow(() -> new CustomException("User Profile with email: " + email + "does not exist", HttpStatus.NOT_FOUND));
-        return emailService.sendAcctVerificationEmailToken(baseUrl, profile, EMAIL_VERIFICATION);
+        return emailService.sendVerificationEmailToken(baseUrl, profile, EMAIL_VERIFICATION);
     }
 
     @Override

@@ -8,6 +8,10 @@ public interface SMSTokenService {
 
     OTPBase generateSMSOTP(String phoneNumber, OTPRequestType otpRequestType);
 
+    OTPBase generateOTP(String phoneNumber, String email, OTPRequestType otpRequestType);
+
+    boolean sendSMSOTP(String name, OTPBase otp);
+
     boolean sendSMSOTP(String phoneNumber, String fullName, OTPRequestType otpRequestType);
 
     OTPVerificationResponse verifySMSOTP(String phoneNumber, Integer otp, OTPRequestType otpRequestType);
