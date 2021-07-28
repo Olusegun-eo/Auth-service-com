@@ -245,7 +245,7 @@ public class AdminController {
 
     @ApiOperation(value = "Deactivate Users via Excel Upload",
             notes = "To deactivate bulk accounts via excel upload", tags = {"ADMIN"})
-    @PostMapping(path = "/account-deactivation",
+    @PostMapping(path = "/account-activation",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN')")
