@@ -3,6 +3,7 @@ package com.waya.wayaauthenticationservice;
 import com.waya.wayaauthenticationservice.entity.BusinessType;
 import com.waya.wayaauthenticationservice.entity.Privilege;
 import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.enums.ERole;
 import com.waya.wayaauthenticationservice.repository.BusinessTypeRepository;
 import com.waya.wayaauthenticationservice.repository.PrivilegeRepository;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
@@ -67,12 +68,12 @@ public class SetUpLoader implements ApplicationListener<ContextRefreshedEvent> {
 		List<Privilege> ownerPrivileges = Arrays.asList(readPrivilege, updatePrivilege, writePrivilege, lockPrivilege,
 				unlockPrivilege, deletePrivilege,appAdmin, appSuperAdmin, appOwner);
 
-		createRoleIfNotFound("ROLE_USER", "USER ROLE", userPrivileges);
-        createRoleIfNotFound("ROLE_CORP", "CORPORATE USER ROLE", userPrivileges);
-        createRoleIfNotFound("ROLE_CORP_ADMIN", "CORPORATE ADMIN ROLE", merchAdminPrivileges);
-		createRoleIfNotFound("ROLE_APP_ADMIN", "APPLICATION ADMIN", adminPrivileges);
-		createRoleIfNotFound("ROLE_SUPER_ADMIN", "SUPER ADMIN ROLE", superAdminPrivileges);
-		createRoleIfNotFound("ROLE_OWNER_ADMIN", "OWNER ADMIN ROLE", ownerPrivileges);
+		createRoleIfNotFound(ERole.ROLE_USER.name(), "USER ROLE", userPrivileges);
+        createRoleIfNotFound(ERole.ROLE_CORP.name(), "CORPORATE USER ROLE", userPrivileges);
+        createRoleIfNotFound(ERole.ROLE_CORP_ADMIN.name(), "CORPORATE ADMIN ROLE", merchAdminPrivileges);
+		createRoleIfNotFound(ERole.ROLE_APP_ADMIN.name(), "APPLICATION ADMIN", adminPrivileges);
+		createRoleIfNotFound(ERole.ROLE_SUPER_ADMIN.name(), "SUPER ADMIN ROLE", superAdminPrivileges);
+		createRoleIfNotFound(ERole.ROLE_OWNER_ADMIN.name(), "OWNER ADMIN ROLE", ownerPrivileges);
 
 		alreadySetup = true;
 	}

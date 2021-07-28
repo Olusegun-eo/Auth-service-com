@@ -1,17 +1,16 @@
 package com.waya.wayaauthenticationservice.security;
 
-import java.util.Collection;
-
-import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Component;
-
 import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.enums.ERole;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.exception.UserServiceException;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Component;
+
+import java.util.Collection;
 
 @Component("userSecurity")
 @Slf4j
@@ -27,7 +26,7 @@ public class UserSecurity {
 		Users user = ((UserPrincipal) authentication.getPrincipal()).getUser()
 				.orElseThrow(() -> new UserServiceException(ErrorMessages.AUTHENTICATION_FAILED.getErrorMessage()));
 
-		if (user.getId() == id)
+		if (user.getId().equals(id))
 			return true;
 
 		Users returnObj = this.userRepo.findById(false, id)
@@ -60,20 +59,24 @@ public class UserSecurity {
 	}
 
 	private int compareRoles(Users targetEmp, Users authEmp) {
+		String[] roles = ERole.getRoleHierarchy().split(">");
 
-		Integer authEmpLevel = 0;
-		Integer returnEmp = 0;
+		Integer authEmpLevel = roles.length;
+		Integer returnEmp = roles.length;
 
-		// TODO: To Compare both User Roles and See who is greater
-		boolean role = roleCheck(authEmp.getRoleList(), "ADMIN");
-		if (role) authEmpLevel = 1;
+		for (int i = roles.length - 1; i >= 0; i--) {
+			boolean authCheck = roleCheck(authEmp.getRoleList(), roles[i]);
+			if (authCheck) authEmpLevel++;
 
+			boolean targetCheck = roleCheck(targetEmp.getRoleList(), roles[i]);
+			if (targetCheck) returnEmp++;
+		}
 		log.info("Authenticating User level is {}, Target User level is {}", authEmpLevel, returnEmp);
 		return authEmpLevel.compareTo(returnEmp);
 	}
 
-	public boolean roleCheck(Collection<Role> roleList, String role) {
-		return roleList.stream().anyMatch(e -> e.getName().contains(role));
+	private boolean roleCheck(Collection<Role> roleList, String role) {
+		return roleList.stream().anyMatch(e -> e.getName().equals(role));
 	}
 
 }

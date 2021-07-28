@@ -1,10 +1,16 @@
 package com.waya.wayaauthenticationservice.config;
 
-import java.util.Arrays;
-
+import com.waya.wayaauthenticationservice.enums.ERole;
+import com.waya.wayaauthenticationservice.security.AuthenticationFilter;
+import com.waya.wayaauthenticationservice.security.AuthorizationFilter;
+import com.waya.wayaauthenticationservice.security.JwtAuthenticationEntryPoint;
+import com.waya.wayaauthenticationservice.security.UserPrincipalDetailsService;
+import com.waya.wayaauthenticationservice.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.expression.SecurityExpressionHandler;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -14,17 +20,15 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.FilterInvocation;
+import org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler;
 import org.springframework.security.web.firewall.DefaultHttpFirewall;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.waya.wayaauthenticationservice.security.AuthenticationFilter;
-import com.waya.wayaauthenticationservice.security.AuthorizationFilter;
-import com.waya.wayaauthenticationservice.security.JwtAuthenticationEntryPoint;
-import com.waya.wayaauthenticationservice.security.UserPrincipalDetailsService;
-import com.waya.wayaauthenticationservice.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
+import java.util.Arrays;
 
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -56,6 +60,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		httpSecurity.cors().and().csrf().disable().exceptionHandling()
 				.authenticationEntryPoint(getBasicAuthEntryPoint()).and().sessionManagement()
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().authorizeRequests()
+				.expressionHandler(webSecurityExpressionHandler())
 				.antMatchers("/api/v1/auth/login", "/api/v1/password/change-password**").permitAll()
 				.antMatchers("/api/v1/auth/create", "/api/v1/auth/create-corporate").permitAll()
 				.antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
@@ -99,6 +104,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		source.registerCorsConfiguration("/**", configuration);
 
 		return source;
+	}
+
+	@Bean
+	public RoleHierarchyImpl roleHierarchy() {
+		RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
+		roleHierarchy.setHierarchy(ERole.getRoleHierarchy());
+		return roleHierarchy;
+	}
+
+	private SecurityExpressionHandler<FilterInvocation> webSecurityExpressionHandler() {
+		DefaultWebSecurityExpressionHandler defaultWebSecurityExpressionHandler     = new DefaultWebSecurityExpressionHandler();
+		defaultWebSecurityExpressionHandler.setRoleHierarchy(roleHierarchy());
+		return defaultWebSecurityExpressionHandler;
 	}
 
 	@Bean
