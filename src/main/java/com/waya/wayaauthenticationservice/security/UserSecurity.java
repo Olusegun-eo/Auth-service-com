@@ -45,7 +45,6 @@ public class UserSecurity {
 	public boolean useHierarchyForRoles(String roleName, Authentication authentication) {
 		Users user = ((UserPrincipal) authentication.getPrincipal()).getUser()
 				.orElse(null);
-
 		if(user == null) return false;
 
 		Role role = this.rolesRepository.findByName(roleName).orElse(null);
