@@ -1,6 +1,7 @@
 package com.waya.wayaauthenticationservice.controller;
 
 import com.waya.wayaauthenticationservice.assembler.UserAssembler;
+import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
 import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
@@ -33,6 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.List;
 
 @CrossOrigin
 @RestController
@@ -204,7 +206,8 @@ public class AdminController {
     @ApiOperation(value = "Manage Users Role and Permissions",
             notes = "To Alter roles and Permission from a User", tags = {"ADMIN"})
     @PostMapping("/manage-user/{userId}/roles/{add}/{roleName}")
-    @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN')")
+    @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN') and " +
+            "@userSecurity.useHierarchyForRoles(#roleName, authentication)")
     public ResponseEntity<?> manageRoles(@PathVariable Long userId,
                                          @PathVariable boolean add,
                                          @PathVariable String roleName) {
@@ -253,7 +256,12 @@ public class AdminController {
         return adminService.bulkActivation(file);
     }
 
-
+    @ApiOperation(value = "Fetch all Auth Users Roles (Admin Endpoint)", tags = {"ADMIN"})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
+    @GetMapping("/manage-user/roles")
+    public ResponseEntity<List<Role>> getAllAuthRolesDB(){
+        return ResponseEntity.ok(adminService.getAllAuthRolesDB());
+    }
 
 
 }

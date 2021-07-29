@@ -1,5 +1,6 @@
 package com.waya.wayaauthenticationservice.service;
 
+import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
@@ -12,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.List;
 
 public interface AdminService {
 
@@ -40,6 +42,8 @@ public interface AdminService {
     ResponseEntity<?> bulkDeactivation(MultipartFile file);
 
     ResponseEntity<?> bulkActivation(MultipartFile file);
+
+    List<Role> getAllAuthRolesDB();
 
     //ResponseEntity<?> createWayaUser(BaseUserPojo userPojo, HttpServletRequest request, Device device);
 }
