@@ -24,9 +24,8 @@ import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
-import com.waya.wayaauthenticationservice.service.EmailService;
+import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.service.SMSTokenService;
 import com.waya.wayaauthenticationservice.util.ReqIPUtils;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -48,13 +47,10 @@ import java.time.Month;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
-import static com.waya.wayaauthenticationservice.enums.OTPRequestType.EMAIL_VERIFICATION;
-import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PHONE_VERIFICATION;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.*;
 import static com.waya.wayaauthenticationservice.util.Constant.*;
-import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
 import static com.waya.wayaauthenticationservice.util.HelperUtils.generateRandomNumber;
 
 @Service
@@ -92,9 +88,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Autowired
     private ProfileService profileService;
     @Autowired
-    private SMSTokenService smsTokenService;
-    @Autowired
-    private EmailService emailService;
+    private OTPTokenService OTPTokenService;
 
     @Value("${api.server.deployed}")
     private String urlRedirect;
@@ -441,19 +435,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 return new ResponseEntity<>(new SuccessResponse("Account has been Verified already. Please login.", null),
                         HttpStatus.CREATED);
 
-            Matcher matcher = emailPattern.matcher(otpPojo.getPhoneOrEmail());
-            boolean isEmail = matcher.matches();
-
-            OTPVerificationResponse otpResponse;
-            if (isEmail) {
-                otpResponse = verifyEmail(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
-            } else {
-                otpResponse = verifyOTP(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
-            }
+            OTPVerificationResponse otpResponse = OTPTokenService.verifyJointOTP(otpPojo.getPhoneOrEmail(), otpPojo.getOtp(), JOINT_VERIFICATION);
             String message = otpResponse.getMessage();
-            boolean success = otpResponse.isValid();
-
-            if (success) {
+            if(otpResponse.isValid()){
                 user.setActive(true);
                 user.setDateOfActivation(LocalDateTime.now());
                 userRepo.save(user);
@@ -466,6 +450,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             } else {
                 return new ResponseEntity<>(new ErrorResponse(message), HttpStatus.BAD_REQUEST);
             }
+
         } catch (Exception e) {
             log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
             return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
@@ -508,7 +493,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if (user == null) {
             return new ResponseEntity<>(new ErrorResponse("Invalid Email Passed"), HttpStatus.BAD_REQUEST);
         }
-        if (user.isActive() && user.isEmailVerified())
+        if (user.isEmailVerified())
             return new ResponseEntity<>(new SuccessResponse("Account and Phone been Verified already.", null),
                     HttpStatus.CREATED);
 
@@ -525,22 +510,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private OTPVerificationResponse verifyOTP(String phoneNumber, Integer otp) {
-        OTPVerificationResponse verify = smsTokenService.verifySMSOTP(phoneNumber, otp, PHONE_VERIFICATION);
+        OTPVerificationResponse verify = OTPTokenService.verifySMSOTP(phoneNumber, otp, PHONE_VERIFICATION);
         return verify;
     }
 
     private OTPVerificationResponse verifyEmail(String email, Integer otp) {
-        return emailService.verifyEmailToken(email, otp, EMAIL_VERIFICATION);
+        return OTPTokenService.verifyEmailToken(email, otp, EMAIL_VERIFICATION);
     }
 
     private boolean sendOTP(String phoneNumber, String fullName) {
-        return smsTokenService.sendSMSOTP(phoneNumber, fullName, PHONE_VERIFICATION);
+        return OTPTokenService.sendSMSOTP(phoneNumber, fullName, PHONE_VERIFICATION);
     }
 
     private boolean pushEMailToken(String baseUrl, String email) {
         Profile profile = profileRepository.findByEmail(false, email)
                 .orElseThrow(() -> new CustomException("User Profile with email: " + email + "does not exist", HttpStatus.NOT_FOUND));
-        return emailService.sendVerificationEmailToken(baseUrl, profile, EMAIL_VERIFICATION);
+        return OTPTokenService.sendVerificationEmailToken(baseUrl, profile, EMAIL_VERIFICATION);
     }
 
     @Override
@@ -563,6 +548,26 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } else {
             return new ResponseEntity<>(new ErrorResponse("Error"), HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @Override
+    public ResponseEntity<?> resendOTPForAccountVerification(String emailOrPhoneNumber, String baseUrl) {
+        Users user = userRepo.findByEmailOrPhoneNumber(emailOrPhoneNumber).orElse(null);
+        if (user == null)
+            return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
+                    HttpStatus.NOT_FOUND);
+
+        if (user.isActive())
+            return new ResponseEntity<>(new SuccessResponse("Account has been Verified already.", null),
+                    HttpStatus.CREATED);
+
+        Profile profile = profileRepository.findByEmailOrPhoneNumber(false, emailOrPhoneNumber)
+                .orElseThrow(() -> new CustomException("User Profile with email: " + user.getEmail()
+                        + "does not exist", HttpStatus.NOT_FOUND));
+
+        this.OTPTokenService.sendAccountVerificationToken(profile, JOINT_VERIFICATION, baseUrl);
+
+        return new ResponseEntity<>(new SuccessResponse("OTP sent successfully.", null), HttpStatus.OK);
     }
 
     @Override

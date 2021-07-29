@@ -1,7 +1,7 @@
 package com.waya.wayaauthenticationservice.enums;
 
 public enum OTPRequestType {
-    ACCOUNT_VERIFICATION,
+    JOINT_VERIFICATION,
     EMAIL_VERIFICATION,
     PHONE_VERIFICATION,
     PIN_CHANGE_EMAIL,

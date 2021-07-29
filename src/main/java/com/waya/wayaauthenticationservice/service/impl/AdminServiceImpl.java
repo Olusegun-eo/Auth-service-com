@@ -64,10 +64,7 @@ public class AdminServiceImpl implements AdminService {
     UserService userService;
 
     @Autowired
-    EmailService emailService;
-
-    @Autowired
-    SMSTokenService smsTokenService;
+    OTPTokenService OTPTokenService;
 
     @Autowired
     PasswordEncoder passwordEncoder;
@@ -151,11 +148,11 @@ public class AdminServiceImpl implements AdminService {
             emailContext.init(profile);
             emailContext.seToken(String.valueOf(otpToken));
 
-            // Send the Mail
+            //Send the Mail
             CompletableFuture.runAsync(() -> this.mailService.sendMail(emailContext));
 
             // Send the Phone Number
-            CompletableFuture.runAsync(() -> this.smsTokenService.sendSMSOTP(adminUser.getPhoneNumber(), adminUser.getName(), ADMIN_VERIFICATION));
+            CompletableFuture.runAsync(() -> this.OTPTokenService.sendSMSOTP(adminUser.getPhoneNumber(), adminUser.getName(), ADMIN_VERIFICATION));
 
             return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
         } catch (Exception ex) {
@@ -170,12 +167,12 @@ public class AdminServiceImpl implements AdminService {
         if (adminUser == null)
             throw new CustomException("Error in Fetching Admin User", HttpStatus.INTERNAL_SERVER_ERROR);
 
-        OTPVerificationResponse resp = this.emailService.verifyEmailToken(adminUser.getEmail(), otp, ADMIN_VERIFICATION);
+        OTPVerificationResponse resp = this.OTPTokenService.verifyEmailToken(adminUser.getEmail(), otp, ADMIN_VERIFICATION);
         if (!resp.isValid()) {
-            resp = this.smsTokenService.verifySMSOTP(adminUser.getPhoneNumber(), otp, ADMIN_VERIFICATION);
-            this.emailService.invalidateOldToken(adminUser.getEmail(), ADMIN_VERIFICATION);
+            resp = this.OTPTokenService.verifySMSOTP(adminUser.getPhoneNumber(), otp, ADMIN_VERIFICATION);
+            this.OTPTokenService.invalidateOldTokenViaEmail(adminUser.getEmail(), ADMIN_VERIFICATION);
         } else {
-            this.smsTokenService.invalidateOldToken(adminUser.getPhoneNumber(), ADMIN_VERIFICATION);
+            this.OTPTokenService.invalidateOldTokenViaPhoneNumber(adminUser.getPhoneNumber(), ADMIN_VERIFICATION);
         }
 
         if (!resp.isValid())
@@ -267,7 +264,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     private Integer generateEmailOTP(String email, OTPRequestType otpRequestType) {
-        OTPBase otpBase = this.emailService.generateEmailToken(email, otpRequestType);
+        OTPBase otpBase = this.OTPTokenService.generateEmailToken(email, otpRequestType);
         return otpBase.getCode();
     }
 

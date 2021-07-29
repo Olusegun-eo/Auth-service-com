@@ -1,12 +1,13 @@
 package com.waya.wayaauthenticationservice.controller;
 
+import com.waya.wayaauthenticationservice.enums.Type;
 import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
-import com.waya.wayaauthenticationservice.pojo.others.EmailPojo;
 import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
 import com.waya.wayaauthenticationservice.service.UserService;
+import com.waya.wayaauthenticationservice.util.CustomValidator;
 import com.waya.wayaauthenticationservice.util.ValidPhone;
 import io.swagger.annotations.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -71,6 +72,15 @@ public class AuthenticationController {
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyAccount(@Valid @RequestBody OTPPojo otpPojo) {
         return authenticationServiceImpl.verifyAccountCreation(otpPojo);
+    }
+
+    @ApiOperation(value = "Resend OTP for Account Verification", notes = "See POjo Object for what to pass", tags = {"AUTH"})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
+    @GetMapping("/resend-otp/signup/{emailOrPhoneNumber}")
+    public ResponseEntity<?> resendOTP(@PathVariable("emailOrPhoneNumber")
+                                       @CustomValidator(message = "Has to be either a valid Email or PhoneNumber", type = Type.EMAIL_OR_PHONE)
+                                       String emailOrPhoneNumber, final HttpServletRequest request) {
+        return authenticationServiceImpl.resendOTPForAccountVerification(emailOrPhoneNumber, getBaseUrl(request));
     }
 
     @ApiOperation(

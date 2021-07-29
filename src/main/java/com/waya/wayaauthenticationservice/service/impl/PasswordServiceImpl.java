@@ -19,10 +19,9 @@ import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
-import com.waya.wayaauthenticationservice.service.EmailService;
 import com.waya.wayaauthenticationservice.service.MailService;
 import com.waya.wayaauthenticationservice.service.PasswordService;
-import com.waya.wayaauthenticationservice.service.SMSTokenService;
+import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -43,8 +42,7 @@ import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
 @Slf4j
 public class PasswordServiceImpl implements PasswordService {
 
-    private final EmailService emailService;
-    private final SMSTokenService smsTokenService;
+    private final OTPTokenService OTPTokenService;
     private final UserRepository usersRepo;
     private final ProfileRepository profileRepo;
     private final MailService mailService;
@@ -132,7 +130,7 @@ public class PasswordServiceImpl implements PasswordService {
                         + " For Profile with userId: " + user.getId(), null), HttpStatus.BAD_REQUEST);
 
             // Send the Phone Number
-            CompletableFuture.runAsync(() -> this.smsTokenService.sendSMSOTP(phoneNumber, user.getName(), PASSWORD_CHANGE_PHONE));
+            CompletableFuture.runAsync(() -> this.OTPTokenService.sendSMSOTP(phoneNumber, user.getName(), PASSWORD_CHANGE_PHONE));
 
             return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
         } catch (Exception ex) {
@@ -176,7 +174,7 @@ public class PasswordServiceImpl implements PasswordService {
     }
 
     private Integer generateEmailOTP(String email, OTPRequestType otpRequestType) {
-        OTPBase otpBase = this.emailService.generateEmailToken(email, otpRequestType);
+        OTPBase otpBase = this.OTPTokenService.generateEmailToken(email, otpRequestType);
         return otpBase.getCode();
     }
 
@@ -222,7 +220,7 @@ public class PasswordServiceImpl implements PasswordService {
                         + " For Profile with userId: " + user.getId(), null), HttpStatus.BAD_REQUEST);
 
             // Send the Phone Number
-            CompletableFuture.runAsync(() -> this.smsTokenService.sendSMSOTP(phoneNumber, user.getName(), PASSWORD_RESET_PHONE));
+            CompletableFuture.runAsync(() -> this.OTPTokenService.sendSMSOTP(phoneNumber, user.getName(), PASSWORD_RESET_PHONE));
 
             return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
         } catch (Exception ex) {
@@ -249,7 +247,7 @@ public class PasswordServiceImpl implements PasswordService {
                         + " For Profile with userId: " + user.getId(), null), HttpStatus.BAD_REQUEST);
 
             // Send the Phone Number
-            CompletableFuture.runAsync(() -> this.smsTokenService.sendSMSOTP(phoneNumber, user.getName(), PIN_RESET_PHONE));
+            CompletableFuture.runAsync(() -> this.OTPTokenService.sendSMSOTP(phoneNumber, user.getName(), PIN_RESET_PHONE));
 
             return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
         } catch (Exception ex) {
@@ -309,7 +307,7 @@ public class PasswordServiceImpl implements PasswordService {
                         + " For Profile with userId: " + user.getId(), null), HttpStatus.BAD_REQUEST);
 
             // Send the Phone Number
-            CompletableFuture.runAsync(() -> this.smsTokenService.sendSMSOTP(phoneNumber, user.getName(), PIN_CHANGE_PHONE));
+            CompletableFuture.runAsync(() -> this.OTPTokenService.sendSMSOTP(phoneNumber, user.getName(), PIN_CHANGE_PHONE));
 
             return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
         } catch (Exception ex) {
@@ -398,9 +396,9 @@ public class PasswordServiceImpl implements PasswordService {
         Map<String, Object> map = new HashMap<>();
         OTPVerificationResponse otpResponse;
         if (isEmail) {
-            otpResponse = this.emailService.verifyEmailToken(phoneOrEmail, Integer.parseInt(otp), otpRequestType);
+            otpResponse = this.OTPTokenService.verifyEmailToken(phoneOrEmail, Integer.parseInt(otp), otpRequestType);
         } else {
-            otpResponse = this.smsTokenService.verifySMSOTP(phoneOrEmail, Integer.parseInt(otp), otpRequestType);
+            otpResponse = this.OTPTokenService.verifySMSOTP(phoneOrEmail, Integer.parseInt(otp), otpRequestType);
         }
         success = otpResponse != null ? otpResponse.isValid() : false;
         message = otpResponse != null ? otpResponse.getMessage() : "Failure";
@@ -538,7 +536,7 @@ public class PasswordServiceImpl implements PasswordService {
                         + " For Profile with userId: " + user.getId(), null), HttpStatus.BAD_REQUEST);
 
             // Send the Phone Number
-            CompletableFuture.runAsync(() -> this.smsTokenService.sendSMSOTP(phoneNumber, user.getName(), PIN_CREATE_PHONE));
+            CompletableFuture.runAsync(() -> this.OTPTokenService.sendSMSOTP(phoneNumber, user.getName(), PIN_CREATE_PHONE));
 
             return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
         } catch (Exception ex) {

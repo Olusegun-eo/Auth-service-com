@@ -8,10 +8,9 @@ import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
 import com.waya.wayaauthenticationservice.repository.*;
 import com.waya.wayaauthenticationservice.response.*;
-import com.waya.wayaauthenticationservice.service.EmailService;
 import com.waya.wayaauthenticationservice.service.MailService;
 import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.service.SMSTokenService;
+import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +30,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.waya.wayaauthenticationservice.enums.OTPRequestType.EMAIL_VERIFICATION;
-import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PHONE_VERIFICATION;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.*;
 import static com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient.uploadImage;
 import static com.waya.wayaauthenticationservice.util.Constant.*;
 import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateReferralCode;
@@ -46,8 +44,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final ModelMapper modelMapper;
     private final ProfileRepository profileRepository;
     private final UserRepository userRepository;
-    private final SMSTokenService smsTokenService;
-    private final EmailService emailService;
+    private final OTPTokenService OTPTokenService;
     private final FileResourceServiceFeignClient fileResourceServiceFeignClient;
     private final OtherDetailsRepository otherDetailsRepository;
     private final RestTemplate restClient;
@@ -66,21 +63,19 @@ public class ProfileServiceImpl implements ProfileService {
     public ProfileServiceImpl(ModelMapper modelMapper,
                               ProfileRepository profileRepository,
                               UserRepository userRepository,
-                              SMSTokenService smsTokenService,
+                              OTPTokenService OTPTokenService,
                               FileResourceServiceFeignClient fileResourceServiceFeignClient,
                               OtherDetailsRepository otherDetailsRepository,
                               @Qualifier("restClient") RestTemplate restClient,
                               SMSAlertConfigRepository smsAlertConfigRepository,
-                              EmailService emailService,
                               MailService mailService, ReferralCodeRepository referralCodeRepository) {
         this.modelMapper = modelMapper;
         this.profileRepository = profileRepository;
-        this.smsTokenService = smsTokenService;
+        this.OTPTokenService = OTPTokenService;
         this.fileResourceServiceFeignClient = fileResourceServiceFeignClient;
         this.otherDetailsRepository = otherDetailsRepository;
         this.restClient = restClient;
         this.smsAlertConfigRepository = smsAlertConfigRepository;
-        this.emailService = emailService;
         this.mailService = mailService;
         this.referralCodeRepository = referralCodeRepository;
         this.userRepository = userRepository;
@@ -176,13 +171,16 @@ public class ProfileServiceImpl implements ProfileService {
                 String fullName = String.format("%s %s", savedProfile.getFirstName(),
                         savedProfile.getSurname());
 
-                //send otp
-                CompletableFuture.runAsync(() -> smsTokenService.sendSMSOTP(
-                        savedProfile.getPhoneNumber(), fullName, PHONE_VERIFICATION));
+                //send otp to Phone and Email
+                CompletableFuture.runAsync(() -> OTPTokenService.sendAccountVerificationToken(
+                       savedProfile, JOINT_VERIFICATION, baseUrl));
 
-                // send email otp
-                CompletableFuture.runAsync(() -> emailService.sendVerificationEmailToken(
-                        baseUrl, savedProfile, EMAIL_VERIFICATION));
+//                CompletableFuture.runAsync(() -> OTPTokenService.sendSMSOTP(
+//                        savedProfile.getPhoneNumber(), fullName, PHONE_VERIFICATION));
+//
+//                // send email otp
+//                CompletableFuture.runAsync(() -> emailService.sendVerificationEmailToken(
+//                        baseUrl, savedProfile, EMAIL_VERIFICATION));
 
                 //create waya gram profile
                 CompletableFuture.runAsync(() -> createWayagramProfile(savedProfile.getUserId(), savedProfile.getSurname(), fullName))
@@ -236,9 +234,9 @@ public class ProfileServiceImpl implements ProfileService {
             //check if the user exist in the profile table
             Optional<Profile> profile = profileRepository.findByEmail(
                     false, profileRequest.getEmail().trim());
+
             //check if the user exist in the referral table
             // now this check will extend to the referral service
-
             Optional<ReferralCode> referralCode = referralCodeRepository
                     .findByUserId(profileRequest.getUserId());
             //validation check
@@ -250,16 +248,16 @@ public class ProfileServiceImpl implements ProfileService {
                 // make request to the referral service
                 saveReferralCode(newCorporateProfile, profileRequest.getUserId());
 
-                String fullName = String.format("%s %s", newCorporateProfile.getFirstName(),
-                        newCorporateProfile.getSurname());
+                //send otp to Phone and Email
+                CompletableFuture.runAsync(() -> OTPTokenService.sendAccountVerificationToken(
+                        newCorporateProfile, JOINT_VERIFICATION, baseUrl));
 
-                //send sms otp
-                CompletableFuture.runAsync(() -> smsTokenService.sendSMSOTP(
-                        newCorporateProfile.getPhoneNumber(), fullName, PHONE_VERIFICATION));
-
-                // send email otp
-                CompletableFuture.runAsync(() -> emailService.sendVerificationEmailToken(
-                        baseUrl, newCorporateProfile, EMAIL_VERIFICATION));
+//                CompletableFuture.runAsync(() -> OTPTokenService.sendSMSOTP(
+//                        savedProfile.getPhoneNumber(), fullName, PHONE_VERIFICATION));
+//
+//                // send email otp
+//                CompletableFuture.runAsync(() -> emailService.sendVerificationEmailToken(
+//                        baseUrl, savedProfile, EMAIL_VERIFICATION));
 
                 return new ApiResponse<>(null,
                         CREATE_PROFILE_SUCCESS_MSG, true, OK);
@@ -562,20 +560,6 @@ public class ProfileServiceImpl implements ProfileService {
                     //save back to the database
                     profileRepository.save(item);
                 }
-//                CompletableFuture.supplyAsync(() ->  uploadImage(fileResourceServiceFeignClient, profileImage, userId, log))
-//                        .handle((res, ex) -> {
-//                            if (ex != null) {
-//                                log.error("Error Uploading Image, Message is: {}", ex.getMessage());
-//                            }
-//                            return res.getData();
-//                        }).thenAccept(p -> {
-//                    if(p != null){
-//                        //update the profile image
-//                        item.setProfileImage(p.getImageUrl());
-//                        //save back to the database
-//                        profileRepository.save(item);
-//                    }
-//                });
                 return new ApiResponse<>("", "Uploaded Successfully", true);
             }
 

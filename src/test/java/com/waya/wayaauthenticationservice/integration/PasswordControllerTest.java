@@ -11,13 +11,10 @@ import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
-import com.waya.wayaauthenticationservice.service.EmailService;
-import com.waya.wayaauthenticationservice.service.SMSTokenService;
-import com.waya.wayaauthenticationservice.util.TestHelper;
+import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.hamcrest.core.Is;
-import org.junit.Before;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,20 +24,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.ApplicationContext;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.Date;
 
 import static com.waya.wayaauthenticationservice.util.Constant.*;
 import static com.waya.wayaauthenticationservice.util.JsonString.asJsonString;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -75,10 +68,7 @@ public class PasswordControllerTest {
     private ReferralCode referralCode;
 
     @MockBean
-    private EmailService emailService;
-
-    @MockBean
-    private SMSTokenService smsTokenService;
+    private OTPTokenService OTPTokenService;
 
     @BeforeAll
     public void initialization(){
@@ -88,7 +78,7 @@ public class PasswordControllerTest {
     @Test
     @DisplayName("reset Password successfully with Email")
     public void resetPasswordSuccessfullyWithEmail() throws Exception {
-        Mockito.when(emailService.verifyEmailToken(any(), any(), any()))
+        Mockito.when(OTPTokenService.verifyEmailToken(any(), any(), any()))
                 .thenReturn(new OTPVerificationResponse(true, "Successful"));
 
         ResetPasswordPojo pojo = buildResetPojo(23456, "test@123", user.getEmail());
@@ -98,7 +88,7 @@ public class PasswordControllerTest {
     @Test
     @DisplayName("reset Password successfully with PhoneNumber")
     public void resetPasswordSuccessfullyWithPhoneNumber() throws Exception {
-        Mockito.when(smsTokenService.verifySMSOTP(any(), any(), any()))
+        Mockito.when(OTPTokenService.verifySMSOTP(any(), any(), any()))
                 .thenReturn(new OTPVerificationResponse(true, "Successful"));
 
         ResetPasswordPojo pojo = buildResetPojo(23456, "test@123", user.getPhoneNumber());
@@ -108,7 +98,7 @@ public class PasswordControllerTest {
     @Test
     @DisplayName("reset Password Failure Test")
     public void resetPasswordFailed() throws Exception {
-        Mockito.when(smsTokenService.verifySMSOTP(any(), any(), any()))
+        Mockito.when(OTPTokenService.verifySMSOTP(any(), any(), any()))
                 .thenReturn(new OTPVerificationResponse(true, "Successful"));
 
         ResetPasswordPojo pojo = buildResetPojo(23456, "test@123", "noemail@waya.com");
@@ -119,7 +109,7 @@ public class PasswordControllerTest {
     @Test
     @DisplayName("Change Forgotten Password Failure Test: Invalid Old Password")
     public void changeForgotPasswordFail() throws Exception {
-        Mockito.when(smsTokenService.verifySMSOTP(any(), any(), any()))
+        Mockito.when(OTPTokenService.verifySMSOTP(any(), any(), any()))
                 .thenReturn(new OTPVerificationResponse(true, "Successful"));
 
         PasswordPojo pojo = buildChangePassPojo(234567, "test@12345",
@@ -131,7 +121,7 @@ public class PasswordControllerTest {
     @Test
     @DisplayName("Change Forgotten Password Success Test: Correct Old Password")
     public void changeForgotPasswordPass() throws Exception {
-        Mockito.when(smsTokenService.verifySMSOTP(any(), any(), any()))
+        Mockito.when(OTPTokenService.verifySMSOTP(any(), any(), any()))
                 .thenReturn(new OTPVerificationResponse(true, "Successful"));
 
         PasswordPojo pojo = buildChangePassPojo(234567, "test@123",

@@ -22,6 +22,10 @@ public interface ProfileRepository extends JpaRepository<Profile, UUID> {
     @Query(value = "select * from m_user_profile where upper(email) = upper(:email) and deleted = :deleted", nativeQuery = true)
     Optional<Profile> findByEmail(boolean deleted, String email);
 
+    @Query(value = "select * from m_user_profile where (upper(email) = upper(:value) or " +
+            "phone_number LIKE CONCAT('%', :value)) and deleted = :deleted", nativeQuery = true)
+    Optional<Profile> findByEmailOrPhoneNumber(boolean deleted, String value);
+
     @Query(value = "select * from m_user_profile where user_id =:userId and deleted =:deleted", nativeQuery = true)
     Optional<Profile> findByUserId(boolean deleted, String userId);
 

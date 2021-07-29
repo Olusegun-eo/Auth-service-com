@@ -32,7 +32,7 @@ public class UserSecurity {
 		Users returnObj = this.userRepo.findById(false, id)
 				.orElse(null);
 
-		if(returnObj == null) return false;
+		if(returnObj == null) return true;
 
 		boolean isOga = compareRoles(returnObj, user) > 0;
 		log.info("isOga returned {}", isOga);
@@ -51,7 +51,7 @@ public class UserSecurity {
 
 		Users returnObj = this.userRepo.findByEmailOrPhoneNumber(emailOrPhoneNumber)
 				.orElse(null);
-		if(returnObj == null) return false;
+		if(returnObj == null) return true;
 
 		boolean isOga = compareRoles(returnObj, user) > 0;
 		log.info("isOga returned {}", isOga);

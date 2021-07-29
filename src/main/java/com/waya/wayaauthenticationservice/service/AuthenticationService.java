@@ -20,6 +20,8 @@ public interface AuthenticationService {
 
 	ResponseEntity<?> resendOTPPhone(String phoneNumber);
 
+	ResponseEntity<?> resendOTPForAccountVerification(String emailOrPhoneNumber, String baseUrl);
+
 	ResponseEntity<?> resendVerificationMail(String email, String baseUrl);
 
 	ResponseEntity<?> verifyAccountCreation(OTPPojo otpPojo);
@@ -47,4 +49,5 @@ public interface AuthenticationService {
 	void createPrivateUser(BaseUserPojo user, Long userId, String token, String baseUrl);
 
 	void sendEmailNewPassword(String randomPassword, String email, String firstName);
+
 }
