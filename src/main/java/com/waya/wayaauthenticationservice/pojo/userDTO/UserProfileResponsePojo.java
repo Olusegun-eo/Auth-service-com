@@ -1,21 +1,14 @@
 package com.waya.wayaauthenticationservice.pojo.userDTO;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import org.springframework.hateoas.RepresentationModel;
-import org.springframework.hateoas.server.core.Relation;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.*;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.server.core.Relation;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -44,7 +37,16 @@ public class UserProfileResponsePojo extends RepresentationModel<UserProfileResp
 	private String referenceCode;
 	private boolean pinCreated;
 	private boolean isCorporate;
-	
+
+	private String gender;
+	private String middleName;
+	private String dateOfBirth;
+	private String profileImage;
+	private String district;
+	private String address;
+	private String city;
+	private String state;
+
 	@Builder.Default
 	private Set<String> roles = new HashSet<>();
 	

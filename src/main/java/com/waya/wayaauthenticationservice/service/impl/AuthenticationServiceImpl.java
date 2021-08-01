@@ -305,7 +305,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         corporateProfileRequest.setPhoneNumber(mUser.getPhoneNumber());
         corporateProfileRequest.setFirstName(mUser.getFirstName());
         corporateProfileRequest.setGender(mUser.getGender());
-        String dateOfBirth = mUser.getDateOfBirth() == null ? LocalDate.now().toString() : mUser.getDateOfBirth().toString();
+        LocalDate dateOfBirth = mUser.getDateOfBirth() == null ? LocalDate.now() : mUser.getDateOfBirth();
         corporateProfileRequest.setDateOfBirth(dateOfBirth);
 
         // Implementation for internal call
@@ -361,7 +361,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         personalProfileRequest.setSurname(user.getSurname());
         personalProfileRequest.setUserId(id);
         personalProfileRequest.setGender(user.getGender());
-        String dateOfBirth = user.getDateOfBirth() == null ? LocalDate.now().toString() : user.getDateOfBirth().toString();
+        LocalDate dateOfBirth = user.getDateOfBirth() == null ? LocalDate.now() : user.getDateOfBirth();
         personalProfileRequest.setDateOfBirth(dateOfBirth);
 
         log.info("PersonalProfile account creation starts: " + personalProfileRequest);

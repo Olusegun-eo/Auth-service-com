@@ -3,18 +3,21 @@ package com.waya.wayaauthenticationservice.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
+import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
 import com.waya.wayaauthenticationservice.pojo.others.LoginResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.repository.PrivilegeRepository;
+import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.service.LoginHistoryService;
 import com.waya.wayaauthenticationservice.util.SecurityConstants;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.SignatureException;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +41,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
+@NoArgsConstructor
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private final Gson gson = new Gson();
@@ -53,9 +57,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         super.setAuthenticationManager(manager);
     }
 
-    public AuthenticationFilter() {
-    }
-
     @Override
     public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res)
             throws AuthenticationException {
@@ -66,7 +67,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
             Users user = userLoginRepo.findByEmailOrPhoneNumber(creds.getEmailOrPhoneNumber())
                     .orElseThrow(() -> new BadCredentialsException("User Does not exist"));
 
-            List<Role> roles = new ArrayList<Role>(user.getRoleList());
+            List<Role> roles = new ArrayList<>(user.getRoleList());
 
             Collection<GrantedAuthority> grantedAuthorities = roles.stream()
                     .map(r -> new SimpleGrantedAuthority(r.getName()))
@@ -86,7 +87,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                                             Authentication auth) throws IOException, SignatureException {
         // Inspect Here
         Users user = ((UserPrincipal) auth.getPrincipal()).getUser().orElse(null);
-        if(user == null) return;
+        if (user == null) return;
 
         String userName = user.getEmail();
 
@@ -102,55 +103,14 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
             userRepository.save(user);
         }
 
+        ProfileRepository profileRepository = (ProfileRepository) SpringApplicationContext.getBean("profileRepository");
+
+        Profile profile = profileRepository.
+                findByUserId(false, String.valueOf(user.getId())).orElse(new Profile());
+
         LoginResponsePojo loginResponsePojo = new LoginResponsePojo();
         Map<String, Object> m = new HashMap<>();
-//        if(user.getAccountStatus() != -1){
-//
-//            if (!user.isActive()) {
-//                loginResponsePojo.setCode(-3);
-//                loginResponsePojo.setStatus(false);
-//                loginResponsePojo.setMessage("User account is disabled, kindly contact Waya Admin");
-//                res.setStatus(400);
-//            } else {
-//                Set<String> permit = getPrivileges(user.getRoleList());
-//                Set<String> roles = user.getRoleList().stream().map(u -> u.getName()).collect(Collectors.toSet());
-//                // true == true
-//                // if (isAdmin == roleCheck(rs, "ROLE_ADMIN")) {
-//                loginResponsePojo.setCode(0);
-//                loginResponsePojo.setStatus(true);
-//                loginResponsePojo.setMessage("Login Successful");
-//
-//                m.put("token", SecurityConstants.TOKEN_PREFIX + token);
-//                m.put("privilege", permit);
-//                m.put("roles", roles);
-//                m.put("pinCreated", user.isPinCreated());
-//                m.put("corporate", user.isCorporate());
-//
-//                res.addHeader(SecurityConstants.HEADER_STRING, SecurityConstants.TOKEN_PREFIX + token);
-//
-//                UserProfileResponsePojo userProfile = new ModelMapper().map(user, UserProfileResponsePojo.class);
-//                userProfile.setPhoneNumber(user.getPhoneNumber());
-//                userProfile.setFirstName(user.getFirstName());
-//                userProfile.setLastName(user.getSurname());
-//                userProfile.setEmailVerified(user.isEmailVerified());
-//                userProfile.setActive(user.isActive());
-//                userProfile.setAccountDeleted(user.isDeleted());
-//                userProfile.setAdmin(user.isAdmin());
-//                userProfile.setRoles(roles);
-//                userProfile.setPermits(permit);
-//                userProfile.setAccountExpired(!user.isAccountNonExpired());
-//                userProfile.setAccountLocked(!user.isAccountNonLocked());
-//                userProfile.setCredentialsExpired(!user.isCredentialsNonExpired());
-//
-//                m.put("user", userProfile);
-//                loginResponsePojo.setData(m);
-//            }
-//        } else {
-//            loginResponsePojo.setCode(-2);
-//            loginResponsePojo.setStatus(false);
-//            loginResponsePojo.setMessage("User's Credential should be Changed ");
-//            res.setStatus(400);
-//        }
+
         Set<String> permit = getPrivileges(user.getRoleList());
         Set<String> roles = user.getRoleList().stream().map(u -> u.getName()).collect(Collectors.toSet());
 
@@ -165,20 +125,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         m.put("corporate", user.isCorporate());
 
         res.addHeader(SecurityConstants.HEADER_STRING, SecurityConstants.TOKEN_PREFIX + token);
-
-        UserProfileResponsePojo userProfile = new ModelMapper().map(user, UserProfileResponsePojo.class);
-        userProfile.setPhoneNumber(user.getPhoneNumber());
-        userProfile.setFirstName(user.getFirstName());
-        userProfile.setLastName(user.getSurname());
-        userProfile.setEmailVerified(user.isEmailVerified());
-        userProfile.setActive(user.isActive());
-        userProfile.setAccountDeleted(user.isDeleted());
-        userProfile.setAdmin(user.isAdmin());
-        userProfile.setRoles(roles);
-        userProfile.setPermits(permit);
-        userProfile.setAccountExpired(!user.isAccountNonExpired());
-        userProfile.setAccountLocked(!user.isAccountNonLocked());
-        userProfile.setCredentialsExpired(!user.isCredentialsNonExpired());
+        UserProfileResponsePojo userProfile = convert(user, profile);
 
         m.put("user", userProfile);
         loginResponsePojo.setData(m);
@@ -213,7 +160,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         return roleList.stream().anyMatch(e -> e.getName().equals(role));
     }
 
-    private final Set<String> getPrivileges(final Collection<Role> roles) {
+    private Set<String> getPrivileges(final Collection<Role> roles) {
         Set<String> privileges = new HashSet<String>();
         for (Role role : roles) {
             privileges.addAll(role.getPrivileges().stream().map(p -> p.getName()).collect(Collectors.toSet()));
@@ -227,5 +174,34 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
             authorities.add(new SimpleGrantedAuthority(privilege));
         }
         return authorities;
+    }
+
+    private UserProfileResponsePojo convert(Users user, Profile profile) {
+        Set<String> permit = getPrivileges(user.getRoleList());
+        Set<String> roles = user.getRoleList().stream().map(u -> u.getName()).collect(Collectors.toSet());
+
+        UserProfileResponsePojo userProfile = new ModelMapper().map(user, UserProfileResponsePojo.class);
+        userProfile.setPhoneNumber(user.getPhoneNumber());
+        userProfile.setFirstName(user.getFirstName());
+        userProfile.setLastName(user.getSurname());
+        userProfile.setEmailVerified(user.isEmailVerified());
+        userProfile.setActive(user.isActive());
+        userProfile.setAccountDeleted(user.isDeleted());
+        userProfile.setAdmin(user.isAdmin());
+        userProfile.setRoles(roles);
+        userProfile.setPermits(permit);
+        userProfile.setAccountExpired(!user.isAccountNonExpired());
+        userProfile.setAccountLocked(!user.isAccountNonLocked());
+        userProfile.setCredentialsExpired(!user.isCredentialsNonExpired());
+        //if(profile != null){
+        userProfile.setGender(profile.getGender());
+        userProfile.setMiddleName(profile.getMiddleName());
+        userProfile.setDateOfBirth(profile.getDateOfBirth());
+        userProfile.setDistrict(profile.getDistrict());
+        userProfile.setAddress(profile.getAddress());
+        userProfile.setCity(profile.getCity());
+        userProfile.setState(profile.getState());
+        //}
+        return userProfile;
     }
 }

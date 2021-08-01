@@ -448,9 +448,9 @@ public class PasswordServiceImpl implements PasswordService {
     public ResponseEntity<?> createPin(NewPinPojo pinPojo) {
         try {
             // Check if email exists
-            Users existingEmail = usersRepo.findByEmailOrPhoneNumber(pinPojo.getPhoneOrEmail()).orElse(null);
-            if (existingEmail != null) {
-                if (existingEmail.isPinCreated())
+            Users users = usersRepo.findByEmailOrPhoneNumber(pinPojo.getPhoneOrEmail()).orElse(null);
+            if (users != null) {
+                if (users.isPinCreated())
                     return new ResponseEntity<>(new ErrorResponse("Transaction pin exists already"),
                             HttpStatus.BAD_REQUEST);
 
@@ -468,9 +468,10 @@ public class PasswordServiceImpl implements PasswordService {
                             HttpStatus.BAD_REQUEST);
                 }
 
-                existingEmail.setPinHash(passwordEncoder.encode(pinPojo.getPin()));
-                existingEmail.setPinCreated(true);
-                usersRepo.save(existingEmail);
+                users.setPinHash(passwordEncoder.encode(pinPojo.getPin()));
+                users.setPinCreated(true);
+                usersRepo.save(users);
+
                 return new ResponseEntity<>(new SuccessResponse("Transaction pin created successfully.", null),
                         HttpStatus.CREATED);
             } else {
@@ -570,7 +571,7 @@ public class PasswordServiceImpl implements PasswordService {
             // Send the Mail
             CompletableFuture.runAsync(() -> this.mailService.sendMail(emailContext));
 
-            return new ResponseEntity<>(new SuccessResponse("Email for Password Reset has been sent"), HttpStatus.OK);
+            return new ResponseEntity<>(new SuccessResponse("Email for Pin Creation has been sent"), HttpStatus.OK);
         } catch (Exception ex) {
             log.error("An Error Occurred: {}", ex.getMessage());
             throw new CustomException(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);

@@ -162,6 +162,7 @@ public class ProfileServiceImpl implements ProfileService {
                 // check if this referral code is already mapped to a user
                 newProfile.setReferral(request.getReferralCode());
                 newProfile.setCorporate(false);
+                newProfile.setDateOfBirth(request.getDateOfBirth().toString());
                 //save new personal profile
                 Profile savedProfile = profileRepository.save(newProfile);
                 log.info("saving new personal profile ::: {}", newProfile);
@@ -174,13 +175,6 @@ public class ProfileServiceImpl implements ProfileService {
                 //send otp to Phone and Email
                 CompletableFuture.runAsync(() -> OTPTokenService.sendAccountVerificationToken(
                        savedProfile, JOINT_VERIFICATION, baseUrl));
-
-//                CompletableFuture.runAsync(() -> OTPTokenService.sendSMSOTP(
-//                        savedProfile.getPhoneNumber(), fullName, PHONE_VERIFICATION));
-//
-//                // send email otp
-//                CompletableFuture.runAsync(() -> emailService.sendVerificationEmailToken(
-//                        baseUrl, savedProfile, EMAIL_VERIFICATION));
 
                 //create waya gram profile
                 CompletableFuture.runAsync(() -> createWayagramProfile(savedProfile.getUserId(), savedProfile.getSurname(), fullName))
@@ -252,13 +246,6 @@ public class ProfileServiceImpl implements ProfileService {
                 CompletableFuture.runAsync(() -> OTPTokenService.sendAccountVerificationToken(
                         newCorporateProfile, JOINT_VERIFICATION, baseUrl));
 
-//                CompletableFuture.runAsync(() -> OTPTokenService.sendSMSOTP(
-//                        savedProfile.getPhoneNumber(), fullName, PHONE_VERIFICATION));
-//
-//                // send email otp
-//                CompletableFuture.runAsync(() -> emailService.sendVerificationEmailToken(
-//                        baseUrl, savedProfile, EMAIL_VERIFICATION));
-
                 return new ApiResponse<>(null,
                         CREATE_PROFILE_SUCCESS_MSG, true, OK);
             } else {
@@ -289,7 +276,7 @@ public class ProfileServiceImpl implements ProfileService {
         OtherDetails otherDetails = saveOtherDetails(otherDetailsRequest);
         Profile profile = new Profile();
         profile.setCorporate(true);
-        profile.setDateOfBirth(profileRequest.getDateOfBirth());
+        profile.setDateOfBirth(profileRequest.getDateOfBirth().toString());
         profile.setGender(profileRequest.getGender());
         profile.setEmail(profileRequest.getEmail());
         profile.setFirstName(profileRequest.getFirstName());
@@ -322,45 +309,9 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     /**
-     * save referral code for the new profile.
-     *
-     * @param newProfile new profile
-     */
-//    private void saveReferralCode(Profile newProfile, String userId) {
-//        ProfileDto profileDto = new ProfileDto();
-//
-//        profileDto.setAddress(newProfile.getAddress());
-//        profileDto.setCity(newProfile.getCity());
-//        profileDto.setCorporate(false);
-//        profileDto.setDateOfBirth(newProfile.getDateOfBirth());
-//        profileDto.setDistrict(newProfile.getDistrict());
-//        profileDto.setEmail(newProfile.getEmail());
-//        profileDto.setFirstName(newProfile.getFirstName());
-//        profileDto.setGender(newProfile.getGender());
-//        profileDto.setMiddleName(newProfile.getMiddleName());
-//        profileDto.setOrganisationName(newProfile.getOrganisationName());
-//        profileDto.setSurname(newProfile.getSurname());
-//        profileDto.setUserId(newProfile.getUserId());
-//        profileDto.setPhoneNumber(newProfile.getPhoneNumber());
-//        profileDto.setReferral(newProfile.getReferral());
-//        profileDto.setState(newProfile.getState());
-//
-//        try {
-//            log.info("saving referral code for this new profile");
-//            ResponseEntity<String> response = referralProxy.saveReferralCode(profileDto, userId);
-//            log.info("Response: {}", response.getBody());
-//        } catch (Exception exception) {
-//            log.error(exception.getMessage());
-//            throw new CustomException(exception.getMessage(), HttpStatus.BAD_REQUEST);
-//        }
-
-//        ReferralCodePojo pro saveReferralCode
-
-    /**
      * check for the availability of the service
      * rollback if the service is unavailable
      */
-    // provide endpoint to send data to referral service
     private void saveReferralCode(Profile newProfile, String userId) {
         // send details to the referral Service
         referralCodeRepository.save(
@@ -382,7 +333,7 @@ public class ProfileServiceImpl implements ProfileService {
     public UserProfileResponse getUserProfile(String userId, HttpServletRequest request) {
         try {
             Optional<Profile> profile = profileRepository.findByUserId(false, userId);
-            if (!profile.isPresent())
+            if (profile.isEmpty())
                 throw new CustomException("profile with that user id is not found", HttpStatus.NOT_FOUND);
 
             log.info("getting users profile from db ::: {}", profile.get());
@@ -457,6 +408,7 @@ public class ProfileServiceImpl implements ProfileService {
             updatedProfile.setId(profile.getId());
             updatedProfile.setUserId(userId);
             updatedProfile.setProfileImage(profile.getProfileImage());
+            updatedProfile.setDateOfBirth(updatePersonalProfileRequest.getDateOfBirth().toString());
 
             log.info("updating  user profile ::: {}", updatedProfile);
             return profileRepository.save(updatedProfile);
@@ -526,6 +478,7 @@ public class ProfileServiceImpl implements ProfileService {
             profile.setCity(corporateProfileRequest.getCity());
             profile.setState(corporateProfileRequest.getState());
             profile.setGender(corporateProfileRequest.getGender());
+            profile.setDateOfBirth(corporateProfileRequest.getDateOfBirth().toString());
 
             log.info("updating  user profile with values ::: {}", profile);
             return profileRepository.save(profile);
