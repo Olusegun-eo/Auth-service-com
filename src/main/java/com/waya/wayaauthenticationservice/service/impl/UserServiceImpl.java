@@ -221,6 +221,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public ResponseEntity<?> validateWalletUserCall(Long userId, String key) {
+        if(!key.equalsIgnoreCase("WALMIFOS"))
+            return new ResponseEntity<>(new ErrorResponse("Invalid KEY Passed"), HttpStatus.BAD_REQUEST);
+
+        Users user = usersRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.NOT_FOUND);
+        }
+        UserProfileResponsePojo userDtO = toModelDTO(user);
+        return new ResponseEntity<>(new SuccessResponse("User info fetched", userDtO), HttpStatus.OK);
+    }
+
+    @Override
     public ResponseEntity<?> getMyInfo() {
         Users user = authenticatedUserFacade.getUser();
         UserProfileResponsePojo userDto = this.toModelDTO(user);

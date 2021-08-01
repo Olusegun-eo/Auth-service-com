@@ -65,4 +65,6 @@ public interface UserService {
     ResponseEntity<?> deactivateAccounts(BulkPrivateUserCreationDTO excelToPrivateUserPojo);
 
     ResponseEntity<?> activateAccounts(BulkPrivateUserCreationDTO excelToPrivateUserPojo);
+
+	ResponseEntity<?> validateWalletUserCall(Long userId, String key);
 }

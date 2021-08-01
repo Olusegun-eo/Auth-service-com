@@ -158,6 +158,15 @@ public class AuthenticationController {
         return authenticationServiceImpl.validateUser();
     }
 
+    @ApiOperation(value = "User Validation (Service consumption only. Do not Use)",
+            notes = "This endpoint help validate user and is meant for service consumption only", tags = {
+            "AUTH"})
+    @PostMapping("/wallet/{userId}/{key}")
+    public ResponseEntity<?> validateWalletUserCall(@PathVariable Long userId, @PathVariable String key) {
+        return userService.validateWalletUserCall(userId, key);
+    }
+
+
     private String getBaseUrl(HttpServletRequest request) {
         return "http://" + urlRedirect + ":" + request.getServerPort() + request.getContextPath();
     }
