@@ -203,18 +203,6 @@ public class AdminController {
         return adminService.verifyAdminOTP(otp);
     }
 
-    @ApiOperation(value = "Manage Users Role and Permissions",
-            notes = "To Alter roles and Permission from a User", tags = {"ADMIN"})
-    @PostMapping("/manage-user/{userId}/roles/{add}/{roleName}")
-    @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN') and " +
-            "@userSecurity.useHierarchyForRoles(#roleName, authentication)")
-    public ResponseEntity<?> manageRoles(@PathVariable Long userId,
-                                         @PathVariable boolean add,
-                                         @PathVariable String roleName) {
-
-        return adminService.manageUserRole(userId, add, roleName);
-    }
-
     @ApiOperation(value = "Manage and Reset Users Password",
             notes = "To Alter Password of a User", tags = {"ADMIN"})
     @PostMapping("/reset/{userId}/password")
@@ -263,5 +251,16 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getAllAuthRolesDB());
     }
 
+    @ApiOperation(value = "Manage Users Role and Permissions",
+            notes = "To Alter roles and Permission from a User", tags = {"ADMIN"})
+    @PostMapping("/manage-user/{userId}/roles/{add}/{roleName}")
+    @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN') and " +
+            "@userSecurity.useHierarchyForRoles(#roleName, authentication)")
+    public ResponseEntity<?> manageRoles(@PathVariable Long userId,
+                                         @PathVariable boolean add,
+                                         @PathVariable String roleName) {
+
+        return adminService.manageUserRole(userId, add, roleName);
+    }
 
 }

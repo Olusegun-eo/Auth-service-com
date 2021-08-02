@@ -250,7 +250,7 @@ public class UserServiceImpl implements UserService {
             // Generate token to use for deactivation of other Services tied to the UserId
             String token = this.authService.generateToken(authenticatedUserFacade.getUser());
 
-            CompletableFuture.runAsync(() -> deactivationServices(user, token));
+            deactivationServices(user, token);
 
             return new ResponseEntity<>(new SuccessResponse("Account deleted", OK), OK);
         } catch (Exception e) {
@@ -268,7 +268,7 @@ public class UserServiceImpl implements UserService {
             });
             int moreOrNegativeBalance = clrBalAmt.compareTo(new BigDecimal("0.00"));
             if (moreOrNegativeBalance != 0)
-                throw new CustomException("User needs to nil off Balance in Wallet", BAD_REQUEST);
+                throw new CustomException("User needs to nil off Balance across all Wallets", BAD_REQUEST);
 
             // De-activate and Delete Existing Accounts
             user.setActive(false);

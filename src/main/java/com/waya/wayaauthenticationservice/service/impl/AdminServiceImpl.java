@@ -1,6 +1,5 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import com.waya.wayaauthenticationservice.SpringApplicationContext;
 import com.waya.wayaauthenticationservice.entity.OTPBase;
 import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.Role;
@@ -18,7 +17,6 @@ import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
-import com.waya.wayaauthenticationservice.security.UserSecurity;
 import com.waya.wayaauthenticationservice.service.*;
 import com.waya.wayaauthenticationservice.util.ExcelHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -188,10 +186,6 @@ public class AdminServiceImpl implements AdminService {
         try {
             Users user = userRepository.findById(false, userId).orElseThrow(() ->
                     new CustomException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage(), HttpStatus.NOT_FOUND));
-
-            Users signedInUser = authenticatedUserFacade.getUser();
-
-            UserSecurity userSecurity = (UserSecurity) SpringApplicationContext.getBean("userSecurity");
 
             Optional<Role> mRole = rolesRepository.findByName(roleName);
             if (mRole.isPresent()) {
