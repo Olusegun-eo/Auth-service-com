@@ -107,9 +107,9 @@ public class UserSecurity {
 					targetRole = roles.length - i;
 
 				boolean authCheck = roleCheck(roleList, roles[i].trim());
-				if (authCheck) authEmpLevel++;
+				if (authCheck) authEmpLevel = roles.length - i;
 			}
-			if(targetRole == roles.length) return true;
+			if(targetRole == roles.length && targetRole.equals(authEmpLevel)) return true;
 
 			return authEmpLevel.compareTo(targetRole) > 0;
 		}

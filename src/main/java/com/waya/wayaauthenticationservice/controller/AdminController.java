@@ -98,7 +98,7 @@ public class AdminController {
         return adminService.createUser(userPojo, request, device);
     }
 
-    @ApiOperation(value = "Create New Waya Official User Account (Admin Endpoint)", tags = {"ADMIN"})
+    @ApiOperation(value = "Create New Waya Official User Account (Admin Endpoint). Only a user with Owner Role can execute", tags = {"ADMIN"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping("/users/waya-account")
     @PreAuthorize(value = "hasAuthority('ROLE_OWNER_ADMIN')")
@@ -214,7 +214,6 @@ public class AdminController {
     @ApiOperation(value = "Manage and Reset Users Password",
             notes = "To Alter Password of a User", tags = {"ADMIN"})
     @PostMapping("/reset/{userId}/password")
-    @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN')")
     public ResponseEntity<?> manageUserPass(@PathVariable Long userId) {
         return adminService.manageUserPass(userId);
     }
@@ -237,7 +236,6 @@ public class AdminController {
     @PostMapping(path = "bulk/account-deactivation",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN')")
     public ResponseEntity<?> bulkDeactivation(@RequestPart("file") MultipartFile file) {
         return adminService.bulkDeactivation(file);
     }
@@ -247,7 +245,6 @@ public class AdminController {
     @PostMapping(path = "bulk/account-activation",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN')")
     public ResponseEntity<?> bulkActivation(@RequestPart("file") MultipartFile file) {
         return adminService.bulkActivation(file);
     }
@@ -260,10 +257,10 @@ public class AdminController {
     }
 
     @ApiOperation(value = "Manage Users Role and Permissions",
-            notes = "To Alter roles and Permission from a User", tags = {"ADMIN"})
+            notes = "To Alter roles and Permission from a User. Only a user with an Higher role can upgrade, "
+            		+ "except when another Owner intends upgrading a user role to Owner", tags = {"ADMIN"})
     @PostMapping("/manage-user/{userId}/roles/{add}/{roleName}")
-    @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN') and " +
-            "@userSecurity.useHierarchyForRoles(#roleName, authentication)")
+    @PreAuthorize(value = "@userSecurity.useHierarchyForRoles(#roleName, authentication)")
     public ResponseEntity<?> manageRoles(@PathVariable Long userId,
                                          @PathVariable boolean add,
                                          @PathVariable String roleName) {
