@@ -1,12 +1,9 @@
 package com.waya.wayaauthenticationservice.util;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import static com.waya.wayaauthenticationservice.util.HelperUtils.numericPattern;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-
-import static com.waya.wayaauthenticationservice.util.HelperUtils.numericPattern;
 
 //@Configurable
 

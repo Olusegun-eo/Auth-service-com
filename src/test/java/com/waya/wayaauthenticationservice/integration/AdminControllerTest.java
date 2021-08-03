@@ -1,12 +1,15 @@
 package com.waya.wayaauthenticationservice.integration;
 
-import com.waya.wayaauthenticationservice.entity.Role;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.enums.ERole;
-import com.waya.wayaauthenticationservice.repository.RolesRepository;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import static com.waya.wayaauthenticationservice.util.Constant.JWT_TOKEN_VALIDITY;
+import static com.waya.wayaauthenticationservice.util.Constant.SECRET_TOKEN;
+import static com.waya.wayaauthenticationservice.util.Constant.TOKEN_PREFIX;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.Collections;
+import java.util.Date;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,13 +23,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 
-import java.util.Collections;
-import java.util.Date;
+import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.enums.ERole;
+import com.waya.wayaauthenticationservice.repository.RolesRepository;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
 
-import static com.waya.wayaauthenticationservice.util.Constant.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 
 @ActiveProfiles("test")
 @SpringBootTest

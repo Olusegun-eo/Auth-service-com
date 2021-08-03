@@ -1,16 +1,10 @@
 package com.waya.wayaauthenticationservice.pojo.others;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.waya.wayaauthenticationservice.enums.Type;
-import com.waya.wayaauthenticationservice.util.CustomValidator;
-import com.waya.wayaauthenticationservice.util.ValidPhone;
-import lombok.Getter;
-import lombok.Setter;
-
-import javax.persistence.Column;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
-import java.util.UUID;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter

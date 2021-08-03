@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -26,6 +27,8 @@ public interface UserRepository extends JpaRepository<Users, Long> {
     Optional<Users> findByEmailOrPhoneNumber(@Param("value") String value);
 
     Page<Users> findByRoleListIn(Collection<Role> roles, Pageable pageable);
+
+    List<Users> findByRoleList_(Role role);
 
     @Query(value = "SELECT u FROM Users u WHERE u.isCorporate = :value AND u.isDeleted = false ORDER BY id")
     Page<Users> findUserByIsCorporate(@Param("value") boolean value, Pageable pageable);

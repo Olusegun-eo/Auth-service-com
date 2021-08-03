@@ -70,16 +70,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				.anyRequest().authenticated().and()
 				// make sure we use stateLess session; session won't be used to
 				// store user's state.
-				.addFilter(getAuthenticationFilter())
-				.addFilter(new AuthorizationFilter(authenticationManager()));
+				.addFilter(getAuthenticationFilter()).addFilter(new AuthorizationFilter(authenticationManager()));
 	}
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
-		web.ignoring().antMatchers(
-				"/v2/api-docs", "/configuration/ui",
-				"/swagger-resources/**","/configuration/security",
-				"/swagger-ui/index.html", "/webjars/**");
+		web.ignoring().antMatchers("/v2/api-docs", "/configuration/ui", "/swagger-resources/**",
+				"/configuration/security", "/swagger-ui/index.html", "/webjars/**");
 	}
 
 	protected AuthenticationFilter getAuthenticationFilter() throws Exception {
@@ -112,7 +109,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	}
 
 	private SecurityExpressionHandler<FilterInvocation> webSecurityExpressionHandler() {
-		DefaultWebSecurityExpressionHandler defaultWebSecurityExpressionHandler     = new DefaultWebSecurityExpressionHandler();
+		DefaultWebSecurityExpressionHandler defaultWebSecurityExpressionHandler = new DefaultWebSecurityExpressionHandler();
 		defaultWebSecurityExpressionHandler.setRoleHierarchy(roleHierarchy());
 		return defaultWebSecurityExpressionHandler;
 	}
@@ -133,7 +130,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	}
 
 	@Bean
-	public AccessDeniedHandler accessDeniedHandler(){
+	public AccessDeniedHandler accessDeniedHandler() {
 		return new CustomAccessDeniedHandler();
 	}
 }

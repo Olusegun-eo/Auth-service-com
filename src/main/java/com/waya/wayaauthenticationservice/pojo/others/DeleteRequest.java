@@ -3,8 +3,12 @@ package com.waya.wayaauthenticationservice.pojo.others;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
 import com.waya.wayaauthenticationservice.enums.Type;
 import com.waya.wayaauthenticationservice.util.CustomValidator;
-import lombok.*;
-import org.springframework.web.bind.annotation.PathVariable;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Setter
 @Getter

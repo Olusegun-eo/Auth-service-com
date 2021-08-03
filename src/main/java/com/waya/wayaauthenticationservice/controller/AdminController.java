@@ -74,6 +74,14 @@ public class AdminController {
         return new ResponseEntity<>(userPagedModel, HttpStatus.OK);
     }
 
+//    @ApiOperation(value = "Create New Owner User (Admin Endpoint)", tags = {"ADMIN"})
+//    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
+//    @PostMapping("/users/create-owner")
+//    public ResponseEntity<?> createOwner(@Valid @RequestBody BaseUserPojo userPojo,
+//                                                  HttpServletRequest request, Device device) {
+//        return adminService.createUser(userPojo, request, device);
+//    }
+
     @ApiOperation(value = "Create New Private User (Admin Endpoint)", tags = {"ADMIN"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping("/users/create-private")

@@ -17,7 +17,10 @@ import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
-import com.waya.wayaauthenticationservice.repository.*;
+import com.waya.wayaauthenticationservice.repository.ProfileRepository;
+import com.waya.wayaauthenticationservice.repository.RedisUserDao;
+import com.waya.wayaauthenticationservice.repository.RolesRepository;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.ApiResponse;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
@@ -57,589 +60,592 @@ import static com.waya.wayaauthenticationservice.util.HelperUtils.generateRandom
 @Slf4j
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-    @Autowired
-    KafkaMessageProducer kafkaMessageProducer;
-    @Autowired
-    ProfileServiceDAO profileServiceDAO;
-    @Autowired
-    private UserRepository userRepo;
-    @Autowired
-    private RolesRepository rolesRepo;
-    @Autowired
-    private UserWalletRepository userWalletRepository;
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
-    @Autowired
-    private RedisUserDao redisUserDao;
-    @Autowired
-    private AuthenticatedUserFacade authenticatedUserFacade;
-    @Autowired
-    private ProfileRepository profileRepository;
-    @Autowired
-    private WalletProxy walletProxy;
-    @Autowired
-    private VirtualAccountProxy virtualAccountProxy;
-    @Autowired
-    private ReqIPUtils reqUtil;
-    @Autowired
-    private NotificationProxy notificationProxy;
-    //@Autowired
-    //private ModelMapper mapper;
-    @Autowired
-    private ProfileService profileService;
-    @Autowired
-    private OTPTokenService OTPTokenService;
+	@Autowired
+	KafkaMessageProducer kafkaMessageProducer;
+	@Autowired
+	ProfileServiceDAO profileServiceDAO;
+	@Autowired
+	private UserRepository userRepo;
+	@Autowired
+	private RolesRepository rolesRepo;
+	@Autowired
+	private BCryptPasswordEncoder passwordEncoder;
+	@Autowired
+	private RedisUserDao redisUserDao;
+	@Autowired
+	private AuthenticatedUserFacade authenticatedUserFacade;
+	@Autowired
+	private ProfileRepository profileRepository;
+	@Autowired
+	private WalletProxy walletProxy;
+	@Autowired
+	private VirtualAccountProxy virtualAccountProxy;
+	@Autowired
+	private ReqIPUtils reqUtil;
+	@Autowired
+	private NotificationProxy notificationProxy;
+	// @Autowired
+	// private ModelMapper mapper;
+	@Autowired
+	private ProfileService profileService;
+	@Autowired
+	private OTPTokenService OTPTokenService;
 
-    @Value("${api.server.deployed}")
-    private String urlRedirect;
+	@Value("${api.server.deployed}")
+	private String urlRedirect;
 
-    private String getBaseUrl(HttpServletRequest request) {
-        try {
-            StringBuffer url = request.getRequestURL();
-            String uri = request.getRequestURI();
-            int idx = (((uri != null) && (uri.length() > 0)) ? url.indexOf(uri) : url.length());
-            String host = url.substring(0, idx); //base url
-            idx = host.indexOf("://");
-            if (idx > 0) {
-                host = host.substring(idx); //remove scheme if present
-                log.info("Servers Host is {}", host);
-            }
-        } catch (Exception ex) {
-            log.error("An Error has Occurred:: {}", ex.getMessage());
-        }
-        return "http://" + urlRedirect + ":" + request.getServerPort() + request.getContextPath();
-    }
+	private String getBaseUrl(HttpServletRequest request) {
+		try {
+			StringBuffer url = request.getRequestURL();
+			String uri = request.getRequestURI();
+			int idx = (((uri != null) && (uri.length() > 0)) ? url.indexOf(uri) : url.length());
+			String host = url.substring(0, idx); // base url
+			idx = host.indexOf("://");
+			if (idx > 0) {
+				host = host.substring(idx); // remove scheme if present
+				log.info("Servers Host is {}", host);
+			}
+		} catch (Exception ex) {
+			log.error("An Error has Occurred:: {}", ex.getMessage());
+		}
+		return "http://" + urlRedirect + ":" + request.getServerPort() + request.getContextPath();
+	}
 
-    @Override
-    @Transactional
-    public ResponseEntity<?> createUser(BaseUserPojo mUser, HttpServletRequest request, Device device, boolean adminAction) {
-        try {
-            // Check if email exists
-            Users existingEmail = userRepo.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
-            if (existingEmail != null)
-                return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
+	@Override
+	@Transactional
+	public ResponseEntity<?> createUser(BaseUserPojo mUser, HttpServletRequest request, Device device,
+			boolean adminAction) {
+		try {
+			// Check if email exists
+			Users existingEmail = userRepo.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
+			if (existingEmail != null)
+				return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
 
-            // Check if Phone exists
-            Users existingTelephone = mUser.getPhoneNumber() == null ? null
-                    : userRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
-            if (existingTelephone != null)
-                return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
-                        HttpStatus.BAD_REQUEST);
+			// Check if Phone exists
+			Users existingTelephone = mUser.getPhoneNumber() == null ? null
+					: userRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
+			if (existingTelephone != null)
+				return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
+						HttpStatus.BAD_REQUEST);
 
-            List<Role> roleList = new ArrayList<>();
-            Role userRole = rolesRepo.findByName("ROLE_USER")
-                    .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
-            roleList.add(userRole);
+			List<Role> roleList = new ArrayList<>();
+			Role userRole = rolesRepo.findByName("ROLE_USER")
+					.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+			roleList.add(userRole);
 
-            if (mUser.isAdmin() && adminAction) {
-                Role adminRole = rolesRepo.findByName("ROLE_APP_ADMIN")
-                        .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
-                roleList.add(adminRole);
-            }
-            if (mUser.isWayaAdmin() && adminAction) {
-                Users signedInUser = authenticatedUserFacade.getUser();
-                Role ownerRole = rolesRepo.findByName("ROLE_OWNER_ADMIN")
-                        .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
-                if (signedInUser != null && signedInUser.getRoleList().contains(ownerRole)) {
-                    Role superAdminRole = rolesRepo.findByName("ROLE_SUPER_ADMIN")
-                            .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
-                    roleList.add(superAdminRole);
-                }
-            }
+			if (mUser.isAdmin() || mUser.isWayaAdmin()) {
+				Role adminRole = rolesRepo.findByName("ROLE_APP_ADMIN")
+						.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
 
-            final String ip = reqUtil.getClientIP(request);
-            log.info("Request IP: " + ip);
+				roleList.add(adminRole);
+			}
+			if (mUser.isWayaAdmin() && adminAction) {
+				// Users signedInUser = authenticatedUserFacade.getUser();
+				Role ownerRole = rolesRepo.findByName("ROLE_OWNER_ADMIN")
+						.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
 
-            DevicePojo dev = this.reqUtil.GetDevice(device);
+				List<Users> usersWithOwnerRole = userRepo.findByRoleList_(ownerRole);
+				if (usersWithOwnerRole.isEmpty()) {
+					roleList.add(ownerRole);
+				}
+				Role superAdminRole = rolesRepo.findByName("ROLE_SUPER_ADMIN")
+						.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+				roleList.add(superAdminRole);
+			}
 
-            Users user = new Users();
-            //String publicUserId = HelperUtils.generateRandomPassword();
-            //while (userRepo.existsByUserId(publicUserId)) {
-            //    publicUserId = HelperUtils.generateRandomPassword();
-            //}
-            //user.setUserId(publicUserId);
-            user.setId(0L);
-            user.setAdmin(mUser.isAdmin());
-            user.setEmail(mUser.getEmail().trim());
-            user.setFirstName(mUser.getFirstName());
-            user.setPhoneNumber(mUser.getPhoneNumber());
-            user.setReferenceCode(mUser.getReferenceCode());
-            user.setSurname(mUser.getSurname());
-            user.setDateCreated(LocalDateTime.now());
-            user.setAccountStatus(1);
-            user.setRegDeviceIP(ip);
-            String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
-            user.setName(fullName);
-            user.setRegDevicePlatform(dev.getPlatform());
-            user.setRegDeviceType(dev.getDeviceType());
-            user.setPassword(passwordEncoder.encode(mUser.getPassword()));
-            user.setRoleList(roleList);
-            if (adminAction) {
-                user.setActive(true);
-                user.setAccountStatus(-1);
-            }
-            Users regUser = userRepo.saveAndFlush(user);
+			final String ip = reqUtil.getClientIP(request);
+			log.info("Request IP: " + ip);
 
-            if (regUser == null)
-                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.COULD_NOT_INSERT_RECORD.getErrorMessage()),
-                        HttpStatus.INTERNAL_SERVER_ERROR);
+			DevicePojo dev = this.reqUtil.GetDevice(device);
 
-            if(adminAction) CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
+			Users user = new Users();
+			// String publicUserId = HelperUtils.generateRandomPassword();
+			// while (userRepo.existsByUserId(publicUserId)) {
+			// publicUserId = HelperUtils.generateRandomPassword();
+			// }
+			// user.setUserId(publicUserId);
+			user.setId(0L);
+			user.setAdmin(mUser.isAdmin());
+			user.setEmail(mUser.getEmail().trim());
+			user.setFirstName(mUser.getFirstName());
+			user.setPhoneNumber(mUser.getPhoneNumber());
+			user.setReferenceCode(mUser.getReferenceCode());
+			user.setSurname(mUser.getSurname());
+			user.setDateCreated(LocalDateTime.now());
+			user.setAccountStatus(1);
+			user.setRegDeviceIP(ip);
+			String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
+			user.setName(fullName);
+			user.setRegDevicePlatform(dev.getPlatform());
+			user.setRegDeviceType(dev.getDeviceType());
+			user.setPassword(passwordEncoder.encode(mUser.getPassword()));
+			user.setRoleList(roleList);
+			if (adminAction) {
+				user.setActive(true);
+				user.setAccountStatus(-1);
+			}
+			Users regUser = userRepo.saveAndFlush(user);
 
-            String token = generateToken(regUser);
-            createPrivateUser(mUser, regUser.getId(), token, getBaseUrl(request));
+			if (regUser == null)
+				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.COULD_NOT_INSERT_RECORD.getErrorMessage()),
+						HttpStatus.INTERNAL_SERVER_ERROR);
 
-            return new ResponseEntity<>(new SuccessResponse(
-                    "User Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
-                    HttpStatus.CREATED);
-        } catch (Exception e) {
-            log.error("Error::: {}, {} and {}", e.getMessage(), 2, 3);
-            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
+			if (adminAction)
+				CompletableFuture.runAsync(
+						() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
 
-    @Override
-    @Transactional
-    public ResponseEntity<?> createCorporateUser(CorporateUserPojo mUser, HttpServletRequest request, Device device, boolean adminAction) {
+			String token = generateToken(regUser);
+			createPrivateUser(mUser, regUser.getId(), token, getBaseUrl(request));
 
-        try {
-            // Check if email exists
-            Users existingEmail = userRepo.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
-            if (existingEmail != null) {
-                return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
-            }
+			return new ResponseEntity<>(new SuccessResponse(
+					"User Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
+					HttpStatus.CREATED);
+		} catch (Exception e) {
+			log.error("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+		}
+	}
 
-            // Check if Phone exists
-            Users existingTelephone = userRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
-            if (existingTelephone != null)
-                return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
-                        HttpStatus.BAD_REQUEST);
+	@Override
+	@Transactional
+	public ResponseEntity<?> createCorporateUser(CorporateUserPojo mUser, HttpServletRequest request, Device device,
+			boolean adminAction) {
 
-            Role userRole = rolesRepo.findByName("ROLE_USER")
-                    .orElseThrow(() -> new CustomException("Merchant Role Not Available", HttpStatus.BAD_REQUEST));
+		try {
+			// Check if email exists
+			Users existingEmail = userRepo.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
+			if (existingEmail != null) {
+				return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
+			}
 
-            Role merchRole = rolesRepo.findByName("ROLE_CORP")
-                    .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+			// Check if Phone exists
+			Users existingTelephone = userRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
+			if (existingTelephone != null)
+				return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
+						HttpStatus.BAD_REQUEST);
 
-            List<Role> roleList = new ArrayList<>(Arrays.asList(userRole, merchRole));
-            if (mUser.isAdmin()) {
-                Role corpAdminRole = rolesRepo.findByName("ROLE_CORP_ADMIN")
-                        .orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
-                roleList.add(corpAdminRole);
-            }
-            final String ip = reqUtil.getClientIP(request);
-            log.info("Request IP: " + ip);
+			Role userRole = rolesRepo.findByName("ROLE_USER")
+					.orElseThrow(() -> new CustomException("Merchant Role Not Available", HttpStatus.BAD_REQUEST));
 
-            DevicePojo dev = reqUtil.GetDevice(device);
+			Role merchRole = rolesRepo.findByName("ROLE_CORP")
+					.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
 
-            Users user = new Users();
-            //String publicUserId = HelperUtils.generateRandomPassword();
-            //while (userRepo.existsByUserId(publicUserId)) {
-            //    publicUserId = HelperUtils.generateRandomPassword();
-            //}
-            //user.setUserId(publicUserId);
+			List<Role> roleList = new ArrayList<>(Arrays.asList(userRole, merchRole));
+			if (mUser.isAdmin()) {
+				Role corpAdminRole = rolesRepo.findByName("ROLE_CORP_ADMIN")
+						.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+				roleList.add(corpAdminRole);
+			}
+			final String ip = reqUtil.getClientIP(request);
+			log.info("Request IP: " + ip);
 
-            user.setAdmin(mUser.isAdmin());
-            user.setId(0L);
-            user.setCorporate(true);
-            user.setDateCreated(LocalDateTime.now());
-            user.setRegDeviceIP(ip);
-            user.setAccountStatus(1);
-            user.setRegDevicePlatform(dev.getPlatform());
-            user.setRegDeviceType(dev.getDeviceType());
-            user.setPassword(passwordEncoder.encode(mUser.getPassword()));
-            user.setRoleList(roleList);
-            user.setEmail(mUser.getEmail().trim());
-            user.setEmailVerified(false);
-            user.setFirstName(mUser.getFirstName());
-            user.setPhoneNumber(mUser.getPhoneNumber());
-            user.setPhoneVerified(false);
-            user.setPinCreated(false);
-            user.setReferenceCode(mUser.getReferenceCode());
-            user.setSurname(mUser.getSurname());
-            String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
-            user.setName(fullName);
-            if (adminAction) {
-                user.setActive(true);
-                user.setAccountStatus(-1);
-            }
-            Users regUser = userRepo.saveAndFlush(user);
+			DevicePojo dev = reqUtil.GetDevice(device);
 
-            if (regUser == null)
-                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.COULD_NOT_INSERT_RECORD.getErrorMessage()),
-                        HttpStatus.INTERNAL_SERVER_ERROR);
+			Users user = new Users();
+			// String publicUserId = HelperUtils.generateRandomPassword();
+			// while (userRepo.existsByUserId(publicUserId)) {
+			// publicUserId = HelperUtils.generateRandomPassword();
+			// }
+			// user.setUserId(publicUserId);
 
-            if(adminAction) CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
+			user.setAdmin(mUser.isAdmin());
+			user.setId(0L);
+			user.setCorporate(true);
+			user.setDateCreated(LocalDateTime.now());
+			user.setRegDeviceIP(ip);
+			user.setAccountStatus(1);
+			user.setRegDevicePlatform(dev.getPlatform());
+			user.setRegDeviceType(dev.getDeviceType());
+			user.setPassword(passwordEncoder.encode(mUser.getPassword()));
+			user.setRoleList(roleList);
+			user.setEmail(mUser.getEmail().trim());
+			user.setEmailVerified(false);
+			user.setFirstName(mUser.getFirstName());
+			user.setPhoneNumber(mUser.getPhoneNumber());
+			user.setPhoneVerified(false);
+			user.setPinCreated(false);
+			user.setReferenceCode(mUser.getReferenceCode());
+			user.setSurname(mUser.getSurname());
+			String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
+			user.setName(fullName);
+			if (adminAction) {
+				user.setActive(true);
+				user.setAccountStatus(-1);
+			}
+			Users regUser = userRepo.saveAndFlush(user);
 
-            String token = generateToken(regUser);
+			if (regUser == null)
+				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.COULD_NOT_INSERT_RECORD.getErrorMessage()),
+						HttpStatus.INTERNAL_SERVER_ERROR);
 
-            createCorporateUser(mUser, regUser.getId(), token, getBaseUrl(request));
+			if (adminAction)
+				CompletableFuture.runAsync(
+						() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
 
-            return new ResponseEntity<>(new SuccessResponse(
-                    "Corporate Account Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
-                    HttpStatus.CREATED);
-        } catch (Exception e) {
-            log.error("Error::: {}, {} and {}", e.getMessage(), 2, 3);
-            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
+			String token = generateToken(regUser);
 
-    public void createCorporateUser(CorporateUserPojo mUser, Long userId, String token, String baseUrl) {
-        String Id = String.valueOf(userId);
+			createCorporateUser(mUser, regUser.getId(), token, getBaseUrl(request));
+
+			return new ResponseEntity<>(new SuccessResponse(
+					"Corporate Account Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
+					HttpStatus.CREATED);
+		} catch (Exception e) {
+			log.error("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	public void createCorporateUser(CorporateUserPojo mUser, Long userId, String token, String baseUrl) {
+		String Id = String.valueOf(userId);
 //        CorporateUser coopUser = mapper.map(mUser, CorporateUser.class);
 //        coopUser.setBusinessType(mUser.getBusinessType());
 //        coopUser.setPassword(passwordEncoder.encode(mUser.getPassword()));
 //        coopUser.setUserId(Id);
 //        coopUser = corporateUserRepository.save(coopUser);
 
-        // Implementation for internal calls begin here
-        CorporateProfileRequest corporateProfileRequest = new CorporateProfileRequest();
-        corporateProfileRequest.setBusinessType(mUser.getBusinessType());
-        corporateProfileRequest.setOrganisationEmail(mUser.getOrgEmail());
-        corporateProfileRequest.setOrganisationName(mUser.getOrgName());
-        corporateProfileRequest.setOrganisationType(mUser.getOrgType());
-        corporateProfileRequest.setReferralCode(mUser.getReferenceCode());
-        corporateProfileRequest.setEmail(mUser.getEmail());
-        corporateProfileRequest.setSurname(mUser.getSurname());
-        corporateProfileRequest.setUserId(Id);
-        corporateProfileRequest.setPhoneNumber(mUser.getPhoneNumber());
-        corporateProfileRequest.setFirstName(mUser.getFirstName());
-        corporateProfileRequest.setGender(mUser.getGender());
-        LocalDate dateOfBirth = mUser.getDateOfBirth() == null ? LocalDate.now() : mUser.getDateOfBirth();
-        corporateProfileRequest.setDateOfBirth(dateOfBirth);
+		// Implementation for internal calls begin here
+		CorporateProfileRequest corporateProfileRequest = new CorporateProfileRequest();
+		corporateProfileRequest.setBusinessType(mUser.getBusinessType());
+		corporateProfileRequest.setOrganisationEmail(mUser.getOrgEmail());
+		corporateProfileRequest.setOrganisationName(mUser.getOrgName());
+		corporateProfileRequest.setOrganisationType(mUser.getOrgType());
+		corporateProfileRequest.setReferralCode(mUser.getReferenceCode());
+		corporateProfileRequest.setEmail(mUser.getEmail());
+		corporateProfileRequest.setSurname(mUser.getSurname());
+		corporateProfileRequest.setUserId(Id);
+		corporateProfileRequest.setPhoneNumber(mUser.getPhoneNumber());
+		corporateProfileRequest.setFirstName(mUser.getFirstName());
+		corporateProfileRequest.setGender(mUser.getGender());
+		LocalDate dateOfBirth = mUser.getDateOfBirth() == null ? LocalDate.now() : mUser.getDateOfBirth();
+		corporateProfileRequest.setDateOfBirth(dateOfBirth);
 
-        // Implementation for internal call
-        log.info("CorporateProfile account creation starts: " + corporateProfileRequest);
-        ApiResponse<String> corporateResponse = profileService.createProfile(corporateProfileRequest, baseUrl);
-        log.info("CorporateProfile account creation ends: " + corporateResponse);
+		// Implementation for internal call
+		log.info("CorporateProfile account creation starts: " + corporateProfileRequest);
+		ApiResponse<String> corporateResponse = profileService.createProfile(corporateProfileRequest, baseUrl);
+		log.info("CorporateProfile account creation ends: " + corporateResponse);
 
-        // Create External Virtual Accounts
-        VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
-        virtualAccountPojo.setAccountName(mUser.getFirstName() + " " + mUser.getSurname());
-        virtualAccountPojo.setUserId(String.valueOf(userId));
-        CompletableFuture.supplyAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo))
-                .orTimeout(3, TimeUnit.MINUTES)
-                .handle((res, ex) -> {
-                    if (ex != null) {
-                        log.error("Error Creating Virtual Account, {}", ex.getMessage());
-                        return new ApiResponse<>("An error has occurred", false);
-                    }
-                    return res.getBody();
-                })
-                .thenAccept(p -> log.info("Response from Call to Create Corporate Virtual Account is: {}",
-                        p.getData()));
+		// Create External Virtual Accounts
+		VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
+		virtualAccountPojo.setAccountName(mUser.getFirstName() + " " + mUser.getSurname());
+		virtualAccountPojo.setUserId(String.valueOf(userId));
+		CompletableFuture.supplyAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo))
+				.orTimeout(3, TimeUnit.MINUTES).handle((res, ex) -> {
+					if (ex != null) {
+						log.error("Error Creating Virtual Account, {}", ex.getMessage());
+						return new ApiResponse<>("An error has occurred", false);
+					}
+					return res.getBody();
+				}).thenAccept(
+						p -> log.info("Response from Call to Create Corporate Virtual Account is: {}", p.getData()));
 
-        // Create Internal Wallet Accounts and Save the AccountNumber
-        CreateAccountPojo createAccount = formAccountCreationPojo(userId, mUser);
-        CompletableFuture.supplyAsync(() -> {
-            try {
-                TimeUnit.MINUTES.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-                return walletProxy.createCorporateAccount(createAccount);
-            })
-            .orTimeout(3, TimeUnit.MINUTES)
-            .handle((res, ex) -> {
-                if (ex != null) {
-                    log.error("Error Creating Internal Wallets Account, {}", ex.getMessage());
-                    return new ApiResponse<>("An error has occurred", false);
-                }
-                return res;
-            })
-            .thenAccept(p -> log.info("Response from Call to Create Corporate Wallet is: {}",
-                            p));
-    }
+		// Create Internal Wallet Accounts and Save the AccountNumber
+		CreateAccountPojo createAccount = formAccountCreationPojo(userId, mUser);
+		CompletableFuture.supplyAsync(() -> {
+			try {
+				TimeUnit.MINUTES.sleep(1);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			return walletProxy.createCorporateAccount(createAccount);
+		}).orTimeout(3, TimeUnit.MINUTES).handle((res, ex) -> {
+			if (ex != null) {
+				log.error("Error Creating Internal Wallets Account, {}", ex.getMessage());
+				return new ApiResponse<>("An error has occurred", false);
+			}
+			return res;
+		}).thenAccept(p -> log.info("Response from Call to Create Corporate Wallet is: {}", p));
+	}
 
-    public void createPrivateUser(BaseUserPojo user, Long userId, String token, String baseUrl) {
-        String id = String.valueOf(userId);
+	public void createPrivateUser(BaseUserPojo user, Long userId, String token, String baseUrl) {
+		String id = String.valueOf(userId);
 
-        PersonalProfileRequest personalProfileRequest = new PersonalProfileRequest();
-        personalProfileRequest.setEmail(user.getEmail());
-        personalProfileRequest.setFirstName(user.getFirstName());
-        personalProfileRequest.setPhoneNumber(user.getPhoneNumber());
-        personalProfileRequest.setSurname(user.getSurname());
-        personalProfileRequest.setUserId(id);
-        personalProfileRequest.setGender(user.getGender());
-        LocalDate dateOfBirth = user.getDateOfBirth() == null ? LocalDate.now() : user.getDateOfBirth();
-        personalProfileRequest.setDateOfBirth(dateOfBirth);
+		PersonalProfileRequest personalProfileRequest = new PersonalProfileRequest();
+		personalProfileRequest.setEmail(user.getEmail());
+		personalProfileRequest.setFirstName(user.getFirstName());
+		personalProfileRequest.setPhoneNumber(user.getPhoneNumber());
+		personalProfileRequest.setSurname(user.getSurname());
+		personalProfileRequest.setUserId(id);
+		personalProfileRequest.setGender(user.getGender());
+		LocalDate dateOfBirth = user.getDateOfBirth() == null ? LocalDate.now() : user.getDateOfBirth();
+		personalProfileRequest.setDateOfBirth(dateOfBirth);
 
-        log.info("PersonalProfile account creation starts: " + personalProfileRequest);
-        ApiResponse<String> personalResponse = profileService.createProfile(personalProfileRequest, baseUrl);
-        log.info("PersonalProfile account creation ends: " + personalResponse);
+		log.info("PersonalProfile account creation starts: " + personalProfileRequest);
+		ApiResponse<String> personalResponse = profileService.createProfile(personalProfileRequest, baseUrl);
+		log.info("PersonalProfile account creation ends: " + personalResponse);
 
-        // Create External Virtual Accounts
-        VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
-        virtualAccountPojo.setAccountName(user.getFirstName() + " " + user.getSurname());
-        virtualAccountPojo.setUserId(id);
-        CompletableFuture.supplyAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo))
-            .orTimeout(3, TimeUnit.MINUTES)
-            .handle((res, ex) -> {
-                if (ex != null) {
-                    log.error("Error Creating Virtual Account, Message is: {}", ex.getMessage());
-                    return new ApiResponse<>("An error has occurred", false);
-                }
-                return res.getBody();
-            })
-            .thenAccept(p -> log.info("Response from Call to Create User Wallet is: {}",
-                    p.getData()));
+		// Create External Virtual Accounts
+		VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
+		virtualAccountPojo.setAccountName(user.getFirstName() + " " + user.getSurname());
+		virtualAccountPojo.setUserId(id);
+		CompletableFuture.supplyAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo))
+				.orTimeout(3, TimeUnit.MINUTES).handle((res, ex) -> {
+					if (ex != null) {
+						log.error("Error Creating Virtual Account, Message is: {}", ex.getMessage());
+						return new ApiResponse<>("An error has occurred", false);
+					}
+					return res.getBody();
+				}).thenAccept(p -> log.info("Response from Call to Create User Wallet is: {}", p.getData()));
 
-        // Create Internal Wallet Accounts
-        CreateAccountPojo createAccount = formAccountCreationPojo(userId, user);
-        //ApiResponse<CreateAccountResponse> accountResp = walletProxy.createUserAccount(createAccount);
-        CompletableFuture.supplyAsync(() -> {
-            try {
-                TimeUnit.MINUTES.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-                return walletProxy.createUserAccount(createAccount);
-            })
-            .orTimeout(3, TimeUnit.MINUTES)
-            .handle((res, ex) -> {
-                if (ex != null) {
-                    log.error("Error Creating Wallet Account, {}", ex.getMessage());
-                    return new ApiResponse<>("An error has occurred", false);
-                }
-                return res;
-            })
-            .thenAccept(p -> log.info("Response from Call to Create User Wallet is: {}",
-                    p));
-    }
+		// Create Internal Wallet Accounts
+		CreateAccountPojo createAccount = formAccountCreationPojo(userId, user);
+		// ApiResponse<CreateAccountResponse> accountResp =
+		// walletProxy.createUserAccount(createAccount);
+		CompletableFuture.supplyAsync(() -> {
+			try {
+				TimeUnit.MINUTES.sleep(1);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			return walletProxy.createUserAccount(createAccount);
+		}).orTimeout(3, TimeUnit.MINUTES).handle((res, ex) -> {
+			if (ex != null) {
+				log.error("Error Creating Wallet Account, {}", ex.getMessage());
+				return new ApiResponse<>("An error has occurred", false);
+			}
+			return res;
+		}).thenAccept(p -> log.info("Response from Call to Create User Wallet is: {}", p));
+	}
 
-    public String generateToken(Users userResponse) {
-        try {
-            System.out.println("::::::GENERATE TOKEN:::::");
-            String token = Jwts.builder().setSubject(userResponse.getEmail())
-                    .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
-                    .signWith(SignatureAlgorithm.HS512, SECRET_TOKEN).compact();
-            System.out.println(":::::Token:::::");
-            return TOKEN_PREFIX + token;
-        } catch (Exception e) {
-            log.error("An Error Occurred:: {}", e.getMessage());
-            throw new RuntimeException(e.fillInStackTrace());
-        }
-    }
+	public String generateToken(Users userResponse) {
+		try {
+			System.out.println("::::::GENERATE TOKEN:::::");
+			String token = Jwts.builder().setSubject(userResponse.getEmail())
+					.setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
+					.signWith(SignatureAlgorithm.HS512, SECRET_TOKEN).compact();
+			System.out.println(":::::Token:::::");
+			return TOKEN_PREFIX + token;
+		} catch (Exception e) {
+			log.error("An Error Occurred:: {}", e.getMessage());
+			throw new RuntimeException(e.fillInStackTrace());
+		}
+	}
 
-    @Override
-    public ResponseEntity<?> verifyAccountCreation(OTPPojo otpPojo) {
-        try {
-            log.info("Verify Account Creation starts {}", otpPojo);
-            Users user = userRepo.findByEmailOrPhoneNumber(otpPojo.getPhoneOrEmail()).orElse(null);
-            if (user == null)
-                return new ResponseEntity<>(new ErrorResponse(
-                        ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + "For User with " + otpPojo.getPhoneOrEmail()),
-                        HttpStatus.BAD_REQUEST);
+	@Override
+	public ResponseEntity<?> verifyAccountCreation(OTPPojo otpPojo) {
+		try {
+			log.info("Verify Account Creation starts {}", otpPojo);
+			Users user = userRepo.findByEmailOrPhoneNumber(otpPojo.getPhoneOrEmail()).orElse(null);
+			if (user == null)
+				return new ResponseEntity<>(new ErrorResponse(
+						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + "For User with " + otpPojo.getPhoneOrEmail()),
+						HttpStatus.BAD_REQUEST);
 
-            if (user.isActive())
-                return new ResponseEntity<>(new SuccessResponse("Account has been Verified already. Please login.", null),
-                        HttpStatus.CREATED);
+			if (user.isActive())
+				return new ResponseEntity<>(
+						new SuccessResponse("Account has been Verified already. Please login.", null),
+						HttpStatus.CREATED);
 
-            OTPVerificationResponse otpResponse = OTPTokenService.verifyJointOTP(otpPojo.getPhoneOrEmail(), otpPojo.getOtp(), JOINT_VERIFICATION);
-            String message = otpResponse.getMessage();
-            if(otpResponse.isValid()){
-                user.setActive(true);
-                user.setDateOfActivation(LocalDateTime.now());
-                userRepo.save(user);
+			OTPVerificationResponse otpResponse = OTPTokenService.verifyJointOTP(otpPojo.getPhoneOrEmail(),
+					otpPojo.getOtp(), JOINT_VERIFICATION);
+			String message = otpResponse.getMessage();
+			if (otpResponse.isValid()) {
+				user.setActive(true);
+				user.setDateOfActivation(LocalDateTime.now());
+				userRepo.save(user);
 
-                //send a welcome email
-                CompletableFuture.runAsync(() -> this.profileService.sendWelcomeEmail(user.getEmail()));
+				// send a welcome email
+				CompletableFuture.runAsync(() -> this.profileService.sendWelcomeEmail(user.getEmail()));
 
-                return new ResponseEntity<>(new SuccessResponse("OTP verified successfully. Please login.", null),
-                        HttpStatus.CREATED);
-            } else {
-                return new ResponseEntity<>(new ErrorResponse(message), HttpStatus.BAD_REQUEST);
-            }
+				return new ResponseEntity<>(new SuccessResponse("OTP verified successfully. Please login.", null),
+						HttpStatus.CREATED);
+			} else {
+				return new ResponseEntity<>(new ErrorResponse(message), HttpStatus.BAD_REQUEST);
+			}
 
-        } catch (Exception e) {
-            log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
-            return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
-        }
-    }
+		} catch (Exception e) {
+			log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+			return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
+		}
+	}
 
-    @Override
-    public ResponseEntity<?> verifyPhoneUsingOTP(OTPPojo otpPojo) {
+	@Override
+	public ResponseEntity<?> verifyPhoneUsingOTP(OTPPojo otpPojo) {
 
-        Users user = userRepo.findByPhoneNumber(otpPojo.getPhoneOrEmail()).orElse(null);
-        if (user == null) {
-            return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND
-                    .getErrorMessage() + " For User: " + otpPojo.getPhoneOrEmail()), HttpStatus.BAD_REQUEST);
-        }
-        // Implementation for internal call
-        log.info("Verify Phone UsingOTP starts {}", otpPojo);
-        OTPVerificationResponse profileResponse = verifyOTP(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
-        log.info("Verify Phone UsingOTP ends {}", profileResponse);
+		Users user = userRepo.findByPhoneNumber(otpPojo.getPhoneOrEmail()).orElse(null);
+		if (user == null) {
+			return new ResponseEntity<>(new ErrorResponse(
+					ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User: " + otpPojo.getPhoneOrEmail()),
+					HttpStatus.BAD_REQUEST);
+		}
+		// Implementation for internal call
+		log.info("Verify Phone UsingOTP starts {}", otpPojo);
+		OTPVerificationResponse profileResponse = verifyOTP(otpPojo.getPhoneOrEmail(),
+				Integer.parseInt(otpPojo.getOtp()));
+		log.info("Verify Phone UsingOTP ends {}", profileResponse);
 
-        if (profileResponse.isValid()) {
-            user.setPhoneVerified(true);
-            // user.setActive(true);
-            try {
-                userRepo.save(user);
-                return new ResponseEntity<>(new SuccessResponse("OTP verified successfully. Please login.", null),
-                        HttpStatus.OK);
-            } catch (Exception e) {
-                log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
-                return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
-            }
-        } else {
-            return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
+		if (profileResponse.isValid()) {
+			user.setPhoneVerified(true);
+			// user.setActive(true);
+			try {
+				userRepo.save(user);
+				return new ResponseEntity<>(new SuccessResponse("OTP verified successfully. Please login.", null),
+						HttpStatus.OK);
+			} catch (Exception e) {
+				log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+				return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
+			}
+		} else {
+			return new ResponseEntity<>(new ErrorResponse(profileResponse.getMessage()), HttpStatus.BAD_REQUEST);
+		}
+	}
 
-    @Override
-    public ResponseEntity<?> verifyEmail(OTPPojo otpPojo) {
-        // Implementation for internal call
-        Users user = userRepo.findByEmailIgnoreCase(otpPojo.getPhoneOrEmail()).orElse(null);
-        if (user == null) {
-            return new ResponseEntity<>(new ErrorResponse("Invalid Email Passed"), HttpStatus.BAD_REQUEST);
-        }
-        if (user.isEmailVerified())
-            return new ResponseEntity<>(new SuccessResponse("Account and Phone been Verified already.", null),
-                    HttpStatus.CREATED);
+	@Override
+	public ResponseEntity<?> verifyEmail(OTPPojo otpPojo) {
+		// Implementation for internal call
+		Users user = userRepo.findByEmailIgnoreCase(otpPojo.getPhoneOrEmail()).orElse(null);
+		if (user == null) {
+			return new ResponseEntity<>(new ErrorResponse("Invalid Email Passed"), HttpStatus.BAD_REQUEST);
+		}
+		if (user.isEmailVerified())
+			return new ResponseEntity<>(new SuccessResponse("Account and Phone been Verified already.", null),
+					HttpStatus.CREATED);
 
-        log.info("Verify Email starts {}", otpPojo);
-        OTPVerificationResponse emailResponse = verifyEmail(otpPojo.getPhoneOrEmail(), Integer.parseInt(otpPojo.getOtp()));
-        if (emailResponse != null && emailResponse.isValid()) {
-            user.setEmailVerified(true);
-            userRepo.save(user);
-            //user.setActive(true);
-            return new ResponseEntity<>(new SuccessResponse(emailResponse.getMessage()), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()), HttpStatus.BAD_REQUEST);
-        }
-    }
+		log.info("Verify Email starts {}", otpPojo);
+		OTPVerificationResponse emailResponse = verifyEmail(otpPojo.getPhoneOrEmail(),
+				Integer.parseInt(otpPojo.getOtp()));
+		if (emailResponse != null && emailResponse.isValid()) {
+			user.setEmailVerified(true);
+			userRepo.save(user);
+			// user.setActive(true);
+			return new ResponseEntity<>(new SuccessResponse(emailResponse.getMessage()), HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
+					HttpStatus.BAD_REQUEST);
+		}
+	}
 
-    private OTPVerificationResponse verifyOTP(String phoneNumber, Integer otp) {
-        OTPVerificationResponse verify = OTPTokenService.verifySMSOTP(phoneNumber, otp, PHONE_VERIFICATION);
-        return verify;
-    }
+	private OTPVerificationResponse verifyOTP(String phoneNumber, Integer otp) {
+		OTPVerificationResponse verify = OTPTokenService.verifySMSOTP(phoneNumber, otp, PHONE_VERIFICATION);
+		return verify;
+	}
 
-    private OTPVerificationResponse verifyEmail(String email, Integer otp) {
-        return OTPTokenService.verifyEmailToken(email, otp, EMAIL_VERIFICATION);
-    }
+	private OTPVerificationResponse verifyEmail(String email, Integer otp) {
+		return OTPTokenService.verifyEmailToken(email, otp, EMAIL_VERIFICATION);
+	}
 
-    private boolean sendOTP(String phoneNumber, String fullName) {
-        return OTPTokenService.sendSMSOTP(phoneNumber, fullName, PHONE_VERIFICATION);
-    }
+	private boolean sendOTP(String phoneNumber, String fullName) {
+		return OTPTokenService.sendSMSOTP(phoneNumber, fullName, PHONE_VERIFICATION);
+	}
 
-    private boolean pushEMailToken(String baseUrl, String email) {
-        Profile profile = profileRepository.findByEmail(false, email)
-                .orElseThrow(() -> new CustomException("User Profile with email: " + email + "does not exist", HttpStatus.NOT_FOUND));
-        return OTPTokenService.sendVerificationEmailToken(baseUrl, profile, EMAIL_VERIFICATION);
-    }
+	private boolean pushEMailToken(String baseUrl, String email) {
+		Profile profile = profileRepository.findByEmail(false, email)
+				.orElseThrow(() -> new CustomException("User Profile with email: " + email + "does not exist",
+						HttpStatus.NOT_FOUND));
+		return OTPTokenService.sendVerificationEmailToken(baseUrl, profile, EMAIL_VERIFICATION);
+	}
 
-    @Override
-    public ResponseEntity<?> resendOTPPhone(String phoneNumber) {
-        Users user = userRepo.findByPhoneNumber(phoneNumber).orElse(null);
-        if (user == null)
-            return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
-                    HttpStatus.NOT_FOUND);
+	@Override
+	public ResponseEntity<?> resendOTPPhone(String phoneNumber) {
+		Users user = userRepo.findByPhoneNumber(phoneNumber).orElse(null);
+		if (user == null)
+			return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
+					HttpStatus.NOT_FOUND);
 
-        if (user.isActive() && user.isPhoneVerified())
-            return new ResponseEntity<>(new SuccessResponse("Account and PhoneNumber has been Verified already.", null),
-                    HttpStatus.CREATED);
-        // Implementation for internal call
-        log.info("Resend OTPPhone starts {}", phoneNumber);
-        boolean generalResponse = sendOTP(phoneNumber, user.getName());
-        log.info("Response From OTPPhone for {}", generalResponse);
+		if (user.isActive() && user.isPhoneVerified())
+			return new ResponseEntity<>(new SuccessResponse("Account and PhoneNumber has been Verified already.", null),
+					HttpStatus.CREATED);
+		// Implementation for internal call
+		log.info("Resend OTPPhone starts {}", phoneNumber);
+		boolean generalResponse = sendOTP(phoneNumber, user.getName());
+		log.info("Response From OTPPhone for {}", generalResponse);
 
-        if (generalResponse) {
-            return new ResponseEntity<>(new SuccessResponse("OTP sent successfully.", null), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(new ErrorResponse("Error"), HttpStatus.BAD_REQUEST);
-        }
-    }
+		if (generalResponse) {
+			return new ResponseEntity<>(new SuccessResponse("OTP sent successfully.", null), HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>(new ErrorResponse("Error"), HttpStatus.BAD_REQUEST);
+		}
+	}
 
-    @Override
-    public ResponseEntity<?> resendOTPForAccountVerification(String emailOrPhoneNumber, String baseUrl) {
-        Users user = userRepo.findByEmailOrPhoneNumber(emailOrPhoneNumber).orElse(null);
-        if (user == null)
-            return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
-                    HttpStatus.NOT_FOUND);
+	@Override
+	public ResponseEntity<?> resendOTPForAccountVerification(String emailOrPhoneNumber, String baseUrl) {
+		Users user = userRepo.findByEmailOrPhoneNumber(emailOrPhoneNumber).orElse(null);
+		if (user == null)
+			return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
+					HttpStatus.NOT_FOUND);
 
-        if (user.isActive())
-            return new ResponseEntity<>(new SuccessResponse("Account has been Verified already.", null),
-                    HttpStatus.CREATED);
+		if (user.isActive())
+			return new ResponseEntity<>(new SuccessResponse("Account has been Verified already.", null),
+					HttpStatus.CREATED);
 
-        Profile profile = profileRepository.findByEmailOrPhoneNumber(false, emailOrPhoneNumber)
-                .orElseThrow(() -> new CustomException("User Profile with email: " + user.getEmail()
-                        + "does not exist", HttpStatus.NOT_FOUND));
+		Profile profile = profileRepository.findByEmailOrPhoneNumber(false, emailOrPhoneNumber)
+				.orElseThrow(() -> new CustomException("User Profile with email: " + user.getEmail() + "does not exist",
+						HttpStatus.NOT_FOUND));
 
-        this.OTPTokenService.sendAccountVerificationToken(profile, JOINT_VERIFICATION, baseUrl);
+		this.OTPTokenService.sendAccountVerificationToken(profile, JOINT_VERIFICATION, baseUrl);
 
-        return new ResponseEntity<>(new SuccessResponse("OTP sent successfully.", null), HttpStatus.OK);
-    }
+		return new ResponseEntity<>(new SuccessResponse("OTP sent successfully.", null), HttpStatus.OK);
+	}
 
-    @Override
-    public ResponseEntity<?> resendVerificationMail(String email, String baseUrl) {
-        try {
-            Users user = userRepo.findByEmailIgnoreCase(email).orElse(null);
-            if (user == null)
-                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
-                        HttpStatus.NOT_FOUND);
+	@Override
+	public ResponseEntity<?> resendVerificationMail(String email, String baseUrl) {
+		try {
+			Users user = userRepo.findByEmailIgnoreCase(email).orElse(null);
+			if (user == null)
+				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
+						HttpStatus.NOT_FOUND);
 
-            // Implementation for internal call
-            log.info("Resend Verification Mail starts for {}", email);
-            boolean check = pushEMailToken(baseUrl, email);
-            log.info("Response From Verification Mail {}", check);
+			// Implementation for internal call
+			log.info("Resend Verification Mail starts for {}", email);
+			boolean check = pushEMailToken(baseUrl, email);
+			log.info("Response From Verification Mail {}", check);
 
-            if (check) {
-                return new ResponseEntity<>(new SuccessResponse("Verification email sent successfully.", null),
-                        HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(new ErrorResponse("Error"), HttpStatus.BAD_REQUEST);
-            }
-        } catch (Exception ex) {
-            throw new CustomException(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
-        }
-    }
+			if (check) {
+				return new ResponseEntity<>(new SuccessResponse("Verification email sent successfully.", null),
+						HttpStatus.OK);
+			} else {
+				return new ResponseEntity<>(new ErrorResponse("Error"), HttpStatus.BAD_REQUEST);
+			}
+		} catch (Exception ex) {
+			throw new CustomException(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+		}
+	}
 
-    @Override
-    public ResponseEntity<?> validateUser() {
-        Users user = authenticatedUserFacade.getUser();
-        if (user == null) {
-            return new ResponseEntity<>(new ErrorResponse("Invalid user."), HttpStatus.OK);
-        } else {
-            Set<String> roles = new HashSet<>();
-            Collection<Role> userRoles = user.getRoleList();
-            Set<String> permits = new HashSet<>();
-            for (Role r : userRoles) {
-                roles.add(r.getName());
-                permits.addAll(r.getPrivileges().stream().map(p -> p.getName()).collect(Collectors.toSet()));
-            }
+	@Override
+	public ResponseEntity<?> validateUser() {
+		Users user = authenticatedUserFacade.getUser();
+		if (user == null) {
+			return new ResponseEntity<>(new ErrorResponse("Invalid user."), HttpStatus.OK);
+		} else {
+			Set<String> roles = new HashSet<>();
+			Collection<Role> userRoles = user.getRoleList();
+			Set<String> permits = new HashSet<>();
+			for (Role r : userRoles) {
+				roles.add(r.getName());
+				permits.addAll(r.getPrivileges().stream().map(p -> p.getName()).collect(Collectors.toSet()));
+			}
 
-            ValidateUserPojo validateUserPojo = new ValidateUserPojo();
-            validateUserPojo.setCorporate(user.isCorporate());
-            validateUserPojo.setEmail(user.getEmail());
-            validateUserPojo.setEmailVerified(user.isEmailVerified());
-            validateUserPojo.setFirstName(user.getFirstName());
-            validateUserPojo.setSurname(user.getSurname());
-            validateUserPojo.setPhoneVerified(user.isPhoneVerified());
-            validateUserPojo.setPinCreated(user.isPinCreated());
-            validateUserPojo.setId(user.getId());
-            validateUserPojo.setReferenceCode(user.getReferenceCode());
-            validateUserPojo.setPhoneNumber(user.getPhoneNumber());
-            validateUserPojo.setRoles(roles);
-            validateUserPojo.setPermits(permits);
+			ValidateUserPojo validateUserPojo = new ValidateUserPojo();
+			validateUserPojo.setCorporate(user.isCorporate());
+			validateUserPojo.setEmail(user.getEmail());
+			validateUserPojo.setEmailVerified(user.isEmailVerified());
+			validateUserPojo.setFirstName(user.getFirstName());
+			validateUserPojo.setSurname(user.getSurname());
+			validateUserPojo.setPhoneVerified(user.isPhoneVerified());
+			validateUserPojo.setPinCreated(user.isPinCreated());
+			validateUserPojo.setId(user.getId());
+			validateUserPojo.setReferenceCode(user.getReferenceCode());
+			validateUserPojo.setPhoneNumber(user.getPhoneNumber());
+			validateUserPojo.setRoles(roles);
+			validateUserPojo.setPermits(permits);
 
-            return new ResponseEntity<>(new SuccessResponse("User valid.", validateUserPojo), HttpStatus.OK);
-        }
-    }
+			return new ResponseEntity<>(new SuccessResponse("User valid.", validateUserPojo), HttpStatus.OK);
+		}
+	}
 
-    @Override
-    public ResponseEntity<?> userByPhone(String phone) {
-        Users users = userRepo.findByPhoneNumber(phone).orElse(null);
-        if (users == null) {
-            return new ResponseEntity<>(new ErrorResponse("Invalid Phone Number."), HttpStatus.BAD_REQUEST);
-        }
-        return new ResponseEntity<>(new SuccessResponse("User valid.", users), HttpStatus.OK);
-    }
+	@Override
+	public ResponseEntity<?> userByPhone(String phone) {
+		Users users = userRepo.findByPhoneNumber(phone).orElse(null);
+		if (users == null) {
+			return new ResponseEntity<>(new ErrorResponse("Invalid Phone Number."), HttpStatus.BAD_REQUEST);
+		}
+		return new ResponseEntity<>(new SuccessResponse("User valid.", users), HttpStatus.OK);
+	}
 
-    @Override
-    public ResponseEntity<?> createVirtualAccount(VirtualAccountPojo virtualAccountPojo) {
-        kafkaMessageProducer.send(VIRTUAL_ACCOUNT_TOPIC, virtualAccountPojo);
-        return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
-    }
+	@Override
+	public ResponseEntity<?> createVirtualAccount(VirtualAccountPojo virtualAccountPojo) {
+		kafkaMessageProducer.send(VIRTUAL_ACCOUNT_TOPIC, virtualAccountPojo);
+		return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
+	}
 
 //    @Override
 //    public ResponseEntity<?> createWalletAccount(WalletPojo walletPojo) {
@@ -647,82 +653,83 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 //        return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
 //    }
 
-    @Override
-    public ResponseEntity<?> createWayagramAccount(WayagramPojo wayagramPojo) {
-        kafkaMessageProducer.send(WAYAGRAM_PROFILE_TOPIC, wayagramPojo);
-        return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
-    }
+	@Override
+	public ResponseEntity<?> createWayagramAccount(WayagramPojo wayagramPojo) {
+		kafkaMessageProducer.send(WAYAGRAM_PROFILE_TOPIC, wayagramPojo);
+		return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
+	}
 
-    @Override
-    public ResponseEntity<?> createProfileAccount(PersonalProfileRequest profilePojo, String baseUrl) {
-        ApiResponse<String> response = profileService.createProfile(profilePojo, baseUrl);
-        //kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC, profilePojo);
-        return new ResponseEntity<>(new SuccessResponse(response.getData(), null), HttpStatus.OK);
-    }
+	@Override
+	public ResponseEntity<?> createProfileAccount(PersonalProfileRequest profilePojo, String baseUrl) {
+		ApiResponse<String> response = profileService.createProfile(profilePojo, baseUrl);
+		// kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC, profilePojo);
+		return new ResponseEntity<>(new SuccessResponse(response.getData(), null), HttpStatus.OK);
+	}
 
-    @Override
-    public ResponseEntity<?> createCorporateProfileAccount(CorporateProfileRequest profilePojo, String baseUrl) {
-        ApiResponse<String> response = profileService.createProfile(profilePojo, baseUrl);
-        //kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC, profilePojo2);
-        return new ResponseEntity<>(new SuccessResponse(response.getData(), null), HttpStatus.OK);
-    }
+	@Override
+	public ResponseEntity<?> createCorporateProfileAccount(CorporateProfileRequest profilePojo, String baseUrl) {
+		ApiResponse<String> response = profileService.createProfile(profilePojo, baseUrl);
+		// kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC, profilePojo2);
+		return new ResponseEntity<>(new SuccessResponse(response.getData(), null), HttpStatus.OK);
+	}
 
-    @SuppressWarnings("unused")
-    private void saveUserToRedis(Users user) {
-        RedisUser redisUser = new RedisUser();
-        redisUser.setId(user.getId());
-        redisUser.setEmail(user.getEmail());
-        redisUser.setPhoneNumber(user.getPhoneNumber());
-        redisUser.setSurname(user.getSurname());
-        redisUser.setRoles(new ArrayList<>(user.getRoleList()));
+	@SuppressWarnings("unused")
+	private void saveUserToRedis(Users user) {
+		RedisUser redisUser = new RedisUser();
+		redisUser.setId(user.getId());
+		redisUser.setEmail(user.getEmail());
+		redisUser.setPhoneNumber(user.getPhoneNumber());
+		redisUser.setSurname(user.getSurname());
+		redisUser.setRoles(new ArrayList<>(user.getRoleList()));
 
-        redisUserDao.save(redisUser);
-    }
+		redisUserDao.save(redisUser);
+	}
 
-    @Override
-    public void sendEmailNewPassword(String randomPassword, String email, String firstName) {
-        //Email Sending of new Password Here
-        NotificationResponsePojo notification = new NotificationResponsePojo();
-        NamesPojo name = new NamesPojo();
-        name.setEmail(email);
-        name.setFullName(firstName);
-        List<NamesPojo> names = new ArrayList<>();
-        names.add(name);
-        DataPojo dataPojo = new DataPojo();
-        String message = String.format("<h3>Hello %s </h3><br> <p> Kindly Use the password below to login to the System, " +
-                        "ensure you change it.</p> <br> <h4 style=\"font-weight:bold\"> %s </h4>",
-                firstName, randomPassword);
-        dataPojo.setMessage(message);
-        dataPojo.setNames(names);
-        notification.setData(dataPojo);
-        notification.setEventType("EMAIL");
-        notification.setInitiator(email);
-        CompletableFuture.runAsync(() -> notificationProxy.sendEmail(notification));
-    }
+	@Override
+	public void sendEmailNewPassword(String randomPassword, String email, String firstName) {
+		// Email Sending of new Password Here
+		NotificationResponsePojo notification = new NotificationResponsePojo();
+		NamesPojo name = new NamesPojo();
+		name.setEmail(email);
+		name.setFullName(firstName);
+		List<NamesPojo> names = new ArrayList<>();
+		names.add(name);
+		DataPojo dataPojo = new DataPojo();
+		String message = String.format(
+				"<h3>Hello %s </h3><br> <p> Kindly Use the password below to login to the System, "
+						+ "ensure you change it.</p> <br> <h4 style=\"font-weight:bold\"> %s </h4>",
+				firstName, randomPassword);
+		dataPojo.setMessage(message);
+		dataPojo.setNames(names);
+		notification.setData(dataPojo);
+		notification.setEventType("EMAIL");
+		notification.setInitiator(email);
+		CompletableFuture.runAsync(() -> notificationProxy.sendEmail(notification));
+	}
 
-    private CreateAccountPojo formAccountCreationPojo(Long userId, BaseUserPojo mUser){
-        CreateAccountPojo createAccount = new CreateAccountPojo();
+	private CreateAccountPojo formAccountCreationPojo(Long userId, BaseUserPojo mUser) {
+		CreateAccountPojo createAccount = new CreateAccountPojo();
 
-        // Default Debit Limit SetUp
-        createAccount.setCustDebitLimit(new BigDecimal("50000.00"));
-        // Default Account Expiration Date
-        LocalDateTime time = LocalDateTime.of(2099, Month.DECEMBER, 30, 0, 0);
-        createAccount.setCustExpIssueDate(time.toString());
-        createAccount.setUserId(userId);
-        createAccount.setCustIssueId(generateRandomNumber(9));
-        createAccount.setFirstName(mUser.getFirstName());
-        createAccount.setLastName(mUser.getSurname());
-        createAccount.setEmailId(mUser.getEmail());
-        createAccount.setMobileNo(mUser.getPhoneNumber());
-        createAccount.setCustSex(mUser.getGender().substring(0, 1));
-        String custTitle = mUser.getGender().equals("MALE") ? "MR" : "MRS";
-        createAccount.setCustTitleCode(custTitle);
-        LocalDate dateOfBirth = mUser.getDateOfBirth() == null ? LocalDate.now() : mUser.getDateOfBirth();
-        createAccount.setDob(dateOfBirth.toString());
-        // Default Branch SOL ID
-        createAccount.setSolId("0000");
+		// Default Debit Limit SetUp
+		createAccount.setCustDebitLimit(new BigDecimal("50000.00"));
+		// Default Account Expiration Date
+		LocalDateTime time = LocalDateTime.of(2099, Month.DECEMBER, 30, 0, 0);
+		createAccount.setCustExpIssueDate(time.toString());
+		createAccount.setUserId(userId);
+		createAccount.setCustIssueId(generateRandomNumber(9));
+		createAccount.setFirstName(mUser.getFirstName());
+		createAccount.setLastName(mUser.getSurname());
+		createAccount.setEmailId(mUser.getEmail());
+		createAccount.setMobileNo(mUser.getPhoneNumber());
+		createAccount.setCustSex(mUser.getGender().substring(0, 1));
+		String custTitle = mUser.getGender().equals("MALE") ? "MR" : "MRS";
+		createAccount.setCustTitleCode(custTitle);
+		LocalDate dateOfBirth = mUser.getDateOfBirth() == null ? LocalDate.now() : mUser.getDateOfBirth();
+		createAccount.setDob(dateOfBirth.toString());
+		// Default Branch SOL ID
+		createAccount.setSolId("0000");
 
-        return createAccount;
-    }
+		return createAccount;
+	}
 
 }

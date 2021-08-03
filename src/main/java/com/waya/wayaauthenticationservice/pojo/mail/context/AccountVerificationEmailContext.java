@@ -1,7 +1,5 @@
 package com.waya.wayaauthenticationservice.pojo.mail.context;
 
-import org.springframework.web.util.UriComponentsBuilder;
-
 import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.pojo.mail.AbstractEmailContext;
 

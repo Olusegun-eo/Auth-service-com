@@ -18,14 +18,14 @@ public class CustomException extends RuntimeException {
     public CustomException(String message, HttpStatus status) {
         this.message = message;
         this.status = status;
-        this.timestamp = new Date();
+        this.setTimestamp(new Date());
     }
 
     public CustomException(String message, Throwable cause, HttpStatus status) {
         this.message = message;
         this.cause = cause;
         this.status = status;
-        this.timestamp = new Date();
+        this.setTimestamp(new Date());
     }
 
     @Override
@@ -41,4 +41,12 @@ public class CustomException extends RuntimeException {
     public synchronized Throwable getCause() {
         return cause;
     }
+
+	public Date getTimestamp() {
+		return timestamp;
+	}
+
+	public void setTimestamp(Date timestamp) {
+		this.timestamp = timestamp;
+	}
 }

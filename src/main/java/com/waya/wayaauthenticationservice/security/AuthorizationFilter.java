@@ -22,77 +22,77 @@ import java.io.IOException;
 @Slf4j
 public class AuthorizationFilter extends BasicAuthenticationFilter {
 
-    public AuthorizationFilter(AuthenticationManager authManager) {
-        super(authManager);
-    }
+	public AuthorizationFilter(AuthenticationManager authManager) {
+		super(authManager);
+	}
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
-            throws IOException, ServletException {
-    	
-        String header = req.getHeader(SecurityConstants.HEADER_STRING);
+	@Override
+	protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+			throws IOException, ServletException {
 
-        if (header == null || !header.startsWith(SecurityConstants.TOKEN_PREFIX)) {
-            chain.doFilter(req, res);
-            return;
-        }
-        UsernamePasswordAuthenticationToken authentication = getAuthentication(req);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        chain.doFilter(req, res);
-    }
+		String header = req.getHeader(SecurityConstants.HEADER_STRING);
 
-    private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
-        String token = parseJwt(request);
-        String userToken;
-        if (token != null && validateToken(token)) {
-            userToken = getUserNameFromToken(token);
-            UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
+		if (header == null || !header.startsWith(SecurityConstants.TOKEN_PREFIX)) {
+			chain.doFilter(req, res);
+			return;
+		}
+		UsernamePasswordAuthenticationToken authentication = getAuthentication(req);
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+		chain.doFilter(req, res);
+	}
 
-            Users user = userLoginRepo.findByEmailOrPhoneNumber(userToken).orElse(null);
+	private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
+		String token = parseJwt(request);
+		String userToken;
+		if (token != null && validateToken(token)) {
+			userToken = getUserNameFromToken(token);
+			UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
 
-            if (user != null) {
-                UserPrincipal userPrincipal = new UserPrincipal(user);
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userPrincipal, null, userPrincipal.getAuthorities());
+			Users user = userLoginRepo.findByEmailOrPhoneNumber(userToken).orElse(null);
 
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+			if (user != null) {
+				UserPrincipal userPrincipal = new UserPrincipal(user);
+				UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+						userPrincipal, null, userPrincipal.getAuthorities());
 
-                return authentication;
-            }
-            return null;
-        }
-        return new UsernamePasswordAuthenticationToken(null, null,null);
-    }
+				authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+				SecurityContextHolder.getContext().setAuthentication(authentication);
 
-    private boolean validateToken(String authToken) {
-        try {
-            Jwts.parser().setSigningKey(SecurityConstants.getSecret()).parseClaimsJws(authToken);
-            return true;
-        } catch (SignatureException ex) {
-            log.error("Invalid JWT signature");
-        } catch (MalformedJwtException ex) {
-            log.error("Invalid JWT token");
-        } catch (ExpiredJwtException ex) {
-            log.error("Expired JWT token");
-        } catch (UnsupportedJwtException ex) {
-            log.error("Unsupported JWT token");
-        } catch (IllegalArgumentException ex) {
-            log.error("JWT claims string is empty.");
-        }
-        return false;
-    }
+				return authentication;
+			}
+			return null;
+		}
+		return new UsernamePasswordAuthenticationToken(null, null, null);
+	}
 
-    private String parseJwt(HttpServletRequest request) {
-        String headerAuth = request.getHeader(SecurityConstants.HEADER_STRING);
+	private boolean validateToken(String authToken) {
+		try {
+			Jwts.parser().setSigningKey(SecurityConstants.getSecret()).parseClaimsJws(authToken);
+			return true;
+		} catch (SignatureException ex) {
+			log.error("Invalid JWT signature");
+		} catch (MalformedJwtException ex) {
+			log.error("Invalid JWT token");
+		} catch (ExpiredJwtException ex) {
+			log.error("Expired JWT token");
+		} catch (UnsupportedJwtException ex) {
+			log.error("Unsupported JWT token");
+		} catch (IllegalArgumentException ex) {
+			log.error("JWT claims string is empty.");
+		}
+		return false;
+	}
 
-        if (StringUtils.hasText(headerAuth) && headerAuth.startsWith(SecurityConstants.TOKEN_PREFIX)) {
-            return  headerAuth.replace(SecurityConstants.TOKEN_PREFIX, "");
-        }
-        return null;
-    }
+	private String parseJwt(HttpServletRequest request) {
+		String headerAuth = request.getHeader(SecurityConstants.HEADER_STRING);
 
-    private String getUserNameFromToken(String token) {
-        return Jwts.parser().setSigningKey(SecurityConstants.getSecret()).parseClaimsJws(token).getBody().getSubject();
-    }
+		if (StringUtils.hasText(headerAuth) && headerAuth.startsWith(SecurityConstants.TOKEN_PREFIX)) {
+			return headerAuth.replace(SecurityConstants.TOKEN_PREFIX, "");
+		}
+		return null;
+	}
+
+	private String getUserNameFromToken(String token) {
+		return Jwts.parser().setSigningKey(SecurityConstants.getSecret()).parseClaimsJws(token).getBody().getSubject();
+	}
 }

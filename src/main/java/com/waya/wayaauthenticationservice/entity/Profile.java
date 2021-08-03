@@ -15,7 +15,9 @@ import java.util.UUID;
 @Table(name = "m_user_profile")
 public class Profile extends AuditModel {
 
-    @Id
+	private static final long serialVersionUID = 1122422343339889166L;
+
+	@Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
