@@ -150,7 +150,7 @@ public class UserServiceImpl implements UserService {
 		if (user == null) {
 			return false;
 		}
-		Role adminRole = rolesRepo.findByName("ROLE_ADMIN")
+		Role adminRole = rolesRepo.findByName("ROLE_APP_ADMIN")
 				.orElseThrow(() -> new CustomException("User Role Not Available", BAD_REQUEST));
 		Optional<Collection<Role>> roles = Optional.ofNullable(user.getRoleList());
 		if (!roles.isPresent())
@@ -161,10 +161,6 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public ResponseEntity<?> getUsersByRole(long roleId) {
-//		Users user = authenticatedUserFacade.getUser();
-//		if (!validateAdmin(user)) {
-//			return new ResponseEntity<>(new ErrorResponse("Invalid Access"), HttpStatus.BAD_REQUEST);
-//		}
 		Role role = rolesRepo.findById(roleId).orElse(null);
 		if (role == null) {
 			return new ResponseEntity<>(new ErrorResponse("Invalid Role"), BAD_REQUEST);
@@ -263,7 +259,6 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public ResponseEntity<?> deleteUser(Long userId) {
 		try {
-			// if (validateUser(token)) {
 			Users user = usersRepository.findById(false, userId).orElseThrow(
 					() -> new CustomException("User with id " + userId + " not found", HttpStatus.NOT_FOUND));
 
@@ -356,15 +351,6 @@ public class UserServiceImpl implements UserService {
 				}).thenAccept(p -> {
 					log.debug("Response from API Call to Delete Virtual Account is: {}, status is: {} data is {}",
 							p.getMessage(), p.getStatus(), p.getData());
-//            try {
-//                List<UserWallet> wallets = userWalletRepository.findByUser_IdAndAccountType(id, WalletAccountType.VIRTUAL);
-//                wallets.forEach(wallet -> {
-//                    wallet.setDeleted(true);
-//                    userWalletRepository.save(wallet);
-//                });
-//            } catch (Exception ex) {
-//                log.error("An error Occurred while processing :: {}", ex.getMessage());
-//            }
 				});
 	}
 
@@ -744,11 +730,6 @@ public class UserServiceImpl implements UserService {
 
 				Users user = new Users();
 				user.setId(0L);
-//                String publicUserId = HelperUtils.generateRandomPassword();
-//                while (usersRepo.existsByUserId(publicUserId)) {
-//                    publicUserId = HelperUtils.generateRandomPassword();
-//                }
-//                user.setUserId(publicUserId);
 				user.setAdmin(mUser.isAdmin());
 				user.setAccountStatus(-1);
 				user.setEmail(mUser.getEmail().trim());
