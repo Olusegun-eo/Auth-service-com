@@ -82,10 +82,10 @@ public class UserSecurity {
 
 		for (int i = roles.length - 1; i >= 0; i--) {
 			boolean authCheck = roleCheck(authEmp.getRoleList(), roles[i].trim());
-			if (authCheck) authEmpLevel++;
+			if (authCheck) authEmpLevel = roles.length - i;
 
 			boolean targetCheck = roleCheck(targetEmp.getRoleList(), roles[i].trim());
-			if (targetCheck) returnEmp++;
+			if (targetCheck) returnEmp = roles.length - i;
 		}
 		log.info("Authenticating User level is {}, Target User level is {}", authEmpLevel, returnEmp);
 
