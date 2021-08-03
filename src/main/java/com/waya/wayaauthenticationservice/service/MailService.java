@@ -1,25 +1,26 @@
 package com.waya.wayaauthenticationservice.service;
 
-import com.google.gson.Gson;
-import com.waya.wayaauthenticationservice.enums.StreamsEventType;
-import com.waya.wayaauthenticationservice.pojo.mail.AbstractEmailContext;
-import com.waya.wayaauthenticationservice.streams.RecipientsEmail;
-import com.waya.wayaauthenticationservice.streams.StreamDataEmail;
-import com.waya.wayaauthenticationservice.streams.StreamPayload;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import static com.waya.wayaauthenticationservice.util.Constant.EMAIL_TOPIC;
+import static com.waya.wayaauthenticationservice.util.Constant.TWILIO_PROVIDER;
+import static com.waya.wayaauthenticationservice.util.Constant.WAYAPAY;
+
+import java.util.Collections;
+
 import org.springframework.messaging.MessagingException;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring5.SpringTemplateEngine;
 
-import java.util.Collections;
+import com.waya.wayaauthenticationservice.enums.StreamsEventType;
+import com.waya.wayaauthenticationservice.pojo.mail.AbstractEmailContext;
+import com.waya.wayaauthenticationservice.streams.RecipientsEmail;
+import com.waya.wayaauthenticationservice.streams.StreamDataEmail;
+import com.waya.wayaauthenticationservice.streams.StreamPayload;
 
-import static com.waya.wayaauthenticationservice.util.Constant.*;
+import lombok.AllArgsConstructor;
 
 @Service
 @AllArgsConstructor
-@Slf4j
 public class MailService {
 
     private final SpringTemplateEngine templateEngine;
@@ -44,6 +45,6 @@ public class MailService {
         post.setData(data);
 
         messageQueueProducer.send(EMAIL_TOPIC, post);
-        log.info("sending Email message kafka message queue::: {}", new Gson().toJson(post));
+        //log.info("sending Email message kafka message queue::: {}", new Gson().toJson(post));
     }
 }

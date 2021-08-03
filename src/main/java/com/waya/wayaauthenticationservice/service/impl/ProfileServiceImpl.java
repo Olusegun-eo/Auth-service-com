@@ -184,7 +184,6 @@ public class ProfileServiceImpl implements ProfileService {
                    }
                    return res;
                 });
-
                 return new ApiResponse<>(null,
                         CREATE_PROFILE_SUCCESS_MSG, true, OK);
             } else {
