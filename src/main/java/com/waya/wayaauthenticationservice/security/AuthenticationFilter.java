@@ -42,7 +42,8 @@ import com.waya.wayaauthenticationservice.repository.PrivilegeRepository;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.service.LoginHistoryService;
-import com.waya.wayaauthenticationservice.util.SecurityConstants;
+
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -100,8 +101,8 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		String userName = user.getEmail();
 
 		String token = Jwts.builder().setSubject(userName)
-				.setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))
-				.signWith(SignatureAlgorithm.HS256, SecurityConstants.getSecret()).compact();
+				.setExpiration(new Date(System.currentTimeMillis() + getExpiration()))
+				.signWith(SignatureAlgorithm.HS256, getSecret()).compact();
 
 		// Check for First Login Attempt and Update User Table
 		UserRepository userRepository = (UserRepository) SpringApplicationContext.getBean("userRepository");
@@ -125,13 +126,13 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		loginResponsePojo.setStatus(true);
 		loginResponsePojo.setMessage("Login Successful");
 
-		m.put("token", SecurityConstants.TOKEN_PREFIX + token);
+		m.put("token", TOKEN_PREFIX + token);
 		m.put("privilege", permit);
 		m.put("roles", roles);
 		m.put("pinCreated", user.isPinCreated());
 		m.put("corporate", user.isCorporate());
 
-		res.addHeader(SecurityConstants.HEADER_STRING, SecurityConstants.TOKEN_PREFIX + token);
+		res.addHeader(HEADER_STRING, TOKEN_PREFIX + token);
 		UserProfileResponsePojo userProfile = convert(user, profile);
 
 		m.put("user", userProfile);

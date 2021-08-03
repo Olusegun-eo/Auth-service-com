@@ -508,5 +508,30 @@
     "name": "POSTGRES_URL",
     "type": "java.lang.String",
     "description": "A description for 'POSTGRES_URL'"
+  },
+  {
+    "name": "SERVER.PORT",
+    "type": "java.lang.String",
+    "description": "A description for 'SERVER.PORT'"
+  },
+  {
+    "name": "JWT_SECRET",
+    "type": "java.lang.String",
+    "description": "A description for 'JWT_SECRET'"
+  },
+  {
+    "name": "JWT_EXPIRATION",
+    "type": "java.lang.String",
+    "description": "A description for 'JWT_EXPIRATION'"
+  },
+  {
+    "name": "AUTH_TOKEN_SECRET",
+    "type": "java.lang.String",
+    "description": "A description for 'AUTH_TOKEN_SECRET'"
+  },
+  {
+    "name": "TOKEN_EXPIRATION_TIME",
+    "type": "java.lang.String",
+    "description": "A description for 'TOKEN_EXPIRATION_TIME'"
   }
 ]}
