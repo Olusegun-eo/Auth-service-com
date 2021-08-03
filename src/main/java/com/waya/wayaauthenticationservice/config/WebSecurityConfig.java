@@ -70,7 +70,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				.anyRequest().authenticated().and()
 				// make sure we use stateLess session; session won't be used to
 				// store user's state.
-				.addFilter(getAuthenticationFilter()).addFilter(new AuthorizationFilter(authenticationManager()));
+				.addFilter(getAuthenticationFilter())
+				.addFilter(new AuthorizationFilter(authenticationManager()));
 	}
 
 	@Override
