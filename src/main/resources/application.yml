@@ -2,12 +2,9 @@ spring:
   application:
     name: auth-service
   datasource:
-    #url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
-    #    username: app_dev
-    #    password: e1bc9e7f864d
-    url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaPayChatAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
-    username: ${POSTGRES_USERNAME:WayaPayChat2020}
-    password: ${POSTGRES_PASSWORD:gh9shfit2m53g4xz}
+    url: ${POSTGRES_URL}
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
     initialization-mode: always
     driver-class-name: org.postgresql.Driver
     continue-on-error: true
@@ -36,10 +33,10 @@ spring:
       use-key-prefix: true
       key-prefix: tokens
   redis:
-    host: ${REDIS_HOST:waya-redis-staging-env.tk8m9t.0001.euw1.cache.amazonaws.com}
-    port: ${REDIS_PORT:6379}
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
     timeout: 10000
-    password: ${REDIS_PASSWORD:wIYretruTPWPmAyLgq6HNQMa0wjRG3q8}
+    password: ${REDIS_PASSWORD}
     ttl: 86400000
     connect-timeout: 10000
 
@@ -49,8 +46,8 @@ spring:
   session:
     store-type: jdbc
   kafka:
-    bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:http://209.97.178.170:9092}
-    groupId: ${KAFKA_GROUP_ID:waya}
+    bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS}
+    groupId: ${KAFKA_GROUP_ID}
     consumer:
       group-id: waya
       auto-offset-reset: earliest
@@ -87,7 +84,7 @@ spring:
             userInfoUri: https://graph.facebook.com/v3.0/me?fields=id,first_name,middle_name,last_name,name,email,verified,is_verified,picture.width(250).height(250)
 
 server:
-  port: 8059
+  port: ${SERVER.PORT:8059}
   error:
     include-message: always
   servlet:
@@ -97,14 +94,14 @@ server:
 eureka:
   client:
     serviceUrl:
-      defaultZone: ${EUREKA_SERVER_URL:http://46.101.41.187:8761/eureka} #http://46.101.41.187:8761/eureka
+      defaultZone: ${EUREKA_SERVER_URL}
     service-url:
-      default-zone: ${EUREKA_SERVER_URL:http://46.101.41.187:8761/eureka} #http://46.101.41.187:8761/eureka
+      default-zone: ${EUREKA_SERVER_URL}
   instance:
     preferIpAddress: true
 
 jwt:
-  secret: mysecret
+  secret: ${JWT_SECRET:mysecret}
 
 #Scheduled Jobs
 job:
@@ -114,14 +111,9 @@ job:
 
 app:
   config:
-    deleteprofile:
-      deleteWallet: http://157.245.84.14:1000/main/activate-or-deactivate-wayagram-account
-      deleteWayagram: http://157.245.84.14:1000/main/activate-or-deactivate-wayagram-account
-    referral:
-      base-url: http://46.101.41.187:8282/referral
     auto:
       follow:
-        base-url: http://157.245.84.14:1000/graph/friend/waya-auto-follow
+        base-url: ${WAYAGRAM_GRAPH:http://157.245.84.14:1000/graph/friend/waya-auto-follow}
     wayagram-profile:
       base-url: http://157.245.84.14:1000/main/profile
     wayagram-profile-create:
@@ -135,10 +127,9 @@ app:
     notification-service:
       base-url: http://68.183.60.114:8085/notification-service
 
-
   auth:
-    tokenSecret: 926D96C90030DD58429D2751AC1BDBBC
-    tokenExpirationMsec: 864000000
+    tokenSecret: ${AUTH_TOKEN_SECRET}
+    tokenExpirationMsec: ${TOKEN_EXPIRATION_TIME}
   oauth2:
     # After successfully authenticating with the OAuth2 Provider,
     # we'll be generating an auth token for the user and sending the token to the
@@ -154,7 +145,7 @@ api:
       prefix: 234
       value: Ensure phone number is valid, 13 characters in length and starts with 234
   server:
-    deployed: 46.101.41.187 #Change per Environment
+    deployed: ${SERVER.URL} #Change per Environment
   pin:
     create-pin-by-email:
       description: Send OTP to email, this is for Create PIN `create-pin` post Request

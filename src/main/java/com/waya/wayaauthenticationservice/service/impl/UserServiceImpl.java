@@ -216,7 +216,7 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<?> getUserInfoByUserIdForServiceConsumption(Long id) {
 		Users user = usersRepository.findById(false, id).orElse(null);
 		if (user == null)
-			return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(new ErrorResponse("Invalid User ID"), HttpStatus.NOT_FOUND);
 		UserProfileResponsePojo userDtO = toModelDTO(user);
 		if (userDtO != null) {
 			return new ResponseEntity<>(new SuccessResponse("User info fetched", userDtO), HttpStatus.OK);
