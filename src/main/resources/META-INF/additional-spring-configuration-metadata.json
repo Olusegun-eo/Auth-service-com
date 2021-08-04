@@ -533,5 +533,10 @@
     "name": "TOKEN_EXPIRATION_TIME",
     "type": "java.lang.String",
     "description": "A description for 'TOKEN_EXPIRATION_TIME'"
+  },
+  {
+    "name": "jwt.expiration",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.expiration'"
   }
 ]}

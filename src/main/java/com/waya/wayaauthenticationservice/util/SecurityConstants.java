@@ -13,7 +13,7 @@ public class SecurityConstants {
 	 * @return the secret
 	 */
 	public static String getSecret() {
-		AppProperties appProperties = (AppProperties) SpringApplicationContext.getBean("appProperties");
+		EnvProperties appProperties = (EnvProperties) SpringApplicationContext.getBean("envProperties");
 		return appProperties.getTokenSecret();
 	}
 
@@ -21,7 +21,7 @@ public class SecurityConstants {
 	 * @return the expiration
 	 */
 	public static Long getExpiration() {
-		AppProperties appProperties = (AppProperties) SpringApplicationContext.getBean("appProperties");
+		EnvProperties appProperties = (EnvProperties) SpringApplicationContext.getBean("envProperties");
 		return appProperties.getTokenExpiryPeriod();
 	}
 
