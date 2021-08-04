@@ -219,7 +219,7 @@ public class AdminServiceImpl implements AdminService {
             user.setAccountStatus(-1);
             userRepository.save(user);
 
-            CompletableFuture.runAsync(() -> this.authenticationService.sendEmailNewPassword(newPassword, user.getEmail(), user.getFirstName()));
+            CompletableFuture.runAsync(() -> this.authenticationService.sendEmailNewPassword(newPassword, user));
 
             return new ResponseEntity<>(new SuccessResponse("User Password Reset Completed", null), HttpStatus.OK);
         } catch (Exception e) {

@@ -1,26 +1,33 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.OK;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import javax.servlet.http.HttpServletRequest;
-
+import com.google.gson.Gson;
+import com.waya.wayaauthenticationservice.controller.UserController;
+import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
+import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.enums.DeleteType;
+import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.exception.ErrorMessages;
+import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordCreateContext;
+import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.pojo.userDTO.*;
+import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
+import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
+import com.waya.wayaauthenticationservice.proxy.WalletProxy;
+import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
+import com.waya.wayaauthenticationservice.repository.RolesRepository;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.response.ErrorResponse;
+import com.waya.wayaauthenticationservice.response.SuccessResponse;
+import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
+import com.waya.wayaauthenticationservice.service.AuthenticationService;
+import com.waya.wayaauthenticationservice.service.MailService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.service.UserService;
+import com.waya.wayaauthenticationservice.util.HelperUtils;
+import com.waya.wayaauthenticationservice.util.ReqIPUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,48 +41,18 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.google.gson.Gson;
-import com.waya.wayaauthenticationservice.controller.UserController;
-import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
-import com.waya.wayaauthenticationservice.entity.Role;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.enums.DeleteType;
-import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.exception.ErrorMessages;
-import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
-import com.waya.wayaauthenticationservice.pojo.notification.NamesPojo;
-import com.waya.wayaauthenticationservice.pojo.notification.NotificationResponsePojo;
-import com.waya.wayaauthenticationservice.pojo.others.ContactPojo;
-import com.waya.wayaauthenticationservice.pojo.others.ContactPojoReq;
-import com.waya.wayaauthenticationservice.pojo.others.DeleteRequest;
-import com.waya.wayaauthenticationservice.pojo.others.DevicePojo;
-import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
-import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
-import com.waya.wayaauthenticationservice.pojo.others.WalletAccessPojo;
-import com.waya.wayaauthenticationservice.pojo.others.WalletAccount;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.UserIDPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
-import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
-import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
-import com.waya.wayaauthenticationservice.proxy.WalletProxy;
-import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
-import com.waya.wayaauthenticationservice.repository.RolesRepository;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
-import com.waya.wayaauthenticationservice.response.ErrorResponse;
-import com.waya.wayaauthenticationservice.response.SuccessResponse;
-import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
-import com.waya.wayaauthenticationservice.service.AuthenticationService;
-import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.service.UserService;
-import com.waya.wayaauthenticationservice.util.HelperUtils;
-import com.waya.wayaauthenticationservice.util.ReqIPUtils;
+import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
-import lombok.extern.slf4j.Slf4j;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.OK;
 
 @Service
 @Slf4j
@@ -111,6 +88,8 @@ public class UserServiceImpl implements UserService {
 	private NotificationProxy notificationProxy;
 	@Autowired
 	private WayagramProxy wayagramProxy;
+	@Autowired
+	MailService mailService;
 
 	@Value("${api.server.deployed}")
 	private String urlRedirect;
@@ -673,7 +652,7 @@ public class UserServiceImpl implements UserService {
 					continue;
 
 				CompletableFuture.runAsync(
-						() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
+						() -> sendEmailNewPassword(mUser.getPassword(), regUser));
 
 				String token = this.authService.generateToken(regUser);
 				this.authService.createCorporateUser(mUser, regUser.getId(), token, getBaseUrl(request));
@@ -755,7 +734,7 @@ public class UserServiceImpl implements UserService {
 				String token = this.authService.generateToken(authenticatedUserFacade.getUser());
 				this.authService.createPrivateUser(mUser, regUser.getId(), token, getBaseUrl(request));
 				CompletableFuture.runAsync(
-						() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
+						() -> sendEmailNewPassword(mUser.getPassword(), regUser));
 				++count;
 			}
 			String message = String
@@ -767,25 +746,12 @@ public class UserServiceImpl implements UserService {
 		}
 	}
 
-	private void sendEmailNewPassword(String randomPassword, String email, String firstName) {
+	private void sendEmailNewPassword(String randomPassword, Users user) {
 		// Email Sending of new Password Here
-		NotificationResponsePojo notification = new NotificationResponsePojo();
-		NamesPojo name = new NamesPojo();
-		name.setEmail(email);
-		name.setFullName(firstName);
-		List<NamesPojo> names = new ArrayList<>();
-		names.add(name);
-		DataPojo dataPojo = new DataPojo();
-		String message = String.format(
-				"<h3>Hello %s </h3><br> <p> Kindly Use the password below to login to the System, "
-						+ "ensure you change it.</p> <br> <h4 style=\"font-weight:bold\"> %s </h4>",
-				firstName, randomPassword);
-		dataPojo.setMessage(message);
-		dataPojo.setNames(names);
-		notification.setData(dataPojo);
-		notification.setEventType("EMAIL");
-		notification.setInitiator(email);
-		CompletableFuture.runAsync(() -> notificationProxy.sendEmail(notification));
+		PasswordCreateContext context = new PasswordCreateContext();
+		context.init(user);
+		context.setPassword(randomPassword);
+		this.mailService.sendMail(context);
 	}
 
 }

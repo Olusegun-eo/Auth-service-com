@@ -7,14 +7,11 @@ import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
-import com.waya.wayaauthenticationservice.pojo.notification.DataPojo;
-import com.waya.wayaauthenticationservice.pojo.notification.NamesPojo;
-import com.waya.wayaauthenticationservice.pojo.notification.NotificationResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordCreateContext;
 import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
-import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
@@ -27,6 +24,7 @@ import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
+import com.waya.wayaauthenticationservice.service.MailService;
 import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.util.ReqIPUtils;
@@ -83,7 +81,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	@Autowired
 	private ReqIPUtils reqUtil;
 	@Autowired
-	private NotificationProxy notificationProxy;
+	private MailService mailService;
 	// @Autowired
 	// private ModelMapper mapper;
 	@Autowired
@@ -192,7 +190,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			if (adminAction)
 				CompletableFuture.runAsync(
-						() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
+						() -> sendEmailNewPassword(mUser.getPassword(), regUser));
 
 			String token = generateToken(regUser);
 			createPrivateUser(mUser, regUser.getId(), token, getBaseUrl(request));
@@ -280,7 +278,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			if (adminAction)
 				CompletableFuture.runAsync(
-						() -> sendEmailNewPassword(mUser.getPassword(), mUser.getEmail(), mUser.getFirstName()));
+						() -> sendEmailNewPassword(mUser.getPassword(), regUser));
 
 			String token = generateToken(regUser);
 
@@ -686,25 +684,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	}
 
 	@Override
-	public void sendEmailNewPassword(String randomPassword, String email, String firstName) {
+	public void sendEmailNewPassword(String randomPassword, Users user) {
 		// Email Sending of new Password Here
-		NotificationResponsePojo notification = new NotificationResponsePojo();
-		NamesPojo name = new NamesPojo();
-		name.setEmail(email);
-		name.setFullName(firstName);
-		List<NamesPojo> names = new ArrayList<>();
-		names.add(name);
-		DataPojo dataPojo = new DataPojo();
-		String message = String.format(
-				"<h3>Hello %s </h3><br> <p> Kindly Use the password below to login to the System, "
-						+ "ensure you change it.</p> <br> <h4 style=\"font-weight:bold\"> %s </h4>",
-				firstName, randomPassword);
-		dataPojo.setMessage(message);
-		dataPojo.setNames(names);
-		notification.setData(dataPojo);
-		notification.setEventType("EMAIL");
-		notification.setInitiator(email);
-		CompletableFuture.runAsync(() -> notificationProxy.sendEmail(notification));
+        PasswordCreateContext context = new PasswordCreateContext();
+        context.init(user);
+        context.setPassword(randomPassword);
+        this.mailService.sendMail(context);
 	}
 
 	private CreateAccountPojo formAccountCreationPojo(Long userId, BaseUserPojo mUser) {
