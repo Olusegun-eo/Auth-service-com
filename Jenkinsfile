@@ -86,23 +86,23 @@ pipeline {
           				}
         			}
       			}
+    		} 
+       
+   		stage('Remove Unused docker image') {
+      			steps{
+				cleanWs()
+         			/* sh "docker rmi $registry:$BUILD_NUMBER" */
+	   			sh "docker rmi $registry"
+      			}
     		}
-				
-    
+		
 		stage ('Starting the deployment job') {
 			steps {
                 		build job: 'waya-2.0-auth-service-deploy-dev', 
 				parameters: [[$class: 'StringParameterValue', name: 'FROM_BUILD', value: "${BUILD_NUMBER}"]
 	        			    ]
 	    		}	    
-    		}	  
-       
-   		stage('Remove Unused docker image') {
-      			steps{
-         			/* sh "docker rmi $registry:$BUILD_NUMBER" */
-	   			sh "docker rmi $registry"
-      			}
-    		} 
+    		}	 
     	}
 
 }
