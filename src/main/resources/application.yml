@@ -112,13 +112,8 @@ job:
 
 app:
   config:
-    auto:
-      follow:
-        base-url: ${WAYAGRAM_GRAPH:http://157.245.84.14:1000/graph/friend/waya-auto-follow}
     wayagram-profile:
-      base-url: http://157.245.84.14:1000/main/profile
-    wayagram-profile-create:
-      base-url: http://157.245.84.14:1000/main/profile/create
+      base-url: http://157.245.84.14:1000
     file-resource:
       base-url: http://46.101.41.187:9098/file-resource/api
     virtual-account:

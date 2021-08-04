@@ -1,15 +1,12 @@
 package com.waya.wayaauthenticationservice.integration;
 
-import static com.waya.wayaauthenticationservice.util.Constant.JWT_TOKEN_VALIDITY;
-import static com.waya.wayaauthenticationservice.util.Constant.SECRET_TOKEN;
-import static com.waya.wayaauthenticationservice.util.Constant.TOKEN_PREFIX;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.Collections;
-import java.util.Date;
-
+import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.enums.ERole;
+import com.waya.wayaauthenticationservice.repository.RolesRepository;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,14 +20,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 
-import com.waya.wayaauthenticationservice.entity.Role;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.enums.ERole;
-import com.waya.wayaauthenticationservice.repository.RolesRepository;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
+import java.util.Collections;
+import java.util.Date;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -76,7 +72,7 @@ public class AdminControllerTest {
         int page = 0;
         int size = 10;
         String token = generateToken(user);
-        findALlUsersPageable(page, size, "$._embedded.userResponse[*].email", user.getEmail(), token, status().isOk() );
+        findALlUsersPageable(page, size, token, status().isOk() );
     }
 
     @Test
@@ -85,15 +81,15 @@ public class AdminControllerTest {
         int page = 0;
         int size = 10;
         String token = "token";
+        findALlUsersPageable(page, size, token, status().is4xxClientError() );
+
     }
 
-    private void findALlUsersPageable(int page, int size, String jsonPath0, String jsonPathMessage, String token, ResultMatcher expectedStatus) throws Exception {
+    private void findALlUsersPageable(int page, int size, String token, ResultMatcher expectedStatus) throws Exception {
         mockMvc.perform(get("/api/v1/admin/users?page="+page+"&size="+size)
                 .header("Authorization", token)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(expectedStatus)
-                //.andExpect(jsonPath(jsonPath0, Is.is(jsonPathMessage)))
-                //.andExpect(jsonPath(jsonPath0).value(containsInAnyOrder(jsonPathMessage)))
                 .andDo(print());
     }
 
@@ -101,8 +97,8 @@ public class AdminControllerTest {
         try {
             System.out.println("::::::GENERATE TOKEN:::::");
             String token = Jwts.builder().setSubject(user.getEmail())
-                    .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
-                    .signWith(SignatureAlgorithm.HS512, SECRET_TOKEN).compact();
+                    .setExpiration(new Date(System.currentTimeMillis() + getExpiration() * 1000))
+                    .signWith(SignatureAlgorithm.HS512, getSecret()).compact();
             System.out.println(":::::Token:::::");
             return TOKEN_PREFIX + token;
         } catch (Exception e) {

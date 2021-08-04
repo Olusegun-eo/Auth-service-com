@@ -5,23 +5,22 @@ import com.waya.wayaauthenticationservice.enums.DeleteType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
 import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserIDPojo;
 import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
+import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
 import com.waya.wayaauthenticationservice.repository.*;
 import com.waya.wayaauthenticationservice.response.*;
 import com.waya.wayaauthenticationservice.service.MailService;
-import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.service.OTPTokenService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,7 +29,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.waya.wayaauthenticationservice.enums.OTPRequestType.*;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.JOINT_VERIFICATION;
 import static com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient.uploadImage;
 import static com.waya.wayaauthenticationservice.util.Constant.*;
 import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateReferralCode;
@@ -38,43 +37,36 @@ import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil
 import static org.springframework.http.HttpStatus.OK;
 
 @Service
+@Slf4j
 public class ProfileServiceImpl implements ProfileService {
 
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final ModelMapper modelMapper;
     private final ProfileRepository profileRepository;
     private final UserRepository userRepository;
-    private final OTPTokenService OTPTokenService;
+    private final OTPTokenService otpTokenService;
     private final FileResourceServiceFeignClient fileResourceServiceFeignClient;
     private final OtherDetailsRepository otherDetailsRepository;
-    private final RestTemplate restClient;
+    private final WayagramProxy wayagramProxy;
     private final SMSAlertConfigRepository smsAlertConfigRepository;
     private final MailService mailService;
     private final ReferralCodeRepository referralCodeRepository;
-
-    @Value("${app.config.wayagram-profile-create.base-url}")
-    private String getAddUrl;
-    @Value("${app.config.auto.follow.base-url}")
-    private String getAutoFollowUrl;
-    @Value("${app.config.auto.follow.base-url}")
-    private String getProfileUrl;
 
     @Autowired
     public ProfileServiceImpl(ModelMapper modelMapper,
                               ProfileRepository profileRepository,
                               UserRepository userRepository,
-                              OTPTokenService OTPTokenService,
+                              OTPTokenService otpTokenService,
                               FileResourceServiceFeignClient fileResourceServiceFeignClient,
                               OtherDetailsRepository otherDetailsRepository,
-                              @Qualifier("restClient") RestTemplate restClient,
+                              WayagramProxy wayagramProxy,
                               SMSAlertConfigRepository smsAlertConfigRepository,
                               MailService mailService, ReferralCodeRepository referralCodeRepository) {
         this.modelMapper = modelMapper;
         this.profileRepository = profileRepository;
-        this.OTPTokenService = OTPTokenService;
+        this.otpTokenService = otpTokenService;
         this.fileResourceServiceFeignClient = fileResourceServiceFeignClient;
         this.otherDetailsRepository = otherDetailsRepository;
-        this.restClient = restClient;
+        this.wayagramProxy = wayagramProxy;
         this.smsAlertConfigRepository = smsAlertConfigRepository;
         this.mailService = mailService;
         this.referralCodeRepository = referralCodeRepository;
@@ -173,7 +165,7 @@ public class ProfileServiceImpl implements ProfileService {
                         savedProfile.getSurname());
 
                 //send otp to Phone and Email
-                CompletableFuture.runAsync(() -> OTPTokenService.sendAccountVerificationToken(
+                CompletableFuture.runAsync(() -> otpTokenService.sendAccountVerificationToken(
                        savedProfile, JOINT_VERIFICATION, baseUrl));
 
                 //create waya gram profile
@@ -206,7 +198,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     /**
      * create a new corporate profile.
-     *
+     * @param baseUrl
      * @param profileRequest corporate profile request
      */
     @Transactional
@@ -237,12 +229,12 @@ public class ProfileServiceImpl implements ProfileService {
 
             if (validationCheck.getStatus()) {
                 Profile newCorporateProfile = saveCorporateProfile(profileRequest);
-                //save the referral code
-                // make request to the referral service
+
+                //save the referral code make request to the referral service
                 saveReferralCode(newCorporateProfile, profileRequest.getUserId());
 
                 //send otp to Phone and Email
-                CompletableFuture.runAsync(() -> OTPTokenService.sendAccountVerificationToken(
+                CompletableFuture.runAsync(() -> otpTokenService.sendAccountVerificationToken(
                         newCorporateProfile, JOINT_VERIFICATION, baseUrl));
 
                 return new ApiResponse<>(null,
@@ -683,7 +675,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     /**
      * Create a wayagram profile
-     *
+     * @param name
      * @param userId
      * @param username
      */
@@ -691,16 +683,21 @@ public class ProfileServiceImpl implements ProfileService {
 
         log.info("Creating waya gram Profile  with userid .....{}", userId);
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-            Map<String, Object> map = new HashMap<>();
-            map.put("user_id", userId);
-            map.put("username", username);
-            map.put("displayName", name);
-            map.put("notPublic", false);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
-            ResponseEntity<String> response = restClient.postForEntity(getAddUrl, entity, String.class);
+			//HttpHeaders headers = new HttpHeaders();
+			//headers.setContentType(MediaType.APPLICATION_JSON);
+			//headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+			//Map<String, Object> map = new HashMap<>();
+			//map.put("user_id", userId);
+			//map.put("username", username);
+			//map.put("displayName", name);
+			//map.put("notPublic", false);
+			//HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
+        	CreateWayagram createWayagram = new CreateWayagram();
+        	createWayagram.setUser_id(userId);
+        	createWayagram.setUsername(username);
+        	createWayagram.setDisplayName(name);
+        	createWayagram.setNotPublic(false);
+            ResponseEntity<String> response = this.wayagramProxy.createWayagramProfile(createWayagram);
             if (response.getStatusCode() == OK) {
                 log.info("Wayagram profile Request Successful with body:: {}", response.getBody());
                 log.info("creating auto follow.....");
@@ -719,6 +716,27 @@ public class ProfileServiceImpl implements ProfileService {
             }
         } catch (Exception unhandledException) {
             log.error("Exception was thrown while creating Waya profile ... ", unhandledException);
+        }
+    }
+
+    private void makeAutoFollow(String userId) {
+        try {
+			//log.info("creating auto follow ... {}", userId);
+			//HttpHeaders headers = new HttpHeaders();
+			//headers.setContentType(MediaType.APPLICATION_JSON);
+			//headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+			//Map<String, Object> map = new HashMap<>();
+			//map.put("user_id", userId);
+			//HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
+        	UserIDPojo userIdPojo = new UserIDPojo(userId);
+        	ResponseEntity<String> response = this.wayagramProxy.autoFollowWayagram(userIdPojo);
+            if (response.getStatusCode() == OK) {
+                log.info("wayaOfficialHandle follow has been created:: {}", response.getBody());
+            } else {
+                log.info("wayaOfficialHandle  Request Failed with body:: {}", response.getStatusCode());
+            }
+        } catch (Exception e) {
+            log.error("wayaOfficialHandle  Exception: ", e);
         }
     }
 
@@ -789,8 +807,6 @@ public class ProfileServiceImpl implements ProfileService {
         return toggleSMSResponse;
     }
 
-
-
     public ToggleSMSResponse getSMSAlertStatus(String phoneNumber) {
         ToggleSMSResponse toggleSMSResponse = null;
         if (Objects.isNull(phoneNumber) || phoneNumber.isEmpty()) {
@@ -803,28 +819,6 @@ public class ProfileServiceImpl implements ProfileService {
         }
         return toggleSMSResponse;
     }
-
-    private void makeAutoFollow(String userId) {
-        try {
-            log.info("creating auto follow ... {}", userId);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-            Map<String, Object> map = new HashMap<>();
-            map.put("user_id", userId);
-
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
-            ResponseEntity<String> response = restClient.postForEntity(getAutoFollowUrl, entity, String.class);
-            if (response.getStatusCode() == OK) {
-                log.info("wayaOfficialHandle follow has been created:: {}", response.getBody());
-            } else {
-                log.info("wayaOfficialHandle  Request Failed with body:: {}", response.getStatusCode());
-            }
-        } catch (Exception e) {
-            log.error("wayaOfficialHandle  Exception: ", e);
-        }
-    }
-
 
     @Override
     public void sendWelcomeEmail(String email) {

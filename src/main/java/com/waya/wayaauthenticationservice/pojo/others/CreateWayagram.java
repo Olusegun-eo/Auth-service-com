@@ -1,5 +1,6 @@
 package com.waya.wayaauthenticationservice.pojo.others;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.waya.wayaauthenticationservice.enums.Type;
 import com.waya.wayaauthenticationservice.util.CustomValidator;
 import lombok.AllArgsConstructor;
@@ -17,7 +18,8 @@ public class CreateWayagram {
 
     @NotBlank(message = "please provide the userId")
     @CustomValidator(type= Type.NUMERIC_STRING, message = "userId Passed must be Numeric")
-	private String user_id;
+    @JsonProperty("user_id")
+    private String user_id;
 
     @NotBlank(message = "please enter your userName")
     @CustomValidator(type= Type.TEXT_STRING, message = "userName Passed must be Valid and not contain numerals")
