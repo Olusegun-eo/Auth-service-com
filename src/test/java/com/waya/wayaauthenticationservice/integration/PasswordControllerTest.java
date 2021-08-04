@@ -1,18 +1,17 @@
 package com.waya.wayaauthenticationservice.integration;
 
-import static com.waya.wayaauthenticationservice.util.Constant.JWT_TOKEN_VALIDITY;
-import static com.waya.wayaauthenticationservice.util.Constant.SECRET_TOKEN;
-import static com.waya.wayaauthenticationservice.util.Constant.TOKEN_PREFIX;
-import static com.waya.wayaauthenticationservice.util.JsonString.asJsonString;
-import static org.mockito.ArgumentMatchers.any;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.Date;
-
+import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.exception.ErrorMessages;
+import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
+import com.waya.wayaauthenticationservice.pojo.password.PasswordPojo;
+import com.waya.wayaauthenticationservice.pojo.password.ResetPasswordPojo;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
+import com.waya.wayaauthenticationservice.service.OTPTokenService;
+import com.waya.wayaauthenticationservice.util.SecurityConstants;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -28,18 +27,17 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 
-import com.waya.wayaauthenticationservice.entity.Profile;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.exception.ErrorMessages;
-import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
-import com.waya.wayaauthenticationservice.pojo.password.PasswordPojo;
-import com.waya.wayaauthenticationservice.pojo.password.ResetPasswordPojo;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
-import com.waya.wayaauthenticationservice.service.OTPTokenService;
+import java.util.Date;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import static com.waya.wayaauthenticationservice.util.JsonString.asJsonString;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.getExpiration;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.getSecret;
+import static org.mockito.ArgumentMatchers.any;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -182,10 +180,10 @@ public class PasswordControllerTest {
 		try {
 			System.out.println("::::::GENERATE TOKEN:::::");
 			String token = Jwts.builder().setSubject(user.getEmail())
-					.setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
-					.signWith(SignatureAlgorithm.HS512, SECRET_TOKEN).compact();
+					.setExpiration(new Date(System.currentTimeMillis() + getExpiration() * 1000))
+					.signWith(SignatureAlgorithm.HS512, getSecret()).compact();
 			System.out.println(":::::Token:::::");
-			return TOKEN_PREFIX + token;
+			return SecurityConstants.TOKEN_PREFIX + token;
 		} catch (Exception e) {
 			throw new RuntimeException(e.fillInStackTrace());
 		}

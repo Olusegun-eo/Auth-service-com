@@ -84,12 +84,11 @@ spring:
             userInfoUri: https://graph.facebook.com/v3.0/me?fields=id,first_name,middle_name,last_name,name,email,verified,is_verified,picture.width(250).height(250)
 
 server:
-  port: ${SERVER.PORT:8059}
+  port: ${SERVER_PORT:8059}
   error:
     include-message: always
   servlet:
     context-path: /
-
 
 eureka:
   client:
@@ -121,7 +120,7 @@ app:
     wallet-service:
       base-url: http://157.230.223.54:9009/api/v1/wallet
     notification-service:
-      base-url: http://68.183.60.114:8085/notification-service
+      base-url: ${NOTIFICATION_SERVICE_BASE_URL:http://68.183.60.114:8085/notification-service}
 
   auth:
     tokenSecret: ${AUTH_TOKEN_SECRET}
@@ -141,7 +140,7 @@ api:
       prefix: 234
       value: Ensure phone number is valid, 13 characters in length and starts with 234
   server:
-    deployed: ${SERVER.URL} #Change per Environment
+    deployed: ${SERVER_URL} #Change per Environment
   pin:
     create-pin-by-email:
       description: Send OTP to email, this is for Create PIN `create-pin` post Request

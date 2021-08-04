@@ -32,8 +32,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Optional;
 
-import static com.waya.wayaauthenticationservice.util.Constant.*;
 import static com.waya.wayaauthenticationservice.util.JsonString.asJsonString;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -512,8 +512,8 @@ class ProfileControllerTest {
 		try {
 			System.out.println("::::::GENERATE TOKEN:::::");
 			String token = Jwts.builder().setSubject(user.getEmail())
-					.setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
-					.signWith(SignatureAlgorithm.HS512, SECRET_TOKEN).compact();
+					.setExpiration(new Date(System.currentTimeMillis() + getExpiration() * 1000))
+					.signWith(SignatureAlgorithm.HS512, getSecret()).compact();
 			System.out.println(":::::Token:::::");
 			return TOKEN_PREFIX + token;
 		} catch (Exception e) {

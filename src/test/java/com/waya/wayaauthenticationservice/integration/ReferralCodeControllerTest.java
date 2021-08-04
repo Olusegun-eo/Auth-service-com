@@ -26,7 +26,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import static com.waya.wayaauthenticationservice.util.Constant.*;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -117,8 +117,8 @@ class ReferralCodeControllerTest {
         try {
             System.out.println("::::::GENERATE TOKEN:::::");
             String token = Jwts.builder().setSubject(user.getEmail())
-                    .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
-                    .signWith(SignatureAlgorithm.HS512, SECRET_TOKEN).compact();
+                    .setExpiration(new Date(System.currentTimeMillis() + getExpiration() * 1000))
+                    .signWith(SignatureAlgorithm.HS512, getSecret()).compact();
             System.out.println(":::::Token:::::");
             return TOKEN_PREFIX + token;
         } catch (Exception e) {
