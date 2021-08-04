@@ -19,8 +19,6 @@ pipeline {
 		
 		 stage('Checkout') {
             		steps {
-				cleanWs()
-				checkout([$class: 'GitSCM', branches: [[name: '*/dev']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'odenigbo-github-credentials', url: 'https://github.com/WAYA-MULTI-LINK/WAYA-PAY-CHAT-2.0-AUTH-SERVICE.git']]])
 				sh "git branch"
                 		sh "ls -lart ./*"
             		}
@@ -86,23 +84,23 @@ pipeline {
           				}
         			}
       			}
+    		} 
+       
+   		stage('Remove Unused docker image') {
+      			steps{
+				cleanWs()
+         			/* sh "docker rmi $registry:$BUILD_NUMBER" */
+	   			sh "docker rmi $registry"
+      			}
     		}
-				
-    
+		
 		stage ('Starting the deployment job') {
 			steps {
                 		build job: 'waya-2.0-auth-service-deploy-dev', 
 				parameters: [[$class: 'StringParameterValue', name: 'FROM_BUILD', value: "${BUILD_NUMBER}"]
 	        			    ]
 	    		}	    
-    		}	  
-       
-   		stage('Remove Unused docker image') {
-      			steps{
-         			/* sh "docker rmi $registry:$BUILD_NUMBER" */
-	   			sh "docker rmi $registry"
-      			}
-    		} 
+    		}	 
     	}
 
 }
