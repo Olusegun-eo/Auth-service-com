@@ -104,7 +104,7 @@ public class PasswordControllerTest {
 		Mockito.when(OTPTokenService.verifySMSOTP(any(), any(), any()))
 				.thenReturn(new OTPVerificationResponse(true, "Successful"));
 
-		PasswordPojo pojo = buildChangePassPojo(234567, "test@12345", "test@1234", user.getPhoneNumber());
+		PasswordPojo pojo = buildChangePassPojo(234567, "test@12345", "test@12345", user.getPhoneNumber());
 		changePassword(pojo, "$.message", "Incorrect Old Password", status().isBadRequest());
 
 	}
