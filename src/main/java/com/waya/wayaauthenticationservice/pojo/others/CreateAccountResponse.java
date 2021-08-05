@@ -1,18 +1,14 @@
 package com.waya.wayaauthenticationservice.pojo.others;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class CreateAccountResponse {
 
-	private Long customerId;
-    private String emailAddress;
-    private String mobileNo;
-    private Long defaultWalletId;
+	private String id = "";
+    private String accountNo = "";
 }

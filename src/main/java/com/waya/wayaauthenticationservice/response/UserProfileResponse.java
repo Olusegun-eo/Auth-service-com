@@ -21,7 +21,6 @@ public class UserProfileResponse {
     private String userId;
     private String referenceCode;
     private boolean smsAlertConfig;
-    private boolean pinCreated;
     private String city;
     private boolean corporate;
 

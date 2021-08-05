@@ -48,11 +48,11 @@ public class KafkaPushController {
         return authenticationService.createCorporateProfileAccount(profilePojo, getBaseUrl(request));
     }
 
-    @ApiOperation(value = "Push Wallet Creation to Kafka (Service consumption only. Do not Use)", notes = "This endpoint is to create a wallet account after auth with Kafka events" , tags = { "KAFKA" })
-    @PostMapping("/create-wallet-push")
-    public ResponseEntity<?> createWalletPush(@Valid @RequestBody WalletPojo walletPojo) {
-        return authenticationService.createWalletAccount(walletPojo);
-    }
+//    @ApiOperation(value = "Push Wallet Creation to Kafka (Service consumption only. Do not Use)", notes = "This endpoint is to create a wallet account after auth with Kafka events" , tags = { "KAFKA" })
+//    @PostMapping("/create-wallet-push")
+//    public ResponseEntity<?> createWalletPush(@Valid @RequestBody WalletPojo walletPojo) {
+//        return authenticationService.createWalletAccount(walletPojo);
+//    }
 
     @ApiOperation(value = "Push Third Party Account Creation to Kafka (Service consumption only. Do not Use)", notes = "This endpoint is to create a Third Party Account after auth with Kafka events" , tags = { "KAFKA" })
     @PostMapping("/create-virtual-account")

@@ -1,120 +1,73 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import static com.waya.wayaauthenticationservice.enums.OTPRequestType.*;
+import com.waya.wayaauthenticationservice.entity.*;
+import com.waya.wayaauthenticationservice.enums.DeleteType;
+import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
+import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserIDPojo;
+import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
+import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
+import com.waya.wayaauthenticationservice.repository.*;
+import com.waya.wayaauthenticationservice.response.*;
+import com.waya.wayaauthenticationservice.service.MailService;
+import com.waya.wayaauthenticationservice.service.OTPTokenService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.JOINT_VERIFICATION;
 import static com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient.uploadImage;
-import static com.waya.wayaauthenticationservice.util.Constant.CATCH_EXCEPTION_MSG;
-import static com.waya.wayaauthenticationservice.util.Constant.COULD_NOT_PROCESS_REQUEST;
-import static com.waya.wayaauthenticationservice.util.Constant.CREATE_PROFILE_SUCCESS_MSG;
-import static com.waya.wayaauthenticationservice.util.Constant.DUPLICATE_KEY;
-import static com.waya.wayaauthenticationservice.util.Constant.ID_IS_REQUIRED;
-import static com.waya.wayaauthenticationservice.util.Constant.ID_IS_UNKNOWN;
-import static com.waya.wayaauthenticationservice.util.Constant.LIMIT;
-import static com.waya.wayaauthenticationservice.util.Constant.PHONE_NUMBER_REQUIRED;
-import static com.waya.wayaauthenticationservice.util.Constant.PROFILE_NOT_EXIST;
-import static com.waya.wayaauthenticationservice.util.Constant.REFERRAL_CODE_LENGHT;
+import static com.waya.wayaauthenticationservice.util.Constant.*;
 import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateReferralCode;
 import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.validateNum;
 import static org.springframework.http.HttpStatus.OK;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-
-import javax.servlet.http.HttpServletRequest;
-
-import com.waya.wayaauthenticationservice.entity.*;
-import com.waya.wayaauthenticationservice.exception.UserServiceException;
-import com.waya.wayaauthenticationservice.repository.*;
-import org.modelmapper.ModelMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.multipart.MultipartFile;
-
-import com.waya.wayaauthenticationservice.enums.DeleteType;
-import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
-import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.DeleteRequest;
-import com.waya.wayaauthenticationservice.pojo.others.OtherDetailsRequest;
-import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.SMSChargeFeeRequest;
-import com.waya.wayaauthenticationservice.pojo.others.ToggleSMSRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
-import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
-import com.waya.wayaauthenticationservice.response.DeleteResponse;
-import com.waya.wayaauthenticationservice.response.OtherdetailsResponse;
-import com.waya.wayaauthenticationservice.response.ProfileImageResponse;
-import com.waya.wayaauthenticationservice.response.SMSChargeResponse;
-import com.waya.wayaauthenticationservice.response.SearchProfileResponse;
-import com.waya.wayaauthenticationservice.response.ToggleSMSResponse;
-import com.waya.wayaauthenticationservice.response.UserProfileResponse;
-import com.waya.wayaauthenticationservice.service.EmailService;
-import com.waya.wayaauthenticationservice.service.MailService;
-import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.service.SMSTokenService;
-
 @Service
+@Slf4j
 public class ProfileServiceImpl implements ProfileService {
 
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final ModelMapper modelMapper;
     private final ProfileRepository profileRepository;
     private final UserRepository userRepository;
-    private final SMSTokenService smsTokenService;
-    private final EmailService emailService;
+    private final OTPTokenService otpTokenService;
     private final FileResourceServiceFeignClient fileResourceServiceFeignClient;
     private final OtherDetailsRepository otherDetailsRepository;
-    private final RestTemplate restClient;
+    private final WayagramProxy wayagramProxy;
     private final SMSAlertConfigRepository smsAlertConfigRepository;
     private final MailService mailService;
     private final ReferralCodeRepository referralCodeRepository;
-
-    @Value("${app.config.wayagram-profile-create.base-url}")
-    private String getAddUrl;
-    @Value("${app.config.auto.follow.base-url}")
-    private String getAutoFollowUrl;
-    @Value("${app.config.auto.follow.base-url}")
-    private String getProfileUrl;
 
     @Autowired
     public ProfileServiceImpl(ModelMapper modelMapper,
                               ProfileRepository profileRepository,
                               UserRepository userRepository,
-                              SMSTokenService smsTokenService,
+                              OTPTokenService otpTokenService,
                               FileResourceServiceFeignClient fileResourceServiceFeignClient,
                               OtherDetailsRepository otherDetailsRepository,
-                              @Qualifier("restClient") RestTemplate restClient,
+                              WayagramProxy wayagramProxy,
                               SMSAlertConfigRepository smsAlertConfigRepository,
-                              EmailService emailService,
                               MailService mailService, ReferralCodeRepository referralCodeRepository) {
         this.modelMapper = modelMapper;
         this.profileRepository = profileRepository;
-        this.smsTokenService = smsTokenService;
+        this.otpTokenService = otpTokenService;
         this.fileResourceServiceFeignClient = fileResourceServiceFeignClient;
         this.otherDetailsRepository = otherDetailsRepository;
-        this.restClient = restClient;
+        this.wayagramProxy = wayagramProxy;
         this.smsAlertConfigRepository = smsAlertConfigRepository;
-        this.emailService = emailService;
         this.mailService = mailService;
         this.referralCodeRepository = referralCodeRepository;
         this.userRepository = userRepository;
@@ -186,15 +139,14 @@ public class ProfileServiceImpl implements ProfileService {
                 if(referralCode1 == null)
                     request.setReferralCode(null);
             }
-
             //check if the user exist in the profile table
             Optional<Profile> profile = profileRepository.findByEmail(
                     false, request.getEmail().trim());
+
             //check if the user exist in the referral table
-            ///get-user-by-referral-code/{userId}
-//            ReferralCodePojo referralCodePojo = referralProxy.getUserByReferralCode(request.getUserId());
             Optional<ReferralCode> referralCode = referralCodeRepository
                     .findByUserId(request.getUserId());
+
             //validation check
             ApiResponse<String> validationCheck = validationCheckOnProfile(profile, referralCode);
             if (validationCheck.getStatus()) {
@@ -202,27 +154,28 @@ public class ProfileServiceImpl implements ProfileService {
                 // check if this referral code is already mapped to a user
                 newProfile.setReferral(request.getReferralCode());
                 newProfile.setCorporate(false);
+                newProfile.setDateOfBirth(request.getDateOfBirth().toString());
                 //save new personal profile
                 Profile savedProfile = profileRepository.save(newProfile);
                 log.info("saving new personal profile ::: {}", newProfile);
                 //save referral code
                 saveReferralCode(savedProfile, request.getUserId());
-                // CompletableFuture.runAsync(() -> saveReferralCode(savedProfile, request.getUserId()));
 
                 String fullName = String.format("%s %s", savedProfile.getFirstName(),
                         savedProfile.getSurname());
 
-                //send otp
-                CompletableFuture.runAsync(() -> smsTokenService.sendSMSOTP(
-                        savedProfile.getPhoneNumber(), fullName, PHONE_VERIFICATION));
-
-                // send email otp
-                CompletableFuture.runAsync(() -> emailService.sendAcctVerificationEmailToken(
-                        baseUrl, savedProfile, EMAIL_VERIFICATION));
+                //send otp to Phone and Email
+                CompletableFuture.runAsync(() -> otpTokenService.sendAccountVerificationToken(
+                       savedProfile, JOINT_VERIFICATION, baseUrl));
 
                 //create waya gram profile
-                CompletableFuture.runAsync(() -> createWayagramProfile(savedProfile.getUserId(), savedProfile.getSurname(), fullName));
-
+                CompletableFuture.runAsync(() -> createWayagramProfile(savedProfile.getUserId(), savedProfile.getSurname(), fullName))
+                .orTimeout(3, TimeUnit.MINUTES).handle((res, ex) -> {
+                   if(ex != null){
+                       log.error("Error With Setting up Wayagram Profile:: {}", ex.getMessage());
+                   }
+                   return res;
+                });
                 return new ApiResponse<>(null,
                         CREATE_PROFILE_SUCCESS_MSG, true, OK);
             } else {
@@ -245,7 +198,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     /**
      * create a new corporate profile.
-     *
+     * @param baseUrl
      * @param profileRequest corporate profile request
      */
     @Transactional
@@ -266,9 +219,9 @@ public class ProfileServiceImpl implements ProfileService {
             //check if the user exist in the profile table
             Optional<Profile> profile = profileRepository.findByEmail(
                     false, profileRequest.getEmail().trim());
+
             //check if the user exist in the referral table
             // now this check will extend to the referral service
-
             Optional<ReferralCode> referralCode = referralCodeRepository
                     .findByUserId(profileRequest.getUserId());
             //validation check
@@ -276,20 +229,13 @@ public class ProfileServiceImpl implements ProfileService {
 
             if (validationCheck.getStatus()) {
                 Profile newCorporateProfile = saveCorporateProfile(profileRequest);
-                //save the referral code
-                // make request to the referral service
+
+                //save the referral code make request to the referral service
                 saveReferralCode(newCorporateProfile, profileRequest.getUserId());
 
-                String fullName = String.format("%s %s", newCorporateProfile.getFirstName(),
-                        newCorporateProfile.getSurname());
-
-                //send sms otp
-                CompletableFuture.runAsync(() -> smsTokenService.sendSMSOTP(
-                        newCorporateProfile.getPhoneNumber(), fullName, PHONE_VERIFICATION));
-
-                // send email otp
-                CompletableFuture.runAsync(() -> emailService.sendAcctVerificationEmailToken(
-                        baseUrl, newCorporateProfile, EMAIL_VERIFICATION));
+                //send otp to Phone and Email
+                CompletableFuture.runAsync(() -> otpTokenService.sendAccountVerificationToken(
+                        newCorporateProfile, JOINT_VERIFICATION, baseUrl));
 
                 return new ApiResponse<>(null,
                         CREATE_PROFILE_SUCCESS_MSG, true, OK);
@@ -321,6 +267,8 @@ public class ProfileServiceImpl implements ProfileService {
         OtherDetails otherDetails = saveOtherDetails(otherDetailsRequest);
         Profile profile = new Profile();
         profile.setCorporate(true);
+        profile.setDateOfBirth(profileRequest.getDateOfBirth().toString());
+        profile.setGender(profileRequest.getGender());
         profile.setEmail(profileRequest.getEmail());
         profile.setFirstName(profileRequest.getFirstName());
         profile.setSurname(profileRequest.getSurname());
@@ -341,7 +289,8 @@ public class ProfileServiceImpl implements ProfileService {
      */
     private OtherDetails saveOtherDetails(OtherDetailsRequest otherDetailsRequest) {
         OtherDetails otherDetails = new OtherDetails();
-        otherDetails.setId(otherDetailsRequest.getOtherDetailsId());
+        UUID id = otherDetailsRequest.getOtherDetailsId() == null ? UUID.randomUUID() : otherDetailsRequest.getOtherDetailsId();
+        otherDetails.setId(id);
         otherDetails.setBusinessType(otherDetailsRequest.getBusinessType());
         otherDetails.setOrganisationName(otherDetailsRequest.getOrganisationName());
         otherDetails.setOrganisationType(otherDetailsRequest.getOrganisationType());
@@ -351,45 +300,9 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     /**
-     * save referral code for the new profile.
-     *
-     * @param newProfile new profile
-     */
-//    private void saveReferralCode(Profile newProfile, String userId) {
-//        ProfileDto profileDto = new ProfileDto();
-//
-//        profileDto.setAddress(newProfile.getAddress());
-//        profileDto.setCity(newProfile.getCity());
-//        profileDto.setCorporate(false);
-//        profileDto.setDateOfBirth(newProfile.getDateOfBirth());
-//        profileDto.setDistrict(newProfile.getDistrict());
-//        profileDto.setEmail(newProfile.getEmail());
-//        profileDto.setFirstName(newProfile.getFirstName());
-//        profileDto.setGender(newProfile.getGender());
-//        profileDto.setMiddleName(newProfile.getMiddleName());
-//        profileDto.setOrganisationName(newProfile.getOrganisationName());
-//        profileDto.setSurname(newProfile.getSurname());
-//        profileDto.setUserId(newProfile.getUserId());
-//        profileDto.setPhoneNumber(newProfile.getPhoneNumber());
-//        profileDto.setReferral(newProfile.getReferral());
-//        profileDto.setState(newProfile.getState());
-//
-//        try {
-//            log.info("saving referral code for this new profile");
-//            ResponseEntity<String> response = referralProxy.saveReferralCode(profileDto, userId);
-//            log.info("Response: {}", response.getBody());
-//        } catch (Exception exception) {
-//            log.error(exception.getMessage());
-//            throw new CustomException(exception.getMessage(), HttpStatus.BAD_REQUEST);
-//        }
-
-//        ReferralCodePojo pro saveReferralCode
-
-    /**
      * check for the availability of the service
      * rollback if the service is unavailable
      */
-    // provide endpoint to send data to referral service
     private void saveReferralCode(Profile newProfile, String userId) {
         // send details to the referral Service
         referralCodeRepository.save(
@@ -411,7 +324,7 @@ public class ProfileServiceImpl implements ProfileService {
     public UserProfileResponse getUserProfile(String userId, HttpServletRequest request) {
         try {
             Optional<Profile> profile = profileRepository.findByUserId(false, userId);
-            if (!profile.isPresent())
+            if (profile.isEmpty())
                 throw new CustomException("profile with that user id is not found", HttpStatus.NOT_FOUND);
 
             log.info("getting users profile from db ::: {}", profile.get());
@@ -457,10 +370,10 @@ public class ProfileServiceImpl implements ProfileService {
 
     private void updateUserAccount(Users users, UpdatePersonalProfileRequest newProfile) {
         if(userRepository.existsByEmail(newProfile.getEmail().trim()) && !compareTwoString(users.getEmail(), newProfile.getEmail()))
-            throw new UserServiceException("Email for Update already Belongs to another User");
+            throw new CustomException("Email for Update already Belongs to another User", HttpStatus.BAD_REQUEST);
         users.setEmail(newProfile.getEmail());
         if(userRepository.existsByPhoneNumber(newProfile.getPhoneNumber().trim()) && !compareTwoString(users.getPhoneNumber(), newProfile.getPhoneNumber()))
-            throw new UserServiceException("Phone Number for Update already Belongs to another User");
+            throw new CustomException("Phone Number for Update already Belongs to another User", HttpStatus.BAD_REQUEST);
         users.setPhoneNumber(newProfile.getPhoneNumber());
         users.setSurname(newProfile.getSurname());
         users.setFirstName(newProfile.getFirstName());
@@ -479,16 +392,21 @@ public class ProfileServiceImpl implements ProfileService {
     private Profile processPersonalProfileUpdateRequest(
             UpdatePersonalProfileRequest updatePersonalProfileRequest,
             Profile profile, String userId) {
+        try{
+            Profile updatedProfile = modelMapper
+                    .map(updatePersonalProfileRequest, Profile.class);
 
-        Profile updatedProfile = modelMapper
-                .map(updatePersonalProfileRequest, Profile.class);
+            updatedProfile.setId(profile.getId());
+            updatedProfile.setUserId(userId);
+            updatedProfile.setProfileImage(profile.getProfileImage());
+            updatedProfile.setDateOfBirth(updatePersonalProfileRequest.getDateOfBirth().toString());
 
-        updatedProfile.setId(profile.getId());
-        updatedProfile.setUserId(userId);
-        updatedProfile.setProfileImage(profile.getProfileImage());
-
-        log.info("updating  user profile ::: {}", updatedProfile);
-        return profileRepository.save(updatedProfile);
+            log.info("updating  user profile ::: {}", updatedProfile);
+            return profileRepository.save(updatedProfile);
+        }catch(Exception e){
+            throw new CustomException(e.getMessage(),
+                    HttpStatus.UNPROCESSABLE_ENTITY);
+        }
     }
 
     /**
@@ -504,9 +422,9 @@ public class ProfileServiceImpl implements ProfileService {
     ) {
         try {
             Optional<Users> user = userRepository.findById(false, Long.parseLong(userId));
-            if (user.isPresent()) {
+            if (user.isPresent() && user.get().isCorporate()) {
                 Optional<Profile> profile = profileRepository.findByUserId(false, userId);
-                if (profile.isPresent()) {
+                if (profile.isPresent() && profile.get().isCorporate()) {
 
                     // Update Base User
                     updateUserAccount(user.get(), corporateProfileRequest);
@@ -516,7 +434,8 @@ public class ProfileServiceImpl implements ProfileService {
                             corporateProfileRequest);
 
                     OtherDetailsRequest otherDetailsRequest = new OtherDetailsRequest();
-                    otherDetailsRequest.setOtherDetailsId(profile.get().getOtherDetails().getId());
+                    UUID id = profile.get().getOtherDetails() == null ? null : profile.get().getOtherDetails().getId();
+                    otherDetailsRequest.setOtherDetailsId(id);
                     otherDetailsRequest.setBusinessType(corporateProfileRequest.getBusinessType());
                     otherDetailsRequest.setOrganisationType(corporateProfileRequest.getOrganisationType());
                     otherDetailsRequest.setOrganisationName(corporateProfileRequest.getOrganisationName());
@@ -524,13 +443,12 @@ public class ProfileServiceImpl implements ProfileService {
                     saveOtherDetails(otherDetailsRequest);
 
                     return setProfileResponse(savedProfile);
-
                 } else {
-                    throw new CustomException("user with that id not found",
+                    throw new CustomException("user with that id not found or is not a Corporate User",
                             HttpStatus.NOT_FOUND);
                 }
             }
-            throw new CustomException("user with that id not found",
+            throw new CustomException("user with that id not found or is not a Corporate User",
                     HttpStatus.NOT_FOUND);
         } catch (Exception exception) {
             throw new CustomException(exception.getMessage(), exception,
@@ -541,18 +459,24 @@ public class ProfileServiceImpl implements ProfileService {
     private Profile processCorporateProfileUpdateRequest(
             Profile profile, UpdateCorporateProfileRequest corporateProfileRequest
     ) {
-        profile.setSurname(corporateProfileRequest.getSurname());
-        profile.setFirstName(corporateProfileRequest.getFirstName());
-        profile.setEmail(corporateProfileRequest.getOrganisationEmail());
-        profile.setPhoneNumber(corporateProfileRequest.getPhoneNumber());
-        profile.setAddress(corporateProfileRequest.getOfficeAddress());
-        profile.setOrganisationName(corporateProfileRequest.getOrganisationName());
-        profile.setCity(corporateProfileRequest.getCity());
-        profile.setState(corporateProfileRequest.getState());
-        profile.setGender(corporateProfileRequest.getGender());
+        try{
+            profile.setSurname(corporateProfileRequest.getSurname());
+            profile.setFirstName(corporateProfileRequest.getFirstName());
+            profile.setEmail(corporateProfileRequest.getOrganisationEmail());
+            profile.setPhoneNumber(corporateProfileRequest.getPhoneNumber());
+            profile.setAddress(corporateProfileRequest.getOfficeAddress());
+            profile.setOrganisationName(corporateProfileRequest.getOrganisationName());
+            profile.setCity(corporateProfileRequest.getCity());
+            profile.setState(corporateProfileRequest.getState());
+            profile.setGender(corporateProfileRequest.getGender());
+            profile.setDateOfBirth(corporateProfileRequest.getDateOfBirth().toString());
 
-        log.info("updating  user profile with values ::: {}", profile);
-        return profileRepository.save(profile);
+            log.info("updating  user profile with values ::: {}", profile);
+            return profileRepository.save(profile);
+        }catch(Exception ex){
+            throw new CustomException(ex.getMessage(),
+                    HttpStatus.UNPROCESSABLE_ENTITY);
+        }
     }
 
     /**
@@ -561,28 +485,34 @@ public class ProfileServiceImpl implements ProfileService {
      * @param userId       user id
      * @param profileImage request
      */
-    @Async
+    //@Async
     @Override
-    public CompletableFuture<ApiResponse<ProfileImageResponse>> updateProfileImage(
+    public ApiResponse<String> updateProfileImage(
             String userId, MultipartFile profileImage
     ) {
         try {
-            CompletableFuture<Profile> profile = profileRepository
-                    .findByUserIdAsync(false, userId);
+            Optional<Profile> profile = profileRepository
+                    .findByUserId(false, userId);
+            if(profile.isPresent()){
+                Profile item = profile.get();
 
-            return profile.thenApply(item -> {
-                if (item == null) throw new CustomException(
-                        PROFILE_NOT_EXIST, HttpStatus.NOT_FOUND);
-                //call file resource service with feign client to upload and return image url
-                ApiResponse<ProfileImageResponse> apiResponse = uploadImage(
-                        fileResourceServiceFeignClient, profileImage, userId, log);
-                //update the profile image
-                item.setProfileImage(apiResponse.getData().getImageUrl());
-                //save back to the database
-                profileRepository.save(item);
-                return apiResponse;
-            });
+                ApiResponse<ProfileImageResponse> response
+                        = uploadImage(fileResourceServiceFeignClient, profileImage, userId, log);
+                if(response != null && response.getStatus()){
+                    //update the profile image
+                    item.setProfileImage(response.getData().getImageUrl());
+                    //save back to the database
+                    profileRepository.save(item);
+                }
+                return new ApiResponse<>("", "Uploaded Successfully", true);
+            }
+
+           throw new CustomException(PROFILE_NOT_EXIST, HttpStatus.NOT_FOUND);
         } catch (Exception exception) {
+            if (exception instanceof CustomException) {
+                CustomException ex = (CustomException) exception;
+                throw new CustomException(ex.getMessage(), ex.getStatus());
+            }
             throw new CustomException(exception.getMessage(),
                     HttpStatus.BAD_REQUEST);
         }
@@ -745,7 +675,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     /**
      * Create a wayagram profile
-     *
+     * @param name
      * @param userId
      * @param username
      */
@@ -753,27 +683,60 @@ public class ProfileServiceImpl implements ProfileService {
 
         log.info("Creating waya gram Profile  with userid .....{}", userId);
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-            Map<String, Object> map = new HashMap<>();
-            map.put("user_id", userId);
-            map.put("username", username);
-            map.put("displayName", name);
-            map.put("notPublic", false);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
-            ResponseEntity<String> response = restClient.postForEntity(getAddUrl, entity, String.class);
+			//HttpHeaders headers = new HttpHeaders();
+			//headers.setContentType(MediaType.APPLICATION_JSON);
+			//headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+			//Map<String, Object> map = new HashMap<>();
+			//map.put("user_id", userId);
+			//map.put("username", username);
+			//map.put("displayName", name);
+			//map.put("notPublic", false);
+			//HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
+        	CreateWayagram createWayagram = new CreateWayagram();
+        	createWayagram.setUser_id(userId);
+        	createWayagram.setUsername(username);
+        	createWayagram.setDisplayName(name);
+        	createWayagram.setNotPublic(false);
+            ResponseEntity<String> response = this.wayagramProxy.createWayagramProfile(createWayagram);
             if (response.getStatusCode() == OK) {
                 log.info("Wayagram profile Request Successful with body:: {}", response.getBody());
                 log.info("creating auto follow.....");
                 //make call to auto follow makeAutoFollow
                 //  Executor delayed = CompletableFuture.delayedExecutor(5L, TimeUnit.SECONDS);
-                CompletableFuture.runAsync(() -> makeAutoFollow(userId));
+                CompletableFuture.runAsync(() -> makeAutoFollow(userId))
+                    .orTimeout(3, TimeUnit.MINUTES)
+                    .handle((res, ex) -> {
+                        if(ex != null){
+                            log.error("Error With Setting up Wayagram Auto-follow:: {}", ex.getMessage());
+                        }
+                        return res;
+                    });
             } else {
                 log.info("Wayagram profile Request Failed with body:: {}", response.getStatusCode());
             }
         } catch (Exception unhandledException) {
             log.error("Exception was thrown while creating Waya profile ... ", unhandledException);
+        }
+    }
+
+    private void makeAutoFollow(String userId) {
+        try {
+			//log.info("creating auto follow ... {}", userId);
+			//HttpHeaders headers = new HttpHeaders();
+			//headers.setContentType(MediaType.APPLICATION_JSON);
+			//headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+			//Map<String, Object> map = new HashMap<>();
+			//map.put("user_id", userId);
+			//HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
+        	UserIDPojo userIdPojo = new UserIDPojo(userId);
+        	ResponseEntity<String> response = this.wayagramProxy.autoFollowWayagram(userIdPojo);
+            if (response.getStatusCode() == OK) {
+                log.info("wayaOfficialHandle follow has been created:: {}", response.getBody());
+            } else {
+                log.info("wayaOfficialHandle  Request Failed with body:: {}", response.getStatusCode());
+            }
+        } catch (Exception e) {
+            log.error("wayaOfficialHandle  Exception: ", e);
         }
     }
 
@@ -844,8 +807,6 @@ public class ProfileServiceImpl implements ProfileService {
         return toggleSMSResponse;
     }
 
-
-
     public ToggleSMSResponse getSMSAlertStatus(String phoneNumber) {
         ToggleSMSResponse toggleSMSResponse = null;
         if (Objects.isNull(phoneNumber) || phoneNumber.isEmpty()) {
@@ -858,28 +819,6 @@ public class ProfileServiceImpl implements ProfileService {
         }
         return toggleSMSResponse;
     }
-
-    private void makeAutoFollow(String userId) {
-        try {
-            log.info("creating auto follow ... {}", userId);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-            Map<String, Object> map = new HashMap<>();
-            map.put("user_id", userId);
-
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
-            ResponseEntity<String> response = restClient.postForEntity(getAutoFollowUrl, entity, String.class);
-            if (response.getStatusCode() == OK) {
-                log.info("wayaOfficialHandle follow has been created:: {}", response.getBody());
-            } else {
-                log.info("wayaOfficialHandle  Request Failed with body:: {}", response.getStatusCode());
-            }
-        } catch (Exception e) {
-            log.error("wayaOfficialHandle  Exception: ", e);
-        }
-    }
-
 
     @Override
     public void sendWelcomeEmail(String email) {

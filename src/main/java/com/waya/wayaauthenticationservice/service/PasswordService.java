@@ -10,6 +10,10 @@ public interface PasswordService {
 
     ResponseEntity<?> sendPasswordResetOTPByEmail(String email, String baseUrl);
 
+    ResponseEntity<?> sendPasswordChangeOTPByEmail(String email, String baseUrl);
+
+    ResponseEntity<?> sendPasswordChangeOTPByPhoneNumber(String phoneNumber);
+
     ResponseEntity<?> resetPassword(ResetPasswordPojo passwordPojo);
 
     ResponseEntity<?> sendPasswordResetOTPByPhoneNumber(String phoneNumber);

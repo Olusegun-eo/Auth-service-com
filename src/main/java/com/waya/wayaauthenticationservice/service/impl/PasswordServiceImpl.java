@@ -1,35 +1,38 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.regex.Matcher;
-
+import com.waya.wayaauthenticationservice.entity.OTPBase;
+import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.OTPRequestType;
+import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.exception.ErrorMessages;
+import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordChangeEmailContext;
+import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordResetContext;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PinResetContext;
-import com.waya.wayaauthenticationservice.pojo.password.*;
-import com.waya.wayaauthenticationservice.response.*;
-import com.waya.wayaauthenticationservice.service.SMSTokenService;
+import com.waya.wayaauthenticationservice.pojo.password.ChangePINPojo;
+import com.waya.wayaauthenticationservice.pojo.password.NewPinPojo;
+import com.waya.wayaauthenticationservice.pojo.password.PasswordPojo;
+import com.waya.wayaauthenticationservice.pojo.password.ResetPasswordPojo;
+import com.waya.wayaauthenticationservice.repository.ProfileRepository;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.response.ErrorResponse;
+import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
+import com.waya.wayaauthenticationservice.response.SuccessResponse;
+import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
+import com.waya.wayaauthenticationservice.service.MailService;
+import com.waya.wayaauthenticationservice.service.PasswordService;
+import com.waya.wayaauthenticationservice.service.OTPTokenService;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.waya.wayaauthenticationservice.entity.OTPBase;
-import com.waya.wayaauthenticationservice.entity.Profile;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.exception.ErrorMessages;
-import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordResetContext;
-import com.waya.wayaauthenticationservice.repository.ProfileRepository;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
-import com.waya.wayaauthenticationservice.service.EmailService;
-import com.waya.wayaauthenticationservice.service.MailService;
-import com.waya.wayaauthenticationservice.service.PasswordService;
-
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
 
 import static com.waya.wayaauthenticationservice.enums.OTPRequestType.*;
 import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
@@ -39,8 +42,7 @@ import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
 @Slf4j
 public class PasswordServiceImpl implements PasswordService {
 
-    private final EmailService emailService;
-    private final SMSTokenService smsTokenService;
+    private final OTPTokenService OTPTokenService;
     private final UserRepository usersRepo;
     private final ProfileRepository profileRepo;
     private final MailService mailService;
@@ -77,11 +79,63 @@ public class PasswordServiceImpl implements PasswordService {
             }
             String newPassword = passwordEncoder.encode(passPojo.getNewPassword());
             user.setPassword(newPassword);
+            user.setCredentialsNonExpired(true);
             user.setAccountStatus(1);
             usersRepo.save(user);
             return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);
         } catch (Exception ex) {
             return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> sendPasswordChangeOTPByEmail(String email, String baseUrl) {
+        try {
+            Users user = usersRepo.findByEmailIgnoreCase(email).orElse(null);
+            if (user == null)
+                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
+                        + " For User with email: " + email, null), HttpStatus.BAD_REQUEST);
+
+            Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
+            if (profile == null)
+                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
+                        + " For Profile with userId: " + user.getId(), null), HttpStatus.BAD_REQUEST);
+
+            PasswordChangeEmailContext emailContext = new PasswordChangeEmailContext();
+            Integer otpToken = generateEmailOTP(email, PASSWORD_CHANGE_EMAIL);
+            emailContext.init(profile);
+            emailContext.redirectTo(baseUrl);
+            emailContext.setToken(String.valueOf(otpToken));
+            // Send the Mail
+            CompletableFuture.runAsync(() -> this.mailService.sendMail(emailContext));
+
+            return new ResponseEntity<>(new SuccessResponse("Email for Password Reset has been sent"), HttpStatus.OK);
+        } catch (Exception ex) {
+            log.error("An Error Occurred: {}", ex.getMessage());
+            throw new CustomException(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> sendPasswordChangeOTPByPhoneNumber(String phoneNumber) {
+        try {
+            Users user = usersRepo.findByPhoneNumber(phoneNumber).orElse(null);
+            if (user == null)
+                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
+                        + " For User with phoneNumber: " + phoneNumber, null), HttpStatus.BAD_REQUEST);
+
+            Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
+            if (profile == null)
+                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
+                        + " For Profile with userId: " + user.getId(), null), HttpStatus.BAD_REQUEST);
+
+            // Send the Phone Number
+            CompletableFuture.runAsync(() -> this.OTPTokenService.sendSMSOTP(phoneNumber, user.getName(), PASSWORD_CHANGE_PHONE));
+
+            return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
+        } catch (Exception ex) {
+            log.error("An Error Occurred: {}", ex.getMessage());
+            throw new CustomException(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }
 
@@ -120,7 +174,7 @@ public class PasswordServiceImpl implements PasswordService {
     }
 
     private Integer generateEmailOTP(String email, OTPRequestType otpRequestType) {
-        OTPBase otpBase = this.emailService.generateEmailToken(email, otpRequestType);
+        OTPBase otpBase = this.OTPTokenService.generateEmailToken(email, otpRequestType);
         return otpBase.getCode();
     }
 
@@ -166,7 +220,7 @@ public class PasswordServiceImpl implements PasswordService {
                         + " For Profile with userId: " + user.getId(), null), HttpStatus.BAD_REQUEST);
 
             // Send the Phone Number
-            CompletableFuture.runAsync(() -> this.smsTokenService.sendSMSOTP(phoneNumber, user.getName(), PASSWORD_RESET_PHONE));
+            CompletableFuture.runAsync(() -> this.OTPTokenService.sendSMSOTP(phoneNumber, user.getName(), PASSWORD_RESET_PHONE));
 
             return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
         } catch (Exception ex) {
@@ -193,7 +247,7 @@ public class PasswordServiceImpl implements PasswordService {
                         + " For Profile with userId: " + user.getId(), null), HttpStatus.BAD_REQUEST);
 
             // Send the Phone Number
-            CompletableFuture.runAsync(() -> this.smsTokenService.sendSMSOTP(phoneNumber, user.getName(), PIN_RESET_PHONE));
+            CompletableFuture.runAsync(() -> this.OTPTokenService.sendSMSOTP(phoneNumber, user.getName(), PIN_RESET_PHONE));
 
             return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
         } catch (Exception ex) {
@@ -253,7 +307,7 @@ public class PasswordServiceImpl implements PasswordService {
                         + " For Profile with userId: " + user.getId(), null), HttpStatus.BAD_REQUEST);
 
             // Send the Phone Number
-            CompletableFuture.runAsync(() -> this.smsTokenService.sendSMSOTP(phoneNumber, user.getName(), PIN_CHANGE_PHONE));
+            CompletableFuture.runAsync(() -> this.OTPTokenService.sendSMSOTP(phoneNumber, user.getName(), PIN_CHANGE_PHONE));
 
             return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
         } catch (Exception ex) {
@@ -342,9 +396,9 @@ public class PasswordServiceImpl implements PasswordService {
         Map<String, Object> map = new HashMap<>();
         OTPVerificationResponse otpResponse;
         if (isEmail) {
-            otpResponse = this.emailService.verifyEmailToken(phoneOrEmail, Integer.parseInt(otp), otpRequestType);
+            otpResponse = this.OTPTokenService.verifyEmailToken(phoneOrEmail, Integer.parseInt(otp), otpRequestType);
         } else {
-            otpResponse = this.smsTokenService.verifySMSOTP(phoneOrEmail, Integer.parseInt(otp), otpRequestType);
+            otpResponse = this.OTPTokenService.verifySMSOTP(phoneOrEmail, Integer.parseInt(otp), otpRequestType);
         }
         success = otpResponse != null ? otpResponse.isValid() : false;
         message = otpResponse != null ? otpResponse.getMessage() : "Failure";
@@ -394,9 +448,9 @@ public class PasswordServiceImpl implements PasswordService {
     public ResponseEntity<?> createPin(NewPinPojo pinPojo) {
         try {
             // Check if email exists
-            Users existingEmail = usersRepo.findByEmailOrPhoneNumber(pinPojo.getPhoneOrEmail()).orElse(null);
-            if (existingEmail != null) {
-                if (existingEmail.isPinCreated())
+            Users users = usersRepo.findByEmailOrPhoneNumber(pinPojo.getPhoneOrEmail()).orElse(null);
+            if (users != null) {
+                if (users.isPinCreated())
                     return new ResponseEntity<>(new ErrorResponse("Transaction pin exists already"),
                             HttpStatus.BAD_REQUEST);
 
@@ -414,9 +468,10 @@ public class PasswordServiceImpl implements PasswordService {
                             HttpStatus.BAD_REQUEST);
                 }
 
-                existingEmail.setPinHash(passwordEncoder.encode(pinPojo.getPin()));
-                existingEmail.setPinCreated(true);
-                usersRepo.save(existingEmail);
+                users.setPinHash(passwordEncoder.encode(pinPojo.getPin()));
+                users.setPinCreated(true);
+                usersRepo.save(users);
+
                 return new ResponseEntity<>(new SuccessResponse("Transaction pin created successfully.", null),
                         HttpStatus.CREATED);
             } else {
@@ -482,7 +537,7 @@ public class PasswordServiceImpl implements PasswordService {
                         + " For Profile with userId: " + user.getId(), null), HttpStatus.BAD_REQUEST);
 
             // Send the Phone Number
-            CompletableFuture.runAsync(() -> this.smsTokenService.sendSMSOTP(phoneNumber, user.getName(), PIN_CREATE_PHONE));
+            CompletableFuture.runAsync(() -> this.OTPTokenService.sendSMSOTP(phoneNumber, user.getName(), PIN_CREATE_PHONE));
 
             return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
         } catch (Exception ex) {
@@ -516,7 +571,7 @@ public class PasswordServiceImpl implements PasswordService {
             // Send the Mail
             CompletableFuture.runAsync(() -> this.mailService.sendMail(emailContext));
 
-            return new ResponseEntity<>(new SuccessResponse("Email for Password Reset has been sent"), HttpStatus.OK);
+            return new ResponseEntity<>(new SuccessResponse("Email for Pin Creation has been sent"), HttpStatus.OK);
         } catch (Exception ex) {
             log.error("An Error Occurred: {}", ex.getMessage());
             throw new CustomException(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);

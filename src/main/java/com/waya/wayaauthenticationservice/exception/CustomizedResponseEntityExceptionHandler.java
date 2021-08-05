@@ -1,17 +1,13 @@
 package com.waya.wayaauthenticationservice.exception;
 
-import java.time.ZonedDateTime;
-import java.util.*;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
@@ -27,7 +23,9 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import lombok.extern.slf4j.Slf4j;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import java.util.*;
 
 @ControllerAdvice
 @RestController
@@ -39,6 +37,12 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
         String message = ex.getLocalizedMessage();
         log.error(ex.getMessage());
         return buildResponseEntity(message, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public final ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException ex, WebRequest request) {
+        return new ResponseEntity<>(getError(ex.getMessage(),
+                request.getDescription(false)), HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(MissingHeaderInfoException.class)

@@ -26,6 +26,20 @@ public class HelperUtils {
                 .toString();
     }
 
+    public static String generateRandomNumber(int length) {
+
+        int randNumOrigin = generateRandomNumber(58, 34);
+        int randNumBound = generateRandomNumber(354, 104);
+
+        SecureRandom random = new SecureRandom();
+        return random.ints(randNumOrigin, randNumBound + 1)
+                .filter(i -> Character.isDigit(i))
+                .limit(length)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint,
+                        StringBuilder::append)
+                .toString();
+    }
+
     public static boolean validateStringIsEmail(String value) {
         Matcher matcher = emailPattern.matcher(value);
         return matcher.matches();

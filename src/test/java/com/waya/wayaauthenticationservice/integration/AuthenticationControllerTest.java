@@ -1,11 +1,16 @@
 package com.waya.wayaauthenticationservice.integration;
 
-import static com.waya.wayaauthenticationservice.util.JsonString.asJsonString;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.others.CreateAccountResponse;
+import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
+import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
+import com.waya.wayaauthenticationservice.proxy.WalletProxy;
+import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -14,16 +19,21 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
+import static com.waya.wayaauthenticationservice.util.JsonString.asJsonString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -35,7 +45,19 @@ public class AuthenticationControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
+    
+    @MockBean
+    private OTPTokenService otpService;
+    
+    @MockBean
+    private WalletProxy walletService;
+    
+    @MockBean
+    private VirtualAccountProxy virtualAccountService;
+    
+    @MockBean
+    private WayagramProxy wayagramService;
+    
     @Autowired
     private UserRepository userRepository;
 
@@ -59,6 +81,16 @@ public class AuthenticationControllerTest {
     @Test
     @DisplayName("create personal profile successfully")
     public void createPersonalUserSuccessfully() throws Exception {
+    	ResponseEntity<?> resp = ResponseEntity.ok(new ApiResponse<>("Success", true));
+        ApiResponse<CreateAccountResponse> acctResponse = new ApiResponse<>
+                (new CreateAccountResponse("1", "5055555783"), "Success", true);
+
+    	doReturn(resp).when(virtualAccountService).createVirtualAccount(any());
+    	doReturn(resp).when(wayagramService).createWayagramProfile(any());
+    	doReturn(resp).when(wayagramService).autoFollowWayagram(any());
+    	doReturn(acctResponse).when(walletService).createUserAccount(any());
+        doNothing().when(otpService).sendAccountVerificationToken(any(), any(), any());
+    	
         BaseUserPojo user = new BaseUserPojo();
         user.setEmail("emmox55@gmail.com");
         user.setFirstName("Stan");
@@ -85,6 +117,14 @@ public class AuthenticationControllerTest {
     @Test
     @DisplayName("create corporate profile successfully")
     public void createCorpUserSuccessfully() throws Exception {
+    	ResponseEntity<?> resp = ResponseEntity.ok(new ApiResponse<>("Success", true));
+        ApiResponse<CreateAccountResponse> acctResponse = new ApiResponse<>
+                (new CreateAccountResponse("1", "5055555783"), "Success", true);
+
+        doReturn(resp).when(virtualAccountService).createVirtualAccount(any());
+    	doReturn(acctResponse).when(walletService).createCorporateAccount(any());
+        doNothing().when(otpService).sendAccountVerificationToken(any(), any(), any());
+    	
         CorporateUserPojo user = new CorporateUserPojo();
         user.setEmail("micro@toju.com");
         user.setFirstName("Stan");

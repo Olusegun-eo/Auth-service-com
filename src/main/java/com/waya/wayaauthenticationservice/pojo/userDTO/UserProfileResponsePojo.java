@@ -7,7 +7,6 @@ import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.server.core.Relation;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
@@ -24,16 +23,21 @@ import lombok.Setter;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Relation(collectionRelation = "userResponse", itemRelation = "user")
-@JsonInclude(Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserProfileResponsePojo extends RepresentationModel<UserProfileResponsePojo> {
 	
 	@JsonProperty("userId")
     private Long id;
-    private String email;
-    private boolean isEmailVerified;
-    private String phoneNumber;
-    private String firstName;
-    private String lastName;
+	@Builder.Default
+    private String email = "";
+	@Builder.Default
+    private boolean isEmailVerified = false;
+	@Builder.Default
+	private String phoneNumber = "";
+	@Builder.Default
+    private String firstName = "";
+	@Builder.Default
+    private String lastName = "";
     private boolean isAdmin;
 	private boolean isPhoneVerified;
 	private boolean isAccountLocked;
@@ -41,10 +45,27 @@ public class UserProfileResponsePojo extends RepresentationModel<UserProfileResp
 	private boolean isCredentialsExpired;
 	private boolean isActive;
 	private boolean isAccountDeleted;
-	private String referenceCode;
+	@Builder.Default
+	private String referenceCode = "";
 	private boolean pinCreated;
 	private boolean isCorporate;
-	
+	@Builder.Default
+	private String gender = "";
+	@Builder.Default
+	private String middleName = "";
+	@Builder.Default
+	private String dateOfBirth = "";
+	@Builder.Default
+	private String profileImage = "";
+	@Builder.Default
+	private String district = "";
+	@Builder.Default
+	private String address = "";
+	@Builder.Default
+	private String city = "";
+	@Builder.Default
+	private String state = "";
+
 	@Builder.Default
 	private Set<String> roles = new HashSet<>();
 	

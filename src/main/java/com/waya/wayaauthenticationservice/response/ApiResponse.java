@@ -1,10 +1,12 @@
 package com.waya.wayaauthenticationservice.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.ToString;
 import org.springframework.http.HttpStatus;
 
 import java.util.Date;
 
+@ToString
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
     private Date timestamp = new Date();

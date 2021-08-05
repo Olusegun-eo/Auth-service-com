@@ -1,20 +1,19 @@
 package com.waya.wayaauthenticationservice;
 
-import java.util.*;
-
-import javax.transaction.Transactional;
-
 import com.waya.wayaauthenticationservice.entity.BusinessType;
+import com.waya.wayaauthenticationservice.entity.Privilege;
+import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.enums.ERole;
 import com.waya.wayaauthenticationservice.repository.BusinessTypeRepository;
+import com.waya.wayaauthenticationservice.repository.PrivilegeRepository;
+import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
-import com.waya.wayaauthenticationservice.entity.Privilege;
-import com.waya.wayaauthenticationservice.entity.Role;
-import com.waya.wayaauthenticationservice.repository.PrivilegeRepository;
-import com.waya.wayaauthenticationservice.repository.RolesRepository;
+import javax.transaction.Transactional;
+import java.util.*;
 
 @Component
 public class SetUpLoader implements ApplicationListener<ContextRefreshedEvent> {
@@ -56,6 +55,7 @@ public class SetUpLoader implements ApplicationListener<ContextRefreshedEvent> {
 		Privilege unlockPrivilege = createPrivilegeIfNotFound("UNLOCK_USER", "UNLOCK");
 		Privilege deletePrivilege = createPrivilegeIfNotFound("DELETE_USER", "DELETE");
         Privilege appAdmin = createPrivilegeIfNotFound("APP_ADMIN", "ADMIN");
+		Privilege appSuperAdmin = createPrivilegeIfNotFound("APP_SUPER_ADMIN", "SUPER ADMIN");
         Privilege appOwner = createPrivilegeIfNotFound("APP_OWNER", "OWNER");
 
 		List<Privilege> userPrivileges = Collections.singletonList(readPrivilege);
@@ -63,14 +63,17 @@ public class SetUpLoader implements ApplicationListener<ContextRefreshedEvent> {
                 unlockPrivilege);
         List<Privilege> adminPrivileges = Arrays.asList(readPrivilege, updatePrivilege, writePrivilege, lockPrivilege,
                 unlockPrivilege, deletePrivilege, appAdmin);
+		List<Privilege> superAdminPrivileges = Arrays.asList(readPrivilege, updatePrivilege, writePrivilege, lockPrivilege,
+				unlockPrivilege, deletePrivilege, appAdmin, appSuperAdmin);
 		List<Privilege> ownerPrivileges = Arrays.asList(readPrivilege, updatePrivilege, writePrivilege, lockPrivilege,
-				unlockPrivilege, deletePrivilege, appOwner);
+				unlockPrivilege, deletePrivilege,appAdmin, appSuperAdmin, appOwner);
 
-		createRoleIfNotFound("ROLE_USER", "USER ROLE", userPrivileges);
-        createRoleIfNotFound("ROLE_CORP", "CORPORATE ROLE", userPrivileges);
-        createRoleIfNotFound("ROLE_CORP_ADMIN", "CORPORATE ADMIN ROLE", merchAdminPrivileges);
-		createRoleIfNotFound("ROLE_APP_ADMIN", "APPLICATION ADMIN", adminPrivileges);
-		createRoleIfNotFound("ROLE_SUPER_ADMIN", "SUPER ADMIN ROLE", ownerPrivileges);
+		createRoleIfNotFound(ERole.ROLE_USER.name(), "USER ROLE", userPrivileges);
+        createRoleIfNotFound(ERole.ROLE_CORP.name(), "CORPORATE USER ROLE", userPrivileges);
+        createRoleIfNotFound(ERole.ROLE_CORP_ADMIN.name(), "CORPORATE ADMIN ROLE", merchAdminPrivileges);
+		createRoleIfNotFound(ERole.ROLE_APP_ADMIN.name(), "APPLICATION ADMIN", adminPrivileges);
+		createRoleIfNotFound(ERole.ROLE_SUPER_ADMIN.name(), "SUPER ADMIN ROLE", superAdminPrivileges);
+		createRoleIfNotFound(ERole.ROLE_OWNER_ADMIN.name(), "OWNER ADMIN ROLE", ownerPrivileges);
 
 		alreadySetup = true;
 	}

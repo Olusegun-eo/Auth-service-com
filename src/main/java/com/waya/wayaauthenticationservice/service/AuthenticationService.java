@@ -1,20 +1,14 @@
 package com.waya.wayaauthenticationservice.service;
 
-import javax.servlet.http.HttpServletRequest;
-
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
+import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
-import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.EmailPojo;
-import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.VirtualAccountPojo;
-import com.waya.wayaauthenticationservice.pojo.others.WalletPojo;
-import com.waya.wayaauthenticationservice.pojo.others.WayagramPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
+import javax.servlet.http.HttpServletRequest;
 
 
 public interface AuthenticationService {
@@ -25,6 +19,8 @@ public interface AuthenticationService {
 										  Device device, boolean adminAction);
 
 	ResponseEntity<?> resendOTPPhone(String phoneNumber);
+
+	ResponseEntity<?> resendOTPForAccountVerification(String emailOrPhoneNumber, String baseUrl);
 
 	ResponseEntity<?> resendVerificationMail(String email, String baseUrl);
 
@@ -40,8 +36,6 @@ public interface AuthenticationService {
 
 	ResponseEntity<?> createVirtualAccount(VirtualAccountPojo virtualAccountPojo);
 
-	ResponseEntity<?> createWalletAccount(WalletPojo walletPojo);
-
 	ResponseEntity<?> createWayagramAccount(WayagramPojo wayagramPojo);
 
 	ResponseEntity<?> createProfileAccount(PersonalProfileRequest profilePojo, String baseUrl);
@@ -52,6 +46,8 @@ public interface AuthenticationService {
 	
 	void createCorporateUser(CorporateUserPojo mUser, Long id, String token, String baseUrl);
 
-	void createPrivateUser(Users regUser, String baseUrl);
+	void createPrivateUser(BaseUserPojo user, Long userId, String token, String baseUrl);
+
+	void sendEmailNewPassword(String randomPassword, Users user);
 
 }

@@ -1,6 +1,7 @@
 package com.waya.wayaauthenticationservice.enums;
 
 public enum OTPRequestType {
+    JOINT_VERIFICATION,
     EMAIL_VERIFICATION,
     PHONE_VERIFICATION,
     PIN_CHANGE_EMAIL,
@@ -12,5 +13,6 @@ public enum OTPRequestType {
     PASSWORD_CHANGE_EMAIL,
     PASSWORD_CHANGE_PHONE,
     PASSWORD_RESET_EMAIL,
-    PASSWORD_RESET_PHONE
+    PASSWORD_RESET_PHONE,
+    ADMIN_VERIFICATION
 }

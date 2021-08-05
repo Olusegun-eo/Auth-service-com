@@ -1,15 +1,25 @@
 package com.waya.wayaauthenticationservice.pojo.userDTO;
 
-import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+import com.waya.wayaauthenticationservice.enums.Gender;
+import com.waya.wayaauthenticationservice.enums.Type;
+import com.waya.wayaauthenticationservice.util.CustomValidator;
+import com.waya.wayaauthenticationservice.util.EnumValue;
+import com.waya.wayaauthenticationservice.util.ValidPhone;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.time.LocalDate;
+import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.waya.wayaauthenticationservice.util.CustomValidator;
-import com.waya.wayaauthenticationservice.enums.Type;
-import com.waya.wayaauthenticationservice.util.ValidPhone;
+import static com.waya.wayaauthenticationservice.enums.Gender.MALE;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BaseUserPojo {
@@ -20,26 +30,37 @@ public class BaseUserPojo {
 
 	@NotBlank(message = "Phone Number Cannot be blank")
 	@ValidPhone
-	@CustomValidator(message = "Phone Number must be 13 characters", type = Type.SIZE, min = 13, max = 13)
+	@CustomValidator(message = "Phone Number must be {max} characters", type = Type.SIZE, min = 13, max = 13)
 	private String phoneNumber;
 
 	private String referenceCode;
 
 	@NotNull(message = "First Name Cannot be Null")
-	@CustomValidator(message = "First Name must be at least 2 characters", type = Type.SIZE, min = 2)
+	@CustomValidator(message = "First Name must be at least {min} characters", type = Type.SIZE, min = 2)
 	@CustomValidator(message = "First Name cannot Contain Non Alphabets", type = Type.TEXT_STRING)
 	private String firstName;
 
 	@NotNull(message = "SurName Cannot be Null")
-	@Size(min = 2, message = "SurName must be at least 2 characters")
+	@Size(min = 2, message = "SurName must be at least {min} characters")
 	@CustomValidator(message = "SurName cannot Contain Non Alphabets", type = Type.TEXT_STRING)
 	private String surname;
 
 	@NotNull(message = "Password Cannot be null")
-	@Size(min = 8, message = "Password must be at least 8 characters Long")
+	@Size(min = 8, message = "Password must be at least {min} characters Long")
 	private String password;
 
 	private boolean isAdmin = false;
+
+	@JsonIgnore
+	private boolean isWayaAdmin = false;
+
+	@JsonDeserialize(using = LocalDateDeserializer.class)
+	@JsonSerialize(using = LocalDateSerializer.class)
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+	private LocalDate dateOfBirth = LocalDate.now();
+
+	@EnumValue(enumClass = Gender.class, message = "Must be either of type MALE or FEMALE")
+	private String gender = MALE.name();
 
 	public String getEmail() {
 		return email;
@@ -95,6 +116,30 @@ public class BaseUserPojo {
 
 	public void setAdmin(boolean admin) {
 		isAdmin = admin;
+	}
+
+	public boolean isWayaAdmin() {
+		return isWayaAdmin;
+	}
+
+	public void setWayaAdmin(boolean wayaAdmin) {
+		isWayaAdmin = wayaAdmin;
+	}
+
+	public LocalDate getDateOfBirth() {
+		return dateOfBirth;
+	}
+
+	public void setDateOfBirth(LocalDate dateOfBirth) {
+		this.dateOfBirth = dateOfBirth;
+	}
+
+	public String getGender() {
+		return gender;
+	}
+
+	public void setGender(String gender) {
+		this.gender = gender;
 	}
 
 	@Override

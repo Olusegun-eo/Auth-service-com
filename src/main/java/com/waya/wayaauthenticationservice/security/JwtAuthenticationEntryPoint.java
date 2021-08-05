@@ -4,6 +4,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
+import com.waya.wayaauthenticationservice.util.SecurityConstants;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,10 +21,13 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint, Se
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationEntryPoint.class);
 
     @Override
-    public void commence(HttpServletRequest httpServletRequest,
+    public void commence(HttpServletRequest req,
                          HttpServletResponse httpServletResponse,
                          AuthenticationException e) throws IOException, ServletException {
-        logger.error("Responding with unauthorized error. Message - {}", e.getMessage());
+       
+        String tokenPassed = req.getHeader(SecurityConstants.HEADER_STRING);
+        logger.error("Responding with unauthorized error. Message - {}:: token Passed is", e.getMessage(), tokenPassed);
+        
         httpServletResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED,
                 e.getLocalizedMessage());
     }

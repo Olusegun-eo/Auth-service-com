@@ -10,7 +10,7 @@ public class CustomException extends RuntimeException {
      * serialversionID
      */
     private static final long serialVersionUID = 1L;
-    private Date timestamp = new Date();
+    private Date timestamp;
     private final String message;
     private final HttpStatus status;
     private Throwable cause;
@@ -18,14 +18,14 @@ public class CustomException extends RuntimeException {
     public CustomException(String message, HttpStatus status) {
         this.message = message;
         this.status = status;
-        this.timestamp = new Date();
+        this.setTimestamp(new Date());
     }
 
     public CustomException(String message, Throwable cause, HttpStatus status) {
         this.message = message;
         this.cause = cause;
         this.status = status;
-        this.timestamp = new Date();
+        this.setTimestamp(new Date());
     }
 
     @Override
@@ -41,4 +41,12 @@ public class CustomException extends RuntimeException {
     public synchronized Throwable getCause() {
         return cause;
     }
+
+	public Date getTimestamp() {
+		return timestamp;
+	}
+
+	public void setTimestamp(Date timestamp) {
+		this.timestamp = timestamp;
+	}
 }

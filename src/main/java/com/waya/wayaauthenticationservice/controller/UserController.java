@@ -10,12 +10,12 @@ import io.swagger.annotations.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.util.List;
 
 @CrossOrigin
@@ -45,10 +45,9 @@ public class UserController {
         return dao.findAll();
     }
 
-    @ApiOperation(value = "Get User Details and Roles by ID from Redis (In-app use only)", tags = {"USER SERVICE"})
+    @ApiOperation(value = "Get User Details and Roles by ID (In-app use only)", tags = {"USER SERVICE"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("/{id}")
-    //    @Cacheable(key = "#id",value = "User")
     @PreAuthorize(value = "@userSecurity.useHierarchy(#id, authentication)")
     public ResponseEntity<?> findUser(@PathVariable Long id) {
         return userService.getUserById(id);
@@ -70,25 +69,25 @@ public class UserController {
         return userService.getUserByPhone(phone);
     }
 
-    @ApiOperation(value = "Get User and Wallet Details by Phone (In-app use only)", tags = {"USER SERVICE"})
+    @ApiOperation(value = "Get User by Phone (In-app use only)", tags = {"USER SERVICE"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("walletByPhone")
-    public ResponseEntity<?> getUserAndWalletByPhone(@RequestParam("phone") String phone) {
-        return userService.getUserAndWalletByPhoneOrEmail(phone.trim());
+    public ResponseEntity<?> getUserByPhoneForService(@RequestParam("phone") String phone) {
+        return userService.getUserInfoByPhoneOrEmailForServiceConsumption(phone.trim());
     }
 
-    @ApiOperation(value = "Get User and Wallet Details by Email (In-app use only)", tags = {"USER SERVICE"})
+    @ApiOperation(value = "Get User by Email (In-app use only)", tags = {"USER SERVICE"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("walletByEmail")
-    public ResponseEntity<?> getUserAndWalletByEmail(@RequestParam("email") String email) {
-        return userService.getUserAndWalletByPhoneOrEmail(email.trim());
+    public ResponseEntity<?> getUserByEmailForService(@RequestParam("email") String email) {
+        return userService.getUserInfoByPhoneOrEmailForServiceConsumption(email.trim());
     }
 
-    @ApiOperation(value = "Get User and Wallet Details by UserId (In-app use only)", tags = {"USER SERVICE"})
+    @ApiOperation(value = "Get User Details by UserId (In-app use only)", tags = {"USER SERVICE"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("walletByUserId")
-    public ResponseEntity<?> getUserAndWalletById(@RequestParam("id") Long userId) {
-        return userService.getUserAndWalletByUserId(userId);
+    public ResponseEntity<?> getUserByIdForService(@RequestParam("id") Long userId) {
+        return userService.getUserInfoByUserIdForServiceConsumption(userId);
     }
 
     @ApiOperation(value = "Phone Contact check  (Service consumption only. Do not Use)", tags = {"USER SERVICE"})
@@ -99,7 +98,7 @@ public class UserController {
         return userService.wayaContactCheck(contacts);
     }
 
-    @ApiOperation(value = "Get my Info change", notes = "This endpointis used by logged in users to fetch their info", tags = {
+    @ApiOperation(value = "Get my Info change", notes = "This endpoint is used by logged in users to fetch their info", tags = {
             "USER SERVICE"})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
@@ -114,6 +113,7 @@ public class UserController {
             @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize(value = "@userSecurity.useHierarchy(#id, authentication)")
     public ResponseEntity<?> remove(@PathVariable Long id) {
         return userService.deleteUser(id);
     }
@@ -127,13 +127,13 @@ public class UserController {
         return userService.unDeleteUser(id);
     }
 
-    @ApiOperation(value = "Edit User Details", notes = "This endpoint is used update user details", tags = {
+    @ApiOperation(value = "Edit User Role Details (Service consumption only. Do not Use)", notes = "This endpoint is used update user details", tags = {
             "USER SERVICE"})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PutMapping("/role/update")
-    public ResponseEntity<UserRoleUpdateRequest> updateUser(@RequestBody UserRoleUpdateRequest user) {
+    public ResponseEntity<?> updateUser(@RequestBody UserRoleUpdateRequest user) {
         return ResponseEntity.ok(userService.UpdateUser(user));
     }
 
@@ -167,4 +167,14 @@ public class UserController {
 //        return ResponseEntity.ok(userService.UpdateUserDetails(userEditPojo));
 //    }
 
+    @ApiOperation(value = "To Activate Users Account by UserId (For In App service consumption)",
+            notes = "To Activate Users Account by UserId (For In App service consumption)", tags = {
+            "USER SERVICE"})
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
+    @PostMapping("activate/{userId}")
+    public  ResponseEntity<?> activateUserAccount(@PathVariable("userId") Long id){
+        return new ResponseEntity<>(userService.activateAccount(id), HttpStatus.OK);
+    }
 }

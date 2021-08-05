@@ -2,12 +2,9 @@ spring:
   application:
     name: auth-service
   datasource:
-    #url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
-    #    username: app_dev
-    #    password: e1bc9e7f864d
-    url: jdbc:postgresql://db-postgresql-sfo2-54806-do-user-4419539-0.b.db.ondigitalocean.com:25060/WayaPayChatAuthDB?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
-    username: ${POSTGRES_USERNAME:WayaPayChat2020}
-    password: ${POSTGRES_PASSWORD:gh9shfit2m53g4xz}
+    url: ${POSTGRES_URL}
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
     initialization-mode: always
     driver-class-name: org.postgresql.Driver
     continue-on-error: true
@@ -17,10 +14,16 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        show-sql: true
         jdbc:
           time_zone: UTC
     open-in-view: false #this config disables database queries which  may be performed during view rendering
+
+  servlet:
+    multipart:
+      enabled: true
+      file-size-threshold: 2KB
+      max-file-size: 2MB
+      max-request-size: 2MB
 
   cache:
     type: redis
@@ -30,10 +33,10 @@ spring:
       use-key-prefix: true
       key-prefix: tokens
   redis:
-    host: ${REDIS_HOST:waya-redis-staging-env.tk8m9t.0001.euw1.cache.amazonaws.com}
-    port: ${REDIS_PORT:6379}
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
     timeout: 10000
-    password: ${REDIS_PASSWORD:wIYretruTPWPmAyLgq6HNQMa0wjRG3q8}
+    password: ${REDIS_PASSWORD}
     ttl: 86400000
     connect-timeout: 10000
 
@@ -43,16 +46,11 @@ spring:
   session:
     store-type: jdbc
   kafka:
-    bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:http://209.97.178.170:9092}
-    groupId: ${KAFKA_GROUP_ID:waya}
+    bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS}
+    groupId: ${KAFKA_GROUP_ID}
     consumer:
       group-id: waya
       auto-offset-reset: earliest
-
-  servlet:
-    multipart:
-      max-file-size: 2MB
-      max-request-size: 2MB
 
   security:
     oauth2:
@@ -86,66 +84,57 @@ spring:
             userInfoUri: https://graph.facebook.com/v3.0/me?fields=id,first_name,middle_name,last_name,name,email,verified,is_verified,picture.width(250).height(250)
 
 server:
-  port: 8059
+  port: ${SERVER_PORT:8059}
   error:
     include-message: always
   servlet:
     context-path: /
 
-logging:
-  level:
-    org:
-      hibernate:
-        SQL: DEBUG
-        type:
-          descriptor:
-            sql:
-              BasicBinder: TRACE
-
 eureka:
   client:
     serviceUrl:
-      defaultZone: ${EUREKA_SERVER_URL:http://46.101.41.187:8761/eureka} #http://46.101.41.187:8761/eureka
+      defaultZone: ${EUREKA_SERVER_URL}
     service-url:
-      default-zone: ${EUREKA_SERVER_URL:http://46.101.41.187:8761/eureka} #http://46.101.41.187:8761/eureka
+      default-zone: ${EUREKA_SERVER_URL}
   instance:
     preferIpAddress: true
 
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 60000
+        readTimeout: 10000
+
+
 jwt:
-  secret: mysecret
+  secret: ${JWT_SECRET:wayas3cr3t}
+  expiration: ${JWT_EXPIRATION:31557600000}
 
 #Scheduled Jobs
 job:
   cron:
     5amED: 0 0 5 * * ? #5am every day
-    5min1318: 0 0-5 13,18 * * ? #Every minute starting at 1pm and 6pm and ending after 5 minutes, and every day
+    5min1318: 0 0-5 13-18 * * ? #Every minute starting at 1pm and 6pm and ending after 5 minutes, and every day
 
 app:
   config:
-    deleteprofile:
-      deleteWallet: http://157.245.84.14:1000/main/activate-or-deactivate-wayagram-account
-      deleteWayagram: http://157.245.84.14:1000/main/activate-or-deactivate-wayagram-account
-    referral:
-      base-url: http://46.101.41.187:8282/referral
-    auto:
-      follow:
-        base-url: http://157.245.84.14:1000/graph/friend/waya-auto-follow
+    access-service:
+      base-url: http://46.101.41.187:8061
     wayagram-profile:
-      base-url: http://157.245.84.14:1000/main/profile
-    wayagram-profile-create:
-      base-url: http://157.245.84.14:1000/main/profile/create
+      base-url: http://157.245.84.14:1000
     file-resource:
       base-url: http://46.101.41.187:9098/file-resource/api
     virtual-account:
       base-url: http://46.101.41.187:7090/account-creation-service/api
-    notification-service:
-      base-url: http://68.183.60.114:8085/notification-service
     wallet-service:
       base-url: http://157.230.223.54:9009/api/v1/wallet
+    notification-service:
+      base-url: ${NOTIFICATION_SERVICE_BASE_URL:http://68.183.60.114:8085/notification-service}
 
   auth:
-    tokenSecret: 926D96C90030DD58429D2751AC1BDBBC
-    tokenExpirationMsec: 864000000
+    tokenSecret: ${AUTH_TOKEN_SECRET}
+    tokenExpirationMsec: ${TOKEN_EXPIRATION_TIME}
   oauth2:
     # After successfully authenticating with the OAuth2 Provider,
     # we'll be generating an auth token for the user and sending the token to the
@@ -161,7 +150,7 @@ api:
       prefix: 234
       value: Ensure phone number is valid, 13 characters in length and starts with 234
   server:
-    deployed: 46.101.41.187 #Change per Environment
+    deployed: ${SERVER_URL} #Change per Environment
   pin:
     create-pin-by-email:
       description: Send OTP to email, this is for Create PIN `create-pin` post Request
@@ -241,9 +230,6 @@ api:
         This endpoint is used to Change Users PIN, OTP is needed from `/change-pin/byPhone` or `/change-pin/byEmail` GET methods
         # Error Response
         Returns with a detailed response about the error.
-
-
-
 
   auth:
     create:

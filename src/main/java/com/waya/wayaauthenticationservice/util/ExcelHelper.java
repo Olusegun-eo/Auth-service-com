@@ -31,6 +31,7 @@ public class ExcelHelper {
     public static List<String> CORPORATE_USER_HEADERS = Arrays.asList("FIRSTNAME", "SURNAME", "PHONE_NUMBER", "EMAIL",
             "OFFICE_ADDRESS", "CITY", "STATE", "ORG_NAME", "ORG_EMAIL",
             "ORG_PHONE", "ORG_TYPE", "BUSINESS_TYPE", "REFERENCE_CODE");
+    //public static List<String> DEACTIVATE_USER_HEADERS = Arrays.asList("FIRSTNAME", "SURNAME", "PHONE_NUMBER", "EMAIL");
 
     static String SHEET = "Users";
     static Pattern alphabetsPattern = Pattern.compile("^[a-zA-Z]*$");

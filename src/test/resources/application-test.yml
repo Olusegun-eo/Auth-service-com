@@ -12,6 +12,17 @@ spring:
         show-sql: true
         jdbc:
           time_zone: UTC
+  redis:
+    host: ${REDIS_HOST:waya-redis-staging-env.tk8m9t.0001.euw1.cache.amazonaws.com}
+    port: ${REDIS_PORT:6379}
+    timeout: 10000
+    password: ${REDIS_PASSWORD:wIYretruTPWPmAyLgq6HNQMa0wjRG3q8}
+  kafka:
+    bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:http://209.97.178.170:9092}
+    groupId: ${KAFKA_GROUP_ID:waya}
+  security:
+    basic:
+      enabled: false
 
   jackson:
     serialization:
@@ -26,9 +37,29 @@ spring:
     username: sa
     password: sa
     driver-class-name: org.h2.Driver
-  h2:
-    console:
-      enabled: true
-security:
-  basic:
-    enabled: false
+
+h2:
+  console:
+    enabled: true
+jwt:
+  secret: ${JWT_SECRET:wayas3cr3t}
+  expiration: ${JWT_EXPIRATION:31557600000}
+
+app:
+  auth:
+    tokenSecret: ${AUTH_TOKEN_SECRET:926D96C90030DD58429D2751AC1BDBBC}
+    tokenExpirationMsec: ${TOKEN_EXPIRATION_TIME:864000000}
+
+api:
+  server:
+    deployed: 127.0.0.1
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE

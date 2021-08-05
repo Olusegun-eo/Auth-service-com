@@ -38,5 +38,505 @@
     "name": "wallet.profile.url",
     "type": "java.lang.String",
     "description": "A description for 'wallet.profile.url'"
+  },
+  {
+    "name": "POSTGRES_USERNAME",
+    "type": "java.lang.String",
+    "description": "A description for 'POSTGRES_USERNAME'"
+  },
+  {
+    "name": "POSTGRES_PASSWORD",
+    "type": "java.lang.String",
+    "description": "A description for 'POSTGRES_PASSWORD'"
+  },
+  {
+    "name": "REDIS_HOST",
+    "type": "java.lang.String",
+    "description": "A description for 'REDIS_HOST'"
+  },
+  {
+    "name": "REDIS_PORT",
+    "type": "java.lang.String",
+    "description": "A description for 'REDIS_PORT'"
+  },
+  {
+    "name": "KAFKA_BOOTSTRAP_SERVERS",
+    "type": "java.lang.String",
+    "description": "A description for 'KAFKA_BOOTSTRAP_SERVERS'"
+  },
+  {
+    "name": "REDIS_PASSWORD",
+    "type": "java.lang.String",
+    "description": "A description for 'REDIS_PASSWORD'"
+  },
+  {
+    "name": "REDIS_PORT",
+    "type": "java.lang.String",
+    "description": "A description for 'REDIS_PORT'"
+  },
+  {
+    "name": "REDIS_PORT",
+    "type": "java.lang.String",
+    "description": "A description for 'REDIS_PORT'"
+  },
+  {
+    "name": "POSTGRES_PASSWORD",
+    "type": "java.lang.String",
+    "description": "A description for 'POSTGRES_PASSWORD'"
+  },
+  {
+    "name": "POSTGRES_PASSWORD",
+    "type": "java.lang.String",
+    "description": "A description for 'POSTGRES_PASSWORD'"
+  },
+  {
+    "name": "POSTGRES_PASSWORD",
+    "type": "java.lang.String",
+    "description": "A description for 'POSTGRES_PASSWORD'"
+  },
+  {
+    "name": "POSTGRES_PASSWORD",
+    "type": "java.lang.String",
+    "description": "A description for 'POSTGRES_PASSWORD'"
+  },
+  {
+    "name": "POSTGRES_PASSWORD",
+    "type": "java.lang.String",
+    "description": "A description for 'POSTGRES_PASSWORD'"
+  },
+  {
+    "name": "POSTGRES_PASSWORD",
+    "type": "java.lang.String",
+    "description": "A description for 'POSTGRES_PASSWORD'"
+  },
+  {
+    "name": "POSTGRES_PASSWORD",
+    "type": "java.lang.String",
+    "description": "A description for 'POSTGRES_PASSWORD'"
+  },
+  {
+    "name": "KAFKA_GROUP_ID",
+    "type": "java.lang.String",
+    "description": "A description for 'KAFKA_GROUP_ID'"
+  },
+  {
+    "name": "EUREKA_SERVER_URL",
+    "type": "java.lang.String",
+    "description": "A description for 'EUREKA_SERVER_URL'"
+  },
+  {
+    "name": "api.validations.phone.prefix",
+    "type": "java.lang.String",
+    "description": "A description for 'api.validations.phone.prefix'"
+  },
+  {
+    "name": "api.validations.phone.value",
+    "type": "java.lang.String",
+    "description": "A description for 'api.validations.phone.value'"
+  },
+  {
+    "name": "api.server.deployed",
+    "type": "java.lang.String",
+    "description": "A description for 'api.server.deployed'"
+  },
+  {
+    "name": "api.pin.create-pin-by-email.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.create-pin-by-email.description'"
+  },
+  {
+    "name": "api.pin.create-pin-by-email.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.create-pin-by-email.notes'"
+  },
+  {
+    "name": "api.pin.create-pin-by-phone.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.create-pin-by-phone.description'"
+  },
+  {
+    "name": "api.pin.create-pin-by-phone.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.create-pin-by-phone.notes'"
+  },
+  {
+    "name": "api.pin.create-pin.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.create-pin.description'"
+  },
+  {
+    "name": "api.pin.create-pin.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.create-pin.notes'"
+  },
+  {
+    "name": "api.pin.validate-pin-by-userId.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.validate-pin-by-userId.description'"
+  },
+  {
+    "name": "api.pin.validate-pin-by-userId.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.validate-pin-by-userId.notes'"
+  },
+  {
+    "name": "api.pin.validate-pin.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.validate-pin.description'"
+  },
+  {
+    "name": "api.pin.validate-pin.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.validate-pin.notes'"
+  },
+  {
+    "name": "api.pin.forgot-pin-by-phone.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.forgot-pin-by-phone.description'"
+  },
+  {
+    "name": "api.pin.forgot-pin-by-phone.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.forgot-pin-by-phone.notes'"
+  },
+  {
+    "name": "api.pin.forgot-pin-by-email.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.forgot-pin-by-email.description'"
+  },
+  {
+    "name": "api.pin.forgot-pin-by-email.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.forgot-pin-by-email.notes'"
+  },
+  {
+    "name": "api.pin.forgot-pin.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.forgot-pin.description'"
+  },
+  {
+    "name": "api.pin.forgot-pin.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.forgot-pin.notes'"
+  },
+  {
+    "name": "api.pin.change-pin-by-phone.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.change-pin-by-phone.description'"
+  },
+  {
+    "name": "api.pin.change-pin-by-phone.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.change-pin-by-phone.notes'"
+  },
+  {
+    "name": "api.pin.change-pin-by-email.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.change-pin-by-email.description'"
+  },
+  {
+    "name": "api.pin.change-pin.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.change-pin.description'"
+  },
+  {
+    "name": "api.pin.change-pin-by-email.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.change-pin-by-email.notes'"
+  },
+  {
+    "name": "api.pin.change-pin.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.pin.change-pin.notes'"
+  },
+  {
+    "name": "api.auth.create.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.auth.create.description'"
+  },
+  {
+    "name": "api.auth.create.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.auth.create.notes'"
+  },
+  {
+    "name": "api.auth.create-corporate.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.auth.create-corporate.description'"
+  },
+  {
+    "name": "api.auth.create-corporate.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.auth.create-corporate.notes'"
+  },
+  {
+    "name": "api.auth.verify-otp.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.auth.verify-otp.description'"
+  },
+  {
+    "name": "api.auth.verify-otp.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.auth.verify-otp.notes'"
+  },
+  {
+    "name": "api.auth.verify-email.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.auth.verify-email.description'"
+  },
+  {
+    "name": "api.auth.verify-email.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.auth.verify-email.notes'"
+  },
+  {
+    "name": "api.auth.login.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.auth.login.description'"
+  },
+  {
+    "name": "api.auth.login.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.auth.login.notes'"
+  },
+  {
+    "name": "api.auth.social.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.auth.social.description'"
+  },
+  {
+    "name": "api.auth.social.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.auth.social.notes'"
+  },
+  {
+    "name": "api.corporate-profile.create-corporate-profile.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.corporate-profile.create-corporate-profile.description'"
+  },
+  {
+    "name": "api.corporate-profile.create-corporate-profile.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.corporate-profile.create-corporate-profile.notes'"
+  },
+  {
+    "name": "api.corporate-profile.update-corporate-profile.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.corporate-profile.update-corporate-profile.description'"
+  },
+  {
+    "name": "api.corporate-profile.update-corporate-profile.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.corporate-profile.update-corporate-profile.notes'"
+  },
+  {
+    "name": "api.corporate-profile.update-profile-pic.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.corporate-profile.update-profile-pic.description'"
+  },
+  {
+    "name": "api.corporate-profile.update-profile-pic.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.corporate-profile.update-profile-pic.notes'"
+  },
+  {
+    "name": "api.corporate-profile.get-corporate-profile.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.corporate-profile.get-corporate-profile.description'"
+  },
+  {
+    "name": "api.corporate-profile.get-corporate-profile.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.corporate-profile.get-corporate-profile.notes'"
+  },
+  {
+    "name": "api.profile.referals.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.profile.referals.description'"
+  },
+  {
+    "name": "api.profile.referals.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.profile.referals.notes'"
+  },
+  {
+    "name": "api.profile.create-personal-profile.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.profile.create-personal-profile.description'"
+  },
+  {
+    "name": "api.profile.get-user-profile.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.profile.get-user-profile.notes'"
+  },
+  {
+    "name": "api.profile.create-personal-profile.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.profile.create-personal-profile.notes'"
+  },
+  {
+    "name": "api.profile.get-user-profile.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.profile.get-user-profile.description'"
+  },
+  {
+    "name": "api.profile.update-user-profile.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.profile.update-user-profile.description'"
+  },
+  {
+    "name": "api.profile.update-user-profile.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.profile.update-user-profile.notes'"
+  },
+  {
+    "name": "api.profile.update-user-profile-image.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.profile.update-user-profile-image.description'"
+  },
+  {
+    "name": "api.profile.update-user-profile-image.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.profile.update-user-profile-image.notes'"
+  },
+  {
+    "name": "api.profile.search-name.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.profile.search-name.description'"
+  },
+  {
+    "name": "api.profile.search-name.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.profile.search-name.notes'"
+  },
+  {
+    "name": "api.profile.search-phone.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.profile.search-phone.description'"
+  },
+  {
+    "name": "api.profile.search-phone.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.profile.search-phone.notes'"
+  },
+  {
+    "name": "api.profile.search-email.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.profile.search-email.description'"
+  },
+  {
+    "name": "api.profile.search-email.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.profile.search-email.notes'"
+  },
+  {
+    "name": "api.profile.search-organization.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.profile.search-organization.description'"
+  },
+  {
+    "name": "api.profile.search-organization.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.profile.search-organization.notes'"
+  },
+  {
+    "name": "api.auth.verify-phone.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.auth.verify-phone.description'"
+  },
+  {
+    "name": "api.auth.verify-phone.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.auth.verify-phone.notes'"
+  },
+  {
+    "name": "app.config.auto.follow.base-url",
+    "type": "java.lang.String",
+    "description": "A description for 'app.config.auto.follow.base-url'"
+  },
+  {
+    "name": "app.config.wayagram-profile.base-url",
+    "type": "java.lang.String",
+    "description": "A description for 'app.config.wayagram-profile.base-url'"
+  },
+  {
+    "name": "app.config.wayagram-profile-create.base-url",
+    "type": "java.lang.String",
+    "description": "A description for 'app.config.wayagram-profile-create.base-url'"
+  },
+  {
+    "name": "app.config.file-resource.base-url",
+    "type": "java.lang.String",
+    "description": "A description for 'app.config.file-resource.base-url'"
+  },
+  {
+    "name": "app.config.virtual-account.base-url",
+    "type": "java.lang.String",
+    "description": "A description for 'app.config.virtual-account.base-url'"
+  },
+  {
+    "name": "app.config.wallet-service.base-url",
+    "type": "java.lang.String",
+    "description": "A description for 'app.config.wallet-service.base-url'"
+  },
+  {
+    "name": "app.config.notification-service.base-url",
+    "type": "java.lang.String",
+    "description": "A description for 'app.config.notification-service.base-url'"
+  },
+  {
+    "name": "job.cron.5am-eD",
+    "type": "java.lang.String",
+    "description": "A description for 'job.cron.5am-eD'"
+  },
+  {
+    "name": "job.cron.5min1318",
+    "type": "java.lang.String",
+    "description": "A description for 'job.cron.5min1318'"
+  },
+  {
+    "name": "spring.kafka.groupId",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.kafka.groupId'"
+  },
+  {
+    "name": "spring.redis.ttl",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.redis.ttl'"
+  },
+  {
+    "name": "POSTGRES_URL",
+    "type": "java.lang.String",
+    "description": "A description for 'POSTGRES_URL'"
+  },
+  {
+    "name": "SERVER.PORT",
+    "type": "java.lang.String",
+    "description": "A description for 'SERVER.PORT'"
+  },
+  {
+    "name": "JWT_SECRET",
+    "type": "java.lang.String",
+    "description": "A description for 'JWT_SECRET'"
+  },
+  {
+    "name": "JWT_EXPIRATION",
+    "type": "java.lang.String",
+    "description": "A description for 'JWT_EXPIRATION'"
+  },
+  {
+    "name": "AUTH_TOKEN_SECRET",
+    "type": "java.lang.String",
+    "description": "A description for 'AUTH_TOKEN_SECRET'"
+  },
+  {
+    "name": "TOKEN_EXPIRATION_TIME",
+    "type": "java.lang.String",
+    "description": "A description for 'TOKEN_EXPIRATION_TIME'"
+  },
+  {
+    "name": "jwt.expiration",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.expiration'"
   }
 ]}

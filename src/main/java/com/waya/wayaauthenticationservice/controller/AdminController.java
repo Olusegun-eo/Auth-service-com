@@ -1,11 +1,20 @@
 package com.waya.wayaauthenticationservice.controller;
 
-import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_400;
-import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_422;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-
+import com.waya.wayaauthenticationservice.assembler.UserAssembler;
+import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.userDTO.*;
+import com.waya.wayaauthenticationservice.repository.RedisUserDao;
+import com.waya.wayaauthenticationservice.response.UserProfileResponse;
+import com.waya.wayaauthenticationservice.service.AdminService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.service.UserService;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.core.io.InputStreamResource;
@@ -20,36 +29,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.waya.wayaauthenticationservice.assembler.UserAssembler;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
-import com.waya.wayaauthenticationservice.repository.RedisUserDao;
-import com.waya.wayaauthenticationservice.response.UserProfileResponse;
-import com.waya.wayaauthenticationservice.service.AdminService;
-import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.service.UserService;
-
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import java.util.List;
 
 @CrossOrigin
 @RestController
@@ -89,17 +74,37 @@ public class AdminController {
         return new ResponseEntity<>(userPagedModel, HttpStatus.OK);
     }
 
+//    @ApiOperation(value = "Create New Owner User (Admin Endpoint)", tags = {"ADMIN"})
+//    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
+//    @PostMapping("/users/create-owner")
+//    public ResponseEntity<?> createOwner(@Valid @RequestBody BaseUserPojo userPojo,
+//                                                  HttpServletRequest request, Device device) {
+//        return adminService.createUser(userPojo, request, device);
+//    }
+
     @ApiOperation(value = "Create New Private User (Admin Endpoint)", tags = {"ADMIN"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping("/users/create-private")
-    public ResponseEntity<?> createNewPrivateUser(@Valid @RequestBody BaseUserPojo userPojo, HttpServletRequest request, Device device) {
+    public ResponseEntity<?> createNewPrivateUser(@Valid @RequestBody BaseUserPojo userPojo,
+                                                  HttpServletRequest request, Device device) {
         return adminService.createUser(userPojo, request, device);
     }
 
     @ApiOperation(value = "Create New Corporate User (Admin Endpoint)", tags = {"ADMIN"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping("/users/create-corporate")
-    public ResponseEntity<?> createNewCorporateUser(@Valid @RequestBody CorporateUserPojo userPojo, HttpServletRequest request, Device device) {
+    public ResponseEntity<?> createNewCorporateUser(@Valid @RequestBody CorporateUserPojo userPojo,
+                                                    HttpServletRequest request, Device device) {
+        return adminService.createUser(userPojo, request, device);
+    }
+
+    @ApiOperation(value = "Create New Waya Official User Account (Admin Endpoint). Only a user with Owner Role can execute", tags = {"ADMIN"})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
+    @PostMapping("/users/waya-account")
+    @PreAuthorize(value = "hasAuthority('ROLE_OWNER_ADMIN')")
+    public ResponseEntity<?> createWayaOfficialAccount(@Valid @RequestBody BaseUserPojo userPojo,
+                                                    HttpServletRequest request, Device device) {
+        userPojo.setWayaAdmin(true);
         return adminService.createUser(userPojo, request, device);
     }
 
@@ -107,7 +112,8 @@ public class AdminController {
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping(path = "/users/bulk-user/private", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {
             MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<?> createBulkPrivateUsers(@Valid @RequestBody BulkPrivateUserCreationDTO userList, HttpServletRequest request, Device device) {
+    public ResponseEntity<?> createBulkPrivateUsers(@Valid @RequestBody BulkPrivateUserCreationDTO userList,
+                                                    HttpServletRequest request, Device device) {
         return userService.createUsers(userList, request, device);
     }
 
@@ -115,15 +121,17 @@ public class AdminController {
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping(path = "/users/bulk-user/corporate", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {
             MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<?> createBulkCorporateUsers(@Valid @RequestBody BulkCorporateUserCreationDTO userList, HttpServletRequest request, Device device) {
+    public ResponseEntity<?> createBulkCorporateUsers(@Valid @RequestBody BulkCorporateUserCreationDTO userList,
+                                                      HttpServletRequest request, Device device) {
         return userService.createUsers(userList, request, device);
     }
 
-    @ApiOperation(value = "Bulk Corporate User Registration", tags = {"ADMIN"})
+    @ApiOperation(value = "Bulk User Registration", tags = {"ADMIN"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
-    @PostMapping(path = "/users/bulk-user-excel/{isCorporate}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE}, produces = {
-            MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<?> createBulkUserExcel(@RequestParam("file") MultipartFile file,
+    @PostMapping(path = "/users/bulk-user-excel/{isCorporate}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> createBulkUserExcel(@RequestPart("file") MultipartFile file,
                                                  @PathVariable(value = "isCorporate") boolean isCorporate,
                                                  HttpServletRequest request, Device device) {
         return adminService.createBulkUser(file, isCorporate, request, device);
@@ -164,26 +172,22 @@ public class AdminController {
         return new ResponseEntity<>(userPagedModel, HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Admin Should be able to update Corporate Profile on behalf of the user", tags = {"ADMIN"})
-    @ApiResponses(value = {
-            @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
-            @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
-    })
+    @ApiOperation(value = "Admin Update Corporate Profile of a User",
+            notes ="Admin Should be able to update Corporate Profile on behalf of the user",
+            tags = {"ADMIN"})
     @PutMapping("/update-corporate-profile/{userId}")
     ResponseEntity<?> updateCorporateProfile(
             @Valid @RequestBody UpdateCorporateProfileRequest updateCorporateProfileRequest,
             @PathVariable String userId){
         UserProfileResponse corporateProfileResponse = profileService.updateProfile(updateCorporateProfileRequest, userId);
-        com.waya.wayaauthenticationservice.response.ApiResponse<UserProfileResponse> response =  new com.waya.wayaauthenticationservice.response.ApiResponse<UserProfileResponse>(corporateProfileResponse,
+        var response = new com.waya.wayaauthenticationservice.response.ApiResponse<>(corporateProfileResponse,
                 "profile updated successfully", true);
         return new ResponseEntity<>(response,HttpStatus.CREATED);
     }
 
-    @ApiOperation(value = "Admin Should be able to update Personal Profile on behalf of the user", tags = {"ADMIN"})
-    @ApiResponses(value = {
-            @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
-            @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
-    })
+    @ApiOperation(value = "Admin Update Personal Profile of a User",
+            notes ="Admin Should be able to update Profile Profile on behalf of the user",
+            tags = {"ADMIN"})
     @PutMapping("/update-personal-profile/{userId}")
     ResponseEntity<?> updateProfile(
             @Valid @RequestBody UpdatePersonalProfileRequest updatePersonalProfileRequest,
@@ -193,20 +197,75 @@ public class AdminController {
                 "profile updated successfully", true), HttpStatus.CREATED);
     }
 
-    public  ResponseEntity<?> deactivateUserAccount(){
-
-        return new ResponseEntity<>(null, HttpStatus.OK);
+    @ApiOperation(value = "Send OTP to email and phoneNumber for Waya Account Viewing",
+            notes = "Send OTP to email and phoneNumber for Waya Account Viewing", tags = {"ADMIN"})
+    @GetMapping("/authenticate-waya/otp-send")
+    public ResponseEntity<?> sendAdminOTP() {
+        return adminService.sendAdminOTP();
     }
 
-    public  ResponseEntity<?> activateUserAccount(){
-
-        return new ResponseEntity<>(null, HttpStatus.OK);
-    }
-    public  ResponseEntity<?> signOutUser(){
-
-        return new ResponseEntity<>(null, HttpStatus.OK);
+    @ApiOperation(value = "Send OTP to email and phoneNumber for Waya Account Viewing",
+            notes = "Send OTP to email and phoneNumber for Waya Account Viewing", tags = {"ADMIN"})
+    @PostMapping("/authenticate-waya/otp-verify/{otp}")
+    public ResponseEntity<?> verifyAdminOTP(@PathVariable Integer otp) {
+        return adminService.verifyAdminOTP(otp);
     }
 
-    //ability to manage account details and profile on behalf of the user�delete, edit, sign out , deactivate, activate
+    @ApiOperation(value = "Manage and Reset Users Password",
+            notes = "To Alter Password of a User", tags = {"ADMIN"})
+    @PostMapping("/reset/{userId}/password")
+    public ResponseEntity<?> manageUserPass(@PathVariable Long userId) {
+        return adminService.manageUserPass(userId);
+    }
+
+    @ApiOperation(value = "Download Template for Bulk User Deactivation ", tags = {"ADMIN"})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
+    @GetMapping("/account-deactivation/bulk-user-excel")
+    public ResponseEntity<Resource> getFile() {
+        String filename = "bulk-user-excel.xlsx";
+        InputStreamResource file = new InputStreamResource(adminService.createDeactivationExcelSheet());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                //.contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(file);
+    }
+
+    @ApiOperation(value = "Deactivate Users via Excel Upload",
+            notes = "To deactivate bulk accounts via excel upload", tags = {"ADMIN"})
+    @PostMapping(path = "bulk/account-deactivation",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> bulkDeactivation(@RequestPart("file") MultipartFile file) {
+        return adminService.bulkDeactivation(file);
+    }
+
+    @ApiOperation(value = "Deactivate Users via Excel Upload",
+            notes = "To deactivate bulk accounts via excel upload", tags = {"ADMIN"})
+    @PostMapping(path = "bulk/account-activation",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> bulkActivation(@RequestPart("file") MultipartFile file) {
+        return adminService.bulkActivation(file);
+    }
+
+    @ApiOperation(value = "Fetch all Auth Users Roles (Admin Endpoint)", tags = {"ADMIN"})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
+    @GetMapping("/manage-user/roles")
+    public ResponseEntity<List<Role>> getAllAuthRolesDB(){
+        return ResponseEntity.ok(adminService.getAllAuthRolesDB());
+    }
+
+    @ApiOperation(value = "Manage Users Role and Permissions",
+            notes = "To Alter roles and Permission from a User. Only a user with an Higher role can upgrade, "
+            		+ "except when another Owner intends upgrading a user role to Owner", tags = {"ADMIN"})
+    @PostMapping("/manage-user/{userId}/roles/{add}/{roleName}")
+    @PreAuthorize(value = "@userSecurity.useHierarchyForRoles(#roleName, authentication)")
+    public ResponseEntity<?> manageRoles(@PathVariable Long userId,
+                                         @PathVariable boolean add,
+                                         @PathVariable String roleName) {
+
+        return adminService.manageUserRole(userId, add, roleName);
+    }
 
 }
