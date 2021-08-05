@@ -178,11 +178,9 @@ public class PasswordControllerTest {
 
 	public String generateToken(Users user) {
 		try {
-			System.out.println("::::::GENERATE TOKEN:::::");
 			String token = Jwts.builder().setSubject(user.getEmail())
 					.setExpiration(new Date(System.currentTimeMillis() + getExpiration() * 1000))
 					.signWith(SignatureAlgorithm.HS512, getSecret()).compact();
-			System.out.println(":::::Token:::::");
 			return SecurityConstants.TOKEN_PREFIX + token;
 		} catch (Exception e) {
 			throw new RuntimeException(e.fillInStackTrace());
