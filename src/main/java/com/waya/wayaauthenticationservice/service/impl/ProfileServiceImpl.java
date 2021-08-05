@@ -306,7 +306,7 @@ public class ProfileServiceImpl implements ProfileService {
     private void saveReferralCode(Profile newProfile, String userId) {
         // send details to the referral Service
         referralCodeRepository.save(
-                new ReferralCode(generateReferralCode(REFERRAL_CODE_LENGHT),
+                new ReferralCode(generateReferralCode(REFERRAL_CODE_LENGTH),
                         newProfile, userId));
 
         log.info("saving referral code for this new profile");

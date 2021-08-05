@@ -1,5 +1,41 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.EMAIL_VERIFICATION;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.JOINT_VERIFICATION;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PHONE_VERIFICATION;
+import static com.waya.wayaauthenticationservice.util.Constant.VIRTUAL_ACCOUNT_TOPIC;
+import static com.waya.wayaauthenticationservice.util.Constant.WAYAGRAM_PROFILE_TOPIC;
+import static com.waya.wayaauthenticationservice.util.HelperUtils.generateRandomNumber;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.TOKEN_PREFIX;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.getExpiration;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.getSecret;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mobile.device.Device;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
 import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.RedisUser;
@@ -9,7 +45,13 @@ import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordCreateContext;
 import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
-import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.CreateAccountPojo;
+import com.waya.wayaauthenticationservice.pojo.others.DevicePojo;
+import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.ValidateUserPojo;
+import com.waya.wayaauthenticationservice.pojo.others.VirtualAccountPojo;
+import com.waya.wayaauthenticationservice.pojo.others.WayagramPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
@@ -28,31 +70,10 @@ import com.waya.wayaauthenticationservice.service.MailService;
 import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.util.ReqIPUtils;
+
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mobile.device.Device;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import javax.servlet.http.HttpServletRequest;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import static com.waya.wayaauthenticationservice.enums.OTPRequestType.*;
-import static com.waya.wayaauthenticationservice.util.Constant.*;
-import static com.waya.wayaauthenticationservice.util.HelperUtils.generateRandomNumber;
 
 @Service
 @Slf4j
@@ -408,8 +429,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		try {
 			System.out.println("::::::GENERATE TOKEN:::::");
 			String token = Jwts.builder().setSubject(userResponse.getEmail())
-					.setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
-					.signWith(SignatureAlgorithm.HS512, SECRET_TOKEN).compact();
+					.setExpiration(new Date(System.currentTimeMillis() + getExpiration() * 1000))
+					.signWith(SignatureAlgorithm.HS512, getSecret()).compact();
 			System.out.println(":::::Token:::::");
 			return TOKEN_PREFIX + token;
 		} catch (Exception e) {
@@ -645,12 +666,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
 	}
 
-//    @Override
-//    public ResponseEntity<?> createWalletAccount(WalletPojo walletPojo) {
-//        kafkaMessageProducer.send(WALLET_ACCOUNT_TOPIC, walletPojo);
-//        return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
-//    }
-
 	@Override
 	public ResponseEntity<?> createWayagramAccount(WayagramPojo wayagramPojo) {
 		kafkaMessageProducer.send(WAYAGRAM_PROFILE_TOPIC, wayagramPojo);
@@ -660,14 +675,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	@Override
 	public ResponseEntity<?> createProfileAccount(PersonalProfileRequest profilePojo, String baseUrl) {
 		ApiResponse<String> response = profileService.createProfile(profilePojo, baseUrl);
-		// kafkaMessageProducer.send(PROFILE_ACCOUNT_TOPIC, profilePojo);
 		return new ResponseEntity<>(new SuccessResponse(response.getData(), null), HttpStatus.OK);
 	}
 
 	@Override
 	public ResponseEntity<?> createCorporateProfileAccount(CorporateProfileRequest profilePojo, String baseUrl) {
 		ApiResponse<String> response = profileService.createProfile(profilePojo, baseUrl);
-		// kafkaMessageProducer.send(CORPORATE_PROFILE_TOPIC, profilePojo2);
 		return new ResponseEntity<>(new SuccessResponse(response.getData(), null), HttpStatus.OK);
 	}
 

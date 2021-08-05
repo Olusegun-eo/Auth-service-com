@@ -132,7 +132,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
                     otpRepository.updateTokenForEmail(email, token.getId(), newTokenExpiryDate, false, String.valueOf(otpRequestType));
                     return new OTPVerificationResponse(true, OTP_SUCCESS_MESSAGE);
                 } else {
-                    return new OTPVerificationResponse(false, EMAIL_VERIFICATION_MSG_ERROR);
+                    return new OTPVerificationResponse(false, TOKEN_VERIFICATION_MSG_ERROR);
                 }
             }
             return new OTPVerificationResponse(false, ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
