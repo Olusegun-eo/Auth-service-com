@@ -1,7 +1,10 @@
 package com.waya.wayaauthenticationservice.security;
 
+import com.waya.wayaauthenticationservice.SpringApplicationContext;
 import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
+import com.waya.wayaauthenticationservice.service.UserService;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,6 +18,7 @@ public class UserPrincipal implements OAuth2User, UserDetails {
 
 	private Users user;
 	private Map<String, Object> attributes;
+	private UserAccessResponse access;
 
 	public UserPrincipal(Users user) {
 		this.user = user;
@@ -68,8 +72,29 @@ public class UserPrincipal implements OAuth2User, UserDetails {
 		Collection<GrantedAuthority> grantedAuthorities = roles.stream()
 				.map(r -> new SimpleGrantedAuthority(r.getName())).collect(Collectors.toSet());
 		grantedAuthorities.addAll(getGrantedAuthorities(getPrivileges(roles)));
-		
+
+		UserAccessResponse access = ((UserService) SpringApplicationContext.getBean("userServiceImpl"))
+				.getAccessResponse(this.user.getId()).getData();
+		this.setAccess(access);
+		if(access != null){
+			grantedAuthorities.add(new SimpleGrantedAuthority(access.getRoleName()));
+			grantedAuthorities.add(new SimpleGrantedAuthority(access.getPermissionName()));
+		}
 		return grantedAuthorities;
+	}
+	
+	/**
+	 * @return the access
+	 */
+	public UserAccessResponse getAccess() {
+		return access;
+	}
+
+	/**
+	 * @param access the access to set
+	 */
+	public void setAccess(UserAccessResponse access) {
+		this.access = access;
 	}
 
 	@Override

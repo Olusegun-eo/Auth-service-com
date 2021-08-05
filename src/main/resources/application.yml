@@ -99,6 +99,14 @@ eureka:
   instance:
     preferIpAddress: true
 
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 60000
+        readTimeout: 10000
+
+
 jwt:
   secret: ${JWT_SECRET:wayas3cr3t}
   expiration: ${JWT_EXPIRATION:31557600000}
@@ -111,6 +119,8 @@ job:
 
 app:
   config:
+    access-service:
+      base-url: http://46.101.41.187:8061
     wayagram-profile:
       base-url: http://157.245.84.14:1000
     file-resource:

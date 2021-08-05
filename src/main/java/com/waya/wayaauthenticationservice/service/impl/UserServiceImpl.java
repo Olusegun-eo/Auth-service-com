@@ -8,10 +8,11 @@ import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
+import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordCreateContext;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.pojo.userDTO.*;
-import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
+import com.waya.wayaauthenticationservice.proxy.AccessProxy;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
@@ -25,6 +26,7 @@ import com.waya.wayaauthenticationservice.service.AuthenticationService;
 import com.waya.wayaauthenticationservice.service.MailService;
 import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.service.UserService;
+import com.waya.wayaauthenticationservice.util.Constant;
 import com.waya.wayaauthenticationservice.util.HelperUtils;
 import com.waya.wayaauthenticationservice.util.ReqIPUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -85,9 +87,9 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private AuthenticationService authService;
 	@Autowired
-	private NotificationProxy notificationProxy;
-	@Autowired
 	private WayagramProxy wayagramProxy;
+	@Autowired
+	private AccessProxy accessProxy;
 	@Autowired
 	MailService mailService;
 
@@ -537,6 +539,17 @@ public class UserServiceImpl implements UserService {
 			log.info("Wayagram Account Activation: {} - {}", resp.getBody(), resp.getStatusCode());
 		} catch (Exception e) {
 			log.error("Error deleting user: {}", e.getMessage());
+		}
+	}
+
+	@Override
+	public ApiResponse<UserAccessResponse> getAccessResponse(Long userId){
+		try {
+			ApiResponse<UserAccessResponse> res = accessProxy.GetUsersAccess(userId);
+			return res;
+		}catch (Exception e) {
+			log.error("Call to Get User Access fails:: {}", e.getMessage());
+			return new ApiResponse<UserAccessResponse>(Constant.ERROR_MESSAGE, false);
 		}
 	}
 

@@ -1,40 +1,12 @@
 package com.waya.wayaauthenticationservice.security;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
 import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
 import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
 import com.waya.wayaauthenticationservice.pojo.others.LoginResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
@@ -42,13 +14,29 @@ import com.waya.wayaauthenticationservice.repository.PrivilegeRepository;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.service.LoginHistoryService;
-
-import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
-
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.SignatureException;
 import lombok.NoArgsConstructor;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import javax.servlet.FilterChain;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
 
 @NoArgsConstructor
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
@@ -71,20 +59,8 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			throws AuthenticationException {
 		try {
 			LoginDetailsPojo creds = new ObjectMapper().readValue(req.getInputStream(), LoginDetailsPojo.class);
-			UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
-
-			Users user = userLoginRepo.findByEmailOrPhoneNumber(creds.getEmailOrPhoneNumber())
-					.orElseThrow(() -> new BadCredentialsException("User Does not exist"));
-
-			List<Role> roles = new ArrayList<>(user.getRoleList());
-
-			Collection<GrantedAuthority> grantedAuthorities = roles.stream()
-					.map(r -> new SimpleGrantedAuthority(r.getName())).collect(Collectors.toSet());
-
-			grantedAuthorities.addAll(getGrantedAuthorities(getPrivileges(roles)));
-
 			return getAuthenticationManager().authenticate(new UsernamePasswordAuthenticationToken(
-					creds.getEmailOrPhoneNumber(), creds.getPassword(), grantedAuthorities));
+					creds.getEmailOrPhoneNumber(), creds.getPassword(), new ArrayList<>()));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -94,16 +70,16 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	protected void successfulAuthentication(HttpServletRequest req, HttpServletResponse res, FilterChain chain,
 			Authentication auth) throws IOException, SignatureException {
 		// Inspect Here
-		Users user = ((UserPrincipal) auth.getPrincipal()).getUser().orElse(null);
+		UserPrincipal userPrincipal = ((UserPrincipal) auth.getPrincipal());
+		Users user = userPrincipal.getUser().orElse(null);
 		if (user == null)
 			return;
+		UserAccessResponse access = userPrincipal.getAccess();
 
 		String userName = user.getEmail();
-
 		String token = Jwts.builder().setSubject(userName)
 				.setExpiration(new Date(System.currentTimeMillis() + getExpiration()))
 				.signWith(SignatureAlgorithm.HS256, getSecret()).compact();
-
 		// Check for First Login Attempt and Update User Table
 		UserRepository userRepository = (UserRepository) SpringApplicationContext.getBean("userRepository");
 		if (user.isFirstTimeLogin()) {
@@ -111,9 +87,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			user.setFirstTimeLoginDate(LocalDateTime.now());
 			userRepository.save(user);
 		}
-
 		ProfileRepository profileRepository = (ProfileRepository) SpringApplicationContext.getBean("profileRepository");
-
 		Profile profile = profileRepository.findByUserId(false, String.valueOf(user.getId())).orElse(new Profile());
 
 		LoginResponsePojo loginResponsePojo = new LoginResponsePojo();
@@ -121,7 +95,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 		Set<String> permit = getPrivileges(user.getRoleList());
 		Set<String> roles = user.getRoleList().stream().map(u -> u.getName()).collect(Collectors.toSet());
-
+		
 		loginResponsePojo.setCode(0);
 		loginResponsePojo.setStatus(true);
 		loginResponsePojo.setMessage("Login Successful");
@@ -129,6 +103,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		m.put("token", TOKEN_PREFIX + token);
 		m.put("privilege", permit);
 		m.put("roles", roles);
+		m.put("access", access);
 		m.put("pinCreated", user.isPinCreated());
 		m.put("corporate", user.isCorporate());
 
@@ -152,7 +127,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 		response.setContentType(MediaType.ALL_VALUE);
 		@SuppressWarnings("rawtypes")
-		Map<String, Comparable> m = new HashMap<String, Comparable>();
+		Map<String, Comparable> m = new HashMap<>();
 		m.put("code", -1);
 		m.put("status", false);
 		String errorMessage = failed != null ? failed.getMessage() : "Invalid Login";
@@ -169,19 +144,11 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	}
 
 	private Set<String> getPrivileges(final Collection<Role> roles) {
-		Set<String> privileges = new HashSet<String>();
+		Set<String> privileges = new HashSet<>();
 		for (Role role : roles) {
 			privileges.addAll(role.getPrivileges().stream().map(p -> p.getName()).collect(Collectors.toSet()));
 		}
 		return privileges;
-	}
-
-	private List<GrantedAuthority> getGrantedAuthorities(Set<String> privileges) {
-		List<GrantedAuthority> authorities = new ArrayList<>();
-		for (String privilege : privileges) {
-			authorities.add(new SimpleGrantedAuthority(privilege));
-		}
-		return authorities;
 	}
 
 	private UserProfileResponsePojo convert(Users user, Profile profile) {
