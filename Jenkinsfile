@@ -1,6 +1,6 @@
 pipeline {
 	environment {
-    		registry = "wayapaychat-container-registry/waya-auth-service"
+    		registry = "wayapaychat-container-registry/waya-auth-service-staging"
     		registryCredential = 'DigitalOcean-registry-for-development'
     		dockerImage = ''
     	}
