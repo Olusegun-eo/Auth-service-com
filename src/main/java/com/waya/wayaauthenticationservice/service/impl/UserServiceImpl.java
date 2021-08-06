@@ -303,7 +303,7 @@ public class UserServiceImpl implements UserService {
 				String error = String.format("Error in Closing Wallet account %s : %s", account.getAccountNo(), res.getMessage());
 				throw new CustomException(error, BAD_REQUEST);
 			}
-		}
+		} 
 		// De-activate and Delete Existing Accounts
 		user.setActive(false);
 		user.setDeleted(true);
