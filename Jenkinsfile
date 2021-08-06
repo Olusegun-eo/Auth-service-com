@@ -30,7 +30,7 @@ pipeline {
             		}
                 }
 		
-		stage('Code Quality Check via SonarQube') {
+		/*stage('Code Quality Check via SonarQube') {
 			steps {
                  		script {
 			     		def scannerHome = tool 'Jenkins-sonar-scanner';
@@ -45,7 +45,7 @@ pipeline {
                      				-Dsonar.language=java \
                      				-Dsonar.java.binaries=/var/jenkins_home/workspace/-waya-staging-auth-service/classes \
                      				-Dsonar.sourceEncoding=UTF-8 \
-                     				-Dsonar.exclusions=/var/jenkins_home/workspace/-waya-staging-auth-service/src/test/**/* \
+                     				-Dsonar.exclusions=/var/jenkins_home/workspace/-waya-staging-auth-service/src/test/**/ /*
 		     				-Dsonar.junit.reportsPath=/var/jenkins_home/workspace/-waya-staging-auth-service/target/surefire-reports \
                      				-Dsonar.surefire.reportsPath=/var/jenkins_home/workspace/-waya-staging-auth-service/target/surefire-reports \
                      				-Dsonar.jacoco.reportPath=/var/jenkins_home/workspace/-waya-staging-auth-service/target/coverage-reports/jacoco-unit.exec \
@@ -65,8 +65,8 @@ pipeline {
                    	    		//waitForQualityGate abortPipeline: true
                 		//}
            	 	//}
-       	 	//}
-		
+       	 	//} */
+		 
 		stage('Building image') {
       			steps{
         			script {
