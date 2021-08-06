@@ -36,14 +36,14 @@ pipeline {
 			     		def scannerHome = tool 'Jenkins-sonar-scanner';
                      			withSonarQubeEnv("Jenkins-sonar-scanner") {
                      				sh "${tool("Jenkins-sonar-scanner")}/bin/sonar-scanner \
-		     				-Dsonar.projectName=waya-auth-service \
-	             				-Dsonar.projectKey=waya-auth-service \
+		     				-Dsonar.projectName=waya-auth-staging-service \
+	             				-Dsonar.projectKey=waya-auth-staging-service \
 	             				-Dsonar.sources=/var/jenkins_home/workspace/-waya-staging-auth-service \
 		     				-Dsonar.projectBaseDir=/var/jenkins_home/workspace/-waya-staging-auth-service \
                      				-Dsonar.sources=. \
 		     				-Dsonar.projectVersion=1.0 \
                      				-Dsonar.language=java \
-                     				//-Dsonar.java.binaries=/var/jenkins_home/workspace/-waya-staging-auth-service/classes \
+                     				-Dsonar.java.binaries=/var/jenkins_home/workspace/-waya-staging-auth-service/classes \
                      				-Dsonar.sourceEncoding=UTF-8 \
                      				-Dsonar.exclusions=/var/jenkins_home/workspace/-waya-staging-auth-service/src/test/**/* \
 		     				-Dsonar.junit.reportsPath=/var/jenkins_home/workspace/-waya-staging-auth-service/target/surefire-reports \
