@@ -1,6 +1,6 @@
 pipeline {
 	environment {
-    		registry = "wayapaychat-container-registry/waya-auth-service"
+    		registry = "wayapaychat-container-registry/waya-auth-service-staging"
     		registryCredential = 'DigitalOcean-registry-for-development'
     		dockerImage = ''
     	}
@@ -38,18 +38,18 @@ pipeline {
                      				sh "${tool("Jenkins-sonar-scanner")}/bin/sonar-scanner \
 		     				-Dsonar.projectName=waya-auth-service \
 	             				-Dsonar.projectKey=waya-auth-service \
-	             				-Dsonar.sources=/var/jenkins_home/workspace/waya-2.0-auth-service-dev \
-		     				-Dsonar.projectBaseDir=/var/jenkins_home/workspace/waya-2.0-auth-service-dev \
+	             				-Dsonar.sources=/var/jenkins_home/workspace/-waya-staging-auth-service \
+		     				-Dsonar.projectBaseDir=/var/jenkins_home/workspace/-waya-staging-auth-service \
                      				-Dsonar.sources=. \
 		     				-Dsonar.projectVersion=1.0 \
                      				-Dsonar.language=java \
-                     				-Dsonar.java.binaries=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/classes \
+                     				-Dsonar.java.binaries=/var/jenkins_home/workspace/-waya-staging-auth-service/classes \
                      				-Dsonar.sourceEncoding=UTF-8 \
-                     				-Dsonar.exclusions=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/src/test/**/* \
-		     				-Dsonar.junit.reportsPath=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/surefire-reports \
-                     				-Dsonar.surefire.reportsPath=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/surefire-reports \
-                     				-Dsonar.jacoco.reportPath=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/coverage-reports/jacoco-unit.exec \
-                     				-Dsonar.java.coveragePlugin=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/jacoco  \
+                     				-Dsonar.exclusions=/var/jenkins_home/workspace/-waya-staging-auth-service/src/test/**/* \
+		     				-Dsonar.junit.reportsPath=/var/jenkins_home/workspace/-waya-staging-auth-service/target/surefire-reports \
+                     				-Dsonar.surefire.reportsPath=/var/jenkins_home/workspace/-waya-staging-auth-service/target/surefire-reports \
+                     				-Dsonar.jacoco.reportPath=/var/jenkins_home/workspace/-waya-staging-auth-service/target/coverage-reports/jacoco-unit.exec \
+                     				-Dsonar.java.coveragePlugin=/var/jenkins_home/workspace/-waya-staging-auth-service/target/jacoco  \
 		     				-Dsonar.host.url=https://sonarqube.waya-pay.com \
 		     				-Dsonar.verbose=true "
                				}
