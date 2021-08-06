@@ -43,7 +43,7 @@ pipeline {
                      				-Dsonar.sources=. \
 		     				-Dsonar.projectVersion=1.0 \
                      				-Dsonar.language=java \
-                     				-Dsonar.java.binaries=/var/jenkins_home/workspace/-waya-staging-auth-service/classes \
+                     				//-Dsonar.java.binaries=/var/jenkins_home/workspace/-waya-staging-auth-service/classes \
                      				-Dsonar.sourceEncoding=UTF-8 \
                      				-Dsonar.exclusions=/var/jenkins_home/workspace/-waya-staging-auth-service/src/test/**/* \
 		     				-Dsonar.junit.reportsPath=/var/jenkins_home/workspace/-waya-staging-auth-service/target/surefire-reports \
