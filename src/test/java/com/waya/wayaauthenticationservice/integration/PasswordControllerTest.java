@@ -104,7 +104,7 @@ public class PasswordControllerTest {
 		Mockito.when(OTPTokenService.verifySMSOTP(any(), any(), any()))
 				.thenReturn(new OTPVerificationResponse(true, "Successful"));
 
-		PasswordPojo pojo = buildChangePassPojo(234567, "test@12345", "test@1234", user.getPhoneNumber());
+		PasswordPojo pojo = buildChangePassPojo(234567, "test@12345", "test@12345", user.getPhoneNumber());
 		changePassword(pojo, "$.message", "Incorrect Old Password", status().isBadRequest());
 
 	}
@@ -178,11 +178,9 @@ public class PasswordControllerTest {
 
 	public String generateToken(Users user) {
 		try {
-			System.out.println("::::::GENERATE TOKEN:::::");
 			String token = Jwts.builder().setSubject(user.getEmail())
 					.setExpiration(new Date(System.currentTimeMillis() + getExpiration() * 1000))
 					.signWith(SignatureAlgorithm.HS512, getSecret()).compact();
-			System.out.println(":::::Token:::::");
 			return SecurityConstants.TOKEN_PREFIX + token;
 		} catch (Exception e) {
 			throw new RuntimeException(e.fillInStackTrace());

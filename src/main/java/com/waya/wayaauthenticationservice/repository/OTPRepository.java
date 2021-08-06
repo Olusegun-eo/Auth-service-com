@@ -5,13 +5,30 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-@SuppressWarnings("all")
+@Repository
 public interface OTPRepository extends JpaRepository<OTPBase, Long> {
+	
+	@Query(value = "select * from m_otp_base t inner join (" +
+        "select email, max(expiry_date) as maxDate" +
+        " from m_otp_base group by email) tm on " +
+        "t.email = tm.email and t.expiry_date = " +
+        "tm.maxDate and t.email = :email " +
+        " and t.request_type = :requestType ", nativeQuery = true)
+	Optional<OTPBase> findLastOTPByEmail(@Param("email") String email,  @Param("requestType") String requestType);
+
+    @Query(value = "select * from m_otp_base t inner join (" +
+            "select phone_number, max(expiry_date) as maxDate" +
+            " from m_otp_base group by phone_number) tm on " +
+            "t.phone_number = tm.phone_number and t.expiry_date = " +
+            "tm.maxDate and t.phone_number = :phoneNumber " +
+            " and t.request_type = :requestType ", nativeQuery = true)
+    Optional<OTPBase> findLastOTPByPhoneNumber(@Param("phoneNumber") String email,  @Param("requestType") String requestType);
 
     @Transactional
     @Modifying
