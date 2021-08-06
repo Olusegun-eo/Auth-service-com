@@ -18,7 +18,7 @@ spring:
     timeout: 10000
     password: ${REDIS_PASSWORD:wIYretruTPWPmAyLgq6HNQMa0wjRG3q8}
   kafka:
-    bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:http://209.97.178.170:9092}
+    bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:http:147.182.214.42//:9092}
     groupId: ${KAFKA_GROUP_ID:waya}
   security:
     basic:
