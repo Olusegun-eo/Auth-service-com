@@ -1,13 +1,17 @@
 package com.waya.wayaauthenticationservice.response;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.ToString;
+import java.util.Date;
+
 import org.springframework.http.HttpStatus;
 
-import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import lombok.ToString;
 
 @ToString
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ApiResponse<T> {
     private Date timestamp = new Date();
     private String message;
@@ -61,5 +65,13 @@ public class ApiResponse<T> {
     public HttpStatus getHttpStatus() {
         return httpStatus;
     }
+
+	/**
+	 * @param httpStatus the httpStatus to set
+	 */
+	public void setHttpStatus(HttpStatus httpStatus) {
+		this.httpStatus = httpStatus;
+	}
+
 }
 

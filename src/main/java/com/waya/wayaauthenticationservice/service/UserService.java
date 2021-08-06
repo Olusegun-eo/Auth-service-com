@@ -14,6 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 
+import java.util.concurrent.ExecutionException;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
@@ -62,7 +64,7 @@ public interface UserService {
 
 	ResponseEntity<?> createUsers(@Valid BulkPrivateUserCreationDTO userList, HttpServletRequest request, Device device);
 
-    void deactivationServices(Users user, String token);
+    void deactivationServices(Users user, String token) throws InterruptedException, ExecutionException;
 
     ResponseEntity<?> unDeleteUser(Long id);
 

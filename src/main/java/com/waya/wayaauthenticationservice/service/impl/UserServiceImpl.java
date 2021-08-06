@@ -1,5 +1,42 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.OK;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mobile.device.Device;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.controller.UserController;
 import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
@@ -10,8 +47,20 @@ import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordCreateContext;
-import com.waya.wayaauthenticationservice.pojo.others.*;
-import com.waya.wayaauthenticationservice.pojo.userDTO.*;
+import com.waya.wayaauthenticationservice.pojo.others.ContactPojo;
+import com.waya.wayaauthenticationservice.pojo.others.ContactPojoReq;
+import com.waya.wayaauthenticationservice.pojo.others.DeleteRequest;
+import com.waya.wayaauthenticationservice.pojo.others.DevicePojo;
+import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
+import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
+import com.waya.wayaauthenticationservice.pojo.others.WalletAccessPojo;
+import com.waya.wayaauthenticationservice.pojo.others.WalletAccount;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserIDPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.proxy.AccessProxy;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
@@ -29,32 +78,8 @@ import com.waya.wayaauthenticationservice.service.UserService;
 import com.waya.wayaauthenticationservice.util.Constant;
 import com.waya.wayaauthenticationservice.util.HelperUtils;
 import com.waya.wayaauthenticationservice.util.ReqIPUtils;
+
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mobile.device.Device;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
-import javax.servlet.http.HttpServletRequest;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.OK;
 
 @Service
 @Slf4j
@@ -92,6 +117,8 @@ public class UserServiceImpl implements UserService {
 	private AccessProxy accessProxy;
 	@Autowired
 	MailService mailService;
+	@Autowired 
+	ObjectMapper mapper;
 
 	@Value("${api.server.deployed}")
 	private String urlRedirect;
@@ -250,38 +277,44 @@ public class UserServiceImpl implements UserService {
 
 			return new ResponseEntity<>(new SuccessResponse("Account deleted", OK), OK);
 		} catch (Exception e) {
+			if (e instanceof CustomException) {
+				CustomException ex = (CustomException) e;
+				return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), ex.getStatus());
+			}
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
 		}
 	}
 
-	public void deactivationServices(Users user, String token) {
-
-		try {
-			List<WalletAccount> wallets = fetchUsersWallet(user.getId(), token).get();
-			BigDecimal clrBalAmt = new BigDecimal("0.00");
-			wallets.stream().filter(account -> !account.isAcctClsFlg()).forEach(account -> {
-				clrBalAmt.add(account.getClrBalAmt());
-			});
-			int moreOrNegativeBalance = clrBalAmt.compareTo(new BigDecimal("0.00"));
-			if (moreOrNegativeBalance != 0)
-				throw new CustomException("User needs to nil off Balance across all Wallets", BAD_REQUEST);
-
-			// De-activate and Delete Existing Accounts
-			user.setActive(false);
-			user.setDeleted(true);
-			user.setDateOfActivation(LocalDateTime.now());
-
-			// Disables User Profile and Wayagram Services
-			// Delete Virtual Account Call
-			// Delete All User's Wallets
-			CompletableFuture.runAsync(() -> disableUserProfile(String.valueOf(user.getId()), token))
-					.thenRun(() -> this.deleteUsersVirtualAccount(user.getId(), token))
-					.thenRun(() -> wallets.stream().filter(account -> !account.isAcctClsFlg())
-							.forEach(account -> this.deleteUserWallet(account.getAccountNo(), token)))
-					.thenRun(() -> usersRepository.saveAndFlush(user));
-		} catch (Exception e) {
-			log.error("An error has Occurred ::: {}", e.getMessage());
+	public void deactivationServices(Users user, String token) throws InterruptedException, ExecutionException {
+		List<WalletAccount> wallets = fetchUsersWallet(user.getId(), token).get();
+		BigDecimal clrBalAmt = new BigDecimal("0.00");
+		for (WalletAccount account : wallets) {
+			if (!account.isAcctClsFlg()) {
+				clrBalAmt = clrBalAmt.add(account.getClrBalAmt());
+			}
 		}
+		int moreOrNegativeBalance = clrBalAmt.compareTo(new BigDecimal("0.00"));
+		if (moreOrNegativeBalance != 0)
+			throw new CustomException("User needs to nil off Balance across all Wallets", BAD_REQUEST);
+
+		for (WalletAccount account : wallets) {
+			ApiResponse<WalletAccount> res = this.deleteUserWallet(account.getAccountNo(), token);
+			if (!res.getStatus()) {
+				String error = String.format("Error in Closing Wallet account %s : %s", account.getAccountNo(), res.getMessage());
+				throw new CustomException(error, BAD_REQUEST);
+			}
+		}
+		// De-activate and Delete Existing Accounts
+		user.setActive(false);
+		user.setDeleted(true);
+		user.setDateOfActivation(LocalDateTime.now());
+
+		// Disables User Profile and Wayagram Services
+		// Delete Virtual Account Call
+		// Delete All User's Wallets
+		CompletableFuture.runAsync(() -> disableUserProfile(String.valueOf(user.getId()), token))
+				.thenRun(() -> this.deleteUsersVirtualAccount(user.getId(), token))
+				.thenRun(() -> usersRepository.saveAndFlush(user));
 	}
 
 	private CompletableFuture<List<WalletAccount>> fetchUsersWallet(Long userId, String token) {
@@ -295,18 +328,26 @@ public class UserServiceImpl implements UserService {
 				});
 	}
 
-	private CompletableFuture<ApiResponse<WalletAccount>> modifyUserWallet(WalletAccessPojo pojo, String token) {
-		return CompletableFuture.supplyAsync(() -> walletProxy.modifyUserWallet(pojo, token))
-				.orTimeout(3, TimeUnit.MINUTES).handle((res, ex) -> {
-					if (ex != null) {
-						log.error("An Error has Occurred::: {}", ex.getMessage());
-						return new ApiResponse<>(null, "An Error Occurred", false);
-					}
-					return res;
-				});
+	private ApiResponse<WalletAccount> modifyUserWallet(WalletAccessPojo pojo, String token) {
+		try {
+			return walletProxy.modifyUserWallet(pojo, token);
+		} catch (CustomException ex) {
+			log.error("Call to Modify Account Access fails:: {}", ex.getMessage());
+			try {
+				@SuppressWarnings("unchecked")
+				ApiResponse<WalletAccount> result = mapper.readValue(ex.getMessage(),
+						ApiResponse.class);
+				result.setHttpStatus(ex.getStatus());
+				return result;
+			} catch (JsonProcessingException e) {
+				log.error("Error Parsing Body to Json");
+			}
+			String error = Constant.ERROR_MESSAGE +": "+ ex.getMessage();
+			return new ApiResponse<>(error, false);
+		}
 	}
 
-	private void deleteUserWallet(String accountNumber, String token) {
+	private ApiResponse<WalletAccount> deleteUserWallet(String accountNumber, String token) {
 		WalletAccessPojo pojo = new WalletAccessPojo();
 		pojo.setAcctClosed(true);
 		pojo.setFreezCode("");
@@ -316,9 +357,7 @@ public class UserServiceImpl implements UserService {
 		pojo.setCustomerAccountNumber(accountNumber);
 
 		log.debug("Request Object sent for Account Deletion:: {}", new Gson().toJson(pojo));
-		this.modifyUserWallet(pojo, token).thenAccept(resp -> {
-			log.debug("Response of Delete Call for account: {} is {}", accountNumber, resp.getMessage());
-		});
+		return this.modifyUserWallet(pojo, token);
 	}
 
 	private void deleteUsersVirtualAccount(Long id, String token) {
@@ -543,11 +582,11 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ApiResponse<UserAccessResponse> getAccessResponse(Long userId){
+	public ApiResponse<UserAccessResponse> getAccessResponse(Long userId) {
 		try {
 			ApiResponse<UserAccessResponse> res = accessProxy.GetUsersAccess(userId);
 			return res;
-		}catch (Exception e) {
+		} catch (Exception e) {
 			log.error("Call to Get User Access fails:: {}", e.getMessage());
 			return new ApiResponse<UserAccessResponse>(Constant.ERROR_MESSAGE, false);
 		}
@@ -664,8 +703,7 @@ public class UserServiceImpl implements UserService {
 				if (regUser == null)
 					continue;
 
-				CompletableFuture.runAsync(
-						() -> sendEmailNewPassword(mUser.getPassword(), regUser));
+				CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), regUser));
 
 				String token = this.authService.generateToken(regUser);
 				this.authService.createCorporateUser(mUser, regUser.getId(), token, getBaseUrl(request));
@@ -746,8 +784,7 @@ public class UserServiceImpl implements UserService {
 
 				String token = this.authService.generateToken(authenticatedUserFacade.getUser());
 				this.authService.createPrivateUser(mUser, regUser.getId(), token, getBaseUrl(request));
-				CompletableFuture.runAsync(
-						() -> sendEmailNewPassword(mUser.getPassword(), regUser));
+				CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), regUser));
 				++count;
 			}
 			String message = String

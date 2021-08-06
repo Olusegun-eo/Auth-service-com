@@ -31,10 +31,13 @@ public class ExcelHelper {
     public static List<String> CORPORATE_USER_HEADERS = Arrays.asList("FIRSTNAME", "SURNAME", "PHONE_NUMBER", "EMAIL",
             "OFFICE_ADDRESS", "CITY", "STATE", "ORG_NAME", "ORG_EMAIL",
             "ORG_PHONE", "ORG_TYPE", "BUSINESS_TYPE", "REFERENCE_CODE");
+    public static List<String> NEW_CORPORATE_USER_HEADERS = Arrays.asList("FIRSTNAME", "SURNAME", "PHONE_NUMBER", "EMAIL",
+            "OFFICE_ADDRESS", "CITY", "STATE", "ORG_NAME", "ORG_EMAIL",
+            "ORG_PHONE", "ORG_TYPE", "REFERENCE_CODE");
     //public static List<String> DEACTIVATE_USER_HEADERS = Arrays.asList("FIRSTNAME", "SURNAME", "PHONE_NUMBER", "EMAIL");
 
     static String SHEET = "Users";
-    static Pattern alphabetsPattern = Pattern.compile("^[a-zA-Z]*$");
+    static Pattern alphabetsPattern = Pattern.compile("^([^0-9]*)$");
     static Pattern numericPattern = Pattern.compile("^[0-9]*$");
     static Pattern emailPattern = Pattern.compile("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\." + "[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@"
             + "(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?");
@@ -53,7 +56,10 @@ public class ExcelHelper {
                 throw new CustomException("Invalid Excel File Check Extension", HttpStatus.BAD_REQUEST);
             }
             Set<BaseUserPojo> models = new HashSet<>();
-
+            DataFormat fmt = workbook.createDataFormat();
+            CellStyle cellStyle = workbook.createCellStyle();
+            cellStyle.setDataFormat(fmt.getFormat("@"));
+            
             Sheet sheet = workbook.getSheet(SHEET);
             if(sheet == null) throw new CustomException("Invalid Excel File Format Passed, Check Sheet Name", HttpStatus.BAD_REQUEST);
             Iterator<Row> rows = sheet.iterator();
@@ -230,11 +236,16 @@ public class ExcelHelper {
 
     public static ByteArrayInputStream createExcelSheet(List<String> HEADERS){
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
+            DataFormat fmt = workbook.createDataFormat();
+            CellStyle cellStyle = workbook.createCellStyle();
+            cellStyle.setDataFormat(fmt.getFormat("@"));
+            
             Sheet sheet = workbook.createSheet(SHEET);
             Row headerRow = sheet.createRow(0);
             for (int col = 0; col < HEADERS.size(); col++) {
                 Cell cell = headerRow.createCell(col);
                 cell.setCellValue(HEADERS.get(col));
+                cell.setCellStyle(cellStyle);
             }
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
