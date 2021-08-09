@@ -69,9 +69,6 @@ public class ExcelHelper {
                 throw new CustomException("Invalid Excel File Check Extension", HttpStatus.BAD_REQUEST);
             }
             Set<BaseUserPojo> models = new HashSet<>();
-            DataFormat fmt = workbook.createDataFormat();
-            CellStyle cellStyle = workbook.createCellStyle();
-            cellStyle.setDataFormat(fmt.getFormat("@"));
             
             Sheet sheet = workbook.getSheet(SHEET);
             if(sheet == null) throw new CustomException("Invalid Excel File Format Passed, Check Sheet Name", HttpStatus.BAD_REQUEST);
@@ -151,7 +148,7 @@ public class ExcelHelper {
                 throw new CustomException("Invalid Excel File Format Passed, Check Extension", HttpStatus.BAD_REQUEST);
             }
             Set<CorporateUserPojo> models = new HashSet<>();
-
+            
             Sheet sheet = workbook.getSheet(SHEET);
             if(sheet == null) throw new CustomException("Invalid Excel File Format Passed, Check Sheet Name", HttpStatus.BAD_REQUEST);
             Iterator<Row> rows = sheet.iterator();
@@ -303,8 +300,7 @@ public class ExcelHelper {
     }
 
     private static String defaultStringCell(final Cell cell) {
-//    	String value = cell.getRichStringCellValue().getString();
-//    	String value2 = String.valueOf(cell.getNumericCellValue());
+
         return dataFormatter.formatCellValue(cell).trim();
     }
 
@@ -329,7 +325,14 @@ public class ExcelHelper {
     }
 
     private static String validateStringNumericOnly(Cell cell, int cellNumber, int rowNumber) {
-        String cellValue =  dataFormatter.formatCellValue(cell).trim();
+    	String cellValue = null;
+    	try {
+    		double d = cell.getNumericCellValue();
+    		cellValue = String.format("%.0f", d);
+    	}catch(IllegalStateException | NumberFormatException ex) {
+    		String errorMessage = String.format("Invalid Numeric Cell Value Passed in row %s, cell %s", rowNumber + 1, cellNumber + 1);
+            throw new CustomException(errorMessage, HttpStatus.EXPECTATION_FAILED);
+    	}
         boolean val = numericPattern.matcher(cellValue).find();
         if(!val) {
             String errorMessage = String.format("Invalid Numeric Cell Value Passed in row %s, cell %s", rowNumber + 1, cellNumber + 1);
