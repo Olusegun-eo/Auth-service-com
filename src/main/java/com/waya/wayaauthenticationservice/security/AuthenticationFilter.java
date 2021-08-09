@@ -1,5 +1,35 @@
 package com.waya.wayaauthenticationservice.security;
 
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.HEADER_STRING;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.TOKEN_PREFIX;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.getExpiration;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.getSecret;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.servlet.FilterChain;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
@@ -14,29 +44,13 @@ import com.waya.wayaauthenticationservice.repository.PrivilegeRepository;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.service.LoginHistoryService;
+
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.SignatureException;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
+import static com.waya.wayaauthenticationservice.util.HelperUtils.*;
 
 @NoArgsConstructor
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
@@ -59,8 +73,18 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			throws AuthenticationException {
 		try {
 			LoginDetailsPojo creds = new ObjectMapper().readValue(req.getInputStream(), LoginDetailsPojo.class);
+			String principal = creds.getEmailOrPhoneNumber().replaceAll("\\s+", "").trim();
+			boolean isEmail = emailPattern.matcher(principal).matches();
+			if(!isEmail) {
+				if(principal.startsWith("+")) {
+					principal = principal.substring(1);
+				}
+				if(principal.length() > 10) {
+					principal = principal.substring(principal.length() - 10);
+				}
+			}
 			return getAuthenticationManager().authenticate(new UsernamePasswordAuthenticationToken(
-					creds.getEmailOrPhoneNumber(), creds.getPassword(), new ArrayList<>()));
+					principal, creds.getPassword(), new ArrayList<>()));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

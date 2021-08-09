@@ -28,6 +28,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
@@ -75,6 +77,9 @@ import com.waya.wayaauthenticationservice.service.AuthenticationService;
 import com.waya.wayaauthenticationservice.service.MailService;
 import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.service.UserService;
+import com.waya.wayaauthenticationservice.service.impl.search.SearchCriteria;
+import com.waya.wayaauthenticationservice.service.impl.search.SearchService;
+import com.waya.wayaauthenticationservice.service.impl.search.SearchSpecification;
 import com.waya.wayaauthenticationservice.util.Constant;
 import com.waya.wayaauthenticationservice.util.HelperUtils;
 import com.waya.wayaauthenticationservice.util.ReqIPUtils;
@@ -119,6 +124,9 @@ public class UserServiceImpl implements UserService {
 	MailService mailService;
 	@Autowired 
 	ObjectMapper mapper;
+
+	@Autowired
+	SearchService searchService;
 
 	@Value("${api.server.deployed}")
 	private String urlRedirect;
@@ -602,15 +610,15 @@ public class UserServiceImpl implements UserService {
 		user.getRoleList().forEach(u -> {
 			permits.addAll(u.getPrivileges().stream().map(p -> p.getName()).collect(Collectors.toSet()));
 		});
-
+		String phoneNumber = user.getPhoneNumber().contains("+") ? 
+				user.getPhoneNumber() : String.format("+%s", user.getPhoneNumber());
 		UserProfileResponsePojo userDto = UserProfileResponsePojo.builder().email(user.getEmail()).id(user.getId())
 				.referenceCode(user.getReferenceCode()).isEmailVerified(user.isEmailVerified())
-				.phoneNumber(user.getPhoneNumber()).firstName(user.getFirstName()).lastName(user.getSurname())
+				.phoneNumber(phoneNumber).firstName(user.getFirstName()).lastName(user.getSurname())
 				.isAdmin(user.isAdmin()).isPhoneVerified(user.isPhoneVerified()).isAccountDeleted(user.isDeleted())
 				.isAccountExpired(!user.isAccountNonExpired()).isCredentialsExpired(!user.isCredentialsNonExpired())
 				.isActive(user.isActive()).isAccountLocked(!user.isAccountNonLocked()).roles(roles).permits(permits)
 				.pinCreated(user.isPinCreated()).isCorporate(user.isCorporate()).build();
-
 		userDto.add(linkTo(methodOn(UserController.class).findUser(user.getId())).withSelfRel());
 
 		return userDto;
@@ -622,6 +630,34 @@ public class UserServiceImpl implements UserService {
 		Page<Users> userPage;
 		try {
 			userPage = usersRepository.findAll(pageableRequest);
+			if (userPage == null) {
+				userPage = Page.empty(pageableRequest);
+			}
+		} catch (Exception ex) {
+			log.error(ex.getCause() + "message");
+			String errorMessages = String.format("%s %s", ErrorMessages.INTERNAL_SERVER_ERROR.getErrorMessage(),
+					ex.getMessage());
+			throw new CustomException(errorMessages, HttpStatus.UNPROCESSABLE_ENTITY);
+		}
+		return userPage;
+	}
+
+	@Override
+	public Page<Users> getAllUsers(int page, int size, String searchString) {
+		
+		List<SearchCriteria> searchCriteria = searchService.parse(searchString);
+		List<SearchSpecification> specList = searchCriteria.stream()
+				.map(criterion -> new SearchSpecification(criterion)).collect(Collectors.toList());
+		Specification<Users> specs = searchService.andSpecification(specList)
+				.orElse(null);
+
+		List<Sort> sortList = searchService.generateSortList(searchCriteria);
+		Sort sort = searchService.andSort(sortList).orElse(Sort.unsorted());
+		Pageable pageableRequest = PageRequest.of(page, size, sort);
+		
+		Page<Users> userPage;
+		try {
+			userPage = usersRepository.findAll(specs, pageableRequest);
 			if (userPage == null) {
 				userPage = Page.empty(pageableRequest);
 			}
@@ -674,11 +710,6 @@ public class UserServiceImpl implements UserService {
 
 				Users user = new Users();
 				user.setId(0L);
-//                String publicUserId = HelperUtils.generateRandomPassword();
-//                while (usersRepo.existsByUserId(publicUserId)) {
-//                    publicUserId = HelperUtils.generateRandomPassword();
-//                }
-//                user.setUserId(publicUserId);
 				user.setCorporate(true);
 				user.setDateCreated(LocalDateTime.now());
 				user.setRegDeviceIP(ip);

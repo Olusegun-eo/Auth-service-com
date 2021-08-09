@@ -73,6 +73,18 @@ public class AdminController {
         PagedModel<UserProfileResponsePojo> userPagedModel = pagedResourcesAssembler.toModel(userPagedList, userAssembler);
         return new ResponseEntity<>(userPagedModel, HttpStatus.OK);
     }
+    
+    @ApiOperation(value = "Fetch all Users (Admin Endpoint)", tags = {"ADMIN"})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
+    @GetMapping("/users/sort")
+    public ResponseEntity<PagedModel<UserProfileResponsePojo>> getAllUsersDBSorted(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sort", defaultValue = "") String searchString) {
+        Page<Users> userPagedList = userService.getAllUsers(page, size, searchString);
+        PagedModel<UserProfileResponsePojo> userPagedModel = pagedResourcesAssembler.toModel(userPagedList, userAssembler);
+        return new ResponseEntity<>(userPagedModel, HttpStatus.OK);
+    }
 
 //    @ApiOperation(value = "Create New Owner User (Admin Endpoint)", tags = {"ADMIN"})
 //    @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})

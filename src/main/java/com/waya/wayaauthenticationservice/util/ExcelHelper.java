@@ -330,8 +330,7 @@ public class ExcelHelper {
     		double d = cell.getNumericCellValue();
     		cellValue = String.format("%.0f", d);
     	}catch(IllegalStateException | NumberFormatException ex) {
-    		String errorMessage = String.format("Invalid Numeric Cell Value Passed in row %s, cell %s", rowNumber + 1, cellNumber + 1);
-            throw new CustomException(errorMessage, HttpStatus.EXPECTATION_FAILED);
+    		cellValue = dataFormatter.formatCellValue(cell).trim();
     	}
         boolean val = numericPattern.matcher(cellValue).find();
         if(!val) {

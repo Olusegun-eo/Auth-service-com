@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 public class HelperUtils {
 
 
-    public static Pattern numericPattern = Pattern.compile("^[0-9]*$");
+    public static Pattern phoneNumPattern = Pattern.compile("^[0-9]*$");
     public static Pattern emailPattern = Pattern.compile("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\." + "[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@"
             + "(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?");
 
@@ -46,14 +46,14 @@ public class HelperUtils {
     }
 
     public static boolean validateStringIsEmailOrPhoneNumber(String value) {
-        boolean val = numericPattern.matcher(value).find() && value.startsWith("234")
-                && value.length() == 13;
+        boolean val = phoneNumPattern.matcher(value).find() 
+        		&& value.startsWith("234")
+                && value.length() >= 13;
         Matcher emailMatcher = emailPattern.matcher(value);
         return emailMatcher.matches() || val;
     }
 
     public static boolean validateStringNumericOnly(String value) {
-        //value.matches("[0-9]+")
         return value.matches("^[0-9]*$");
     }
 

@@ -30,7 +30,7 @@ public class BaseUserPojo {
 
 	@NotBlank(message = "Phone Number Cannot be blank")
 	@ValidPhone
-	@CustomValidator(message = "Phone Number must be {max} characters", type = Type.SIZE, min = 13, max = 13)
+	@CustomValidator(message = "Phone Number must be {max} characters", type = Type.SIZE, min = 13, max = 14)
 	private String phoneNumber;
 
 	private String referenceCode;

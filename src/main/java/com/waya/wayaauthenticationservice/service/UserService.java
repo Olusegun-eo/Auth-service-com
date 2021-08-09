@@ -73,4 +73,6 @@ public interface UserService {
     ResponseEntity<?> activateAccounts(BulkPrivateUserCreationDTO excelToPrivateUserPojo);
 
 	ResponseEntity<?> validateWalletUserCall(Long userId, String key);
+
+	Page<Users> getAllUsers(int page, int size, String searchString);
 }
