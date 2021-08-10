@@ -46,6 +46,13 @@ public class HelperUtils {
     }
 
     public static boolean validateStringIsEmailOrPhoneNumber(String value) {
+    	if(value == null)
+            return false;
+    	
+    	if(value.startsWith("+"))
+    		value = value.substring(1);
+    	
+    	value = value.replaceAll("\\s+", "").trim();
         boolean val = phoneNumPattern.matcher(value).find() 
         		&& value.startsWith("234")
                 && value.length() >= 13;

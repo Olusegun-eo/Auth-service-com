@@ -159,7 +159,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				roleList.add(adminRole);
 			}
 			if (mUser.isWayaAdmin() && adminAction) {
-				// Users signedInUser = authenticatedUserFacade.getUser();
 				Role ownerRole = rolesRepo.findByName("ROLE_OWNER_ADMIN")
 						.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
 
@@ -178,11 +177,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			DevicePojo dev = this.reqUtil.GetDevice(device);
 
 			Users user = new Users();
-			// String publicUserId = HelperUtils.generateRandomPassword();
-			// while (userRepo.existsByUserId(publicUserId)) {
-			// publicUserId = HelperUtils.generateRandomPassword();
-			// }
-			// user.setUserId(publicUserId);
 			user.setId(0L);
 			user.setAdmin(mUser.isAdmin());
 			user.setEmail(mUser.getEmail().trim());

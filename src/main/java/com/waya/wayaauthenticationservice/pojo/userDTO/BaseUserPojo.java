@@ -75,6 +75,9 @@ public class BaseUserPojo {
 	}
 
 	public void setPhoneNumber(String phoneNumber) {
+        if(phoneNumber.startsWith("+"))
+        	phoneNumber = phoneNumber.substring(1);
+        
 		this.phoneNumber = phoneNumber.replaceAll("\\s+", "").trim();
 	}
 

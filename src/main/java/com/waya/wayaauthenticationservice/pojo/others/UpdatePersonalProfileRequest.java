@@ -52,5 +52,16 @@ public class UpdatePersonalProfileRequest {
     private String district;
 
     private String address;
+    
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+
+	public void setPhoneNumber(String phoneNumber) {
+        if(phoneNumber.startsWith("+"))
+        	phoneNumber = phoneNumber.substring(1);
+        
+		this.phoneNumber = phoneNumber.replaceAll("\\s+", "").trim();
+	}
 }
 

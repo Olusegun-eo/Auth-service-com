@@ -18,7 +18,9 @@ public class PhoneNumberValidator implements ConstraintValidator<ValidPhone, Str
         // null values are valid
         if(phoneNumberField == null)
             return true;
-
+        if(phoneNumberField.startsWith("+"))
+        	phoneNumberField = phoneNumberField.substring(1).replaceAll("\\s+", "").trim();
+        
         return phoneNumPattern.matcher(phoneNumberField).find()
                 && phoneNumberField.startsWith("234")
                 && phoneNumberField.length() >= 13;
