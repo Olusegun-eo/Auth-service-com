@@ -1,40 +1,5 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.OK;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mobile.device.Device;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
@@ -47,20 +12,8 @@ import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordCreateContext;
-import com.waya.wayaauthenticationservice.pojo.others.ContactPojo;
-import com.waya.wayaauthenticationservice.pojo.others.ContactPojoReq;
-import com.waya.wayaauthenticationservice.pojo.others.DeleteRequest;
-import com.waya.wayaauthenticationservice.pojo.others.DevicePojo;
-import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
-import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
-import com.waya.wayaauthenticationservice.pojo.others.WalletAccessPojo;
-import com.waya.wayaauthenticationservice.pojo.others.WalletAccount;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.UserIDPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.pojo.userDTO.*;
 import com.waya.wayaauthenticationservice.proxy.AccessProxy;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
@@ -75,11 +28,42 @@ import com.waya.wayaauthenticationservice.service.AuthenticationService;
 import com.waya.wayaauthenticationservice.service.MailService;
 import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.service.UserService;
+import com.waya.wayaauthenticationservice.service.impl.search.SearchCriteria;
+import com.waya.wayaauthenticationservice.service.impl.search.SearchOperation;
+import com.waya.wayaauthenticationservice.service.impl.search.SearchService;
+import com.waya.wayaauthenticationservice.service.impl.search.SearchSpecification;
 import com.waya.wayaauthenticationservice.util.Constant;
 import com.waya.wayaauthenticationservice.util.HelperUtils;
 import com.waya.wayaauthenticationservice.util.ReqIPUtils;
-
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mobile.device.Device;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.OK;
 
 @Service
 @Slf4j
@@ -117,8 +101,11 @@ public class UserServiceImpl implements UserService {
 	private AccessProxy accessProxy;
 	@Autowired
 	MailService mailService;
-	@Autowired 
+	@Autowired
 	ObjectMapper mapper;
+
+	@Autowired
+	SearchService searchService;
 
 	@Value("${api.server.deployed}")
 	private String urlRedirect;
@@ -300,10 +287,11 @@ public class UserServiceImpl implements UserService {
 		for (WalletAccount account : wallets) {
 			ApiResponse<WalletAccount> res = this.deleteUserWallet(account.getAccountNo(), token);
 			if (!res.getStatus()) {
-				String error = String.format("Error in Closing Wallet account %s : %s", account.getAccountNo(), res.getMessage());
+				String error = String.format("Error in Closing Wallet account %s : %s", account.getAccountNo(),
+						res.getMessage());
 				throw new CustomException(error, BAD_REQUEST);
 			}
-		} 
+		}
 		// De-activate and Delete Existing Accounts
 		user.setActive(false);
 		user.setDeleted(true);
@@ -335,14 +323,13 @@ public class UserServiceImpl implements UserService {
 			log.error("Call to Modify Account Access fails:: {}", ex.getMessage());
 			try {
 				@SuppressWarnings("unchecked")
-				ApiResponse<WalletAccount> result = mapper.readValue(ex.getMessage(),
-						ApiResponse.class);
+				ApiResponse<WalletAccount> result = mapper.readValue(ex.getMessage(), ApiResponse.class);
 				result.setHttpStatus(ex.getStatus());
 				return result;
 			} catch (JsonProcessingException e) {
 				log.error("Error Parsing Body to Json");
 			}
-			String error = Constant.ERROR_MESSAGE +": "+ ex.getMessage();
+			String error = Constant.ERROR_MESSAGE + ": " + ex.getMessage();
 			return new ApiResponse<>(error, false);
 		}
 	}
@@ -602,15 +589,17 @@ public class UserServiceImpl implements UserService {
 		user.getRoleList().forEach(u -> {
 			permits.addAll(u.getPrivileges().stream().map(p -> p.getName()).collect(Collectors.toSet()));
 		});
-
+		String phoneNumber = user.getPhoneNumber().contains("+") ? user.getPhoneNumber()
+				: (user.getPhoneNumber().startsWith("234") ? String.format("+%s", user.getPhoneNumber())
+				: user.getPhoneNumber());
+		
 		UserProfileResponsePojo userDto = UserProfileResponsePojo.builder().email(user.getEmail()).id(user.getId())
-				.referenceCode(user.getReferenceCode()).isEmailVerified(user.isEmailVerified())
-				.phoneNumber(user.getPhoneNumber()).firstName(user.getFirstName()).lastName(user.getSurname())
-				.isAdmin(user.isAdmin()).isPhoneVerified(user.isPhoneVerified()).isAccountDeleted(user.isDeleted())
+				.referenceCode(user.getReferenceCode()).isEmailVerified(user.isEmailVerified()).phoneNumber(phoneNumber)
+				.firstName(user.getFirstName()).lastName(user.getSurname()).isAdmin(user.isAdmin())
+				.isPhoneVerified(user.isPhoneVerified()).isAccountDeleted(user.isDeleted())
 				.isAccountExpired(!user.isAccountNonExpired()).isCredentialsExpired(!user.isCredentialsNonExpired())
 				.isActive(user.isActive()).isAccountLocked(!user.isAccountNonLocked()).roles(roles).permits(permits)
 				.pinCreated(user.isPinCreated()).isCorporate(user.isCorporate()).build();
-
 		userDto.add(linkTo(methodOn(UserController.class).findUser(user.getId())).withSelfRel());
 
 		return userDto;
@@ -622,6 +611,36 @@ public class UserServiceImpl implements UserService {
 		Page<Users> userPage;
 		try {
 			userPage = usersRepository.findAll(pageableRequest);
+			if (userPage == null) {
+				userPage = Page.empty(pageableRequest);
+			}
+		} catch (Exception ex) {
+			log.error(ex.getCause() + "message");
+			String errorMessages = String.format("%s %s", ErrorMessages.INTERNAL_SERVER_ERROR.getErrorMessage(),
+					ex.getMessage());
+			throw new CustomException(errorMessages, HttpStatus.UNPROCESSABLE_ENTITY);
+		}
+		return userPage;
+	}
+
+	@Override
+	public Page<Users> getAllUsers(int page, int size, String searchString) {
+
+		List<SearchCriteria> searchCriteria = searchService.parse(searchString);
+		// Default isDeleted to false
+		searchCriteria.add(new SearchCriteria("isDeleted", SearchOperation.EQUALITY, "false"));
+
+		List<SearchSpecification> specList = searchCriteria.stream()
+				.map(criterion -> new SearchSpecification(criterion)).collect(Collectors.toList());
+		Specification<Users> specs = searchService.andSpecification(specList).orElse(null);
+
+		List<Sort> sortList = searchService.generateSortList(searchCriteria);
+		Sort sort = searchService.andSort(sortList).orElse(Sort.unsorted());
+		Pageable pageableRequest = PageRequest.of(page, size, sort);
+
+		Page<Users> userPage;
+		try {
+			userPage = usersRepository.findAll(specs, pageableRequest);
 			if (userPage == null) {
 				userPage = Page.empty(pageableRequest);
 			}
@@ -674,11 +693,6 @@ public class UserServiceImpl implements UserService {
 
 				Users user = new Users();
 				user.setId(0L);
-//                String publicUserId = HelperUtils.generateRandomPassword();
-//                while (usersRepo.existsByUserId(publicUserId)) {
-//                    publicUserId = HelperUtils.generateRandomPassword();
-//                }
-//                user.setUserId(publicUserId);
 				user.setCorporate(true);
 				user.setDateCreated(LocalDateTime.now());
 				user.setRegDeviceIP(ip);

@@ -56,6 +56,7 @@ public class AuthenticationController {
 	@PostMapping(path = "/create", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {
 			MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<?> create(@Valid @RequestBody BaseUserPojo user, HttpServletRequest request, Device device) {
+		user.setWayaAdmin(false);
 		return authenticationServiceImpl.createUser(user, request, device, false);
 	}
 

@@ -30,7 +30,7 @@ public class BaseUserPojo {
 
 	@NotBlank(message = "Phone Number Cannot be blank")
 	@ValidPhone
-	@CustomValidator(message = "Phone Number must be {max} characters", type = Type.SIZE, min = 13, max = 13)
+	@CustomValidator(message = "Phone Number must be {max} characters", type = Type.SIZE, min = 13, max = 14)
 	private String phoneNumber;
 
 	private String referenceCode;
@@ -75,6 +75,9 @@ public class BaseUserPojo {
 	}
 
 	public void setPhoneNumber(String phoneNumber) {
+        if(phoneNumber.startsWith("+"))
+        	phoneNumber = phoneNumber.substring(1);
+        
 		this.phoneNumber = phoneNumber.replaceAll("\\s+", "").trim();
 	}
 
