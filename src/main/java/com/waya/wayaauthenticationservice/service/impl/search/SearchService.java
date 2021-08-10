@@ -19,7 +19,7 @@ public class SearchService {
 	private static String wordRegex = "[a-zA-Z]\\w*";
 	private static String valueRegex = "\\w+";
 	private static String operatorRegex = "(:|<|>|!|\\+|-|~|\\s)";
-	private static String timestampRegex = "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}";
+	private static String timestampRegex = "[0-9]{2}-[0-9]{2}-[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}";
 	private static String fullRegex = "(" + wordRegex + ")" + operatorRegex + "(" + timestampRegex + "|" + valueRegex + ")?,";
 	private static final Pattern searchPattern = Pattern.compile(fullRegex);
 	
