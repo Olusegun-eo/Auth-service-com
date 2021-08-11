@@ -67,15 +67,8 @@ class ProfileControllerTest {
 	@MockBean
 	private FileResourceServiceFeignClient fileResourceServiceFeignClient;
 
-	// private final Profile profilePersonal = new Profile();
-	// private Profile profile = new Profile();
-
 	final MockMultipartFile file = new MockMultipartFile("files", "snapshot.png", MediaType.IMAGE_JPEG_VALUE,
 			"content".getBytes(StandardCharsets.UTF_8));
-
-//    final String setUpUserId = "749";
-//    private final String EMAIL = "app@app.com";
-//    private final String EMAIL2 = "cpd@app.com";
 
 	@Autowired
 	private RolesRepository rolesRepository;
@@ -117,7 +110,7 @@ class ProfileControllerTest {
 				user.getId().toString(), "2340291838294");
 
 		createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 	}
 
 	@Order(2)
@@ -128,13 +121,13 @@ class ProfileControllerTest {
 				user.getId().toString(), "2340291838294");
 
 		createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		final PersonalProfileRequest newPersonalProfileRequest = setPersonalProfileData("app@app.com",
 				user.getId().toString(), "2340291838294");
 
 		createAndVerifyPersonalProfile(newPersonalProfileRequest, "$.message",
-				"Profile with Provided User ID already Exists", "$.httpStatus", "BAD_REQUEST");
+				"Profile with Provided User ID already Exists");
 	}
 
 	@Order(3)
@@ -146,13 +139,13 @@ class ProfileControllerTest {
 				user.getId().toString(), "2340291838294");
 
 		createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		final PersonalProfileRequest newPersonalProfileRequest = setPersonalProfileData("app@app12.com",
 				user.getId().toString(), "2340291838294");
 
 		createAndVerifyPersonalProfile(newPersonalProfileRequest, "$.message",
-				"Profile with Provided User ID already Exists", "$.httpStatus", "BAD_REQUEST");
+				"Profile with Provided User ID already Exists");
 	}
 
 	@Order(4)
@@ -163,7 +156,7 @@ class ProfileControllerTest {
 				user2.getId().toString(), "2349870928349");
 
 		createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 	}
 
 	@Order(5)
@@ -173,8 +166,7 @@ class ProfileControllerTest {
 		final CorporateProfileRequest corporateProfileRequest = setCorporateProfileData("app@app.com", "5432",
 				"2349870928349");
 
-		createAndVerifyCorporateProfile(corporateProfileRequest, "$.message", "Base User with Provided ID not Found",
-				"$.httpStatus", "BAD_REQUEST");
+		createAndVerifyCorporateProfile(corporateProfileRequest, "$.message", "Base User with Provided ID not Found");
 	}
 
 	@Order(6)
@@ -185,13 +177,13 @@ class ProfileControllerTest {
 				user2.getId().toString(), "2349870928349");
 
 		createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		final CorporateProfileRequest newCorporateProfileRequest = setCorporateProfileData("app@app.com",
 				user2.getId().toString(), "2349870928349");
 
 		createAndVerifyCorporateProfile(newCorporateProfileRequest, "$.message",
-				"Profile with Provided User ID already Exists", "$.httpStatus", "BAD_REQUEST");
+				"Profile with Provided User ID already Exists");
 	}
 
 	@Order(7)
@@ -202,7 +194,7 @@ class ProfileControllerTest {
 				user.getId().toString(), "2349870928349");
 
 		createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		getAndVerifyUserProfile(user.getId().toString(), "$.message", "retrieved successfully", status().isOk());
 	}
@@ -215,7 +207,7 @@ class ProfileControllerTest {
 				user2.getId().toString(), "2349870928349");
 
 		createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		getAndVerifyUserProfile(user2.getId().toString(), "$.message", "retrieved successfully", status().isOk());
 	}
@@ -237,7 +229,7 @@ class ProfileControllerTest {
 				user.getId().toString(), "2349870928349");
 
 		createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		final UpdatePersonalProfileRequest updatePersonalProfileRequest = setUpdatePersonalProfileRequest(
 				"kola@app.com", "2349870928349");
@@ -266,7 +258,7 @@ class ProfileControllerTest {
 				user2.getId().toString(), "2349870928349");
 
 		createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		final UpdateCorporateProfileRequest updateCorporateProfileRequest = setUpdateCorporateProfileRequest(
 				"kola@app.com", "2349870928349");
@@ -294,7 +286,7 @@ class ProfileControllerTest {
 				user2.getId().toString(), "2349870928349");
 
 		createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		getAndVerifyAllUsersReferrals(user2.getId().toString(), status().isOk());
 	}
@@ -308,7 +300,7 @@ class ProfileControllerTest {
 				user.getId().toString(), "2340291838294");
 
 		createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		DeleteRequest deleteRequest = DeleteRequest.builder().deleteType(DeleteType.DELETE)
 				.userId(user.getId().toString()).build();
@@ -325,7 +317,7 @@ class ProfileControllerTest {
 				user.getId().toString(), "2340291838294");
 
 		createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		DeleteRequest deleteRequest = DeleteRequest.builder().deleteType(DeleteType.NONE).userId("455").build();
 
@@ -341,7 +333,7 @@ class ProfileControllerTest {
 				user.getId().toString(), "2340291838294");
 
 		createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		DeleteRequest deleteRequest = DeleteRequest.builder().deleteType(DeleteType.DELETE)
 				.userId(user.getId().toString()).build();
@@ -376,12 +368,10 @@ class ProfileControllerTest {
 	}
 
 	private void createAndVerifyPersonalProfile(final PersonalProfileRequest personalProfileRequest,
-			final String jsonPath0, final String jsonPathMessage0, final String jsonPath1,
-			final String jsonPathMessage1) throws Exception {
+			final String jsonPath0, final String jsonPathMessage0) throws Exception {
 		mockMvc.perform(post("/api/v1/profile/personal-profile").header("Authorization", generateToken(user))
 				.contentType(APPLICATION_JSON).content(asJsonString(personalProfileRequest)))
-				.andExpect(jsonPath(jsonPath0, Is.is(jsonPathMessage0)))
-				.andExpect(jsonPath(jsonPath1, Is.is(jsonPathMessage1)));
+				.andExpect(jsonPath(jsonPath0, Is.is(jsonPathMessage0)));
 	}
 
 	private void deleteProfile(final DeleteRequest deleteRequest, final String jsonPath0, final String jsonPathMessage0,
@@ -396,12 +386,10 @@ class ProfileControllerTest {
 	}
 
 	private void createAndVerifyCorporateProfile(final CorporateProfileRequest corporateProfileRequest,
-			final String jsonPath0, final String jsonPathMessage0, final String jsonPath1,
-			final String jsonPathMessage1) throws Exception {
+			final String jsonPath0, final String jsonPathMessage0) throws Exception {
 		mockMvc.perform(post("/api/v1/profile/corporate-profile").header("Authorization", generateToken(user))
 				.contentType(APPLICATION_JSON).content(asJsonString(corporateProfileRequest)))
-				.andExpect(jsonPath(jsonPath0, Is.is(jsonPathMessage0))).andDo(print())
-				.andExpect(jsonPath(jsonPath1, Is.is(jsonPathMessage1)));
+				.andExpect(jsonPath(jsonPath0, Is.is(jsonPathMessage0))).andDo(print());
 	}
 
 	private void getAndVerifyUserProfile(final String userId, final String jsonPath, final String jsonPathMessage,
