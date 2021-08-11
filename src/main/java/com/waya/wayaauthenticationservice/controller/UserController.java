@@ -1,22 +1,39 @@
 package com.waya.wayaauthenticationservice.controller;
 
-import com.waya.wayaauthenticationservice.entity.RedisUser;
-import com.waya.wayaauthenticationservice.pojo.others.ContactPojoReq;
-import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
-import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
-import com.waya.wayaauthenticationservice.repository.RedisUserDao;
-import com.waya.wayaauthenticationservice.service.UserService;
-import io.swagger.annotations.*;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+
+import javax.validation.constraints.Email;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.waya.wayaauthenticationservice.entity.RedisUser;
+import com.waya.wayaauthenticationservice.pojo.others.ContactPojoReq;
+import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
+import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
+import com.waya.wayaauthenticationservice.repository.RedisUserDao;
+import com.waya.wayaauthenticationservice.service.UserService;
+
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @CrossOrigin
 @RestController
@@ -57,7 +74,7 @@ public class UserController {
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("email/{email}")
     @PreAuthorize(value = "@userSecurity.useHierarchy(#email, authentication)")
-    public ResponseEntity<?> getUserByEmail(@PathVariable String email) {
+    public ResponseEntity<?> getUserByEmail(@PathVariable @Email String email) {
         return userService.getUserByEmail(email);
     }
 
@@ -79,7 +96,7 @@ public class UserController {
     @ApiOperation(value = "Get User by Email (In-app use only)", tags = {"USER SERVICE"})
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping("walletByEmail")
-    public ResponseEntity<?> getUserByEmailForService(@RequestParam("email") String email) {
+    public ResponseEntity<?> getUserByEmailForService(@RequestParam("email") @Email String email) {
         return userService.getUserInfoByPhoneOrEmailForServiceConsumption(email.trim());
     }
 

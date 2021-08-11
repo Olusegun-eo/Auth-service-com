@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
+import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
+
 import java.util.Collection;
 
 @Component("userSecurity")
@@ -24,18 +26,18 @@ public class UserSecurity {
 	}
 
 	public boolean useHierarchy(Long id, Authentication authentication) {
-		Users user = ((UserPrincipal) authentication.getPrincipal()).getUser()
-				.orElse(null);
+		Users user = ((UserPrincipal) authentication.getPrincipal()).getUser().orElse(null);
 
-		if(user == null) return false;
+		if (user == null)
+			return false;
 
 		if (user.getId().equals(id))
 			return true;
 
-		Users returnObj = this.userRepo.findById(false, id)
-				.orElse(null);
+		Users returnObj = this.userRepo.findById(false, id).orElse(null);
 
-		if(returnObj == null) return true;
+		if (returnObj == null)
+			return true;
 
 		boolean isOga = compareRoles(returnObj, user) > 0;
 		log.info("isOga returned {}", isOga);
@@ -43,12 +45,13 @@ public class UserSecurity {
 	}
 
 	public boolean useHierarchyForRoles(String roleName, Authentication authentication) {
-		Users user = ((UserPrincipal) authentication.getPrincipal()).getUser()
-				.orElse(null);
-		if(user == null) return false;
+		Users user = ((UserPrincipal) authentication.getPrincipal()).getUser().orElse(null);
+		if (user == null)
+			return false;
 
 		Role role = this.rolesRepository.findByName(roleName).orElse(null);
-		if(role == null) return true;
+		if (role == null)
+			return true;
 
 		boolean isOga = compareRoles(role, user.getRoleList());
 		log.info("isOga returned {}", isOga);
@@ -57,17 +60,31 @@ public class UserSecurity {
 
 	public boolean useHierarchy(String emailOrPhoneNumber, Authentication authentication) {
 
-		Users user = ((UserPrincipal) authentication.getPrincipal()).getUser()
-				.orElse(null);
-		if(user == null) return false;
+		Users user = ((UserPrincipal) authentication.getPrincipal()).getUser().orElse(null);
+		if (user == null)
+			return false;
 
-		if (user.getEmail().equals(emailOrPhoneNumber) ||
-				user.getPhoneNumber().equals(emailOrPhoneNumber))
+		String principal = emailOrPhoneNumber.replaceAll("\\s+", "").trim();
+		boolean isEmail = emailPattern.matcher(principal).matches();
+		if (!isEmail) {
+			if (principal.startsWith("+")) {
+				principal = principal.substring(1);
+			}
+			if (principal.length() > 10) {
+				principal = principal.substring(principal.length() - 10);
+			}
+		}
+		
+		String userPhone = user.getPhoneNumber();
+		if (userPhone.length() > 10) {
+			userPhone = userPhone.substring(userPhone.length() - 10);
+		}
+		if (user.getEmail().equals(principal) || userPhone.equals(principal))
 			return true;
 
-		Users returnObj = this.userRepo.findByEmailOrPhoneNumber(emailOrPhoneNumber)
-				.orElse(null);
-		if(returnObj == null) return true;
+		Users returnObj = this.userRepo.findByEmailOrPhoneNumber(principal).orElse(null);
+		if (returnObj == null)
+			return true;
 
 		boolean isOga = compareRoles(returnObj, user) > 0;
 		log.info("isOga returned {}", isOga);
@@ -82,14 +99,16 @@ public class UserSecurity {
 
 		for (int i = roles.length - 1; i >= 0; i--) {
 			boolean authCheck = roleCheck(authEmp.getRoleList(), roles[i].trim());
-			if (authCheck) authEmpLevel = roles.length - i;
+			if (authCheck)
+				authEmpLevel = roles.length - i;
 
 			boolean targetCheck = roleCheck(targetEmp.getRoleList(), roles[i].trim());
-			if (targetCheck) returnEmp = roles.length - i;
+			if (targetCheck)
+				returnEmp = roles.length - i;
 		}
 		log.info("Authenticating User level is {}, Target User level is {}", authEmpLevel, returnEmp);
 
-		if(authEmpLevel.equals(returnEmp) && authEmpLevel == roles.length)
+		if (authEmpLevel.equals(returnEmp) && authEmpLevel == roles.length)
 			return 1;
 
 		return authEmpLevel.compareTo(returnEmp);
@@ -101,15 +120,17 @@ public class UserSecurity {
 		Integer targetRole = 0;
 		Integer authEmpLevel = 0;
 		boolean hasRole = roleList.contains(role);
-		if(hasRole) {
-			for(int i = roles.length - 1; i >= 0; i--){
-				if(roles[i].trim().equals(role.getName()))
+		if (hasRole) {
+			for (int i = roles.length - 1; i >= 0; i--) {
+				if (roles[i].trim().equals(role.getName()))
 					targetRole = roles.length - i;
 
 				boolean authCheck = roleCheck(roleList, roles[i].trim());
-				if (authCheck) authEmpLevel = roles.length - i;
+				if (authCheck)
+					authEmpLevel = roles.length - i;
 			}
-			if(targetRole == roles.length && targetRole.equals(authEmpLevel)) return true;
+			if (targetRole == roles.length && targetRole.equals(authEmpLevel))
+				return true;
 
 			return authEmpLevel.compareTo(targetRole) > 0;
 		}

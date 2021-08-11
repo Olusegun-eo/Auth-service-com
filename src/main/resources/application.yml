@@ -24,6 +24,7 @@ spring:
       file-size-threshold: 2KB
       max-file-size: 2MB
       max-request-size: 2MB
+      resolve-lazily: true
 
   cache:
     type: redis
@@ -364,7 +365,15 @@ api:
         if the request passes all validation, it will update a users profile image successfully,
         # Error Response
         returns with a detailed response about the error.
-
+        
+    update-user-images:
+      description: updates a Corporate users Surrounding image
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will update a users profile image successfully,
+        # Error Response
+        returns with a detailed response about the error.
+        
     search-name:
       description: search for a user by name
       notes: |

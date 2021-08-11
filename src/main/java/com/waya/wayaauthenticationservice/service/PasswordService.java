@@ -1,6 +1,9 @@
 package com.waya.wayaauthenticationservice.service;
 
 import com.waya.wayaauthenticationservice.pojo.password.*;
+
+import javax.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -41,4 +44,6 @@ public interface PasswordService {
     ResponseEntity<?> sendPinCreationOTPPhone(String phoneNumber);
 
     ResponseEntity<?> sendPinCreationOTPEmail(String email, String redirectUrl);
+
+	ResponseEntity<?> changePassword(@Valid ChangePasswordPojo passwordPojo);
 }
