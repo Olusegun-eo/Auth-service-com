@@ -58,6 +58,7 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
 				authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 				SecurityContextHolder.getContext().setAuthentication(authentication);
 
+				log.info(userPrincipal.toString());
 				return authentication;
 			}
 			return null;

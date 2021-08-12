@@ -108,7 +108,7 @@ feign:
         readTimeout: 10000
 logging:
   level:
-    net.sf.jmimemagic.MagicParser: DEBUG
+    net.sf.jmimemagic.MagicParser: ERROR
 
 jwt:
   secret: ${JWT_SECRET:wayas3cr3t}

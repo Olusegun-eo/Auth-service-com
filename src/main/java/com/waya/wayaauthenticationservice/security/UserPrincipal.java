@@ -1,19 +1,29 @@
 package com.waya.wayaauthenticationservice.security;
 
-import com.waya.wayaauthenticationservice.SpringApplicationContext;
-import com.waya.wayaauthenticationservice.entity.Role;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
-import com.waya.wayaauthenticationservice.service.UserService;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import com.waya.wayaauthenticationservice.SpringApplicationContext;
+import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
+import com.waya.wayaauthenticationservice.service.UserService;
+
+import lombok.ToString;
 
 @SuppressWarnings("serial")
+@ToString(exclude = "attributes")
 public class UserPrincipal implements OAuth2User, UserDetails {
 
 	private Users user;

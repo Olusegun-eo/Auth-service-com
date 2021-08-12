@@ -591,7 +591,7 @@ public class UserServiceImpl implements UserService {
 			ApiResponse<UserAccessResponse> res = accessProxy.GetUsersAccess(userId);
 			return res;
 		} catch (Exception e) {
-			log.error("Call to Get User Access fails:: {}", e.getMessage());
+			//log.error("Call to Get User Access fails:: {}", e.getMessage());
 			return new ApiResponse<UserAccessResponse>(Constant.ERROR_MESSAGE, false);
 		}
 	}

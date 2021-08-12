@@ -133,12 +133,6 @@ public class PasswordServiceImpl implements PasswordService {
 						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User with phoneNumber: " + phoneNumber,
 						null), HttpStatus.BAD_REQUEST);
 
-			Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
-			if (profile == null)
-				return new ResponseEntity<>(new ErrorResponse(
-						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For Profile with userId: " + user.getId(),
-						null), HttpStatus.BAD_REQUEST);
-
 			// Send the Phone Number
 			CompletableFuture
 					.runAsync(() -> this.OTPTokenService.sendSMSOTP(number, user.getName(), PASSWORD_CHANGE_PHONE));
@@ -155,10 +149,8 @@ public class PasswordServiceImpl implements PasswordService {
 		try {
 			Users user = usersRepo.findByEmailOrPhoneNumber(passPojo.getPhoneOrEmail()).orElse(null);
 			if (user == null) {
-				return new ResponseEntity<>(
-						new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
-								+ " For User with identity: " + passPojo.getPhoneOrEmail(), null),
-						HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
+						+ " For User with identity: " + passPojo.getPhoneOrEmail(), null), HttpStatus.BAD_REQUEST);
 			}
 			Matcher matcher = emailPattern.matcher(passPojo.getPhoneOrEmail());
 			boolean isEmail = matcher.matches();
@@ -232,12 +224,6 @@ public class PasswordServiceImpl implements PasswordService {
 						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User with phoneNumber: " + phoneNumber,
 						null), HttpStatus.BAD_REQUEST);
 
-			Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
-			if (profile == null)
-				return new ResponseEntity<>(new ErrorResponse(
-						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For Profile with userId: " + user.getId(),
-						null), HttpStatus.BAD_REQUEST);
-
 			// Send the Phone Number
 			CompletableFuture
 					.runAsync(() -> this.OTPTokenService.sendSMSOTP(number, user.getName(), PASSWORD_RESET_PHONE));
@@ -264,12 +250,6 @@ public class PasswordServiceImpl implements PasswordService {
 
 			if (!user.isPinCreated())
 				return new ResponseEntity<>(new ErrorResponse("Transaction pin Not Setup yet"), HttpStatus.BAD_REQUEST);
-
-			Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
-			if (profile == null)
-				return new ResponseEntity<>(new ErrorResponse(
-						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For Profile with userId: " + user.getId(),
-						null), HttpStatus.BAD_REQUEST);
 
 			// Send the Phone Number
 			CompletableFuture.runAsync(() -> this.OTPTokenService.sendSMSOTP(number, user.getName(), PIN_RESET_PHONE));
@@ -330,12 +310,6 @@ public class PasswordServiceImpl implements PasswordService {
 
 			if (!user.isPinCreated())
 				return new ResponseEntity<>(new ErrorResponse("Transaction pin Not Setup yet"), HttpStatus.BAD_REQUEST);
-
-			Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
-			if (profile == null)
-				return new ResponseEntity<>(new ErrorResponse(
-						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For Profile with userId: " + user.getId(),
-						null), HttpStatus.BAD_REQUEST);
 
 			// Send the Phone Number
 			CompletableFuture.runAsync(() -> this.OTPTokenService.sendSMSOTP(number, user.getName(), PIN_CHANGE_PHONE));
@@ -561,12 +535,6 @@ public class PasswordServiceImpl implements PasswordService {
 				return new ResponseEntity<>(
 						new ErrorResponse(ErrorMessages.RECORD_ALREADY_EXISTS.getErrorMessage() + " For Pin", null),
 						HttpStatus.BAD_REQUEST);
-
-			Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
-			if (profile == null)
-				return new ResponseEntity<>(new ErrorResponse(
-						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For Profile with userId: " + user.getId(),
-						null), HttpStatus.BAD_REQUEST);
 
 			// Send the Phone Number
 			final String number = phoneNumber;

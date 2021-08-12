@@ -34,7 +34,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @Entity
-@ToString(exclude = "userAccounts")
+@ToString(exclude = {"userAccounts", "password", "pinHash", "roleList"})
 @Table(name = "m_users", uniqueConstraints = {
         @UniqueConstraint(name = "UniqueEmailAndPhoneNumberAndDelFlg", columnNames = {"id", "phone_number", "email", "is_deleted"})})
 public class Users extends AuditModel implements Serializable {
