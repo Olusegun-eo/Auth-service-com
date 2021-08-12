@@ -93,11 +93,10 @@
 			includeLocation="true">
 			<AppenderRef ref="debugLog" />
 		</Logger>
-
-		<Logger name="com.waya.wayaauthenticationservice.config"
+		<!--<Logger name="com.waya.wayaauthenticationservice.config"
 				additivity="false" includeLocation="true">
 			<AppenderRef ref="requestLog" />
-		</Logger>
+		</Logger> -->
 		<Logger name="com.waya.wayaauthenticationservice.scheduler"
 				additivity="false" includeLocation="true">
 			<AppenderRef ref="cronLog" />

@@ -1,5 +1,6 @@
 package com.waya.wayaauthenticationservice.security;
 
+import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
 import static com.waya.wayaauthenticationservice.util.SecurityConstants.HEADER_STRING;
 import static com.waya.wayaauthenticationservice.util.SecurityConstants.TOKEN_PREFIX;
 import static com.waya.wayaauthenticationservice.util.SecurityConstants.getExpiration;
@@ -22,7 +23,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -40,29 +40,19 @@ import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
 import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
 import com.waya.wayaauthenticationservice.pojo.others.LoginResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
-import com.waya.wayaauthenticationservice.repository.PrivilegeRepository;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.service.LoginHistoryService;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.SignatureException;
 import lombok.NoArgsConstructor;
 
-import static com.waya.wayaauthenticationservice.util.HelperUtils.*;
-
 @NoArgsConstructor
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 	private final Gson gson = new Gson();
 	// private boolean isAdmin = false;
-
-	@Autowired
-	LoginHistoryService loginHistoryService;
-
-	@Autowired
-	PrivilegeRepository privilegeRepos;
 
 	public AuthenticationFilter(AuthenticationManager manager) {
 		super.setAuthenticationManager(manager);
@@ -204,4 +194,5 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		// }
 		return userProfile;
 	}
+
 }

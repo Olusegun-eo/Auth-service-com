@@ -123,21 +123,19 @@ public class PasswordServiceImpl implements PasswordService {
 	@Override
 	public ResponseEntity<?> sendPasswordChangeOTPByPhoneNumber(String phoneNumber) {
 		try {
+			if (phoneNumber.startsWith("+"))
+				phoneNumber = phoneNumber.substring(1);
+			final String number = phoneNumber;
+
 			Users user = usersRepo.findByPhoneNumber(phoneNumber).orElse(null);
 			if (user == null)
 				return new ResponseEntity<>(new ErrorResponse(
 						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User with phoneNumber: " + phoneNumber,
 						null), HttpStatus.BAD_REQUEST);
 
-			Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
-			if (profile == null)
-				return new ResponseEntity<>(new ErrorResponse(
-						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For Profile with userId: " + user.getId(),
-						null), HttpStatus.BAD_REQUEST);
-
 			// Send the Phone Number
-			CompletableFuture.runAsync(
-					() -> this.OTPTokenService.sendSMSOTP(phoneNumber, user.getName(), PASSWORD_CHANGE_PHONE));
+			CompletableFuture
+					.runAsync(() -> this.OTPTokenService.sendSMSOTP(number, user.getName(), PASSWORD_CHANGE_PHONE));
 
 			return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
 		} catch (Exception ex) {
@@ -151,10 +149,8 @@ public class PasswordServiceImpl implements PasswordService {
 		try {
 			Users user = usersRepo.findByEmailOrPhoneNumber(passPojo.getPhoneOrEmail()).orElse(null);
 			if (user == null) {
-				return new ResponseEntity<>(
-						new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
-								+ " For User with email/phoneNumber: " + passPojo.getPhoneOrEmail(), null),
-						HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
+						+ " For User with identity: " + passPojo.getPhoneOrEmail(), null), HttpStatus.BAD_REQUEST);
 			}
 			Matcher matcher = emailPattern.matcher(passPojo.getPhoneOrEmail());
 			boolean isEmail = matcher.matches();
@@ -218,21 +214,19 @@ public class PasswordServiceImpl implements PasswordService {
 	@Override
 	public ResponseEntity<?> sendPasswordResetOTPByPhoneNumber(String phoneNumber) {
 		try {
+			if (phoneNumber.startsWith("+"))
+				phoneNumber = phoneNumber.substring(1);
+			final String number = phoneNumber;
+
 			Users user = usersRepo.findByPhoneNumber(phoneNumber).orElse(null);
 			if (user == null)
 				return new ResponseEntity<>(new ErrorResponse(
 						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User with phoneNumber: " + phoneNumber,
 						null), HttpStatus.BAD_REQUEST);
 
-			Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
-			if (profile == null)
-				return new ResponseEntity<>(new ErrorResponse(
-						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For Profile with userId: " + user.getId(),
-						null), HttpStatus.BAD_REQUEST);
-
 			// Send the Phone Number
 			CompletableFuture
-					.runAsync(() -> this.OTPTokenService.sendSMSOTP(phoneNumber, user.getName(), PASSWORD_RESET_PHONE));
+					.runAsync(() -> this.OTPTokenService.sendSMSOTP(number, user.getName(), PASSWORD_RESET_PHONE));
 
 			return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
 		} catch (Exception ex) {
@@ -244,6 +238,10 @@ public class PasswordServiceImpl implements PasswordService {
 	@Override
 	public ResponseEntity<?> sendPINResetOTPByPhoneNumber(String phoneNumber) {
 		try {
+			if (phoneNumber.startsWith("+"))
+				phoneNumber = phoneNumber.substring(1);
+			final String number = phoneNumber;
+
 			Users user = usersRepo.findByPhoneNumber(phoneNumber).orElse(null);
 			if (user == null)
 				return new ResponseEntity<>(new ErrorResponse(
@@ -253,15 +251,8 @@ public class PasswordServiceImpl implements PasswordService {
 			if (!user.isPinCreated())
 				return new ResponseEntity<>(new ErrorResponse("Transaction pin Not Setup yet"), HttpStatus.BAD_REQUEST);
 
-			Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
-			if (profile == null)
-				return new ResponseEntity<>(new ErrorResponse(
-						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For Profile with userId: " + user.getId(),
-						null), HttpStatus.BAD_REQUEST);
-
 			// Send the Phone Number
-			CompletableFuture
-					.runAsync(() -> this.OTPTokenService.sendSMSOTP(phoneNumber, user.getName(), PIN_RESET_PHONE));
+			CompletableFuture.runAsync(() -> this.OTPTokenService.sendSMSOTP(number, user.getName(), PIN_RESET_PHONE));
 
 			return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
 		} catch (Exception ex) {
@@ -306,6 +297,10 @@ public class PasswordServiceImpl implements PasswordService {
 	@Override
 	public ResponseEntity<?> sendPINChangeOTPByPhoneNumber(String phoneNumber) {
 		try {
+			if (phoneNumber.startsWith("+"))
+				phoneNumber = phoneNumber.substring(1);
+			final String number = phoneNumber;
+
 			// Fetch Users Information
 			Users user = usersRepo.findByPhoneNumber(phoneNumber).orElse(null);
 			if (user == null)
@@ -316,15 +311,8 @@ public class PasswordServiceImpl implements PasswordService {
 			if (!user.isPinCreated())
 				return new ResponseEntity<>(new ErrorResponse("Transaction pin Not Setup yet"), HttpStatus.BAD_REQUEST);
 
-			Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
-			if (profile == null)
-				return new ResponseEntity<>(new ErrorResponse(
-						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For Profile with userId: " + user.getId(),
-						null), HttpStatus.BAD_REQUEST);
-
 			// Send the Phone Number
-			CompletableFuture
-					.runAsync(() -> this.OTPTokenService.sendSMSOTP(phoneNumber, user.getName(), PIN_CHANGE_PHONE));
+			CompletableFuture.runAsync(() -> this.OTPTokenService.sendSMSOTP(number, user.getName(), PIN_CHANGE_PHONE));
 
 			return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
 		} catch (Exception ex) {
@@ -379,7 +367,7 @@ public class PasswordServiceImpl implements PasswordService {
 			Users user = usersRepo.findByEmailOrPhoneNumber(pinPojo.getPhoneOrEmail()).orElse(null);
 			if (user == null)
 				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
-						+ " For User with email: " + pinPojo.getPhoneOrEmail(), null), HttpStatus.BAD_REQUEST);
+						+ " For User with identity: " + pinPojo.getPhoneOrEmail(), null), HttpStatus.BAD_REQUEST);
 
 			if (!user.isPinCreated())
 				return new ResponseEntity<>(new ErrorResponse("Transaction pin Not Setup yet"), HttpStatus.BAD_REQUEST);
@@ -428,7 +416,7 @@ public class PasswordServiceImpl implements PasswordService {
 	public ResponseEntity<?> changePin(ChangePINPojo pinPojo) {
 		Users user = usersRepo.findByEmailOrPhoneNumber(pinPojo.getPhoneOrEmail()).orElse(null);
 		if (user == null) {
-			return new ResponseEntity<>(new ErrorResponse("Invalid Email"), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(new ErrorResponse("Invalid User Identifier"), HttpStatus.BAD_REQUEST);
 		}
 		if (!user.isPinCreated())
 			return new ResponseEntity<>(new ErrorResponse("Transaction pin Not Setup yet"), HttpStatus.BAD_REQUEST);
@@ -480,7 +468,6 @@ public class PasswordServiceImpl implements PasswordService {
 							+ map.get("message").toString();
 					return new ResponseEntity<>(new ErrorResponse(errorMessage), HttpStatus.BAD_REQUEST);
 				}
-
 				users.setPinHash(passwordEncoder.encode(pinPojo.getPin()));
 				users.setPinCreated(true);
 				usersRepo.save(users);
@@ -488,7 +475,9 @@ public class PasswordServiceImpl implements PasswordService {
 				return new ResponseEntity<>(new SuccessResponse("Transaction pin created successfully.", null),
 						HttpStatus.CREATED);
 			} else {
-				return new ResponseEntity<>(new ErrorResponse("This email does exists"), HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<>(
+						new ErrorResponse("This user does not exists: " + pinPojo.getPhoneOrEmail()),
+						HttpStatus.BAD_REQUEST);
 			}
 		} catch (Exception e) {
 			log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
@@ -500,7 +489,7 @@ public class PasswordServiceImpl implements PasswordService {
 	public ResponseEntity<?> validatePin(Long userId, int pin) {
 		Users users = usersRepo.findById(false, userId).orElse(null);
 		if (users == null) {
-			return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(new ErrorResponse("Invalid User ID Supplied."), HttpStatus.NOT_FOUND);
 		}
 		if (!users.isPinCreated())
 			return new ResponseEntity<>(new ErrorResponse("Transaction pin Not Setup yet"), HttpStatus.BAD_REQUEST);
@@ -517,7 +506,7 @@ public class PasswordServiceImpl implements PasswordService {
 	public ResponseEntity<?> validatePinFromUser(int pin) {
 		Users users = authenticatedUserFacade.getUser();
 		if (users == null) {
-			return new ResponseEntity<>(new ErrorResponse("Invalid User."), HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(new ErrorResponse("Invalid User Logged In."), HttpStatus.NOT_FOUND);
 		}
 		if (!users.isPinCreated())
 			return new ResponseEntity<>(new ErrorResponse("Transaction pin Not Setup yet"), HttpStatus.BAD_REQUEST);
@@ -533,6 +522,9 @@ public class PasswordServiceImpl implements PasswordService {
 	@Override
 	public ResponseEntity<?> sendPinCreationOTPPhone(String phoneNumber) {
 		try {
+			if (phoneNumber.startsWith("+") || phoneNumber.startsWith("0"))
+				phoneNumber = phoneNumber.substring(1);
+
 			Users user = usersRepo.findByPhoneNumber(phoneNumber).orElse(null);
 			if (user == null)
 				return new ResponseEntity<>(new ErrorResponse(
@@ -544,15 +536,9 @@ public class PasswordServiceImpl implements PasswordService {
 						new ErrorResponse(ErrorMessages.RECORD_ALREADY_EXISTS.getErrorMessage() + " For Pin", null),
 						HttpStatus.BAD_REQUEST);
 
-			Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
-			if (profile == null)
-				return new ResponseEntity<>(new ErrorResponse(
-						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For Profile with userId: " + user.getId(),
-						null), HttpStatus.BAD_REQUEST);
-
 			// Send the Phone Number
-			CompletableFuture
-					.runAsync(() -> this.OTPTokenService.sendSMSOTP(phoneNumber, user.getName(), PIN_CREATE_PHONE));
+			final String number = phoneNumber;
+			CompletableFuture.runAsync(() -> this.OTPTokenService.sendSMSOTP(number, user.getName(), PIN_CREATE_PHONE));
 
 			return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
 		} catch (Exception ex) {

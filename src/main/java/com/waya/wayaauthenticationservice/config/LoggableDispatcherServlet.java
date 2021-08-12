@@ -82,7 +82,7 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
         jsonObject.addProperty("httpMethod", request.getMethod());
         jsonObject.addProperty("timeTakenMs", timeTaken);
         jsonObject.addProperty("clientIP", reqUtil.getClientIP(request));
-        jsonObject.addProperty("javaMethod", handler == null ? "null" : handler.toString());
+        jsonObject.addProperty("javaMethod", handler == null ? "null" : handler.getHandler().toString());
         jsonObject.addProperty("response", getResponsePayload(response));
 
         if (status > 299) {

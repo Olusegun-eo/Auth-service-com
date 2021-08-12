@@ -136,14 +136,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			boolean adminAction) {
 		try {
 			// Check if email exists
-			Users existingEmail = userRepo.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
-			if (existingEmail != null)
+			Users user = userRepo.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
+			if (user != null)
 				return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
 
 			// Check if Phone exists
-			Users existingTelephone = mUser.getPhoneNumber() == null ? null
+			user = mUser.getPhoneNumber() == null ? null
 					: userRepo.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
-			if (existingTelephone != null)
+			if (user != null)
 				return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
 						HttpStatus.BAD_REQUEST);
 
@@ -176,7 +176,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			DevicePojo dev = this.reqUtil.GetDevice(device);
 
-			Users user = new Users();
+			user = new Users();
 			user.setId(0L);
 			user.setAdmin(mUser.isAdmin());
 			user.setEmail(mUser.getEmail().trim());
@@ -255,13 +255,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			DevicePojo dev = reqUtil.GetDevice(device);
 
 			Users user = new Users();
-			// String publicUserId = HelperUtils.generateRandomPassword();
-			// while (userRepo.existsByUserId(publicUserId)) {
-			// publicUserId = HelperUtils.generateRandomPassword();
-			// }
-			// user.setUserId(publicUserId);
-
-			user.setAdmin(mUser.isAdmin());
+			user.setAdmin(false);
 			user.setId(0L);
 			user.setCorporate(true);
 			user.setDateCreated(LocalDateTime.now());
@@ -310,12 +304,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	public void createCorporateUser(CorporateUserPojo mUser, Long userId, String token, String baseUrl) {
 		String Id = String.valueOf(userId);
-//        CorporateUser coopUser = mapper.map(mUser, CorporateUser.class);
-//        coopUser.setBusinessType(mUser.getBusinessType());
-//        coopUser.setPassword(passwordEncoder.encode(mUser.getPassword()));
-//        coopUser.setUserId(Id);
-//        coopUser = corporateUserRepository.save(coopUser);
-
 		// Implementation for internal calls begin here
 		CorporateProfileRequest corporateProfileRequest = new CorporateProfileRequest();
 		corporateProfileRequest.setBusinessType(mUser.getBusinessType());
@@ -401,8 +389,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 		// Create Internal Wallet Accounts
 		CreateAccountPojo createAccount = formAccountCreationPojo(userId, user);
-		// ApiResponse<CreateAccountResponse> accountResp =
-		// walletProxy.createUserAccount(createAccount);
 		CompletableFuture.supplyAsync(() -> {
 			try {
 				TimeUnit.MINUTES.sleep(1);
@@ -429,7 +415,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			return TOKEN_PREFIX + token;
 		} catch (Exception e) {
 			log.error("An Error Occurred:: {}", e.getMessage());
-			throw new RuntimeException(e.fillInStackTrace());
+			return "";
 		}
 	}
 
@@ -571,6 +557,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Override
 	public ResponseEntity<?> resendOTPForAccountVerification(String emailOrPhoneNumber, String baseUrl) {
+		if(emailOrPhoneNumber.startsWith("+"))
+			emailOrPhoneNumber = emailOrPhoneNumber.substring(1);
+        
 		Users user = userRepo.findByEmailOrPhoneNumber(emailOrPhoneNumber).orElse(null);
 		if (user == null)
 			return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
@@ -647,6 +636,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Override
 	public ResponseEntity<?> userByPhone(String phone) {
+		if(phone.startsWith("+") || phone.startsWith("0"))
+			phone = phone.substring(1);
+        
 		Users users = userRepo.findByPhoneNumber(phone).orElse(null);
 		if (users == null) {
 			return new ResponseEntity<>(new ErrorResponse("Invalid Phone Number."), HttpStatus.BAD_REQUEST);

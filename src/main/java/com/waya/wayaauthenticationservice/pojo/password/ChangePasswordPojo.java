@@ -23,4 +23,9 @@ public class ChangePasswordPojo {
 
     public ChangePasswordPojo(){}
 
+    public void setPhoneOrEmail(String value) {
+    	if(value.startsWith("+"))
+    		value = value.substring(1);
+		this.phoneOrEmail = value.replaceAll("\\s+", "").trim();
+    }
 }

@@ -59,10 +59,10 @@ public class OTPTokenServiceImpl implements OTPTokenService {
                 log.error("An Error Occurred:: {}", e.getMessage());
             }
             // mailService.sendMail(user.getEmail(), message);
-            log.info("Activation email sent!! \n");
+            log.info("Activation email sent!!: {} \n", profile.getEmail());
             return true;
         } catch (Exception exception) {
-            log.error("could not process data ", exception);
+            log.error("could not process data {}", exception.getMessage());
         }
         return false;
     }
@@ -81,10 +81,10 @@ public class OTPTokenServiceImpl implements OTPTokenService {
             } catch (Exception e) {
                 log.error("An Error Occurred:: {}", e.getMessage());
             }
-            log.info(" email sent!! \n");
+            log.info(" email sent!!- {} \n", emailContext.getEmail());
             return true;
         } catch (Exception exception) {
-            log.error("could not process data ", exception);
+            log.error("could not process data {}", exception.getMessage());
         }
         return false;
     }
@@ -108,7 +108,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
             }
             return new OTPVerificationResponse(false, ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
         } catch (Exception exception) {
-            log.error("could not process data ", exception);
+            log.error("could not process data {}", exception.getMessage());
             throw new CustomException("Invalid Token", HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }
@@ -138,7 +138,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
             return new OTPVerificationResponse(false, ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
 
         } catch (Exception exception) {
-            log.error("could not process data ", exception);
+            log.error("could not process data: {}", exception.getMessage());
             throw new CustomException("Invalid Token", HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }

@@ -94,7 +94,7 @@ public class PasswordControllerTest {
 
 		ResetPasswordPojo pojo = buildResetPojo(23456, "test@123", "noemail@waya.com");
 		resetPassword(pojo, "$.message",
-				ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User with email/phoneNumber: noemail@waya.com",
+				ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User with identity: noemail@waya.com",
 				status().isBadRequest());
 	}
 
