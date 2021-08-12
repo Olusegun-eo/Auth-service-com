@@ -1,29 +1,51 @@
 package com.waya.wayaauthenticationservice.controller;
 
-import com.waya.wayaauthenticationservice.enums.Type;
-import com.waya.wayaauthenticationservice.pojo.others.*;
-import com.waya.wayaauthenticationservice.response.*;
-import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.util.CustomValidator;
-import com.waya.wayaauthenticationservice.util.ValidPhone;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_400;
+import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_422;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
+import com.waya.wayaauthenticationservice.enums.Type;
+import com.waya.wayaauthenticationservice.enums.UploadType;
+import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.DeleteRequest;
+import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.ToggleSMSRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
+import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.response.DeleteResponse;
+import com.waya.wayaauthenticationservice.response.ToggleSMSResponse;
+import com.waya.wayaauthenticationservice.response.UserProfileResponse;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.util.CustomValidator;
+import com.waya.wayaauthenticationservice.util.EnumValue;
+import com.waya.wayaauthenticationservice.util.ValidPhone;
 
-import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_400;
-import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_422;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "PROFILE RESOURCE", description = "REST API for Profile Service API")
 @CrossOrigin
@@ -155,6 +177,18 @@ public class ProfileController {
 			@PathVariable @CustomValidator(message = "UserId must be numeric", type = Type.NUMERIC_STRING) String userId)
 			throws MaxUploadSizeExceededException {
 		return ResponseEntity.ok(profileService.updateProfileImage(userId, file));
+	}
+
+	@ApiOperation(value = "${api.profile.update-user-images.description}", notes = "${api.profile.update-user-images.notes}", tags = {
+			"PROFILE RESOURCE" })
+	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
+			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
+	@PostMapping("/update-profile-image/{type}/{userId}")
+	public ResponseEntity<ApiResponse<String>> updateProfileImage(@RequestPart MultipartFile file,
+			@PathVariable @CustomValidator(message = "UserId must be numeric", type = Type.NUMERIC_STRING) String userId,
+			@PathVariable @EnumValue(enumClass = UploadType.class, message = "Must be either of type FRONT, LEFT or RIGHT") String type)
+			throws MaxUploadSizeExceededException {
+		return ResponseEntity.ok(profileService.uploadOtherImage(userId, file, type));
 	}
 
 	/**

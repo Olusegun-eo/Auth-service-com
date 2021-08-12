@@ -7,6 +7,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class ProfileImageResponse {
+public class ImageUrlResponse {
     private String imageUrl;
 }

@@ -60,6 +60,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -187,7 +188,14 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public ResponseEntity<?> getUserByPhone(String phone) {
-		Users user = usersRepository.findByPhoneNumber(phone).orElse(null);
+		String principal = phone.replaceAll("\\s+", "").trim();
+		if(principal.startsWith("+")) {
+			principal = principal.substring(1);
+		}
+		if(principal.length() > 10) {
+			principal = principal.substring(principal.length() - 10);
+		}
+		Users user = usersRepository.findByPhoneNumber(principal).orElse(null);
 		if (user == null) {
 			return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.NOT_FOUND);
 		}
@@ -197,7 +205,17 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public ResponseEntity<?> getUserInfoByPhoneOrEmailForServiceConsumption(String value) {
-		Users user = usersRepository.findByEmailOrPhoneNumber(value).orElse(null);
+		String principal = value.replaceAll("\\s+", "").trim();
+		boolean isEmail = emailPattern.matcher(principal).matches();
+		if(!isEmail) {
+			if(principal.startsWith("+")) {
+				principal = principal.substring(1);
+			}
+			if(principal.length() > 10) {
+				principal = principal.substring(principal.length() - 10);
+			}
+		}
+		Users user = usersRepository.findByEmailOrPhoneNumber(principal).orElse(null);
 		if (user == null)
 			return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.NOT_FOUND);
 		UserProfileResponsePojo userDtO = toModelDTO(user);
@@ -324,7 +342,6 @@ public class UserServiceImpl implements UserService {
 			try {
 				@SuppressWarnings("unchecked")
 				ApiResponse<WalletAccount> result = mapper.readValue(ex.getMessage(), ApiResponse.class);
-				result.setHttpStatus(ex.getStatus());
 				return result;
 			} catch (JsonProcessingException e) {
 				log.error("Error Parsing Body to Json");

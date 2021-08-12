@@ -59,7 +59,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				.authenticationEntryPoint(getBasicAuthEntryPoint()).and().sessionManagement()
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().authorizeRequests()
 				.expressionHandler(webSecurityExpressionHandler())
-				.antMatchers("/api/v1/auth/login", "/api/v1/password/change-password**").permitAll()
+				.antMatchers("/api/v1/auth/login", "/api/v1/password/change**").permitAll()
 				.antMatchers("/api/v1/auth/create", "/api/v1/auth/create-corporate").permitAll()
 				.antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
 				.antMatchers("/api/v1/auth/resend-otp**/**", "/api/v1/auth/verify-otp").permitAll()

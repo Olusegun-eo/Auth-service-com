@@ -101,7 +101,7 @@ public class WayaAuthenticationServiceApplication {
 	public CommonsMultipartResolver createMultipartResolver() {
 		CommonsMultipartResolver resolver=new CommonsMultipartResolver();
 		resolver.setDefaultEncoding("utf-8");
-		resolver.setMaxUploadSize(100000000);
+		resolver.setMaxUploadSize(10000000);
 		resolver.setMaxInMemorySize(10240000);
 
 		return resolver;
