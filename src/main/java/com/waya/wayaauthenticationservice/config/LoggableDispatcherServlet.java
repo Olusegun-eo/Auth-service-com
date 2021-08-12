@@ -73,12 +73,16 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
 
     private void log(HttpServletRequest request, HttpServletResponse response, HandlerExecutionChain handler,
                      long timeTaken) {
+    	
+    	final String path = request.getRequestURI();
+    	if(path.startsWith("/swagger-ui") || path.startsWith("/v2/api-docs")) 
+    		return;
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         int status = response.getStatus();
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("httpStatus", status);
-        jsonObject.addProperty("path", request.getRequestURI());
+        jsonObject.addProperty("path", path);
         jsonObject.addProperty("httpMethod", request.getMethod());
         jsonObject.addProperty("timeTakenMs", timeTaken);
         jsonObject.addProperty("clientIP", reqUtil.getClientIP(request));
