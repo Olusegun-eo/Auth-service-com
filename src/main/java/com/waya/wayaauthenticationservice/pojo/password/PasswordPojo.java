@@ -25,6 +25,12 @@ public class PasswordPojo {
     @NotBlank(message = "NewPassword cannot be blank")
     private String newPassword;
 
+    public void setPhoneOrEmail(String value) {
+    	if(value.startsWith("+"))
+    		value = value.substring(1);
+		this.phoneOrEmail = value.replaceAll("\\s+", "").trim();
+    }
+    
     public PasswordPojo(){}
 
 }

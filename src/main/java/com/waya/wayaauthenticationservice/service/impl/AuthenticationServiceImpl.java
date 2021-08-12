@@ -571,6 +571,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Override
 	public ResponseEntity<?> resendOTPForAccountVerification(String emailOrPhoneNumber, String baseUrl) {
+		if(emailOrPhoneNumber.startsWith("+"))
+			emailOrPhoneNumber = emailOrPhoneNumber.substring(1);
+        
 		Users user = userRepo.findByEmailOrPhoneNumber(emailOrPhoneNumber).orElse(null);
 		if (user == null)
 			return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
@@ -647,6 +650,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Override
 	public ResponseEntity<?> userByPhone(String phone) {
+		if(phone.startsWith("+") || phone.startsWith("0"))
+			phone = phone.substring(1);
+        
 		Users users = userRepo.findByPhoneNumber(phone).orElse(null);
 		if (users == null) {
 			return new ResponseEntity<>(new ErrorResponse("Invalid Phone Number."), HttpStatus.BAD_REQUEST);
