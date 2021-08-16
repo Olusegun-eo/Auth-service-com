@@ -21,7 +21,6 @@ public class Profile extends AuditModel {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(nullable = false)
     @Email(message = "please enter a valid email")
     private String email;
 
@@ -31,7 +30,6 @@ public class Profile extends AuditModel {
     @Column(nullable = false)
     private String surname;
 
-    @Column(nullable = false)
     private String phoneNumber;
 
     private String organisationName;

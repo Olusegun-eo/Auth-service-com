@@ -9,7 +9,7 @@ import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.BeforeAll;
@@ -81,8 +81,8 @@ public class AuthenticationControllerTest {
     @Test
     @DisplayName("create personal profile successfully")
     public void createPersonalUserSuccessfully() throws Exception {
-    	ResponseEntity<?> resp = ResponseEntity.ok(new ApiResponse<>("Success", true));
-        ApiResponse<CreateAccountResponse> acctResponse = new ApiResponse<>
+    	ResponseEntity<?> resp = ResponseEntity.ok(new ApiResponseBody<>("Success", true));
+        ApiResponseBody<CreateAccountResponse> acctResponse = new ApiResponseBody<>
                 (new CreateAccountResponse("1", "5055555783"), "Success", true);
 
     	doReturn(resp).when(virtualAccountService).createVirtualAccount(any());
@@ -117,8 +117,8 @@ public class AuthenticationControllerTest {
     @Test
     @DisplayName("create corporate profile successfully")
     public void createCorpUserSuccessfully() throws Exception {
-    	ResponseEntity<?> resp = ResponseEntity.ok(new ApiResponse<>("Success", true));
-        ApiResponse<CreateAccountResponse> acctResponse = new ApiResponse<>
+    	ResponseEntity<?> resp = ResponseEntity.ok(new ApiResponseBody<>("Success", true));
+        ApiResponseBody<CreateAccountResponse> acctResponse = new ApiResponseBody<>
                 (new CreateAccountResponse("1", "5055555783"), "Success", true);
 
         doReturn(resp).when(virtualAccountService).createVirtualAccount(any());

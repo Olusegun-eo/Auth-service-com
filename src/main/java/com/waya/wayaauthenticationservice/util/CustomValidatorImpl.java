@@ -34,13 +34,13 @@ public class CustomValidatorImpl implements ConstraintValidator<CustomValidator,
             case TEXT_STRING:
                 return validateStringTextOnly(value);
             case NUMERIC_STRING:
-                return validateStringNumericOnly(value);
+                return isNumericOnly(value);
             case EMAIL:
-                return validateStringIsEmail(value);
+                return isEmail(value);
             case CONTAINS:
                 return validateContains(value);
             case EMAIL_OR_PHONE:
-                return validateStringIsEmailOrPhoneNumber(value);
+                return isEmailOrPhoneNumber(value);
         }
         return false;
     }

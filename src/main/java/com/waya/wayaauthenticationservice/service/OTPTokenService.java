@@ -1,7 +1,7 @@
 package com.waya.wayaauthenticationservice.service;
 
 import com.waya.wayaauthenticationservice.entity.OTPBase;
-import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.OTPRequestType;
 import com.waya.wayaauthenticationservice.pojo.mail.AbstractEmailContext;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
@@ -21,7 +21,7 @@ public interface OTPTokenService {
 
     OTPVerificationResponse verifySMSOTP(String phoneNumber, Integer otp, OTPRequestType otpRequestType);
 
-    boolean sendVerificationEmailToken(String baseUrl, Profile profile, OTPRequestType otpRequestType);
+    boolean sendVerificationEmailToken(String baseUrl, Users profile, OTPRequestType otpRequestType);
 
     boolean sendEmailToken(AbstractEmailContext emailContext);
 
@@ -35,5 +35,5 @@ public interface OTPTokenService {
 
     void invalidateOldTokenViaPhoneNumber(String phoneNumber, OTPRequestType otpRequestType);
 
-    void sendAccountVerificationToken(Profile profile, OTPRequestType accountVerification, String baseUrl);
+    void sendAccountVerificationToken(Users profile, OTPRequestType accountVerification, String baseUrl);
 }

@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 
 @Tag(name = "REFERRAL RESOURCE",  description = "REST API for Referral Service API")
 @CrossOrigin
@@ -29,9 +29,9 @@ public class ReferralCodeController {
             @io.swagger.annotations.ApiResponse(code = 422, message = Constant.MESSAGE_422)
     })
     @GetMapping("referral-code/{userId}")
-    public ResponseEntity<ApiResponse<ReferralCodeResponse>> getReferralCode(@PathVariable String userId) {
+    public ResponseEntity<ApiResponseBody<ReferralCodeResponse>> getReferralCode(@PathVariable String userId) {
         ReferralCodeResponse referralCodeResponse = referralService.getReferralCode(userId);
-        ApiResponse<ReferralCodeResponse> response = new ApiResponse<>(referralCodeResponse, "retrieved data successfully", true);
+        ApiResponseBody<ReferralCodeResponse> response = new ApiResponseBody<>(referralCodeResponse, "retrieved data successfully", true);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

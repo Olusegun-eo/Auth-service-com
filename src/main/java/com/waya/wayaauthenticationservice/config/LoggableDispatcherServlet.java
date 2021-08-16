@@ -75,7 +75,7 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
                      long timeTaken) {
     	
     	final String path = request.getRequestURI();
-    	if(path.startsWith("/swagger-ui") || path.startsWith("/v2/api-docs")) 
+    	if(path.startsWith("/swagger") || path.startsWith("/v2/api-docs")) 
     		return;
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();

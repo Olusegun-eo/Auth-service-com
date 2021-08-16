@@ -1,27 +1,23 @@
 package com.waya.wayaauthenticationservice.service;
 
-import static com.waya.wayaauthenticationservice.util.Constant.EMAIL_TOPIC;
-import static com.waya.wayaauthenticationservice.util.Constant.TWILIO_PROVIDER;
-import static com.waya.wayaauthenticationservice.util.Constant.WAYAPAY;
-
-import java.util.Collections;
-
+import com.waya.wayaauthenticationservice.enums.StreamsEventType;
+import com.waya.wayaauthenticationservice.pojo.mail.AbstractEmailContext;
+import com.waya.wayaauthenticationservice.streams.*;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.MessagingException;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring5.SpringTemplateEngine;
 
-import com.waya.wayaauthenticationservice.enums.StreamsEventType;
-import com.waya.wayaauthenticationservice.pojo.mail.AbstractEmailContext;
-import com.waya.wayaauthenticationservice.streams.RecipientsEmail;
-import com.waya.wayaauthenticationservice.streams.StreamDataEmail;
-import com.waya.wayaauthenticationservice.streams.StreamPayload;
+import java.util.Collections;
 
-import lombok.AllArgsConstructor;
+import static com.waya.wayaauthenticationservice.util.Constant.*;
 
 @Service
 @AllArgsConstructor
-public class MailService {
+@Slf4j
+public class MessagingService {
 
     private final SpringTemplateEngine templateEngine;
     private final MessageQueueProducer messageQueueProducer;
@@ -46,5 +42,24 @@ public class MailService {
 
         messageQueueProducer.send(EMAIL_TOPIC, post);
         //log.info("sending Email message kafka message queue::: {}", new Gson().toJson(post));
+    }
+
+    public void sendSMS(String name, String message, String phoneNumber) {
+        try {
+            StreamPayload<StreamDataSMS> post = new StreamPayload<>();
+            post.setEventType(StreamsEventType.SMS.toString());
+            post.setInitiator(WAYAPAY);
+            post.setToken(null);
+            post.setKey(TWILIO_PROVIDER);
+
+            StreamDataSMS data = new StreamDataSMS();
+            data.setMessage(message);
+            data.setRecipients(Collections.singletonList(new RecipientsSMS(name, "+".concat(phoneNumber))));
+
+            post.setData(data);
+            messageQueueProducer.send(SMS_TOPIC, post);
+        } catch (Exception exception) {
+            log.error("could not process data {}", exception.getMessage());
+        }
     }
 }

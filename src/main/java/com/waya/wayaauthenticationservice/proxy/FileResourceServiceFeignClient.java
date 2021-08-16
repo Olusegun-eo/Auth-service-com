@@ -12,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.proxy.impl.ApiClientExceptionHandler;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.response.ImageUrlResponse;
 import com.waya.wayaauthenticationservice.util.HandleFeignError;
 
@@ -21,11 +21,11 @@ public interface FileResourceServiceFeignClient {
 
 	@HandleFeignError(ApiClientExceptionHandler.class)
 	@PostMapping(value = "/upload/others", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	ApiResponse<String> uploadOtherImage(@RequestPart("file") MultipartFile file,
+	ApiResponseBody<String> uploadOtherImage(@RequestPart("file") MultipartFile file,
 			@RequestParam("fileName") String fileName, @RequestParam("userId") String userId);
 
 	@PostMapping(value = "/upload/profile-picture/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	ApiResponse<ImageUrlResponse> uploadProfileImage(@RequestPart("file") MultipartFile file,
+	ApiResponseBody<ImageUrlResponse> uploadProfileImage(@RequestPart("file") MultipartFile file,
 			@PathVariable("userId") String userId);
 
 	/**
@@ -34,11 +34,11 @@ public interface FileResourceServiceFeignClient {
 	 *
 	 * @return ApiResponse<ProfileImageResponse>
 	 */
-	static ApiResponse<ImageUrlResponse> uploadImage(FileResourceServiceFeignClient fileResourceServiceFeignClient,
+	static ApiResponseBody<ImageUrlResponse> uploadImage(FileResourceServiceFeignClient fileResourceServiceFeignClient,
 			MultipartFile profileImage, String userId, Logger log) {
 		String error = "error";
 		try {
-			ApiResponse<ImageUrlResponse> apiResponse = fileResourceServiceFeignClient.uploadProfileImage(profileImage,
+			ApiResponseBody<ImageUrlResponse> apiResponse = fileResourceServiceFeignClient.uploadProfileImage(profileImage,
 					userId);
 			log.info("calling file resource service...... :::");
 			if (apiResponse.getStatus()) {

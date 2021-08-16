@@ -1,8 +1,5 @@
 package com.waya.wayaauthenticationservice.assembler;
 
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.server.mvc.RepresentationModelAssemblerSupport;
 import org.springframework.stereotype.Component;
@@ -25,7 +22,6 @@ public class UserAssembler extends RepresentationModelAssemblerSupport<Users, Us
 	@Override
 	public UserProfileResponsePojo toModel(Users entity) {
 		UserProfileResponsePojo userDTO = this.userService.toModelDTO(entity);
-		userDTO.add(linkTo(methodOn(UserController.class).findUser(entity.getId())).withSelfRel());
 		return userDTO;
 	}
 	

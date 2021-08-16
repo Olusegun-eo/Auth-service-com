@@ -10,23 +10,23 @@ import lombok.ToString;
 @ToString
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ApiResponse<T> {
+public class ApiResponseBody<T> {
     private Date timestamp = new Date();
     private String message;
     private boolean status;
     private T data;
 
-    public ApiResponse() {
+    public ApiResponseBody() {
     }
 
-    public ApiResponse(T data, String message, boolean status) {
+    public ApiResponseBody(T data, String message, boolean status) {
         timestamp = new Date();
         this.status = status;
         this.message = message;
         this.data = data;
     }
 
-    public ApiResponse(String message, boolean status) {
+    public ApiResponseBody(String message, boolean status) {
 
         timestamp = new Date();
         this.status = status;

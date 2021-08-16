@@ -40,14 +40,14 @@ public class HelperUtils {
                 .toString();
     }
 
-    public static boolean validateStringIsEmail(String value) {
+    public static boolean isEmail(String value) {
         Matcher matcher = emailPattern.matcher(value);
         return matcher.matches();
     }
 
-    public static boolean validateStringIsEmailOrPhoneNumber(String value) {
+    public static boolean isEmailOrPhoneNumber(String value) {
     	if(value == null)
-            return false;
+            return true;
     	
     	if(value.startsWith("+"))
     		value = value.substring(1);
@@ -55,12 +55,12 @@ public class HelperUtils {
     	value = value.replaceAll("\\s+", "").trim();
         boolean val = phoneNumPattern.matcher(value).find() 
         		&& value.startsWith("234")
-                && value.length() >= 13;
+                && value.length() == 13;
         Matcher emailMatcher = emailPattern.matcher(value);
         return emailMatcher.matches() || val;
     }
 
-    public static boolean validateStringNumericOnly(String value) {
+    public static boolean isNumericOnly(String value) {
         return value.matches("^[0-9]*$");
     }
 

@@ -1,22 +1,11 @@
 package com.waya.wayaauthenticationservice.service;
 
-import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
-
+import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.response.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.DeleteRequest;
-import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.ToggleSMSRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
-import com.waya.wayaauthenticationservice.response.DeleteResponse;
-import com.waya.wayaauthenticationservice.response.SearchProfileResponse;
-import com.waya.wayaauthenticationservice.response.ToggleSMSResponse;
-import com.waya.wayaauthenticationservice.response.UserProfileResponse;
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 public interface ProfileService {
 
@@ -25,14 +14,14 @@ public interface ProfileService {
 	 *
 	 * @param personalProfileRequest personal profile request
 	 */
-	ApiResponse<String> createProfile(final PersonalProfileRequest personalProfileRequest, String baseUrl);
+	ApiResponseBody<String> createProfile(final PersonalProfileRequest personalProfileRequest, String baseUrl);
 
 	/**
 	 * create a new corporate profile.
 	 *
 	 * @param profileRequest corporate profile request
 	 */
-	ApiResponse<String> createProfile(final CorporateProfileRequest profileRequest, String baseUrl);
+	ApiResponseBody<String> createProfile(final CorporateProfileRequest profileRequest, String baseUrl);
 
 	/**
 	 * gets a users profile
@@ -63,7 +52,7 @@ public interface ProfileService {
 	 * @param userId              user id
 	 * @param profileImageRequest request
 	 */
-	ApiResponse<String> updateProfileImage(final String userId, MultipartFile profileImageRequest);
+	ApiResponseBody<String> updateProfileImage(final String userId, MultipartFile profileImageRequest);
 
 	/**
 	 * search for profile by name
@@ -125,5 +114,5 @@ public interface ProfileService {
 	 * @param type: either FRONT, LEFT or RIGHT
 	 * @return
 	 */
-	ApiResponse<String> uploadOtherImage(String userId, MultipartFile file, String type);
+	ApiResponseBody<String> uploadOtherImage(String userId, MultipartFile file, String type);
 }

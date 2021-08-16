@@ -1,5 +1,14 @@
 package com.waya.wayaauthenticationservice.service;
 
+import java.util.concurrent.ExecutionException;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+
+import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mobile.device.Device;
+
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
 import com.waya.wayaauthenticationservice.pojo.others.ContactPojoReq;
@@ -8,16 +17,9 @@ import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserSetupPojo;
+import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
-import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mobile.device.Device;
-
-import java.util.concurrent.ExecutionException;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
 
 public interface UserService {
 
@@ -50,7 +52,7 @@ public interface UserService {
 
 	ResponseEntity<?> isUserAdmin(Long userId);
 
-	ApiResponse<UserAccessResponse> getAccessResponse(Long userId);
+	ApiResponseBody<UserAccessResponse> getAccessResponse(Long userId);
 
 	UserProfileResponsePojo toModelDTO(Users user);
 
@@ -75,4 +77,10 @@ public interface UserService {
 	ResponseEntity<?> validateWalletUserCall(Long userId, String key);
 
 	Page<Users> getAllUsers(int page, int size, String searchString);
+
+	ResponseEntity<?> validateUser();
+
+	ResponseEntity<?> getUserSetupById(Long id);
+
+	ResponseEntity<?> maintainUserSetup(UserSetupPojo pojo);
 }

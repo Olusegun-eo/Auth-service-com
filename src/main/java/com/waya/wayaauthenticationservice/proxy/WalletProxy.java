@@ -16,7 +16,7 @@ import com.waya.wayaauthenticationservice.pojo.others.CreateAccountResponse;
 import com.waya.wayaauthenticationservice.pojo.others.WalletAccessPojo;
 import com.waya.wayaauthenticationservice.pojo.others.WalletAccount;
 import com.waya.wayaauthenticationservice.proxy.impl.ApiClientExceptionHandler;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.util.HandleFeignError;
 
 
@@ -24,15 +24,15 @@ import com.waya.wayaauthenticationservice.util.HandleFeignError;
 public interface WalletProxy {
 	
 	@RequestMapping(method = RequestMethod.POST, value = "/create/cooperate/user")
-	ApiResponse<CreateAccountResponse> createCorporateAccount(@RequestBody CreateAccountPojo createAccountPojo);
+	ApiResponseBody<CreateAccountResponse> createCorporateAccount(@RequestBody CreateAccountPojo createAccountPojo);
 
 	@RequestMapping(method = RequestMethod.POST, value = "/user/account")
-	ApiResponse<CreateAccountResponse> createUserAccount(@RequestBody CreateAccountPojo createAccountPojo);
+	ApiResponseBody<CreateAccountResponse> createUserAccount(@RequestBody CreateAccountPojo createAccountPojo);
 
 	@GetMapping("/accounts/{userId}")
-	ApiResponse<List<WalletAccount>> fetchUsersWallets(@PathVariable("userId") Long userId, @RequestHeader("Authorization") String token);
+	ApiResponseBody<List<WalletAccount>> fetchUsersWallets(@PathVariable("userId") Long userId, @RequestHeader("Authorization") String token);
 
 	@RequestMapping(method = RequestMethod.POST, value = "/user/account/access")
 	@HandleFeignError(ApiClientExceptionHandler.class)
-	ApiResponse<WalletAccount> modifyUserWallet(@RequestBody WalletAccessPojo pojo, @RequestHeader("Authorization") String token);
+	ApiResponseBody<WalletAccount> modifyUserWallet(@RequestBody WalletAccessPojo pojo, @RequestHeader("Authorization") String token);
 }

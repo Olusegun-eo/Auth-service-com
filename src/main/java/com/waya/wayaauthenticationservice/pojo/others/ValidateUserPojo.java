@@ -1,11 +1,12 @@
 package com.waya.wayaauthenticationservice.pojo.others;
 
+import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -25,5 +26,5 @@ public class ValidateUserPojo {
     private boolean isCorporate = false;
     private Set<String> roles = new HashSet<>();
     private Set<String> permits = new HashSet<>();
-
+    private BigDecimal transactionLimit;
 }

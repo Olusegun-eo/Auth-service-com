@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.controller.UserController;
 import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
 import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.UserSetup;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
@@ -20,12 +21,14 @@ import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.repository.UserSetupRepository;
+import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
+import com.waya.wayaauthenticationservice.security.UserPrincipal;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
-import com.waya.wayaauthenticationservice.service.MailService;
+import com.waya.wayaauthenticationservice.service.MessagingService;
 import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.service.UserService;
 import com.waya.wayaauthenticationservice.service.impl.search.SearchCriteria;
@@ -61,6 +64,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
+import static com.waya.wayaauthenticationservice.util.HelperUtils.phoneNumPattern;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -101,9 +105,11 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private AccessProxy accessProxy;
 	@Autowired
-	MailService mailService;
+	MessagingService messagingService;
 	@Autowired
 	ObjectMapper mapper;
+	@Autowired
+	UserSetupRepository userSetupRepository;
 
 	@Autowired
 	SearchService searchService;
@@ -189,10 +195,10 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public ResponseEntity<?> getUserByPhone(String phone) {
 		String principal = phone.replaceAll("\\s+", "").trim();
-		if(principal.startsWith("+")) {
+		if (principal.startsWith("+")) {
 			principal = principal.substring(1);
 		}
-		if(principal.length() > 10) {
+		if (principal.length() > 10) {
 			principal = principal.substring(principal.length() - 10);
 		}
 		Users user = usersRepository.findByPhoneNumber(principal).orElse(null);
@@ -207,11 +213,11 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<?> getUserInfoByPhoneOrEmailForServiceConsumption(String value) {
 		String principal = value.replaceAll("\\s+", "").trim();
 		boolean isEmail = emailPattern.matcher(principal).matches();
-		if(!isEmail) {
-			if(principal.startsWith("+")) {
+		if (!isEmail) {
+			if (principal.startsWith("+")) {
 				principal = principal.substring(1);
 			}
-			if(principal.length() > 10) {
+			if (principal.length() > 10) {
 				principal = principal.substring(principal.length() - 10);
 			}
 		}
@@ -303,7 +309,7 @@ public class UserServiceImpl implements UserService {
 			throw new CustomException("User needs to nil off Balance across all Wallets", BAD_REQUEST);
 
 		for (WalletAccount account : wallets) {
-			ApiResponse<WalletAccount> res = this.deleteUserWallet(account.getAccountNo(), token);
+			ApiResponseBody<WalletAccount> res = this.deleteUserWallet(account.getAccountNo(), token);
 			if (!res.getStatus()) {
 				String error = String.format("Error in Closing Wallet account %s : %s", account.getAccountNo(),
 						res.getMessage());
@@ -334,24 +340,24 @@ public class UserServiceImpl implements UserService {
 				});
 	}
 
-	private ApiResponse<WalletAccount> modifyUserWallet(WalletAccessPojo pojo, String token) {
+	private ApiResponseBody<WalletAccount> modifyUserWallet(WalletAccessPojo pojo, String token) {
 		try {
 			return walletProxy.modifyUserWallet(pojo, token);
 		} catch (CustomException ex) {
 			log.error("Call to Modify Account Access fails:: {}", ex.getMessage());
 			try {
 				@SuppressWarnings("unchecked")
-				ApiResponse<WalletAccount> result = mapper.readValue(ex.getMessage(), ApiResponse.class);
+				ApiResponseBody<WalletAccount> result = mapper.readValue(ex.getMessage(), ApiResponseBody.class);
 				return result;
 			} catch (JsonProcessingException e) {
 				log.error("Error Parsing Body to Json");
 			}
 			String error = Constant.ERROR_MESSAGE + ": " + ex.getMessage();
-			return new ApiResponse<>(error, false);
+			return new ApiResponseBody<>(error, false);
 		}
 	}
 
-	private ApiResponse<WalletAccount> deleteUserWallet(String accountNumber, String token) {
+	private ApiResponseBody<WalletAccount> deleteUserWallet(String accountNumber, String token) {
 		WalletAccessPojo pojo = new WalletAccessPojo();
 		pojo.setAcctClosed(true);
 		pojo.setFreezCode("");
@@ -369,7 +375,7 @@ public class UserServiceImpl implements UserService {
 				.orTimeout(3, TimeUnit.MINUTES).handle((res, ex) -> {
 					if (ex != null) {
 						log.error("Error Fetching Accounts, {}", ex.getMessage());
-						return new ApiResponse<>("An error has occurred", false);
+						return new ApiResponseBody<>("An error has occurred", false);
 					}
 					return res.getBody();
 				}).thenAccept(p -> {
@@ -586,13 +592,56 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ApiResponse<UserAccessResponse> getAccessResponse(Long userId) {
+	public ResponseEntity<?> validateUser() {
+		UserPrincipal userPrincipal = (UserPrincipal) authenticatedUserFacade.getAuthentication().getPrincipal();
+		if (userPrincipal == null || !userPrincipal.getUser().isPresent()) {
+			return new ResponseEntity<>(new ErrorResponse("Invalid user."), HttpStatus.OK);
+		} else {
+			Users user = userPrincipal.getUser().get();
+			Set<String> roles = new HashSet<>();
+			Collection<Role> userRoles = user.getRoleList();
+			Set<String> permits = new HashSet<>();
+			for (Role r : userRoles) {
+				roles.add(r.getName());
+				permits.addAll(r.getPrivileges().stream().map(p -> p.getName()).collect(Collectors.toSet()));
+			}
+			BigDecimal tranLimit = null;
+			UserAccessResponse access = userPrincipal.getAccess();
+			if (access != null) {
+				roles.add(access.getRoleName());
+				permits.add(access.getPermissionName());
+				if (user.isAdmin())
+					tranLimit = access.getTransactionLimit();
+			}
+			if (tranLimit == null) {
+				UserSetup setUp = userSetupRepository.findByUserId(user.getId());
+				tranLimit = setUp == null ? new BigDecimal("0.00") : setUp.getTransactionLimit();
+			}
+			ValidateUserPojo validateUserPojo = new ValidateUserPojo();
+			validateUserPojo.setCorporate(user.isCorporate());
+			validateUserPojo.setEmail(user.getEmail());
+			validateUserPojo.setEmailVerified(user.isEmailVerified());
+			validateUserPojo.setFirstName(user.getFirstName());
+			validateUserPojo.setSurname(user.getSurname());
+			validateUserPojo.setPhoneVerified(user.isPhoneVerified());
+			validateUserPojo.setPinCreated(user.isPinCreated());
+			validateUserPojo.setId(user.getId());
+			validateUserPojo.setReferenceCode(user.getReferenceCode());
+			validateUserPojo.setPhoneNumber(user.getPhoneNumber());
+			validateUserPojo.setRoles(roles);
+			validateUserPojo.setTransactionLimit(tranLimit);
+			validateUserPojo.setPermits(permits);
+
+			return new ResponseEntity<>(new SuccessResponse("User valid.", validateUserPojo), HttpStatus.OK);
+		}
+	}
+
+	@Override
+	public ApiResponseBody<UserAccessResponse> getAccessResponse(Long userId) {
 		try {
-			ApiResponse<UserAccessResponse> res = accessProxy.GetUsersAccess(userId);
-			return res;
+			return accessProxy.GetUsersAccess(userId);
 		} catch (Exception e) {
-			//log.error("Call to Get User Access fails:: {}", e.getMessage());
-			return new ApiResponse<UserAccessResponse>(Constant.ERROR_MESSAGE, false);
+			return new ApiResponseBody<UserAccessResponse>(Constant.ERROR_MESSAGE, false);
 		}
 	}
 
@@ -608,8 +657,8 @@ public class UserServiceImpl implements UserService {
 		});
 		String phoneNumber = user.getPhoneNumber().contains("+") ? user.getPhoneNumber()
 				: (user.getPhoneNumber().startsWith("234") ? String.format("+%s", user.getPhoneNumber())
-				: user.getPhoneNumber());
-		
+						: user.getPhoneNumber());
+
 		UserProfileResponsePojo userDto = UserProfileResponsePojo.builder().email(user.getEmail()).id(user.getId())
 				.referenceCode(user.getReferenceCode()).isEmailVerified(user.isEmailVerified()).phoneNumber(phoneNumber)
 				.firstName(user.getFirstName()).lastName(user.getSurname()).isAdmin(user.isAdmin())
@@ -674,21 +723,53 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<?> createUsers(BulkCorporateUserCreationDTO userList, HttpServletRequest request,
 			Device device) {
 		int count = 0;
+		List<String> messages = new ArrayList<>();
 		try {
 			DevicePojo dev = reqUtil.GetDevice(device);
 			final String ip = reqUtil.getClientIP(request);
 			for (CorporateUserPojo mUser : userList.getUsersList()) {
+
+				if(mUser.getPhoneNumber() != null){
+					boolean isPhoneValid = phoneNumPattern.matcher(mUser.getPhoneNumber()).find()
+							&& mUser.getPhoneNumber().startsWith("234")
+							&& mUser.getPhoneNumber().length() == 13;
+					if(!isPhoneValid){
+						messages.add(String.format("Phone Number is not valid for %s, " +
+								"ensure it starts with 234 and is 13 characters in length",
+								mUser.getPhoneNumber()));
+						continue;
+					}
+				}
+
+				if(mUser.getEmail() != null){
+					boolean isEmailValid = emailPattern.matcher(mUser.getEmail().toLowerCase()).matches();
+					if(!isEmailValid) {
+						messages.add(String.format("Email is not valid for: %s", mUser.getEmail()));
+						continue;
+					}
+				}
+
 				// Check if email exists
-				Users existingEmail = mUser.getEmail() == null ? null
+				Users user = mUser.getEmail() == null ? null
 						: usersRepository.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
-				if (existingEmail != null)
+				if (user != null){
+					messages.add(String.format("User with Email already exists: %s", mUser.getEmail()));
 					continue;
+				}
 
 				// Check if Phone exists
-				Users existingTelephone = mUser.getPhoneNumber() == null ? null
+				user = mUser.getPhoneNumber() == null ? null
 						: usersRepository.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
-				if (existingTelephone != null)
+				if (user != null) {
+					messages.add(String.format("User with Phone Number exists %s",
+							mUser.getPhoneNumber()));
 					continue;
+				}
+
+				if(mUser.getEmail() == null && mUser.getPhoneNumber() == null){
+					messages.add(String.format("Both Email and Phone Number cannot be null"));
+					continue;
+				}
 
 				Role userRole = rolesRepo.findByName("ROLE_USER")
 						.orElseThrow(() -> new CustomException("User Role Not Available", BAD_REQUEST));
@@ -706,10 +787,8 @@ public class UserServiceImpl implements UserService {
 				// Generate and Save Random Password
 				String randomPassword = HelperUtils.generateRandomPassword();
 				mUser.setPassword(randomPassword);
-				log.info("Password for {} is {}", mUser.getEmail(), randomPassword);
 
-				Users user = new Users();
-				user.setId(0L);
+				user = new Users();
 				user.setCorporate(true);
 				user.setDateCreated(LocalDateTime.now());
 				user.setRegDeviceIP(ip);
@@ -734,7 +813,7 @@ public class UserServiceImpl implements UserService {
 				if (regUser == null)
 					continue;
 
-				CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), regUser));
+				CompletableFuture.runAsync(() -> sendNewPassword(mUser.getPassword(), regUser));
 
 				String token = this.authService.generateToken(regUser);
 				this.authService.createCorporateUser(mUser, regUser.getId(), token, getBaseUrl(request));
@@ -742,7 +821,8 @@ public class UserServiceImpl implements UserService {
 			}
 			String message = String
 					.format("%s  Corporate Account Created Successfully and Sub-account creation in process.", count);
-			return new ResponseEntity<>(new SuccessResponse(message), HttpStatus.CREATED);
+			messages.add(message);
+			return new ResponseEntity<>(new SuccessResponse(messages), HttpStatus.OK);
 		} catch (Exception e) {
 			log.error("Error in Creating Bulk Account:: {}", e.getMessage());
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
@@ -753,6 +833,7 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<?> createUsers(BulkPrivateUserCreationDTO userList, HttpServletRequest request,
 			Device device) {
 		int count = 0;
+		List<String> messages = new ArrayList<>();
 		try {
 			if (userList == null || userList.getUsersList().isEmpty())
 				return new ResponseEntity<>(new ErrorResponse("User List cannot be null or Empty"), BAD_REQUEST);
@@ -760,17 +841,48 @@ public class UserServiceImpl implements UserService {
 			DevicePojo dev = reqUtil.GetDevice(device);
 			final String ip = reqUtil.getClientIP(request);
 			for (BaseUserPojo mUser : userList.getUsersList()) {
+
+				if(mUser.getPhoneNumber() != null){
+					boolean isPhoneValid = phoneNumPattern.matcher(mUser.getPhoneNumber()).find()
+							&& mUser.getPhoneNumber().startsWith("234")
+							&& mUser.getPhoneNumber().length() == 13;
+					if(!isPhoneValid){
+						messages.add(String.format("Phone Number is not valid for %s, " +
+										"ensure it starts with 234 and is 13 characters in length",
+								mUser.getPhoneNumber()));
+						continue;
+					}
+				}
+
+				if(mUser.getEmail() != null){
+					boolean isEmailValid = emailPattern.matcher(mUser.getEmail().toLowerCase()).matches();
+					if(!isEmailValid) {
+						messages.add(String.format("Email is not valid for: %s", mUser.getEmail()));
+						continue;
+					}
+				}
+
 				// Check if email exists
-				Users existingEmail = mUser.getEmail() == null ? null
+				Users user = mUser.getEmail() == null ? null
 						: usersRepository.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
-				if (existingEmail != null)
+				if (user != null){
+					messages.add(String.format("User with Email already exists: %s", mUser.getEmail()));
 					continue;
+				}
 
 				// Check if Phone exists
-				Users existingTelephone = mUser.getPhoneNumber() == null ? null
+				user = mUser.getPhoneNumber() == null ? null
 						: usersRepository.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
-				if (existingTelephone != null)
+				if (user != null) {
+					messages.add(String.format("User with Phone Number exists %s",
+							mUser.getPhoneNumber()));
 					continue;
+				}
+
+				if(mUser.getEmail() == null && mUser.getPhoneNumber() == null){
+					messages.add(String.format("Both Email and Phone Number cannot be null"));
+					continue;
+				}
 
 				List<Role> roleList = new ArrayList<>();
 
@@ -787,10 +899,8 @@ public class UserServiceImpl implements UserService {
 				// Generate and Save Random Password
 				String randomPassword = HelperUtils.generateRandomPassword();
 				mUser.setPassword(randomPassword);
-				log.info("Password for {} is {}", mUser.getEmail(), randomPassword);
 
-				Users user = new Users();
-				user.setId(0L);
+				user = new Users();
 				user.setAdmin(mUser.isAdmin());
 				user.setAccountStatus(-1);
 				user.setEmail(mUser.getEmail().trim());
@@ -815,24 +925,74 @@ public class UserServiceImpl implements UserService {
 
 				String token = this.authService.generateToken(authenticatedUserFacade.getUser());
 				this.authService.createPrivateUser(mUser, regUser.getId(), token, getBaseUrl(request));
-				CompletableFuture.runAsync(() -> sendEmailNewPassword(mUser.getPassword(), regUser));
+				CompletableFuture.runAsync(() -> sendNewPassword(mUser.getPassword(), regUser));
 				++count;
 			}
 			String message = String
 					.format("%s Private Accounts Created Successfully and Sub-account creation in process.", count);
-			return new ResponseEntity<>(new SuccessResponse(message), HttpStatus.OK);
+			messages.add(message);
+			return new ResponseEntity<>(new SuccessResponse(messages), HttpStatus.OK);
 		} catch (Exception e) {
 			log.error("Error in Creating Bulk Account:: {}", e.getMessage());
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
 		}
 	}
 
-	private void sendEmailNewPassword(String randomPassword, Users user) {
-		// Email Sending of new Password Here
-		PasswordCreateContext context = new PasswordCreateContext();
-		context.init(user);
-		context.setPassword(randomPassword);
-		this.mailService.sendMail(context);
+	private void sendNewPassword(String randomPassword, Users user) {
+
+		if(user.getEmail() != null){
+			// Email Sending of new Password Here
+			PasswordCreateContext context = new PasswordCreateContext();
+			context.init(user);
+			context.setPassword(randomPassword);
+			this.messagingService.sendMail(context);
+		}else{
+			String message = String.format("An account has been created for you with password: %s." +
+					" Kindly login with your phone Number and change your password", randomPassword);
+			this.messagingService.sendSMS(user.getFirstName(), message, user.getPhoneNumber());
+		}
+	}
+
+	@Override
+	public ResponseEntity<?> getUserSetupById(Long id) {
+		try {
+			UserSetup setup = userSetupRepository.findByUserId(id);
+			if (setup != null) {
+				UserSetupPojo pojo = new UserSetupPojo(setup.getId(), String.valueOf(setup.getUser().getId()),
+						setup.getTransactionLimit());
+				return new ResponseEntity<>(new SuccessResponse(pojo), HttpStatus.OK);
+			}
+			return new ResponseEntity<>(new ErrorResponse("No Setup Exists"), HttpStatus.NOT_FOUND);
+		} catch (Exception e) {
+			log.error("Error in Fetching User's Setup::{}", e.getMessage());
+			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
+		}
+	}
+
+	@Override
+	public ResponseEntity<?> maintainUserSetup(UserSetupPojo pojo) {
+		try {
+			Optional<Users> userOpt = usersRepository.findById(Long.valueOf(pojo.getUserId()));
+			if (userOpt.isEmpty()) {
+				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User with " + pojo.getUserId()),
+						HttpStatus.NOT_FOUND);
+			}
+			Users user = usersRepository.getOne(Long.valueOf(pojo.getUserId()));
+			UserSetup setup = userSetupRepository.findByUserId(user.getId());
+			if (setup == null) {
+				setup = new UserSetup();
+				setup.setTransactionLimit(pojo.getTransactionLimit());
+				setup.setUser(user);
+			} else {
+				setup.setTransactionLimit(pojo.getTransactionLimit());
+			}
+			setup = userSetupRepository.save(setup);
+			pojo.setId(setup.getId());
+			return new ResponseEntity<>(new SuccessResponse(pojo), HttpStatus.CREATED);
+		} catch (Exception e) {
+			log.error("Error in Maintaining User's Setup::{}", e.getMessage());
+			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
+		}
 	}
 
 }

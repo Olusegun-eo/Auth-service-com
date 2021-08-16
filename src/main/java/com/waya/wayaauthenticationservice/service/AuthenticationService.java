@@ -28,8 +28,6 @@ public interface AuthenticationService {
 
 	ResponseEntity<?> verifyPhoneUsingOTP(OTPPojo otpPojo);
 
-	ResponseEntity<?> validateUser();
-
 	ResponseEntity<?> verifyEmail(OTPPojo otpPojo);
 
 	ResponseEntity<?> userByPhone(String phone);
@@ -48,6 +46,6 @@ public interface AuthenticationService {
 
 	void createPrivateUser(BaseUserPojo user, Long userId, String token, String baseUrl);
 
-	void sendEmailNewPassword(String randomPassword, Users user);
+	void sendNewPassword(String randomPassword, Users user);
 
 }

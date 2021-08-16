@@ -152,7 +152,7 @@ public class AuthenticationController {
 			@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
 	@PostMapping("/validate-user")
 	public ResponseEntity<?> validateUser() {
-		return authenticationServiceImpl.validateUser();
+		return userService.validateUser();
 	}
 
 	@ApiOperation(value = "User Validation (Service consumption only. Do not Use)", notes = "This endpoint help validate user and is meant for service consumption only", tags = {

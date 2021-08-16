@@ -33,7 +33,7 @@ import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
 import com.waya.wayaauthenticationservice.pojo.others.ToggleSMSRequest;
 import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
 import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.response.DeleteResponse;
 import com.waya.wayaauthenticationservice.response.ToggleSMSResponse;
 import com.waya.wayaauthenticationservice.response.UserProfileResponse;
@@ -76,10 +76,10 @@ public class ProfileController {
 	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
 	@GetMapping("/{userId}")
-	ResponseEntity<ApiResponse<UserProfileResponse>> getUsersProfile(@PathVariable String userId,
+	ResponseEntity<ApiResponseBody<UserProfileResponse>> getUsersProfile(@PathVariable String userId,
 			HttpServletRequest request) {
 		UserProfileResponse profileResponse = profileService.getUserProfile(userId, request);
-		return new ResponseEntity<>(new ApiResponse<>(profileResponse, "retrieved successfully", true), HttpStatus.OK);
+		return new ResponseEntity<>(new ApiResponseBody<>(profileResponse, "retrieved successfully", true), HttpStatus.OK);
 	}
 
 	/**
@@ -94,7 +94,7 @@ public class ProfileController {
 	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
 	@PostMapping("personal-profile")
-	public ApiResponse<String> createPersonalProfile(final HttpServletRequest request,
+	public ApiResponseBody<String> createPersonalProfile(final HttpServletRequest request,
 			@Valid @RequestBody PersonalProfileRequest personalProfileRequest) {
 		return profileService.createProfile(personalProfileRequest, getBaseUrl(request));
 	}
@@ -111,7 +111,7 @@ public class ProfileController {
 	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
 	@PostMapping("corporate-profile")
-	ApiResponse<String> createCorporateProfile(final HttpServletRequest request,
+	ApiResponseBody<String> createCorporateProfile(final HttpServletRequest request,
 			@Valid @RequestBody CorporateProfileRequest corporateProfileRequest) {
 
 		return profileService.createProfile(corporateProfileRequest, getBaseUrl(request));
@@ -129,11 +129,11 @@ public class ProfileController {
 	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
 	@PutMapping("update-personal-profile/{userId}")
-	ResponseEntity<ApiResponse<Object>> updateProfile(
+	ResponseEntity<ApiResponseBody<Object>> updateProfile(
 			@Valid @RequestBody UpdatePersonalProfileRequest updatePersonalProfileRequest,
 			@PathVariable @CustomValidator(message = "UserId must be numeric", type = Type.NUMERIC_STRING) String userId) {
 		UserProfileResponse profileResponse = profileService.updateProfile(updatePersonalProfileRequest, userId);
-		return new ResponseEntity<>(new ApiResponse<>(profileResponse, "profile updated successfully", true),
+		return new ResponseEntity<>(new ApiResponseBody<>(profileResponse, "profile updated successfully", true),
 				HttpStatus.CREATED);
 	}
 
@@ -149,14 +149,14 @@ public class ProfileController {
 	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
 	@PutMapping("update-corporate-profile/{userId}")
-	ResponseEntity<ApiResponse<UserProfileResponse>> updateCorporateProfile(
+	ResponseEntity<ApiResponseBody<UserProfileResponse>> updateCorporateProfile(
 			@Valid @RequestBody UpdateCorporateProfileRequest updateCorporateProfileRequest,
 			@PathVariable @CustomValidator(message = "UserId must be numeric", type = Type.NUMERIC_STRING) String userId) {
 
 		UserProfileResponse corporateProfileResponse = profileService.updateProfile(updateCorporateProfileRequest,
 				userId);
 
-		return new ResponseEntity<>(new ApiResponse<>(corporateProfileResponse, "profile updated successfully", true),
+		return new ResponseEntity<>(new ApiResponseBody<>(corporateProfileResponse, "profile updated successfully", true),
 				HttpStatus.CREATED);
 	}
 
@@ -173,7 +173,7 @@ public class ProfileController {
 	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
 	@PostMapping("/update-profile-image/{userId}")
-	public ResponseEntity<ApiResponse<String>> updateProfileImage(@RequestPart MultipartFile file,
+	public ResponseEntity<ApiResponseBody<String>> updateProfileImage(@RequestPart MultipartFile file,
 			@PathVariable @CustomValidator(message = "UserId must be numeric", type = Type.NUMERIC_STRING) String userId)
 			throws MaxUploadSizeExceededException {
 		return ResponseEntity.ok(profileService.updateProfileImage(userId, file));
@@ -184,7 +184,7 @@ public class ProfileController {
 	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
 	@PostMapping("/update-profile-image/{type}/{userId}")
-	public ResponseEntity<ApiResponse<String>> updateProfileImage(@RequestPart MultipartFile file,
+	public ResponseEntity<ApiResponseBody<String>> updateProfileImage(@RequestPart MultipartFile file,
 			@PathVariable @CustomValidator(message = "UserId must be numeric", type = Type.NUMERIC_STRING) String userId,
 			@PathVariable @EnumValue(enumClass = UploadType.class, message = "Must be either of type FRONT, LEFT or RIGHT") String type)
 			throws MaxUploadSizeExceededException {
@@ -222,11 +222,11 @@ public class ProfileController {
 	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
 	@PostMapping("/toggle-sms-alerts")
-	ResponseEntity<ApiResponse<ToggleSMSResponse>> toggleSMSAlert(
+	ResponseEntity<ApiResponseBody<ToggleSMSResponse>> toggleSMSAlert(
 			@Valid @RequestBody ToggleSMSRequest toggleSMSRequest) {
 
 		ToggleSMSResponse toggleSMSResponse = profileService.toggleSMSAlert(toggleSMSRequest);
-		ApiResponse<ToggleSMSResponse> response = new ApiResponse<>(toggleSMSResponse, "Data retrieved successfully",
+		ApiResponseBody<ToggleSMSResponse> response = new ApiResponseBody<>(toggleSMSResponse, "Data retrieved successfully",
 				true);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
@@ -237,12 +237,12 @@ public class ProfileController {
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
 	@ResponseStatus(HttpStatus.OK)
 	@GetMapping("/sms-alert/status/{phoneNumber}")
-	ResponseEntity<ApiResponse<ToggleSMSResponse>> getSMSAlertStatus(
+	ResponseEntity<ApiResponseBody<ToggleSMSResponse>> getSMSAlertStatus(
 			@Valid @ApiParam(example = "2348054354344") @PathVariable @ValidPhone String phoneNumber) {
 
 		ToggleSMSResponse toggleSMSResponse = profileService.getSMSAlertStatus(phoneNumber);
 		System.out.println(" ### back from service class smsCharges: :::: " + toggleSMSResponse);
-		ApiResponse<ToggleSMSResponse> response = new ApiResponse<>(toggleSMSResponse, "Data created successfully",
+		ApiResponseBody<ToggleSMSResponse> response = new ApiResponseBody<>(toggleSMSResponse, "Data created successfully",
 				true);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
@@ -253,9 +253,9 @@ public class ProfileController {
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
 	@ResponseStatus(HttpStatus.OK)
 	@GetMapping("/get-user-profile/{referralCode}")
-	ResponseEntity<ApiResponse<UserProfileResponse>> getProfileByReferralCode(@PathVariable String referralCode) {
+	ResponseEntity<ApiResponseBody<UserProfileResponse>> getProfileByReferralCode(@PathVariable String referralCode) {
 		UserProfileResponse userProfileResponse = profileService.getProfileByReferralCode(referralCode);
-		ApiResponse<UserProfileResponse> response = new ApiResponse<>(userProfileResponse, "Data created successfully",
+		ApiResponseBody<UserProfileResponse> response = new ApiResponseBody<>(userProfileResponse, "Data created successfully",
 				true);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}

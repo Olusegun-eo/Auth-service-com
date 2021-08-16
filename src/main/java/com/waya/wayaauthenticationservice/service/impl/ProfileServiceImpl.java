@@ -1,30 +1,24 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import static com.waya.wayaauthenticationservice.enums.OTPRequestType.JOINT_VERIFICATION;
-import static com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient.uploadImage;
-import static com.waya.wayaauthenticationservice.util.Constant.CATCH_EXCEPTION_MSG;
-import static com.waya.wayaauthenticationservice.util.Constant.CREATE_PROFILE_SUCCESS_MSG;
-import static com.waya.wayaauthenticationservice.util.Constant.DUPLICATE_KEY;
-import static com.waya.wayaauthenticationservice.util.Constant.LIMIT;
-import static com.waya.wayaauthenticationservice.util.Constant.PHONE_NUMBER_REQUIRED;
-import static com.waya.wayaauthenticationservice.util.Constant.PROFILE_NOT_EXIST;
-import static com.waya.wayaauthenticationservice.util.Constant.REFERRAL_CODE_LENGTH;
-import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateReferralCode;
-import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.validateNum;
-import static org.springframework.http.HttpStatus.OK;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import javax.servlet.http.HttpServletRequest;
-
+import com.waya.wayaauthenticationservice.entity.*;
+import com.waya.wayaauthenticationservice.enums.DeleteType;
+import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
+import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserIDPojo;
+import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
+import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
+import com.waya.wayaauthenticationservice.repository.*;
+import com.waya.wayaauthenticationservice.response.*;
+import com.waya.wayaauthenticationservice.service.MessagingService;
+import com.waya.wayaauthenticationservice.service.OTPTokenService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.util.Constant;
+import lombok.extern.slf4j.Slf4j;
+import net.sf.jmimemagic.Magic;
+import net.sf.jmimemagic.MagicException;
+import net.sf.jmimemagic.MagicMatchNotFoundException;
+import net.sf.jmimemagic.MagicParseException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -34,47 +28,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.waya.wayaauthenticationservice.entity.OtherDetails;
-import com.waya.wayaauthenticationservice.entity.Profile;
-import com.waya.wayaauthenticationservice.entity.ReferralCode;
-import com.waya.wayaauthenticationservice.entity.SMSAlertConfig;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.enums.DeleteType;
-import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
-import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.CreateWayagram;
-import com.waya.wayaauthenticationservice.pojo.others.DeleteRequest;
-import com.waya.wayaauthenticationservice.pojo.others.OtherDetailsRequest;
-import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.ToggleSMSRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.userDTO.UserIDPojo;
-import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
-import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
-import com.waya.wayaauthenticationservice.repository.OtherDetailsRepository;
-import com.waya.wayaauthenticationservice.repository.ProfileRepository;
-import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
-import com.waya.wayaauthenticationservice.repository.SMSAlertConfigRepository;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
-import com.waya.wayaauthenticationservice.response.DeleteResponse;
-import com.waya.wayaauthenticationservice.response.ImageUrlResponse;
-import com.waya.wayaauthenticationservice.response.OtherdetailsResponse;
-import com.waya.wayaauthenticationservice.response.SearchProfileResponse;
-import com.waya.wayaauthenticationservice.response.ToggleSMSResponse;
-import com.waya.wayaauthenticationservice.response.UserProfileResponse;
-import com.waya.wayaauthenticationservice.service.MailService;
-import com.waya.wayaauthenticationservice.service.OTPTokenService;
-import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.util.Constant;
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
-import lombok.extern.slf4j.Slf4j;
-import net.sf.jmimemagic.Magic;
-import net.sf.jmimemagic.MagicException;
-import net.sf.jmimemagic.MagicMatchNotFoundException;
-import net.sf.jmimemagic.MagicParseException;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.JOINT_VERIFICATION;
+import static com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient.uploadImage;
+import static com.waya.wayaauthenticationservice.util.Constant.*;
+import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.generateReferralCode;
+import static com.waya.wayaauthenticationservice.util.profile.ProfileServiceUtil.validateNum;
+import static org.springframework.http.HttpStatus.OK;
 
 @Service
 @Slf4j
@@ -88,7 +54,7 @@ public class ProfileServiceImpl implements ProfileService {
 	private final OtherDetailsRepository otherDetailsRepository;
 	private final WayagramProxy wayagramProxy;
 	private final SMSAlertConfigRepository smsAlertConfigRepository;
-	private final MailService mailService;
+	private final MessagingService messagingService;
 	private final ReferralCodeRepository referralCodeRepository;
 
 	@Autowired
@@ -96,7 +62,7 @@ public class ProfileServiceImpl implements ProfileService {
 			UserRepository userRepository, OTPTokenService otpTokenService,
 			FileResourceServiceFeignClient fileResourceServiceFeignClient,
 			OtherDetailsRepository otherDetailsRepository, WayagramProxy wayagramProxy,
-			SMSAlertConfigRepository smsAlertConfigRepository, MailService mailService,
+			SMSAlertConfigRepository smsAlertConfigRepository, MessagingService messagingService,
 			ReferralCodeRepository referralCodeRepository) {
 		this.modelMapper = modelMapper;
 		this.profileRepository = profileRepository;
@@ -105,7 +71,7 @@ public class ProfileServiceImpl implements ProfileService {
 		this.otherDetailsRepository = otherDetailsRepository;
 		this.wayagramProxy = wayagramProxy;
 		this.smsAlertConfigRepository = smsAlertConfigRepository;
-		this.mailService = mailService;
+		this.messagingService = messagingService;
 		this.referralCodeRepository = referralCodeRepository;
 		this.userRepository = userRepository;
 	}
@@ -163,7 +129,7 @@ public class ProfileServiceImpl implements ProfileService {
 	 * @param request profile
 	 */
 	@Override
-	public ApiResponse<String> createProfile(PersonalProfileRequest request, String baseUrl) {
+	public ApiResponseBody<String> createProfile(PersonalProfileRequest request, String baseUrl) {
 		try {
 			Users user = this.userRepository.findById(false, Long.valueOf(request.getUserId())).orElse(null);
 			if (user == null)
@@ -179,13 +145,14 @@ public class ProfileServiceImpl implements ProfileService {
 					request.setReferralCode(null);
 			}
 			// check if the user exist in the profile table
-			Optional<Profile> profile = profileRepository.findByEmail(false, request.getEmail().trim());
+			Optional<Profile> profile = request.getEmail() == null ? Optional.empty() :
+					profileRepository.findByEmail(false, request.getEmail());
 
 			// check if the user exist in the referral table
 			Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(request.getUserId());
 
 			// validation check
-			ApiResponse<String> validationCheck = validationCheckOnProfile(profile, referralCode);
+			ApiResponseBody<String> validationCheck = validationCheckOnProfile(profile, referralCode);
 			if (validationCheck.getStatus()) {
 				Profile newProfile = modelMapper.map(request, Profile.class);
 				// check if this referral code is already mapped to a user
@@ -202,7 +169,7 @@ public class ProfileServiceImpl implements ProfileService {
 
 				// send otp to Phone and Email
 				CompletableFuture.runAsync(
-						() -> otpTokenService.sendAccountVerificationToken(savedProfile, JOINT_VERIFICATION, baseUrl));
+						() -> otpTokenService.sendAccountVerificationToken(user, JOINT_VERIFICATION, baseUrl));
 
 				// create waya gram profile
 				CompletableFuture.runAsync(
@@ -213,17 +180,17 @@ public class ProfileServiceImpl implements ProfileService {
 							}
 							return res;
 						});
-				return new ApiResponse<>(null, CREATE_PROFILE_SUCCESS_MSG, true);
+				return new ApiResponseBody<>(null, CREATE_PROFILE_SUCCESS_MSG, true);
 			} else {
 				// return the error
 				return validationCheck;
 			}
 		} catch (DataIntegrityViolationException dve) {
 			log.error(CATCH_EXCEPTION_MSG, dve);
-			return new ApiResponse<>(null, DUPLICATE_KEY, false);
+			return new ApiResponseBody<>(null, DUPLICATE_KEY, false);
 		} catch (Exception exception) {
 			log.error(CATCH_EXCEPTION_MSG, exception);
-			return new ApiResponse<>(null, exception.getMessage(), false);
+			return new ApiResponseBody<>(null, exception.getMessage(), false);
 		}
 	}
 
@@ -235,7 +202,7 @@ public class ProfileServiceImpl implements ProfileService {
 	 */
 	@Transactional
 	@Override
-	public ApiResponse<String> createProfile(CorporateProfileRequest profileRequest, String baseUrl) {
+	public ApiResponseBody<String> createProfile(CorporateProfileRequest profileRequest, String baseUrl) {
 		try {
 			Users user = this.userRepository.findById(false, Long.valueOf(profileRequest.getUserId())).orElse(null);
 			if (user == null)
@@ -252,13 +219,14 @@ public class ProfileServiceImpl implements ProfileService {
 					profileRequest.setReferralCode(null);
 			}
 			// check if the user exist in the profile table
-			Optional<Profile> profile = profileRepository.findByEmail(false, profileRequest.getEmail().trim());
+			Optional<Profile> profile = profileRequest.getEmail() == null ? Optional.empty() :
+					profileRepository.findByEmail(false, profileRequest.getEmail());
 
 			// check if the user exist in the referral table
 			// now this check will extend to the referral service
 			Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(profileRequest.getUserId());
 			// validation check
-			ApiResponse<String> validationCheck = validationCheckOnProfile(profile, referralCode);
+			ApiResponseBody<String> validationCheck = validationCheckOnProfile(profile, referralCode);
 
 			if (validationCheck.getStatus()) {
 				Profile newCorporateProfile = saveCorporateProfile(profileRequest);
@@ -267,20 +235,20 @@ public class ProfileServiceImpl implements ProfileService {
 				saveReferralCode(newCorporateProfile, profileRequest.getUserId());
 
 				// send otp to Phone and Email
-				CompletableFuture.runAsync(() -> otpTokenService.sendAccountVerificationToken(newCorporateProfile,
+				CompletableFuture.runAsync(() -> otpTokenService.sendAccountVerificationToken(user,
 						JOINT_VERIFICATION, baseUrl));
 
-				return new ApiResponse<>(null, CREATE_PROFILE_SUCCESS_MSG, true);
+				return new ApiResponseBody<>(null, CREATE_PROFILE_SUCCESS_MSG, true);
 			} else {
 				// return the error
 				return validationCheck;
 			}
 		} catch (DataIntegrityViolationException dve) {
 			log.error(CATCH_EXCEPTION_MSG, dve);
-			return new ApiResponse<>(null, DUPLICATE_KEY, false);
+			return new ApiResponseBody<>(null, DUPLICATE_KEY, false);
 		} catch (Exception exception) {
 			log.error(CATCH_EXCEPTION_MSG, exception);
-			return new ApiResponse<>(null, exception.getMessage(), false);
+			return new ApiResponseBody<>(null, exception.getMessage(), false);
 		}
 	}
 
@@ -343,7 +311,7 @@ public class ProfileServiceImpl implements ProfileService {
 	 * notificat
 	 *
 	 * @param userId  user id
-	 * @param request http servelet request
+	 * @param request http servlet request
 	 * @return PersonalProfileResponse
 	 */
 	// @Cacheable(cacheNames = "PersonalProfile", key = "#userId")
@@ -394,7 +362,7 @@ public class ProfileServiceImpl implements ProfileService {
 	}
 
 	private void updateUserAccount(Users users, UpdatePersonalProfileRequest newProfile) {
-		if (userRepository.existsByEmail(newProfile.getEmail().trim())
+		if (userRepository.existsByEmail(newProfile.getEmail())
 				&& !compareTwoString(users.getEmail(), newProfile.getEmail()))
 			throw new CustomException("Email for Update already Belongs to another User", HttpStatus.BAD_REQUEST);
 		users.setEmail(newProfile.getEmail());
@@ -504,11 +472,11 @@ public class ProfileServiceImpl implements ProfileService {
 	 * This method updates a users profile image.
 	 *
 	 * @param userId       user id
-	 * @param profileImage request
+	 * @param file request
 	 */
 	// @Async
 	@Override
-	public ApiResponse<String> updateProfileImage(String userId, MultipartFile file) {
+	public ApiResponseBody<String> updateProfileImage(String userId, MultipartFile file) {
 		try {
 			String mimeType = Magic.getMagicMatch(file.getBytes(), false).getMimeType();
 			if (mimeType.startsWith("image/")) {
@@ -516,7 +484,7 @@ public class ProfileServiceImpl implements ProfileService {
 				Optional<Profile> profile = profileRepository.findByUserId(false, userId);
 				if (profile.isPresent()) {
 					Profile item = profile.get();
-					ApiResponse<ImageUrlResponse> response = uploadImage(fileResourceServiceFeignClient, file, userId,
+					ApiResponseBody<ImageUrlResponse> response = uploadImage(fileResourceServiceFeignClient, file, userId,
 							log);
 					if (response != null && response.getStatus()) {
 						// update the profile image
@@ -524,24 +492,24 @@ public class ProfileServiceImpl implements ProfileService {
 						// save back to the database
 						profileRepository.save(item);
 					}
-					return new ApiResponse<>("", "Uploaded Successfully", true);
+					return new ApiResponseBody<>("", "Uploaded Successfully", true);
 				}
 				throw new CustomException(PROFILE_NOT_EXIST, HttpStatus.NOT_FOUND);
 			} else {
-				return new ApiResponse<String>("Invalid Image Passed", "Error", false);
+				return new ApiResponseBody<String>("Invalid Image Passed", "Error", false);
 			}
 		} catch (MagicParseException e) {
 			log.error("caught an exception ::: {}", e.getMessage());
-			return new ApiResponse<String>("Invalid Image Passed", "Error", false);
+			return new ApiResponseBody<String>("Invalid Image Passed", "Error", false);
 		} catch (MagicMatchNotFoundException e) {
 			log.error("caught an exception ::: {}", e.getMessage());
-			return new ApiResponse<String>("Invalid Image Passed", "Error", false);
+			return new ApiResponseBody<String>("Invalid Image Passed", "Error", false);
 		} catch (MagicException e) {
 			log.error("caught an exception ::: {}", e.getMessage());
-			return new ApiResponse<String>("Invalid Image Passed", "Error", false);
+			return new ApiResponseBody<String>("Invalid Image Passed", "Error", false);
 		} catch (IOException e) {
 			log.error("caught an exception ::: {}", e.getMessage());
-			return new ApiResponse<String>("Error uploading Image Passed", "Error", false);
+			return new ApiResponseBody<String>("Error uploading Image Passed", "Error", false);
 		} catch (Exception exception) {
 			if (exception instanceof CustomException) {
 				CustomException ex = (CustomException) exception;
@@ -559,7 +527,7 @@ public class ProfileServiceImpl implements ProfileService {
 	 * @return
 	 */
 	@Override
-	public ApiResponse<String> uploadOtherImage(String userId, MultipartFile file, String type) {
+	public ApiResponseBody<String> uploadOtherImage(String userId, MultipartFile file, String type) {
 		try {
 			String mimeType = Magic.getMagicMatch(file.getBytes(), false).getMimeType();
 			if (mimeType.startsWith("image/")) {
@@ -569,7 +537,7 @@ public class ProfileServiceImpl implements ProfileService {
 					Profile item = profile.get();
 					if (item.isCorporate()) {
 						String fileName = String.format("%s_%s", item.getFirstName(), type);
-						ApiResponse<String> response = fileResourceServiceFeignClient
+						ApiResponseBody<String> response = fileResourceServiceFeignClient
 								.uploadOtherImage(file, fileName, userId);
 						
 						log.info("Response from Upload:: {}", response.toString());
@@ -589,7 +557,7 @@ public class ProfileServiceImpl implements ProfileService {
 							// save back to the database
 							profileRepository.save(item);
 						}
-						return new ApiResponse<>(Constant.SUCCESS_MESSAGE, "Uploaded Successfully", true);
+						return new ApiResponseBody<>(Constant.SUCCESS_MESSAGE, "Uploaded Successfully", true);
 					}
 					throw new CustomException("User is not a Corporate Account Holder", HttpStatus.BAD_REQUEST);
 				}
@@ -732,16 +700,16 @@ public class ProfileServiceImpl implements ProfileService {
 				.city(profile.getCity()).corporate(profile.isCorporate()).otherDetails(otherdetailsResponse).build();
 	}
 
-	private ApiResponse<String> validationCheckOnProfile(Optional<Profile> profile,
+	private ApiResponseBody<String> validationCheckOnProfile(Optional<Profile> profile,
 			Optional<ReferralCode> referralCodePojo) {
 
 		if (profile.isPresent()) {
-			return new ApiResponse<>(null, DUPLICATE_KEY, false);
+			return new ApiResponseBody<>(null, DUPLICATE_KEY, false);
 		}
 		if (referralCodePojo.isPresent()) {
-			return new ApiResponse<>(null, "user id already exists", false);
+			return new ApiResponseBody<>(null, "user id already exists", false);
 		} else {
-			return new ApiResponse<>(null, "", true);
+			return new ApiResponseBody<>(null, "", true);
 		}
 	}
 
@@ -904,7 +872,7 @@ public class ProfileServiceImpl implements ProfileService {
 		WelcomeEmailContext emailContext = new WelcomeEmailContext();
 		emailContext.init(userProfile);
 		try {
-			mailService.sendMail(emailContext);
+			messagingService.sendMail(emailContext);
 		} catch (Exception e) {
 			log.error("An Error Occurred:: {}", e.getMessage());
 		}

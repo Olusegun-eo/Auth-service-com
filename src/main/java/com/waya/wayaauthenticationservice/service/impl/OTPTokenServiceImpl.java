@@ -1,7 +1,7 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
 import com.waya.wayaauthenticationservice.entity.OTPBase;
-import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.OTPRequestType;
 import com.waya.wayaauthenticationservice.enums.StreamsEventType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
@@ -10,8 +10,8 @@ import com.waya.wayaauthenticationservice.pojo.mail.AbstractEmailContext;
 import com.waya.wayaauthenticationservice.pojo.mail.context.AccountVerificationEmailContext;
 import com.waya.wayaauthenticationservice.repository.OTPRepository;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
-import com.waya.wayaauthenticationservice.service.MailService;
 import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
+import com.waya.wayaauthenticationservice.service.MessagingService;
 import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import com.waya.wayaauthenticationservice.streams.RecipientsSMS;
 import com.waya.wayaauthenticationservice.streams.StreamDataSMS;
@@ -35,7 +35,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
 
     private final OTPRepository otpRepository;
     private final MessageQueueProducer messageQueueProducer;
-    private final MailService mailService;
+    private final MessagingService messagingService;
 
     /**
      * generates a 6 digit OTP code and send code to email topic
@@ -45,7 +45,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
      * @param profile userProfile
      */
     @Override
-    public boolean sendVerificationEmailToken(String baseUrl, Profile profile, OTPRequestType otpRequestType) {
+    public boolean sendVerificationEmailToken(String baseUrl, Users profile, OTPRequestType otpRequestType) {
         try {
             //generate the token
             OTPBase otp = generateEmailToken(profile.getEmail(), otpRequestType);
@@ -54,7 +54,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
             emailContext.buildURL(baseUrl);
             emailContext.setToken(String.valueOf(otp.getCode()));
             try {
-                mailService.sendMail(emailContext);
+                messagingService.sendMail(emailContext);
             } catch (Exception e) {
                 log.error("An Error Occurred:: {}", e.getMessage());
             }
@@ -77,7 +77,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
     public boolean sendEmailToken(AbstractEmailContext emailContext) {
         try {
             try {
-                mailService.sendMail(emailContext);
+                messagingService.sendMail(emailContext);
             } catch (Exception e) {
                 log.error("An Error Occurred:: {}", e.getMessage());
             }
@@ -334,7 +334,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
     }
 
     @Override
-    public void sendAccountVerificationToken(Profile profile, OTPRequestType otpRequestType, String baseUrl) {
+    public void sendAccountVerificationToken(Users profile, OTPRequestType otpRequestType, String baseUrl) {
         try{
             OTPBase otp = generateOTP(profile.getPhoneNumber(), profile.getEmail(), otpRequestType);
 
@@ -342,14 +342,18 @@ public class OTPTokenServiceImpl implements OTPTokenService {
                     profile.getSurname());
 
             // Send SMS
-            sendSMSOTP(fullName, otp);
+            if(profile.getPhoneNumber() != null)
+                sendSMSOTP(fullName, otp);
 
             // Send Email
-            AccountVerificationEmailContext emailContext = new AccountVerificationEmailContext();
-            emailContext.init(profile);
-            emailContext.setToken(String.valueOf(otp.getCode()));
-            emailContext.buildURL(baseUrl);
-            sendEmailToken(emailContext);
+            if(profile.getEmail() != null){
+                AccountVerificationEmailContext emailContext = new AccountVerificationEmailContext();
+                emailContext.init(profile);
+                emailContext.setToken(String.valueOf(otp.getCode()));
+                emailContext.buildURL(baseUrl);
+                sendEmailToken(emailContext);
+            }
+
         }catch(Exception ex){
             log.error("An Error Occurred :: {}", ex.getMessage());
         }

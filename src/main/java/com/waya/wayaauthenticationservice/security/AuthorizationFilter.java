@@ -19,6 +19,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static com.waya.wayaauthenticationservice.util.HelperUtils.isEmail;
+
 @Slf4j
 public class AuthorizationFilter extends BasicAuthenticationFilter {
 
@@ -46,6 +48,14 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
 		String userToken;
 		if (token != null && validateToken(token)) {
 			userToken = getUserNameFromToken(token);
+			if(!isEmail(userToken)) {
+				if(userToken.startsWith("+")) {
+					userToken = userToken.substring(1);
+				}
+				if(userToken.length() > 10) {
+					userToken = userToken.substring(userToken.length() - 10);
+				}
+			}
 			UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
 
 			Users user = userLoginRepo.findByEmailOrPhoneNumber(userToken).orElse(null);

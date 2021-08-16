@@ -13,7 +13,6 @@ import com.waya.wayaauthenticationservice.util.CustomValidator;
 import com.waya.wayaauthenticationservice.util.EnumValue;
 import com.waya.wayaauthenticationservice.util.ValidPhone;
 
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
@@ -24,13 +23,13 @@ import static com.waya.wayaauthenticationservice.enums.Gender.MALE;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BaseUserPojo {
 
-	@NotNull(message = "Email Cannot be Null")
+	//@NotNull(message = "Email Cannot be Null")
 	@CustomValidator(message = "Invalid Email", type = Type.EMAIL)
 	private String email;
 
-	@NotBlank(message = "Phone Number Cannot be blank")
+	//@NotBlank(message = "Phone Number Cannot be blank")
 	@ValidPhone
-	@CustomValidator(message = "Phone Number must be {max} characters", type = Type.SIZE, min = 13, max = 14)
+	@CustomValidator(message = "Phone Number must be {max} characters", type = Type.SIZE, max = 13)
 	private String phoneNumber;
 
 	private String referenceCode;

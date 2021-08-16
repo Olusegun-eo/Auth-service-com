@@ -3,7 +3,6 @@ package com.waya.wayaauthenticationservice.entity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 
 import javax.persistence.Column;
@@ -17,7 +16,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
@@ -34,7 +32,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @Entity
-@ToString(exclude = {"userAccounts", "password", "pinHash", "roleList"})
+@ToString(exclude = {"password", "pinHash", "roleList"})
 @Table(name = "m_users", uniqueConstraints = {
         @UniqueConstraint(name = "UniqueEmailAndPhoneNumberAndDelFlg", columnNames = {"id", "phone_number", "email", "is_deleted"})})
 public class Users extends AuditModel implements Serializable {
@@ -49,10 +47,9 @@ public class Users extends AuditModel implements Serializable {
     //@Column(name = "user_id", unique = true, nullable = false)
     //private String userId;
 
-    @Column(nullable = false)
     private String email;
 
-    @Column(nullable = false, name = "phone_number")
+    @Column(name = "phone_number")
     private String phoneNumber;
 
     private String referenceCode;
@@ -140,13 +137,6 @@ public class Users extends AuditModel implements Serializable {
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "m_users_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private Collection<Role> roleList;
-
-    // The 'mappedBy = "user"' attribute specifies that
-    // the 'private Users user;' field in UserWallet owns the
-    // relationship (i.e. contains the foreign key for the query to
-    // find all userWallets for a user.)
-    @OneToMany(mappedBy = "user")
-    private List<UserWallet> userAccounts;
 
     @CreationTimestamp
     @ApiModelProperty(hidden = true)

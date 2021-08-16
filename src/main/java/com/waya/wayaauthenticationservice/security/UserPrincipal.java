@@ -1,26 +1,18 @@
 package com.waya.wayaauthenticationservice.security;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
 import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
 import com.waya.wayaauthenticationservice.service.UserService;
-
 import lombok.ToString;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("serial")
 @ToString(exclude = "attributes")
@@ -32,6 +24,9 @@ public class UserPrincipal implements OAuth2User, UserDetails {
 
 	public UserPrincipal(Users user) {
 		this.user = user;
+		UserAccessResponse access = ((UserService) SpringApplicationContext.getBean("userServiceImpl"))
+				.getAccessResponse(this.user.getId()).getData();
+		this.access = access;
 	}
 
 	public static UserPrincipal create(Users user) {
@@ -82,13 +77,10 @@ public class UserPrincipal implements OAuth2User, UserDetails {
 		Collection<GrantedAuthority> grantedAuthorities = roles.stream()
 				.map(r -> new SimpleGrantedAuthority(r.getName())).collect(Collectors.toSet());
 		grantedAuthorities.addAll(getGrantedAuthorities(getPrivileges(roles)));
-
-		UserAccessResponse access = ((UserService) SpringApplicationContext.getBean("userServiceImpl"))
-				.getAccessResponse(this.user.getId()).getData();
-		this.setAccess(access);
-		if(access != null){
-			grantedAuthorities.add(new SimpleGrantedAuthority(access.getRoleName()));
-			grantedAuthorities.add(new SimpleGrantedAuthority(access.getPermissionName()));
+		
+		if(this.getAccess() != null){
+			grantedAuthorities.add(new SimpleGrantedAuthority(this.getAccess().getRoleName()));
+			grantedAuthorities.add(new SimpleGrantedAuthority(this.getAccess().getPermissionName()));
 		}
 		return grantedAuthorities;
 	}

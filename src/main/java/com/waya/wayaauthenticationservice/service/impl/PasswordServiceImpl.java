@@ -9,20 +9,16 @@ import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordChangeEmailContext;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordResetContext;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PinResetContext;
-import com.waya.wayaauthenticationservice.pojo.password.ChangePINPojo;
-import com.waya.wayaauthenticationservice.pojo.password.ChangePasswordPojo;
-import com.waya.wayaauthenticationservice.pojo.password.NewPinPojo;
-import com.waya.wayaauthenticationservice.pojo.password.PasswordPojo;
-import com.waya.wayaauthenticationservice.pojo.password.ResetPasswordPojo;
+import com.waya.wayaauthenticationservice.pojo.password.*;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
-import com.waya.wayaauthenticationservice.service.MailService;
-import com.waya.wayaauthenticationservice.service.PasswordService;
+import com.waya.wayaauthenticationservice.service.MessagingService;
 import com.waya.wayaauthenticationservice.service.OTPTokenService;
+import com.waya.wayaauthenticationservice.service.PasswordService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -30,12 +26,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
-
-import javax.validation.Valid;
 
 import static com.waya.wayaauthenticationservice.enums.OTPRequestType.*;
 import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
@@ -48,7 +43,7 @@ public class PasswordServiceImpl implements PasswordService {
 	private final OTPTokenService OTPTokenService;
 	private final UserRepository usersRepo;
 	private final ProfileRepository profileRepo;
-	private final MailService mailService;
+	private final MessagingService messagingService;
 	private final BCryptPasswordEncoder passwordEncoder;
 	private final AuthenticatedUserFacade authenticatedUserFacade;
 
@@ -99,19 +94,13 @@ public class PasswordServiceImpl implements PasswordService {
 						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User with email: " + email, null),
 						HttpStatus.BAD_REQUEST);
 
-			Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
-			if (profile == null)
-				return new ResponseEntity<>(new ErrorResponse(
-						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For Profile with userId: " + user.getId(),
-						null), HttpStatus.BAD_REQUEST);
-
 			PasswordChangeEmailContext emailContext = new PasswordChangeEmailContext();
 			Integer otpToken = generateEmailOTP(email, PASSWORD_CHANGE_EMAIL);
-			emailContext.init(profile);
+			emailContext.init(user);
 			emailContext.redirectTo(baseUrl);
 			emailContext.setToken(String.valueOf(otpToken));
 			// Send the Mail
-			CompletableFuture.runAsync(() -> this.mailService.sendMail(emailContext));
+			CompletableFuture.runAsync(() -> this.messagingService.sendMail(emailContext));
 
 			return new ResponseEntity<>(new SuccessResponse("Email for Password Reset has been sent"), HttpStatus.OK);
 		} catch (Exception ex) {
@@ -190,19 +179,13 @@ public class PasswordServiceImpl implements PasswordService {
 						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User with email: " + email, null),
 						HttpStatus.BAD_REQUEST);
 
-			Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
-			if (profile == null)
-				return new ResponseEntity<>(new ErrorResponse(
-						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For Profile with userId: " + user.getId(),
-						null), HttpStatus.BAD_REQUEST);
-
 			PasswordResetContext emailContext = new PasswordResetContext();
 			Integer otpToken = generateEmailOTP(email, PASSWORD_RESET_EMAIL);
-			emailContext.init(profile);
+			emailContext.init(user);
 			emailContext.redirectTo(baseUrl);
 			emailContext.seToken(String.valueOf(otpToken));
 			// Send the Mail
-			CompletableFuture.runAsync(() -> this.mailService.sendMail(emailContext));
+			CompletableFuture.runAsync(() -> this.messagingService.sendMail(emailContext));
 
 			return new ResponseEntity<>(new SuccessResponse("Email for Password Reset has been sent"), HttpStatus.OK);
 		} catch (Exception ex) {
@@ -273,19 +256,13 @@ public class PasswordServiceImpl implements PasswordService {
 			if (!user.isPinCreated())
 				return new ResponseEntity<>(new ErrorResponse("Transaction pin Not Setup yet"), HttpStatus.BAD_REQUEST);
 
-			Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
-			if (profile == null)
-				return new ResponseEntity<>(new ErrorResponse(
-						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For Profile with userId: " + user.getId(),
-						null), HttpStatus.BAD_REQUEST);
-
 			PinResetContext emailContext = new PinResetContext();
 			Integer otpToken = generateEmailOTP(email, PIN_RESET_EMAIL);
-			emailContext.init(profile);
+			emailContext.init(user);
 			emailContext.redirectTo(redirectUrl);
 			emailContext.seToken(String.valueOf(otpToken));
 			// Send the Mail
-			CompletableFuture.runAsync(() -> this.mailService.sendMail(emailContext));
+			CompletableFuture.runAsync(() -> this.messagingService.sendMail(emailContext));
 
 			return new ResponseEntity<>(new SuccessResponse("Email for Pin Reset has been sent"), HttpStatus.OK);
 		} catch (Exception ex) {
@@ -349,7 +326,7 @@ public class PasswordServiceImpl implements PasswordService {
 			emailContext.seToken(String.valueOf(otpToken));
 
 			// Send the Mail
-			CompletableFuture.runAsync(() -> this.mailService.sendMail(emailContext));
+			CompletableFuture.runAsync(() -> this.messagingService.sendMail(emailContext));
 
 			return new ResponseEntity<>(new SuccessResponse("Email for Pin Reset has been sent"), HttpStatus.OK);
 		} catch (Exception ex) {
@@ -573,7 +550,7 @@ public class PasswordServiceImpl implements PasswordService {
 			emailContext.redirectTo(redirectUrl);
 			emailContext.seToken(String.valueOf(otpToken));
 			// Send the Mail
-			CompletableFuture.runAsync(() -> this.mailService.sendMail(emailContext));
+			CompletableFuture.runAsync(() -> this.messagingService.sendMail(emailContext));
 
 			return new ResponseEntity<>(new SuccessResponse("Email for Pin Creation has been sent"), HttpStatus.OK);
 		} catch (Exception ex) {

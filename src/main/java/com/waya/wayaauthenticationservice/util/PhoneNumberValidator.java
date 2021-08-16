@@ -1,9 +1,9 @@
 package com.waya.wayaauthenticationservice.util;
 
-import static com.waya.wayaauthenticationservice.util.HelperUtils.phoneNumPattern;
-
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
+
+import static com.waya.wayaauthenticationservice.util.HelperUtils.phoneNumPattern;
 
 //@Configurable
 
@@ -23,7 +23,7 @@ public class PhoneNumberValidator implements ConstraintValidator<ValidPhone, Str
         
         return phoneNumPattern.matcher(phoneNumberField).find()
                 && phoneNumberField.startsWith("234")
-                && phoneNumberField.length() >= 13;
+                && phoneNumberField.length() == 13;
 
     }
 }

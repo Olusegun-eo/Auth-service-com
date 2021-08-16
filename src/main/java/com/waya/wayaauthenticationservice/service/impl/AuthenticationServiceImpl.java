@@ -16,14 +16,10 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -37,7 +33,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
-import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
@@ -49,24 +44,21 @@ import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
 import com.waya.wayaauthenticationservice.pojo.others.CreateAccountPojo;
 import com.waya.wayaauthenticationservice.pojo.others.DevicePojo;
 import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.ValidateUserPojo;
 import com.waya.wayaauthenticationservice.pojo.others.VirtualAccountPojo;
 import com.waya.wayaauthenticationservice.pojo.others.WayagramPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
-import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.RedisUserDao;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
-import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
-import com.waya.wayaauthenticationservice.service.MailService;
+import com.waya.wayaauthenticationservice.service.MessagingService;
 import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.util.ReqIPUtils;
@@ -92,41 +84,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	@Autowired
 	private RedisUserDao redisUserDao;
 	@Autowired
-	private AuthenticatedUserFacade authenticatedUserFacade;
-	@Autowired
-	private ProfileRepository profileRepository;
-	@Autowired
 	private WalletProxy walletProxy;
 	@Autowired
 	private VirtualAccountProxy virtualAccountProxy;
 	@Autowired
 	private ReqIPUtils reqUtil;
 	@Autowired
-	private MailService mailService;
-	// @Autowired
-	// private ModelMapper mapper;
+	private MessagingService messagingService;
 	@Autowired
 	private ProfileService profileService;
 	@Autowired
-	private OTPTokenService OTPTokenService;
+	private OTPTokenService otpTokenService;
 
 	@Value("${api.server.deployed}")
 	private String urlRedirect;
 
 	private String getBaseUrl(HttpServletRequest request) {
-		try {
-			StringBuffer url = request.getRequestURL();
-			String uri = request.getRequestURI();
-			int idx = (((uri != null) && (uri.length() > 0)) ? url.indexOf(uri) : url.length());
-			String host = url.substring(0, idx); // base url
-			idx = host.indexOf("://");
-			if (idx > 0) {
-				host = host.substring(idx); // remove scheme if present
-				log.info("Servers Host is {}", host);
-			}
-		} catch (Exception ex) {
-			log.error("An Error has Occurred:: {}", ex.getMessage());
-		}
 		return "http://" + urlRedirect + ":" + request.getServerPort() + request.getContextPath();
 	}
 
@@ -136,7 +109,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			boolean adminAction) {
 		try {
 			// Check if email exists
-			Users user = userRepo.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
+			Users user = mUser.getEmail() == null ? null
+					: userRepo.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
 			if (user != null)
 				return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
 
@@ -146,6 +120,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			if (user != null)
 				return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
 						HttpStatus.BAD_REQUEST);
+
+			if(mUser.getEmail() == null && mUser.getPhoneNumber() == null){
+				return new ResponseEntity<>(new ErrorResponse("Both Phone number and Email cannot be null"),
+						HttpStatus.BAD_REQUEST);
+			}
 
 			List<Role> roleList = new ArrayList<>();
 			Role userRole = rolesRepo.findByName("ROLE_USER")
@@ -177,9 +156,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			DevicePojo dev = this.reqUtil.GetDevice(device);
 
 			user = new Users();
-			user.setId(0L);
 			user.setAdmin(mUser.isAdmin());
-			user.setEmail(mUser.getEmail().trim());
+			user.setCorporate(false);
+			user.setEmail(mUser.getEmail());
 			user.setFirstName(mUser.getFirstName());
 			user.setPhoneNumber(mUser.getPhoneNumber());
 			user.setReferenceCode(mUser.getReferenceCode());
@@ -205,7 +184,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			if (adminAction)
 				CompletableFuture.runAsync(
-						() -> sendEmailNewPassword(mUser.getPassword(), regUser));
+						() -> sendNewPassword(mUser.getPassword(), regUser));
 
 			String token = generateToken(regUser);
 			createPrivateUser(mUser, regUser.getId(), token, getBaseUrl(request));
@@ -214,7 +193,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 					"User Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
 					HttpStatus.CREATED);
 		} catch (Exception e) {
-			log.error("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+			log.error("Error::: {}", e.getMessage());
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -236,6 +215,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			if (existingTelephone != null)
 				return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
 						HttpStatus.BAD_REQUEST);
+
+			if(mUser.getEmail() == null && mUser.getPhoneNumber() == null){
+				return new ResponseEntity<>(new ErrorResponse("Both Phone number and Email cannot be null"),
+						HttpStatus.BAD_REQUEST);
+			}
 
 			Role userRole = rolesRepo.findByName("ROLE_USER")
 					.orElseThrow(() -> new CustomException("Merchant Role Not Available", HttpStatus.BAD_REQUEST));
@@ -287,7 +271,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			if (adminAction)
 				CompletableFuture.runAsync(
-						() -> sendEmailNewPassword(mUser.getPassword(), regUser));
+						() -> sendNewPassword(mUser.getPassword(), regUser));
 
 			String token = generateToken(regUser);
 
@@ -322,7 +306,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 		// Implementation for internal call
 		log.info("CorporateProfile account creation starts: " + corporateProfileRequest);
-		ApiResponse<String> corporateResponse = profileService.createProfile(corporateProfileRequest, baseUrl);
+		ApiResponseBody<String> corporateResponse = profileService.createProfile(corporateProfileRequest, baseUrl);
 		log.info("CorporateProfile account creation ends: " + corporateResponse);
 
 		// Create External Virtual Accounts
@@ -333,7 +317,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				.orTimeout(3, TimeUnit.MINUTES).handle((res, ex) -> {
 					if (ex != null) {
 						log.error("Error Creating Virtual Account, {}", ex.getMessage());
-						return new ApiResponse<>("An error has occurred", false);
+						return new ApiResponseBody<>("An error has occurred", false);
 					}
 					return res.getBody();
 				}).thenAccept(
@@ -351,7 +335,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		}).orTimeout(3, TimeUnit.MINUTES).handle((res, ex) -> {
 			if (ex != null) {
 				log.error("Error Creating Internal Wallets Account, {}", ex.getMessage());
-				return new ApiResponse<>("An error has occurred", false);
+				return new ApiResponseBody<>("An error has occurred", false);
 			}
 			return res;
 		}).thenAccept(p -> log.info("Response from Call to Create Corporate Wallet is: {}", p));
@@ -371,7 +355,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		personalProfileRequest.setDateOfBirth(dateOfBirth);
 
 		log.info("PersonalProfile account creation starts: " + personalProfileRequest);
-		ApiResponse<String> personalResponse = profileService.createProfile(personalProfileRequest, baseUrl);
+		ApiResponseBody<String> personalResponse = profileService.createProfile(personalProfileRequest, baseUrl);
 		log.info("PersonalProfile account creation ends: " + personalResponse);
 
 		// Create External Virtual Accounts
@@ -382,7 +366,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				.orTimeout(3, TimeUnit.MINUTES).handle((res, ex) -> {
 					if (ex != null) {
 						log.error("Error Creating Virtual Account, Message is: {}", ex.getMessage());
-						return new ApiResponse<>("An error has occurred", false);
+						return new ApiResponseBody<>("An error has occurred", false);
 					}
 					return res.getBody();
 				}).thenAccept(p -> log.info("Response from Call to Create User Wallet is: {}", p.getData()));
@@ -399,19 +383,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		}).orTimeout(3, TimeUnit.MINUTES).handle((res, ex) -> {
 			if (ex != null) {
 				log.error("Error Creating Wallet Account, {}", ex.getMessage());
-				return new ApiResponse<>("An error has occurred", false);
+				return new ApiResponseBody<>("An error has occurred", false);
 			}
 			return res;
 		}).thenAccept(p -> log.info("Response from Call to Create User Wallet is: {}", p));
 	}
 
-	public String generateToken(Users userResponse) {
+	public String generateToken(Users user) {
 		try {
-			System.out.println("::::::GENERATE TOKEN:::::");
-			String token = Jwts.builder().setSubject(userResponse.getEmail())
+			String name = user.getEmail() != null ? user.getEmail() : user.getPhoneNumber();
+			String token = Jwts.builder().setSubject(name)
 					.setExpiration(new Date(System.currentTimeMillis() + getExpiration() * 1000))
 					.signWith(SignatureAlgorithm.HS512, getSecret()).compact();
-			System.out.println(":::::Token:::::");
 			return TOKEN_PREFIX + token;
 		} catch (Exception e) {
 			log.error("An Error Occurred:: {}", e.getMessage());
@@ -434,7 +417,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 						new SuccessResponse("Account has been Verified already. Please login.", null),
 						HttpStatus.CREATED);
 
-			OTPVerificationResponse otpResponse = OTPTokenService.verifyJointOTP(otpPojo.getPhoneOrEmail(),
+			OTPVerificationResponse otpResponse = otpTokenService.verifyJointOTP(otpPojo.getPhoneOrEmail(),
 					otpPojo.getOtp(), JOINT_VERIFICATION);
 			String message = otpResponse.getMessage();
 			if (otpResponse.isValid()) {
@@ -514,23 +497,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	}
 
 	private OTPVerificationResponse verifyOTP(String phoneNumber, Integer otp) {
-		OTPVerificationResponse verify = OTPTokenService.verifySMSOTP(phoneNumber, otp, PHONE_VERIFICATION);
+		OTPVerificationResponse verify = otpTokenService.verifySMSOTP(phoneNumber, otp, PHONE_VERIFICATION);
 		return verify;
 	}
 
 	private OTPVerificationResponse verifyEmail(String email, Integer otp) {
-		return OTPTokenService.verifyEmailToken(email, otp, EMAIL_VERIFICATION);
+		return otpTokenService.verifyEmailToken(email, otp, EMAIL_VERIFICATION);
 	}
 
 	private boolean sendOTP(String phoneNumber, String fullName) {
-		return OTPTokenService.sendSMSOTP(phoneNumber, fullName, PHONE_VERIFICATION);
+		return otpTokenService.sendSMSOTP(phoneNumber, fullName, PHONE_VERIFICATION);
 	}
 
-	private boolean pushEMailToken(String baseUrl, String email) {
-		Profile profile = profileRepository.findByEmail(false, email)
-				.orElseThrow(() -> new CustomException("User Profile with email: " + email + "does not exist",
-						HttpStatus.NOT_FOUND));
-		return OTPTokenService.sendVerificationEmailToken(baseUrl, profile, EMAIL_VERIFICATION);
+	private boolean pushEMailToken(String baseUrl, Users user) {
+		return otpTokenService.sendVerificationEmailToken(baseUrl, user, EMAIL_VERIFICATION);
 	}
 
 	@Override
@@ -569,11 +549,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			return new ResponseEntity<>(new SuccessResponse("Account has been Verified already.", null),
 					HttpStatus.CREATED);
 
-		Profile profile = profileRepository.findByEmailOrPhoneNumber(false, emailOrPhoneNumber)
-				.orElseThrow(() -> new CustomException("User Profile with email: " + user.getEmail() + "does not exist",
-						HttpStatus.NOT_FOUND));
-
-		this.OTPTokenService.sendAccountVerificationToken(profile, JOINT_VERIFICATION, baseUrl);
+		this.otpTokenService.sendAccountVerificationToken(user, JOINT_VERIFICATION, baseUrl);
 
 		return new ResponseEntity<>(new SuccessResponse("OTP sent successfully.", null), HttpStatus.OK);
 	}
@@ -588,7 +564,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			// Implementation for internal call
 			log.info("Resend Verification Mail starts for {}", email);
-			boolean check = pushEMailToken(baseUrl, email);
+			boolean check = pushEMailToken(baseUrl, user);
 			log.info("Response From Verification Mail {}", check);
 
 			if (check) {
@@ -599,38 +575,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			}
 		} catch (Exception ex) {
 			throw new CustomException(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
-		}
-	}
-
-	@Override
-	public ResponseEntity<?> validateUser() {
-		Users user = authenticatedUserFacade.getUser();
-		if (user == null) {
-			return new ResponseEntity<>(new ErrorResponse("Invalid user."), HttpStatus.OK);
-		} else {
-			Set<String> roles = new HashSet<>();
-			Collection<Role> userRoles = user.getRoleList();
-			Set<String> permits = new HashSet<>();
-			for (Role r : userRoles) {
-				roles.add(r.getName());
-				permits.addAll(r.getPrivileges().stream().map(p -> p.getName()).collect(Collectors.toSet()));
-			}
-
-			ValidateUserPojo validateUserPojo = new ValidateUserPojo();
-			validateUserPojo.setCorporate(user.isCorporate());
-			validateUserPojo.setEmail(user.getEmail());
-			validateUserPojo.setEmailVerified(user.isEmailVerified());
-			validateUserPojo.setFirstName(user.getFirstName());
-			validateUserPojo.setSurname(user.getSurname());
-			validateUserPojo.setPhoneVerified(user.isPhoneVerified());
-			validateUserPojo.setPinCreated(user.isPinCreated());
-			validateUserPojo.setId(user.getId());
-			validateUserPojo.setReferenceCode(user.getReferenceCode());
-			validateUserPojo.setPhoneNumber(user.getPhoneNumber());
-			validateUserPojo.setRoles(roles);
-			validateUserPojo.setPermits(permits);
-
-			return new ResponseEntity<>(new SuccessResponse("User valid.", validateUserPojo), HttpStatus.OK);
 		}
 	}
 
@@ -660,13 +604,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Override
 	public ResponseEntity<?> createProfileAccount(PersonalProfileRequest profilePojo, String baseUrl) {
-		ApiResponse<String> response = profileService.createProfile(profilePojo, baseUrl);
+		ApiResponseBody<String> response = profileService.createProfile(profilePojo, baseUrl);
 		return new ResponseEntity<>(new SuccessResponse(response.getData(), null), HttpStatus.OK);
 	}
 
 	@Override
 	public ResponseEntity<?> createCorporateProfileAccount(CorporateProfileRequest profilePojo, String baseUrl) {
-		ApiResponse<String> response = profileService.createProfile(profilePojo, baseUrl);
+		ApiResponseBody<String> response = profileService.createProfile(profilePojo, baseUrl);
 		return new ResponseEntity<>(new SuccessResponse(response.getData(), null), HttpStatus.OK);
 	}
 
@@ -683,12 +627,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	}
 
 	@Override
-	public void sendEmailNewPassword(String randomPassword, Users user) {
+	public void sendNewPassword(String randomPassword, Users user) {
 		// Email Sending of new Password Here
-        PasswordCreateContext context = new PasswordCreateContext();
-        context.init(user);
-        context.setPassword(randomPassword);
-        this.mailService.sendMail(context);
+		if(user.getEmail() != null){
+			PasswordCreateContext context = new PasswordCreateContext();
+			context.init(user);
+			context.setPassword(randomPassword);
+			this.messagingService.sendMail(context);
+		}else{
+			String message = String.format("An account has been created for you with password: %s." +
+					" Kindly login with your phone Number and change your password", randomPassword);
+			this.messagingService.sendSMS(user.getFirstName(), message, user.getPhoneNumber());
+		}
 	}
 
 	private CreateAccountPojo formAccountCreationPojo(Long userId, BaseUserPojo mUser) {
