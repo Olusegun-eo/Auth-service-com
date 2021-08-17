@@ -3,6 +3,7 @@ package com.waya.wayaauthenticationservice.integration;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.others.CreateAccountResponse;
 import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
+import com.waya.wayaauthenticationservice.pojo.others.VirtualAccountResponse;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
@@ -81,13 +82,14 @@ public class AuthenticationControllerTest {
     @Test
     @DisplayName("create personal profile successfully")
     public void createPersonalUserSuccessfully() throws Exception {
-    	ResponseEntity<?> resp = ResponseEntity.ok(new ApiResponseBody<>("Success", true));
+        ApiResponseBody<?> resp = new ApiResponseBody<>("Success", true);
+        ResponseEntity<String> response = ResponseEntity.ok("Success");
         ApiResponseBody<CreateAccountResponse> acctResponse = new ApiResponseBody<>
                 (new CreateAccountResponse("1", "5055555783"), "Success", true);
 
     	doReturn(resp).when(virtualAccountService).createVirtualAccount(any());
-    	doReturn(resp).when(wayagramService).createWayagramProfile(any());
-    	doReturn(resp).when(wayagramService).autoFollowWayagram(any());
+    	doReturn(response).when(wayagramService).createWayagramProfile(any());
+    	doReturn(response).when(wayagramService).autoFollowWayagram(any());
     	doReturn(acctResponse).when(walletService).createUserAccount(any());
         doNothing().when(otpService).sendAccountVerificationToken(any(), any(), any());
     	
@@ -117,7 +119,7 @@ public class AuthenticationControllerTest {
     @Test
     @DisplayName("create corporate profile successfully")
     public void createCorpUserSuccessfully() throws Exception {
-    	ResponseEntity<?> resp = ResponseEntity.ok(new ApiResponseBody<>("Success", true));
+        ApiResponseBody<VirtualAccountResponse> resp = new ApiResponseBody<>("Success", true);
         ApiResponseBody<CreateAccountResponse> acctResponse = new ApiResponseBody<>
                 (new CreateAccountResponse("1", "5055555783"), "Success", true);
 

@@ -82,7 +82,7 @@ public class UserControllerTest {
 	@Test
 	@DisplayName("test User Controller Get User Setup: PASS")
 	public void getUserSetUp() throws Exception {
-		String token = generateToken(user);
+		String token = generateToken();
 		
 		UserSetupPojo pojo = new UserSetupPojo();
 		pojo.setUserId(user.getId());
@@ -98,7 +98,7 @@ public class UserControllerTest {
 	@Test
 	@DisplayName("test User Controller Save User Setup: PASS")
 	public void saveUserSetup() throws Exception {
-		String token = generateToken(user);
+		String token = generateToken();
 		UserSetupPojo pojo = new UserSetupPojo();
 		pojo.setUserId(user.getId());
 		pojo.setTransactionLimit(new BigDecimal("300000"));
@@ -110,7 +110,7 @@ public class UserControllerTest {
 	@Test
 	@DisplayName("test User Controller Get User Setup: FAIL")
 	public void getUserSetUpfAIL() throws Exception {
-		String token = generateToken(user);
+		String token = generateToken();
 		long id = 4567;
 
 		UserSetupPojo pojo = new UserSetupPojo();
@@ -129,7 +129,7 @@ public class UserControllerTest {
 	@DisplayName("test User Controller Save User Setup: FAIL")
 	public void saveUserSetupFAIL() throws Exception {
 		long id = 4567;
-		String token = generateToken(user);
+		String token = generateToken();
 		UserSetupPojo pojo = new UserSetupPojo();
 		pojo.setUserId(id);
 		pojo.setTransactionLimit(new BigDecimal("300000"));
@@ -163,10 +163,9 @@ public class UserControllerTest {
 				.andDo(print());
 	}
 
-	private String generateToken(Users user) {
+	private String generateToken() {
 		try {
-			System.out.println("::::::GENERATE TOKEN:::::");
-			String token = Jwts.builder().setSubject(user.getEmail())
+			String token = Jwts.builder().setSubject("stan@toju.com")
 					.setExpiration(new Date(System.currentTimeMillis() + getExpiration() * 1000))
 					.signWith(SignatureAlgorithm.HS512, getSecret()).compact();
 			System.out.println(":::::Token:::::");
