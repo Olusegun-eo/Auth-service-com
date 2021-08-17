@@ -1,19 +1,16 @@
 package com.waya.wayaauthenticationservice.response;
 
-import java.util.UUID;
+import lombok.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import java.util.UUID;
 
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class ToggleSMSResponse {
+public class SMSResponse {
+
     private UUID id;
     private String phoneNumber;
     private boolean active = true;

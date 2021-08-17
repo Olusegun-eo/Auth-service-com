@@ -324,7 +324,7 @@ public class UserServiceImpl implements UserService {
 		// Disables User Profile and Wayagram Services
 		// Delete Virtual Account Call
 		// Delete All User's Wallets
-		CompletableFuture.runAsync(() -> disableUserProfile(String.valueOf(user.getId()), token))
+		CompletableFuture.runAsync(() -> disableUserProfile(user.getId(), token))
 				.thenRun(() -> this.deleteUsersVirtualAccount(user.getId(), token))
 				.thenRun(() -> usersRepository.saveAndFlush(user));
 	}
@@ -400,7 +400,7 @@ public class UserServiceImpl implements UserService {
 
 			// Reactivates other Services tied to the UserId
 			String token = this.authService.generateToken(authenticatedUserFacade.getUser());
-			CompletableFuture.runAsync(() -> enableUserProfile(String.valueOf(user.getId()), token))
+			CompletableFuture.runAsync(() -> enableUserProfile(user.getId(), token))
 					.thenRun(() -> usersRepository.saveAndFlush(user));
 
 			return new ResponseEntity<>(new SuccessResponse("Account Undeleted", OK), OK);
@@ -556,7 +556,7 @@ public class UserServiceImpl implements UserService {
 		}
 	}
 
-	private void disableUserProfile(String userId, String token) {
+	private void disableUserProfile(Long userId, String token) {
 		try {
 			// Profile Service Delete Call
 			DeleteRequest deleteRequest = DeleteRequest.builder().userId(userId).deleteType(DeleteType.DELETE).build();
@@ -564,7 +564,7 @@ public class UserServiceImpl implements UserService {
 			log.info("Profile Deleted: {} {}", returnValue.getCode(), returnValue.getMessage());
 
 			// Wayagram delete Account call
-			UserIDPojo idPojo = new UserIDPojo(userId);
+			UserIDPojo idPojo = new UserIDPojo(String.valueOf(userId));
 
 			var resp = this.wayagramProxy.deleteWayagramAccount(idPojo, token);
 			log.info("Wayagram Account Activation: {} - {}", resp.getBody(), resp.getStatusCode());
@@ -573,7 +573,7 @@ public class UserServiceImpl implements UserService {
 		}
 	}
 
-	private void enableUserProfile(String userId, String token) {
+	private void enableUserProfile(Long userId, String token) {
 		try {
 			// Profile Service Un-Delete Call
 			DeleteRequest deleteRequest = DeleteRequest.builder().userId(userId).deleteType(DeleteType.RESTORE).build();
@@ -583,7 +583,7 @@ public class UserServiceImpl implements UserService {
 			// TODO: Wallet Un-Delete Account Call
 
 			// Wayagram Activate Account call
-			UserIDPojo idPojo = new UserIDPojo(userId);
+			UserIDPojo idPojo = new UserIDPojo(String.valueOf(userId));
 			var resp = this.wayagramProxy.undeleteAccount(idPojo, token);
 			log.info("Wayagram Account Activation: {} - {}", resp.getBody(), resp.getStatusCode());
 		} catch (Exception e) {

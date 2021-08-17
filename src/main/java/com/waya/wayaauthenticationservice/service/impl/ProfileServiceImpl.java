@@ -3,6 +3,7 @@ package com.waya.wayaauthenticationservice.service.impl;
 import com.waya.wayaauthenticationservice.entity.*;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserIDPojo;
@@ -484,15 +485,15 @@ public class ProfileServiceImpl implements ProfileService {
 	 */
 	// @Async
 	@Override
-	public ApiResponseBody<String> updateProfileImage(String userId, MultipartFile file) {
+	public ApiResponseBody<String> updateProfileImage(Long userId, MultipartFile file) {
 		try {
 			String mimeType = Magic.getMagicMatch(file.getBytes(), false).getMimeType();
 			if (mimeType.startsWith("image/")) {
 				// It's an image.
-				Optional<Profile> profile = profileRepository.findByUserId(false, userId);
+				Optional<Profile> profile = profileRepository.findByUserId(false, String.valueOf(userId));
 				if (profile.isPresent()) {
 					Profile item = profile.get();
-					ApiResponseBody<ImageUrlResponse> response = uploadImage(fileResourceServiceFeignClient, file, userId,
+					ApiResponseBody<ImageUrlResponse> response = uploadImage(fileResourceServiceFeignClient, file,  String.valueOf(userId),
 							log);
 					if (response != null && response.getStatus()) {
 						// update the profile image
@@ -535,18 +536,18 @@ public class ProfileServiceImpl implements ProfileService {
 	 * @return
 	 */
 	@Override
-	public ApiResponseBody<String> uploadOtherImage(String userId, MultipartFile file, String type) {
+	public ApiResponseBody<String> uploadOtherImage(Long userId, MultipartFile file, String type) {
 		try {
 			String mimeType = Magic.getMagicMatch(file.getBytes(), false).getMimeType();
 			if (mimeType.startsWith("image/")) {
 				// It's an image.
-				Optional<Profile> profile = profileRepository.findByUserId(false, userId);
+				Optional<Profile> profile = profileRepository.findByUserId(false,  String.valueOf(userId));
 				if (profile.isPresent()) {
 					Profile item = profile.get();
 					if (item.isCorporate()) {
 						String fileName = String.format("%s_%s", item.getFirstName(), type);
 						ApiResponseBody<String> response = fileResourceServiceFeignClient
-								.uploadOtherImage(file, fileName, userId);
+								.uploadOtherImage(file, fileName,  String.valueOf(userId));
 						
 						log.info("Response from Upload:: {}", response.toString());
 						if (response != null && response.getStatus()) {
@@ -796,7 +797,7 @@ public class ProfileServiceImpl implements ProfileService {
 		DeleteResponse deleteResponse = new DeleteResponse();
 		try {
 			if (deleteRequest.getDeleteType().equals(DeleteType.DELETE)) {
-				Optional<Profile> optionalProfile = profileRepository.findByUserId(false, deleteRequest.getUserId());
+				Optional<Profile> optionalProfile = profileRepository.findByUserId(false, String.valueOf(deleteRequest.getUserId()));
 				if (optionalProfile.isPresent()) {
 					Profile profile = optionalProfile.get();
 					log.info("profile found :: {}", profile);
@@ -809,7 +810,7 @@ public class ProfileServiceImpl implements ProfileService {
 					deleteResponse.setError("Profile with userId do not exist or already deleted");
 				}
 			} else if (deleteRequest.getDeleteType().equals(DeleteType.RESTORE)) {
-				Optional<Profile> optionalProfile = profileRepository.findByUserId(true, deleteRequest.getUserId());
+				Optional<Profile> optionalProfile = profileRepository.findByUserId(true, String.valueOf(deleteRequest.getUserId()));
 				if (optionalProfile.isPresent()) {
 					Profile profile = optionalProfile.get();
 					profile.setDeleted(false);
@@ -826,7 +827,7 @@ public class ProfileServiceImpl implements ProfileService {
 			}
 
 		} catch (Exception e) {
-			log.error("Error while calling toggle delete:: {}", e);
+			log.error("Error while calling toggle delete:: {}", e.getMessage());
 			deleteResponse.setCode("400");
 			deleteResponse.setError("Error while performing operation");
 			return deleteResponse;
@@ -834,42 +835,48 @@ public class ProfileServiceImpl implements ProfileService {
 		return deleteResponse;
 	}
 
-	public ToggleSMSResponse toggleSMSAlert(ToggleSMSRequest toggleSMSRequest) {
-		if (Objects.isNull(toggleSMSRequest.getPhoneNumber())) {
-			throw new CustomException(PHONE_NUMBER_REQUIRED, HttpStatus.BAD_REQUEST);
+	public SMSResponse toggleSMSAlert(SMSRequest smsRequest) {
+		Users user = userRepository.findByPhoneNumber(smsRequest.getPhoneNumber())
+				.orElse(null);
+		if(user == null){
+			throw new CustomException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User: " +
+					smsRequest.getPhoneNumber(), HttpStatus.NOT_FOUND);
 		}
-		Optional<SMSAlertConfig> smsCharges = smsAlertConfigRepository
-				.findByPhoneNumber(toggleSMSRequest.getPhoneNumber());
 
-		ToggleSMSResponse toggleSMSResponse;
+		Optional<SMSAlertConfig> smsCharges = smsAlertConfigRepository
+				.findByPhoneNumber(smsRequest.getPhoneNumber());
+
+		SMSResponse SMSResponse;
 		if (smsCharges.isPresent()) {
 			smsCharges.get().setActive(!smsCharges.get().isActive());
 			smsAlertConfigRepository.save(smsCharges.get());
-			toggleSMSResponse = new ToggleSMSResponse(smsCharges.get().getId(), smsCharges.get().getPhoneNumber(),
-					smsCharges.get().isActive());
+			SMSResponse = new SMSResponse(smsCharges.get().getId(),
+					smsCharges.get().getPhoneNumber(),
+				 smsCharges.get().isActive());
 		} else {
 			SMSAlertConfig smsCharges1 = new SMSAlertConfig();
 			smsCharges1.setActive(smsCharges1.isActive());
-			smsCharges1.setPhoneNumber(toggleSMSRequest.getPhoneNumber());
+			smsCharges1.setPhoneNumber(smsRequest.getPhoneNumber());
+			smsCharges1.setUserId(user.getId());
 			smsCharges1 = smsAlertConfigRepository.save(smsCharges1);
-			toggleSMSResponse = new ToggleSMSResponse(smsCharges1.getId(), smsCharges1.getPhoneNumber(),
+			SMSResponse = new SMSResponse(smsCharges1.getId(), smsCharges1.getPhoneNumber(),
 					smsCharges1.isActive());
 		}
-		return toggleSMSResponse;
+		return SMSResponse;
 	}
 
-	public ToggleSMSResponse getSMSAlertStatus(String phoneNumber) {
-		ToggleSMSResponse toggleSMSResponse = null;
+	public SMSResponse getSMSAlertStatus(String phoneNumber) {
+		SMSResponse SMSResponse = null;
 		if (Objects.isNull(phoneNumber) || phoneNumber.isEmpty()) {
 			throw new CustomException(PHONE_NUMBER_REQUIRED, HttpStatus.BAD_REQUEST);
 		}
 		Optional<SMSAlertConfig> smsCharges = smsAlertConfigRepository.findByPhoneNumber(phoneNumber);
 
 		if (smsCharges.isPresent()) {
-			toggleSMSResponse = new ToggleSMSResponse(smsCharges.get().getId(), smsCharges.get().getPhoneNumber(),
+			SMSResponse = new SMSResponse(smsCharges.get().getId(), smsCharges.get().getPhoneNumber(),
 					smsCharges.get().isActive());
 		}
-		return toggleSMSResponse;
+		return SMSResponse;
 	}
 
 	@Override
@@ -903,7 +910,7 @@ public class ProfileServiceImpl implements ProfileService {
 				throw new CustomException("Null", HttpStatus.BAD_REQUEST);
 			}
 		} catch (Exception e) {
-			throw new RuntimeException(e.fillInStackTrace());
+			throw new RuntimeException(e.getMessage());
 		}
 
 		return setProfileResponse(profile.get());

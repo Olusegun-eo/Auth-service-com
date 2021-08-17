@@ -53,7 +53,7 @@ public interface ProfileService {
 	 * @param userId              user id
 	 * @param profileImageRequest request
 	 */
-	ApiResponseBody<String> updateProfileImage(final String userId, MultipartFile profileImageRequest);
+	ApiResponseBody<String> updateProfileImage(final Long userId, MultipartFile profileImageRequest);
 
 	/**
 	 * search for profile by name
@@ -100,9 +100,9 @@ public interface ProfileService {
 	 */
 	DeleteResponse toggleDelete(DeleteRequest deleteRequest);
 
-	ToggleSMSResponse toggleSMSAlert(ToggleSMSRequest toggleSMSRequest);
+	SMSResponse toggleSMSAlert(SMSRequest SMSRequest);
 
-	ToggleSMSResponse getSMSAlertStatus(String phoneNumber);
+	SMSResponse getSMSAlertStatus(String phoneNumber);
 
 	void sendWelcomeEmail(Users user);
 
@@ -115,5 +115,5 @@ public interface ProfileService {
 	 * @param type: either FRONT, LEFT or RIGHT
 	 * @return
 	 */
-	ApiResponseBody<String> uploadOtherImage(String userId, MultipartFile file, String type);
+	ApiResponseBody<String> uploadOtherImage(Long userId, MultipartFile file, String type);
 }

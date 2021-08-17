@@ -1,24 +1,10 @@
 package com.waya.wayaauthenticationservice.entity;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+import lombok.*;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import java.util.UUID;
 
 @SuppressWarnings("all")
 @Entity
@@ -34,9 +20,10 @@ public class SMSAlertConfig extends AuditModel  {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @NotBlank(message = "please enter a phone number")
     @Column(name="phone_number", unique = true, nullable = false)
     private String phoneNumber;
+
+    private Long userId;
 
     private boolean active = true;
 }

@@ -5,7 +5,7 @@ import com.waya.wayaauthenticationservice.enums.UploadType;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.response.DeleteResponse;
-import com.waya.wayaauthenticationservice.response.ToggleSMSResponse;
+import com.waya.wayaauthenticationservice.response.SMSResponse;
 import com.waya.wayaauthenticationservice.response.UserProfileResponse;
 import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.util.CustomValidator;
@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -27,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_400;
 import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_422;
@@ -114,10 +116,11 @@ public class ProfileController {
 	@ApiResponses(value = { @ApiResponse(code = 400, message = MESSAGE_400),
 			@ApiResponse(code = 422, message = MESSAGE_422) })
 	@PutMapping("update-personal-profile/{userId}")
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#userId, authentication)")
 	ResponseEntity<ApiResponseBody<Object>> updateProfile(
 			@Valid @RequestBody UpdatePersonalProfileRequest updatePersonalProfileRequest,
-			@PathVariable @CustomValidator(message = "UserId must be numeric", type = Type.NUMERIC_STRING) String userId) {
-		UserProfileResponse profileResponse = profileService.updateProfile(updatePersonalProfileRequest, userId);
+			@PathVariable @NotNull(message = "UserId cannot be Null") Long userId) {
+		UserProfileResponse profileResponse = profileService.updateProfile(updatePersonalProfileRequest, String.valueOf(userId));
 		return new ResponseEntity<>(new ApiResponseBody<>(profileResponse, "profile updated successfully", true),
 				HttpStatus.CREATED);
 	}
@@ -134,13 +137,12 @@ public class ProfileController {
 	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
 	@PutMapping("update-corporate-profile/{userId}")
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#userId, authentication)")
 	ResponseEntity<ApiResponseBody<UserProfileResponse>> updateCorporateProfile(
 			@Valid @RequestBody UpdateCorporateProfileRequest updateCorporateProfileRequest,
-			@PathVariable @CustomValidator(message = "UserId must be numeric", type = Type.NUMERIC_STRING) String userId) {
-
+			@PathVariable @NotNull(message = "UserId cannot be Null") Long userId) {
 		UserProfileResponse corporateProfileResponse = profileService.updateProfile(updateCorporateProfileRequest,
-				userId);
-
+				String.valueOf(userId));
 		return new ResponseEntity<>(new ApiResponseBody<>(corporateProfileResponse, "profile updated successfully", true),
 				HttpStatus.CREATED);
 	}
@@ -158,8 +160,9 @@ public class ProfileController {
 	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
 	@PostMapping("/update-profile-image/{userId}")
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#userId, authentication)")
 	public ResponseEntity<ApiResponseBody<String>> updateProfileImage(@RequestPart MultipartFile file,
-			@PathVariable @CustomValidator(message = "UserId must be numeric", type = Type.NUMERIC_STRING) String userId)
+																	  @PathVariable @NotNull(message = "UserId cannot be Null") Long userId)
 			throws MaxUploadSizeExceededException {
 		return ResponseEntity.ok(profileService.updateProfileImage(userId, file));
 	}
@@ -169,8 +172,9 @@ public class ProfileController {
 	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
 	@PostMapping("/update-profile-image/{type}/{userId}")
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#userId, authentication)")
 	public ResponseEntity<ApiResponseBody<String>> updateProfileImage(@RequestPart MultipartFile file,
-			@PathVariable @CustomValidator(message = "UserId must be numeric", type = Type.NUMERIC_STRING) String userId,
+			@PathVariable @NotNull(message = "UserId cannot be Null") Long userId,
 			@PathVariable @EnumValue(enumClass = UploadType.class, message = "Must be either of type FRONT, LEFT or RIGHT") String type)
 			throws MaxUploadSizeExceededException {
 		return ResponseEntity.ok(profileService.uploadOtherImage(userId, file, type));
@@ -198,20 +202,21 @@ public class ProfileController {
 	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
 	@PutMapping("delete-restore")
-	ResponseEntity<DeleteResponse> toggleDelete(@Valid @RequestBody DeleteRequest deleteRequest) {
-		return new ResponseEntity<>(profileService.toggleDelete(deleteRequest), HttpStatus.OK);
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#request.userId, authentication)")
+	ResponseEntity<DeleteResponse> toggleDelete(@Valid @RequestBody DeleteRequest request) {
+		return new ResponseEntity<>(profileService.toggleDelete(request), HttpStatus.OK);
 	}
 
 	@ApiOperation(value = "SMS Alert", notes = "SMS Alert: user can enable or disable sms alert", tags = {
 			"PROFILE RESOURCE" })
 	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
-	@PostMapping("/toggle-sms-alerts")
-	ResponseEntity<ApiResponseBody<ToggleSMSResponse>> toggleSMSAlert(
-			@Valid @RequestBody ToggleSMSRequest toggleSMSRequest) {
-
-		ToggleSMSResponse toggleSMSResponse = profileService.toggleSMSAlert(toggleSMSRequest);
-		ApiResponseBody<ToggleSMSResponse> response = new ApiResponseBody<>(toggleSMSResponse, "Data retrieved successfully",
+	@PostMapping("/sms-alert")
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#request.phoneNumber, authentication)")
+	ResponseEntity<ApiResponseBody<SMSResponse>> toggleSMSAlert(
+			@Valid @RequestBody SMSRequest request) {
+		SMSResponse SMSResponse = profileService.toggleSMSAlert(request);
+		ApiResponseBody<SMSResponse> response = new ApiResponseBody<>(SMSResponse, "Data retrieved successfully",
 				true);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
@@ -220,14 +225,14 @@ public class ProfileController {
 			"PROFILE RESOURCE" }, notes = "Config SMS Charge Fee: User can check status of sms alert")
 	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
-	@ResponseStatus(HttpStatus.OK)
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#phoneNumber, authentication)")
 	@GetMapping("/sms-alert/status/{phoneNumber}")
-	ResponseEntity<ApiResponseBody<ToggleSMSResponse>> getSMSAlertStatus(
+	ResponseEntity<ApiResponseBody<SMSResponse>> getSMSAlertStatus(
 			@Valid @ApiParam(example = "2348054354344") @PathVariable @ValidPhone String phoneNumber) {
 
-		ToggleSMSResponse toggleSMSResponse = profileService.getSMSAlertStatus(phoneNumber);
-		System.out.println(" ### back from service class smsCharges: :::: " + toggleSMSResponse);
-		ApiResponseBody<ToggleSMSResponse> response = new ApiResponseBody<>(toggleSMSResponse, "Data created successfully",
+		SMSResponse SMSResponse = profileService.getSMSAlertStatus(phoneNumber);
+		System.out.println(" ### back from service class smsCharges: :::: " + SMSResponse);
+		ApiResponseBody<SMSResponse> response = new ApiResponseBody<>(SMSResponse, "Data created successfully",
 				true);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}

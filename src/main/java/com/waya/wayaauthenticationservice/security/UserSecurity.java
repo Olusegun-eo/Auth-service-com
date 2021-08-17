@@ -31,8 +31,10 @@ public class UserSecurity {
 		if (user == null)
 			return false;
 
-		if (user.getId().equals(id))
+		if (user.getId().equals(id)){
+			log.info("Same User request");
 			return true;
+		}
 
 		Users returnObj = this.userRepo.findById(false, id).orElse(null);
 
@@ -79,8 +81,10 @@ public class UserSecurity {
 		if (userPhone != null && userPhone.length() > 10) {
 			userPhone = userPhone.substring(userPhone.length() - 10);
 		}
-		if (user.getEmail().equals(principal) || userPhone.equals(principal))
+		if (user.getEmail().equals(principal) || userPhone.equals(principal)){
+			log.info("Same User request");
 			return true;
+		}
 
 		Users returnObj = this.userRepo.findByEmailOrPhoneNumber(principal).orElse(null);
 		if (returnObj == null)

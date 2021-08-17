@@ -1,14 +1,9 @@
 package com.waya.wayaauthenticationservice.pojo.others;
 
 import com.waya.wayaauthenticationservice.enums.DeleteType;
-import com.waya.wayaauthenticationservice.enums.Type;
-import com.waya.wayaauthenticationservice.util.CustomValidator;
+import lombok.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import javax.validation.constraints.NotNull;
 
 @Setter
 @Getter
@@ -17,8 +12,8 @@ import lombok.Setter;
 @NoArgsConstructor
 public class DeleteRequest {
 
-    @CustomValidator(message = "UserId must be numeric", type = Type.NUMERIC_STRING)
-    private String userId;
+    @NotNull(message = "UserId must be passed")
+    private Long userId;
     
     private DeleteType deleteType;
 }
