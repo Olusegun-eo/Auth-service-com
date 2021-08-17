@@ -303,14 +303,14 @@ class ProfileControllerTest {
 				"profile created. An OTP has been sent to your phone");
 
 		DeleteRequest deleteRequest = DeleteRequest.builder().deleteType(DeleteType.DELETE)
-				.userId(user.getId().toString()).build();
+				.userId(user.getId()).build();
 
 		deleteProfile(deleteRequest, "$.message", "Deletion successful", "$.code", "200");
 	}
 
 	@Order(15)
 	@Test
-	@DisplayName("invalid delete personal profile  💯")
+	@DisplayName("invalid delete personal profile 💯")
 	void invalidDeleteProfile() throws Exception {
 
 		final PersonalProfileRequest personalProfileRequest = setPersonalProfileData("youtbue@app.com",
@@ -319,7 +319,7 @@ class ProfileControllerTest {
 		createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
 				"profile created. An OTP has been sent to your phone");
 
-		DeleteRequest deleteRequest = DeleteRequest.builder().deleteType(DeleteType.NONE).userId("455").build();
+		DeleteRequest deleteRequest = DeleteRequest.builder().deleteType(DeleteType.NONE).userId(455l).build();
 
 		deleteProfile(deleteRequest, "$.error", "Invalid delete type, try RESTORE OR DELETE", "$.code", "401");
 	}
@@ -336,12 +336,12 @@ class ProfileControllerTest {
 				"profile created. An OTP has been sent to your phone");
 
 		DeleteRequest deleteRequest = DeleteRequest.builder().deleteType(DeleteType.DELETE)
-				.userId(user.getId().toString()).build();
+				.userId(user.getId()).build();
 
 		deleteProfile(deleteRequest, "$.message", "Deletion successful", "$.code", "200");
 
 		DeleteRequest restoreRequest = DeleteRequest.builder().deleteType(DeleteType.RESTORE)
-				.userId(user.getId().toString()).build();
+				.userId(user.getId()).build();
 
 		deleteProfile(restoreRequest, "$.message", "Profile has been restored", "$.code", "200");
 	}
@@ -351,7 +351,9 @@ class ProfileControllerTest {
 	@DisplayName("delete personal profile error 💯")
 	void deleteProfileError() throws Exception {
 
-		DeleteRequest deleteRequest = DeleteRequest.builder().deleteType(DeleteType.DELETE).userId("10").build();
+		DeleteRequest deleteRequest = DeleteRequest.builder()
+				.deleteType(DeleteType.DELETE)
+				.userId(10l).build();
 
 		deleteProfile(deleteRequest, "$.error", "Profile with userId do not exist or already deleted", "$.code", "300");
 	}
@@ -361,9 +363,13 @@ class ProfileControllerTest {
 	@DisplayName("Restore personal profile error 💯")
 	void restoreProfileError() throws Exception {
 
-		DeleteRequest deleteRequest = DeleteRequest.builder().deleteType(DeleteType.RESTORE).userId("10").build();
+		DeleteRequest deleteRequest = DeleteRequest.builder()
+				.deleteType(DeleteType.RESTORE)
+				.userId(10l).build();
 
-		deleteProfile(deleteRequest, "$.error", "Profile with userId do not exist or already restored", "$.code",
+		deleteProfile(deleteRequest, "$.error",
+				"Profile with userId do not exist or already restored",
+				"$.code",
 				"300");
 	}
 

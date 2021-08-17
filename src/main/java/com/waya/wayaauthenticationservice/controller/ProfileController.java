@@ -231,7 +231,7 @@ public class ProfileController {
 			@Valid @ApiParam(example = "2348054354344") @PathVariable @ValidPhone String phoneNumber) {
 
 		SMSResponse SMSResponse = profileService.getSMSAlertStatus(phoneNumber);
-		System.out.println(" ### back from service class smsCharges: :::: " + SMSResponse);
+		System.out.println("Back from service class smsCharges: :::: " + SMSResponse);
 		ApiResponseBody<SMSResponse> response = new ApiResponseBody<>(SMSResponse, "Data created successfully",
 				true);
 		return new ResponseEntity<>(response, HttpStatus.OK);
