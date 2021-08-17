@@ -619,18 +619,18 @@ public class UserServiceImpl implements UserService {
 			}
 			ValidateUserPojo validateUserPojo = new ValidateUserPojo();
 			validateUserPojo.setCorporate(user.isCorporate());
-			validateUserPojo.setEmail(user.getEmail());
+			validateUserPojo.setEmail(Objects.toString(user.getEmail(), ""));
 			validateUserPojo.setEmailVerified(user.isEmailVerified());
 			validateUserPojo.setFirstName(user.getFirstName());
 			validateUserPojo.setSurname(user.getSurname());
 			validateUserPojo.setPhoneVerified(user.isPhoneVerified());
 			validateUserPojo.setPinCreated(user.isPinCreated());
-			validateUserPojo.setId(user.getId());
-			validateUserPojo.setReferenceCode(user.getReferenceCode());
-			validateUserPojo.setPhoneNumber(user.getPhoneNumber());
+			validateUserPojo.setId(Objects.toString(user.getId(), "0"));
+			validateUserPojo.setReferenceCode(Objects.toString(user.getReferenceCode(), ""));
+			validateUserPojo.setPhoneNumber(Objects.toString(user.getPhoneNumber(), ""));
 			validateUserPojo.setRoles(roles);
-			validateUserPojo.setTransactionLimit(tranLimit);
 			validateUserPojo.setPermits(permits);
+			validateUserPojo.setTransactionLimit(Objects.toString(tranLimit, "0.00"));
 
 			return new ResponseEntity<>(new SuccessResponse("User valid.", validateUserPojo), HttpStatus.OK);
 		}
@@ -641,7 +641,7 @@ public class UserServiceImpl implements UserService {
 		try {
 			return accessProxy.GetUsersAccess(userId);
 		} catch (Exception e) {
-			return new ApiResponseBody<UserAccessResponse>(Constant.ERROR_MESSAGE, false);
+			return new ApiResponseBody<>(Constant.ERROR_MESSAGE, false);
 		}
 	}
 

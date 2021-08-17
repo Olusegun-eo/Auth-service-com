@@ -202,7 +202,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	@Transactional
 	public ResponseEntity<?> createCorporateUser(CorporateUserPojo mUser, HttpServletRequest request, Device device,
 			boolean adminAction) {
-
 		try {
 			// Check if email exists
 			Users existingEmail = userRepo.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);

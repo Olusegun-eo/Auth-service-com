@@ -1,35 +1,5 @@
 package com.waya.wayaauthenticationservice.security;
 
-import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
-import static com.waya.wayaauthenticationservice.util.SecurityConstants.HEADER_STRING;
-import static com.waya.wayaauthenticationservice.util.SecurityConstants.TOKEN_PREFIX;
-import static com.waya.wayaauthenticationservice.util.SecurityConstants.getExpiration;
-import static com.waya.wayaauthenticationservice.util.SecurityConstants.getSecret;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.modelmapper.ModelMapper;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
@@ -42,11 +12,28 @@ import com.waya.wayaauthenticationservice.pojo.others.LoginResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
-
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.SignatureException;
 import lombok.NoArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import javax.servlet.FilterChain;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
 
 @NoArgsConstructor
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
@@ -169,29 +156,36 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		Set<String> permit = getPrivileges(user.getRoleList());
 		Set<String> roles = user.getRoleList().stream().map(u -> u.getName()).collect(Collectors.toSet());
 
-		UserProfileResponsePojo userProfile = new ModelMapper().map(user, UserProfileResponsePojo.class);
-		userProfile.setPhoneNumber(user.getPhoneNumber());
+		UserProfileResponsePojo userProfile = new UserProfileResponsePojo();
+
+		userProfile.setId(user.getId());
+		userProfile.setEmail(Objects.toString(user.getEmail(), ""));
+		userProfile.setPhoneNumber(Objects.toString(user.getPhoneNumber(), ""));
+		userProfile.setReferenceCode(Objects.toString(user.getReferenceCode(), ""));
 		userProfile.setFirstName(user.getFirstName());
 		userProfile.setLastName(user.getSurname());
+		userProfile.setAdmin(user.isAdmin());
+		userProfile.setPinCreated(user.isPinCreated());
+		userProfile.setCorporate(user.isCorporate());
 		userProfile.setEmailVerified(user.isEmailVerified());
+		userProfile.setPhoneVerified(user.isPhoneVerified());
 		userProfile.setActive(user.isActive());
 		userProfile.setAccountDeleted(user.isDeleted());
-		userProfile.setAdmin(user.isAdmin());
 		userProfile.setRoles(roles);
 		userProfile.setPermits(permit);
 		userProfile.setAccountExpired(!user.isAccountNonExpired());
 		userProfile.setAccountLocked(!user.isAccountNonLocked());
 		userProfile.setCredentialsExpired(!user.isCredentialsNonExpired());
-		// if(profile != null){
-		userProfile.setGender(profile.getGender());
-		userProfile.setMiddleName(profile.getMiddleName());
-		userProfile.setDateOfBirth(profile.getDateOfBirth());
-		userProfile.setDistrict(profile.getDistrict());
-		userProfile.setAddress(profile.getAddress());
-		userProfile.setCity(profile.getCity());
-		userProfile.setState(profile.getState());
-		userProfile.setProfileImage(profile.getProfileImage());
-		// }
+
+		userProfile.setGender(Objects.toString(profile.getGender(), ""));
+		userProfile.setMiddleName(Objects.toString(profile.getMiddleName(), ""));
+		userProfile.setDateOfBirth(Objects.toString(profile.getDateOfBirth(), ""));
+		userProfile.setDistrict(Objects.toString(profile.getDistrict(), ""));
+		userProfile.setAddress(Objects.toString(profile.getAddress(), ""));
+		userProfile.setCity(Objects.toString(profile.getCity(), ""));
+		userProfile.setState(Objects.toString(profile.getState(), ""));
+		userProfile.setProfileImage(Objects.toString(profile.getProfileImage(), ""));
+
 		return userProfile;
 	}
 
