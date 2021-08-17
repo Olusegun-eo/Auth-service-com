@@ -15,52 +15,52 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<Users, Long>, JpaSpecificationExecutor<Users>  {
+public interface UserRepository extends JpaRepository<Users, Long>, JpaSpecificationExecutor<Users> {
 
-    @Query("SELECT u FROM Users u WHERE UPPER(u.email) = UPPER(:value) AND u.isDeleted = false")
-    Optional<Users> findByEmailIgnoreCase(@Param("value") String value);
+	@Query(value = "SELECT * FROM m_users u WHERE UPPER(u.email) = UPPER(:value) AND u.is_deleted = false", nativeQuery = true)
+	Optional<Users> findByEmailIgnoreCase(@Param("value") String value);
 
-    @Query("SELECT u FROM Users u WHERE u.phoneNumber LIKE CONCAT('%', ?1) AND u.isDeleted = false")
-    Optional<Users> findByPhoneNumber(String phoneNumber);
+	@Query("SELECT u FROM Users u WHERE u.phoneNumber LIKE CONCAT('%', ?1) AND u.isDeleted = false")
+	Optional<Users> findByPhoneNumber(String phoneNumber);
 
-    @Query(value = "SELECT u FROM Users u WHERE (UPPER(u.email) = UPPER(:value) OR "
-            + "u.phoneNumber LIKE CONCAT('%', :value)) AND u.isDeleted = false")
+	@Query(value = "SELECT u FROM Users u WHERE (UPPER(u.email) = UPPER(:value) OR "
+			+ "u.phoneNumber LIKE CONCAT('%', :value)) AND u.isDeleted = false")
 //    @Query(value = "SELECT * FROM m_users u WHERE (UPPER(u.email) = UPPER(:value) OR " +
 //            "u.phone_number LIKE CONCAT('%', :value)) AND u.is_deleted = false", nativeQuery = true)
-    Optional<Users> findByEmailOrPhoneNumber(@Param("value") String value);
+	Optional<Users> findByEmailOrPhoneNumber(@Param("value") String value);
 
-    Page<Users> findByRoleListIn(Collection<Role> roles, Pageable pageable);
+	Page<Users> findByRoleListIn(Collection<Role> roles, Pageable pageable);
 
-    List<Users> findByRoleList_(Role role);
+	List<Users> findByRoleList_(Role role);
 
-    @Query(value = "SELECT u FROM Users u WHERE u.isCorporate = :value AND u.isDeleted = false ORDER BY id")
-    Page<Users> findUserByIsCorporate(@Param("value") boolean value, Pageable pageable);
+	@Query(value = "SELECT u FROM Users u WHERE u.isCorporate = :value AND u.isDeleted = false ORDER BY id")
+	Page<Users> findUserByIsCorporate(@Param("value") boolean value, Pageable pageable);
 
-    @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM Users u " +
-            "WHERE UPPER(u.email) = UPPER(:email) AND u.isDeleted = false")
-    boolean existsByEmail(@Param("email") String email);
+	@Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM Users u "
+			+ "WHERE UPPER(u.email) = UPPER(:email) AND u.isDeleted = false")
+	boolean existsByEmail(@Param("email") String email);
 
-    @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM Users u " +
-            "WHERE u.phoneNumber LIKE CONCAT('%', :value) AND u.isDeleted = false")
-    boolean existsByPhoneNumber(@Param("value") String value);
+	@Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM Users u "
+			+ "WHERE u.phoneNumber LIKE CONCAT('%', :value) AND u.isDeleted = false")
+	boolean existsByPhoneNumber(@Param("value") String value);
 
-    @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM Users u " +
-            "WHERE UPPER(u.email) = UPPER(:value) OR "
-            + "u.phoneNumber LIKE CONCAT('%', :value) AND u.isDeleted = false")
-    boolean existsByEmailOrPhoneNumber(String value);
+	@Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM Users u "
+			+ "WHERE UPPER(u.email) = UPPER(:value) OR "
+			+ "u.phoneNumber LIKE CONCAT('%', :value) AND u.isDeleted = false")
+	boolean existsByEmailOrPhoneNumber(String value);
 
-    @Override
-    @Query(value = "SELECT u FROM Users u WHERE u.id =:userId AND u.isDeleted = false")
-    Optional<Users> findById(@Param("userId") Long userId);
+	@Override
+	@Query(value = "SELECT u FROM Users u WHERE u.id =:userId AND u.isDeleted = false")
+	Optional<Users> findById(@Param("userId") Long userId);
 
-    @Query(value = "SELECT u FROM Users u WHERE u.id =:userId AND u.isDeleted =:deleted")
-    Optional<Users> findById(@Param("deleted") boolean deleted, @Param("userId") Long userId);
+	@Query(value = "SELECT u FROM Users u WHERE u.id =:userId AND u.isDeleted =:deleted")
+	Optional<Users> findById(@Param("deleted") boolean deleted, @Param("userId") Long userId);
 
-    @Query(value = "update m_users set is_deleted =:deleted where id=:userId", nativeQuery = true)
-    Optional<Users> deleteAccountByUserId(boolean deleted, Long userId);
+	@Query(value = "update m_users set is_deleted =:deleted where id=:userId", nativeQuery = true)
+	Optional<Users> deleteAccountByUserId(boolean deleted, Long userId);
 
-    @Override
-    @Query(value = "SELECT u FROM Users u WHERE u.isDeleted = false ORDER BY id")
-    Page<Users> findAll(Pageable pageable);
+	@Override
+	@Query(value = "SELECT u FROM Users u WHERE u.isDeleted = false ORDER BY id")
+	Page<Users> findAll(Pageable pageable);
 
 }

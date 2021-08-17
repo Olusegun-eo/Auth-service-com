@@ -44,7 +44,7 @@ public class PinController {
     @ApiOperation(value = "${api.pin.create-pin.description}",
             notes = "${api.pin.create-pin.notes}", tags = {"PIN RESOURCE"})
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
+            @ApiImplicitParam(name = "authorization", dataTypeClass = String.class, value = "token", paramType = "header", required = true)})
     @PostMapping("/create-pin")
     public ResponseEntity<?> createPin(@Valid @RequestBody NewPinPojo pinPojo) {
         return passwordService.createPin(pinPojo);
@@ -60,13 +60,13 @@ public class PinController {
     @ApiOperation(value = "${api.pin.validate-pin.description}",
             notes = "${api.pin.validate-pin.notes}", tags = {"PIN RESOURCE"})
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
+            @ApiImplicitParam(name = "authorization", dataTypeClass = String.class, value = "token", paramType = "header", required = true)})
     @GetMapping("/validate-pin/{pin}")
     public ResponseEntity<?> validateUserByPin(@PathVariable int pin) {
         return passwordService.validatePinFromUser(pin);
     }
 
-    @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
+    @ApiImplicitParams({@ApiImplicitParam(name = "authorization", dataTypeClass = String.class, value = "token", paramType = "header", required = true)})
     @ApiOperation(value = "${api.pin.forgot-pin-by-email.description}",
             notes = "${api.pin.forgot-pin-by-email.notes}", tags = {"PIN RESOURCE"})
     @GetMapping("/forgot-pin/byEmail")
@@ -76,7 +76,7 @@ public class PinController {
         return passwordService.sendPinResetOTPByEmail(email, redirectUrl);
     }
 
-    @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
+    @ApiImplicitParams({@ApiImplicitParam(name = "authorization", dataTypeClass = String.class, value = "token", paramType = "header", required = true)})
     @ApiOperation(value = "${api.pin.forgot-pin-by-phone.description}",
             notes = "${api.pin.forgot-pin-by-phone.notes}", tags = {"PIN RESOURCE"})
     @GetMapping("/forgot-pin/byPhone")
@@ -85,7 +85,7 @@ public class PinController {
         return passwordService.sendPINResetOTPByPhoneNumber(phoneNumber);
     }
 
-    @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
+    @ApiImplicitParams({@ApiImplicitParam(name = "authorization", dataTypeClass = String.class, value = "token", paramType = "header", required = true)})
     @ApiOperation(value = "${api.pin.forgot-pin.description}",
             notes = "${api.pin.forgot-pin.notes}", tags = {"PIN RESOURCE"})
     @PostMapping("/forgot-pin")
@@ -94,7 +94,7 @@ public class PinController {
         return passwordService.changeForgotPIN(changePinPojo);
     }
 
-    @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
+    @ApiImplicitParams({@ApiImplicitParam(name = "authorization", dataTypeClass = String.class, value = "token", paramType = "header", required = true)})
     @ApiOperation(value = "${api.pin.change-pin-by-email.description}",
             notes = "${api.pin.change-pin-by-email.notes}", tags = {"PIN RESOURCE"})
     @GetMapping("/change-pin/byEmail")
@@ -104,7 +104,7 @@ public class PinController {
         return passwordService.sendPinChangeOTPByEmail(email, redirectUrl);
     }
 
-    @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
+    @ApiImplicitParams({@ApiImplicitParam(name = "authorization", dataTypeClass = String.class, value = "token", paramType = "header", required = true)})
     @ApiOperation(value = "${api.pin.change-pin-by-phone.description}",
             notes = "${api.pin.change-pin-by-phone.notes}", tags = {"PIN RESOURCE"})
     @GetMapping("/change-pin/byPhone")
@@ -113,7 +113,7 @@ public class PinController {
         return passwordService.sendPINChangeOTPByPhoneNumber(phoneNumber);
     }
 
-    @ApiImplicitParams({@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true)})
+    @ApiImplicitParams({@ApiImplicitParam(name = "authorization", dataTypeClass = String.class, value = "token", paramType = "header", required = true)})
     @ApiOperation(value = "${api.pin.change-pin.description}",
             notes = "${api.pin.change-pin.notes}", tags = {"PIN RESOURCE"})
     @PostMapping("/change-pin")

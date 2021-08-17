@@ -118,6 +118,7 @@ public class UserController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "authorization", dataTypeClass = String.class, value = "token", paramType = "header", required = true)})
     @PostMapping("/reverse-delete/{id}")
+    @PreAuthorize(value = "@userSecurity.useHierarchy(#id, authentication)")
     public ResponseEntity<?> reverseDelete(@PathVariable Long id) {
         return userService.unDeleteUser(id);
     }
@@ -155,18 +156,21 @@ public class UserController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "authorization", dataTypeClass = String.class, value = "token", paramType = "header", required = true)})
     @PostMapping("activate/{userId}")
+    @PreAuthorize(value = "@userSecurity.useHierarchy(#id, authentication)")
     public  ResponseEntity<?> activateUserAccount(@PathVariable("userId") Long id){
         return new ResponseEntity<>(userService.activateAccount(id), HttpStatus.OK);
     }
     
     @ApiOperation(value = "Get Users Setup (In-app use only)", tags = {"USER SERVICE"})
     @GetMapping("/setup")
+    @PreAuthorize(value = "@userSecurity.useHierarchy(#id, authentication)")
     public ResponseEntity<?> fetchUserSetUp(@RequestParam("id") Long id) {
         return userService.getUserSetupById(id);
     }
     
     @ApiOperation(value = "Create/Update Users Setup (In-app use only)", tags = {"USER SERVICE"})
     @PostMapping("/setup")
+    @PreAuthorize(value = "@userSecurity.useHierarchy(#pojo.userId, authentication)")
     public ResponseEntity<?> maintainUserSetUp(@Valid @RequestBody UserSetupPojo pojo) {
         return userService.maintainUserSetup(pojo);
     }

@@ -28,7 +28,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 @Table(name = "m_sms_alert_config")
-public class SMSAlertConfig {
+public class SMSAlertConfig extends AuditModel  {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -39,10 +39,4 @@ public class SMSAlertConfig {
     private String phoneNumber;
 
     private boolean active = true;
-
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
 }

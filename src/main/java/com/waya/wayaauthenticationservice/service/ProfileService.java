@@ -1,5 +1,6 @@
 package com.waya.wayaauthenticationservice.service;
 
+import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.response.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -103,7 +104,7 @@ public interface ProfileService {
 
 	ToggleSMSResponse getSMSAlertStatus(String phoneNumber);
 
-	void sendWelcomeEmail(String email);
+	void sendWelcomeEmail(Users user);
 
 	UserProfileResponse getProfileByReferralCode(String referralCode);
 

@@ -9,9 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
-
 import java.util.Collection;
+
+import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
 
 @Component("userSecurity")
 @Slf4j
@@ -76,7 +76,7 @@ public class UserSecurity {
 		}
 		
 		String userPhone = user.getPhoneNumber();
-		if (userPhone.length() > 10) {
+		if (userPhone != null && userPhone.length() > 10) {
 			userPhone = userPhone.substring(userPhone.length() - 10);
 		}
 		if (user.getEmail().equals(principal) || userPhone.equals(principal))

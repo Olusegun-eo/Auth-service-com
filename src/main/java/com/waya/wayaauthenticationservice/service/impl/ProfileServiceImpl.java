@@ -361,26 +361,34 @@ public class ProfileServiceImpl implements ProfileService {
 		}
 	}
 
-	private void updateUserAccount(Users users, UpdatePersonalProfileRequest newProfile) {
+	private void updateUserAccount(Users user, UpdatePersonalProfileRequest newProfile) {
 		if (userRepository.existsByEmail(newProfile.getEmail())
-				&& !compareTwoString(users.getEmail(), newProfile.getEmail()))
+				&& !isEqual(user.getEmail(), newProfile.getEmail()))
 			throw new CustomException("Email for Update already Belongs to another User", HttpStatus.BAD_REQUEST);
-		users.setEmail(newProfile.getEmail());
+		
+		if(!isEqual(user.getEmail(), newProfile.getEmail())) {
+			user.setPhoneVerified(false);
+		}
+		user.setEmail(newProfile.getEmail());
 		if (userRepository.existsByPhoneNumber(newProfile.getPhoneNumber().trim())
-				&& !compareTwoString(users.getPhoneNumber(), newProfile.getPhoneNumber()))
+				&& !isEqual(user.getPhoneNumber(), newProfile.getPhoneNumber()))
 			throw new CustomException("Phone Number for Update already Belongs to another User",
 					HttpStatus.BAD_REQUEST);
-		users.setPhoneNumber(newProfile.getPhoneNumber());
-		users.setSurname(newProfile.getSurname());
-		users.setFirstName(newProfile.getFirstName());
+		
+		if(!isEqual(user.getPhoneNumber(), newProfile.getPhoneNumber())) {
+			user.setPhoneVerified(false);
+		}
+		user.setPhoneNumber(newProfile.getPhoneNumber());
+		user.setSurname(newProfile.getSurname());
+		user.setFirstName(newProfile.getFirstName());
 		String name = String
 				.format("%s %s %s", newProfile.getFirstName(), newProfile.getMiddleName(), newProfile.getSurname())
 				.replaceAll("\\s+", " ").trim();
-		users.setName(name);
-		userRepository.save(users);
+		user.setName(name);
+		userRepository.save(user);
 	}
 
-	private boolean compareTwoString(String str1, String str2) {
+	private boolean isEqual(String str1, String str2) {
 		if (str1 == null && str2 == null)
 			return true;
 		if (str1 == null || str2 == null)
@@ -865,12 +873,9 @@ public class ProfileServiceImpl implements ProfileService {
 	}
 
 	@Override
-	public void sendWelcomeEmail(String email) {
-		Profile userProfile = profileRepository.findByEmail(false, email)
-				.orElseThrow(() -> new CustomException("profile does not exist", HttpStatus.NOT_FOUND));
-
+	public void sendWelcomeEmail(Users user) {
 		WelcomeEmailContext emailContext = new WelcomeEmailContext();
-		emailContext.init(userProfile);
+		emailContext.init(user);
 		try {
 			messagingService.sendMail(emailContext);
 		} catch (Exception e) {

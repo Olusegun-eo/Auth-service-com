@@ -55,9 +55,11 @@ public class PersonalProfileRequest {
 	}
 
 	public void setPhoneNumber(String phoneNumber) {
-        if(phoneNumber.startsWith("+"))
-        	phoneNumber = phoneNumber.substring(1);
-        
-		this.phoneNumber = phoneNumber.replaceAll("\\s+", "").trim();
+		if(phoneNumber != null) {
+			if(phoneNumber.startsWith("+"))
+	        	phoneNumber = phoneNumber.substring(1);
+			phoneNumber = phoneNumber.replaceAll("\\s+", "").trim();
+		}
+		this.phoneNumber = phoneNumber;
 	}
 }

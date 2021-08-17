@@ -377,7 +377,7 @@ public class UserServiceImpl implements UserService {
 						log.error("Error Fetching Accounts, {}", ex.getMessage());
 						return new ApiResponseBody<>("An error has occurred", false);
 					}
-					return res.getBody();
+					return res;
 				}).thenAccept(p -> {
 					log.debug("Response from API Call to Delete Virtual Account is: {}, status is: {} data is {}",
 							p.getMessage(), p.getStatus(), p.getData());
@@ -958,7 +958,7 @@ public class UserServiceImpl implements UserService {
 		try {
 			UserSetup setup = userSetupRepository.findByUserId(id);
 			if (setup != null) {
-				UserSetupPojo pojo = new UserSetupPojo(setup.getId(), String.valueOf(setup.getUser().getId()),
+				UserSetupPojo pojo = new UserSetupPojo(setup.getId(), setup.getUser().getId(),
 						setup.getTransactionLimit());
 				return new ResponseEntity<>(new SuccessResponse(pojo), HttpStatus.OK);
 			}

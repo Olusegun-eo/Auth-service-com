@@ -319,17 +319,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 						log.error("Error Creating Virtual Account, {}", ex.getMessage());
 						return new ApiResponseBody<>("An error has occurred", false);
 					}
-					return res.getBody();
-				}).thenAccept(
-						p -> log.info("Response from Call to Create Corporate Virtual Account is: {}", p.getData()));
+					return res;
+				}).thenAccept(p -> log.info("Response from Call to Create Corporate Virtual Account is: {}", p));
 
 		// Create Internal Wallet Accounts and Save the AccountNumber
 		CreateAccountPojo createAccount = formAccountCreationPojo(userId, mUser);
 		CompletableFuture.supplyAsync(() -> {
 			try {
 				TimeUnit.MINUTES.sleep(1);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+			} catch (InterruptedException ex) {
+				log.error("Error {}", ex.getMessage());
 			}
 			return walletProxy.createCorporateAccount(createAccount);
 		}).orTimeout(3, TimeUnit.MINUTES).handle((res, ex) -> {
@@ -368,8 +367,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 						log.error("Error Creating Virtual Account, Message is: {}", ex.getMessage());
 						return new ApiResponseBody<>("An error has occurred", false);
 					}
-					return res.getBody();
-				}).thenAccept(p -> log.info("Response from Call to Create User Wallet is: {}", p.getData()));
+					return res;
+				}).thenAccept(p -> log.info("Response from Call to Create User Virtual Account is: {}", p));
 
 		// Create Internal Wallet Accounts
 		CreateAccountPojo createAccount = formAccountCreationPojo(userId, user);
@@ -423,10 +422,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			if (otpResponse.isValid()) {
 				user.setActive(true);
 				user.setDateOfActivation(LocalDateTime.now());
-				userRepo.save(user);
-
 				// send a welcome email
-				CompletableFuture.runAsync(() -> this.profileService.sendWelcomeEmail(user.getEmail()));
+				if(user.getEmail() != null && !user.getEmail().isBlank()) {
+					CompletableFuture.runAsync(() -> this.profileService.sendWelcomeEmail(user));
+					user.setWelcomed(true);
+				}
+				userRepo.save(user);
 
 				return new ResponseEntity<>(new SuccessResponse("OTP verified successfully. Please login.", null),
 						HttpStatus.CREATED);
@@ -487,6 +488,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				Integer.parseInt(otpPojo.getOtp()));
 		if (emailResponse != null && emailResponse.isValid()) {
 			user.setEmailVerified(true);
+			if(!user.isWelcomed()) {
+				CompletableFuture.runAsync(() -> this.profileService.sendWelcomeEmail(user));
+				user.setWelcomed(true);
+			}
 			userRepo.save(user);
 			// user.setActive(true);
 			return new ResponseEntity<>(new SuccessResponse(emailResponse.getMessage()), HttpStatus.OK);
@@ -643,7 +648,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	private CreateAccountPojo formAccountCreationPojo(Long userId, BaseUserPojo mUser) {
 		CreateAccountPojo createAccount = new CreateAccountPojo();
-
 		// Default Debit Limit SetUp
 		createAccount.setCustDebitLimit(new BigDecimal("50000.00"));
 		// Default Account Expiration Date

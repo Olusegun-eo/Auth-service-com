@@ -1,38 +1,8 @@
 package com.waya.wayaauthenticationservice.controller;
 
-import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_400;
-import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_422;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MaxUploadSizeExceededException;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.waya.wayaauthenticationservice.enums.Type;
 import com.waya.wayaauthenticationservice.enums.UploadType;
-import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.DeleteRequest;
-import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.ToggleSMSRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.response.DeleteResponse;
 import com.waya.wayaauthenticationservice.response.ToggleSMSResponse;
@@ -41,11 +11,25 @@ import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.util.CustomValidator;
 import com.waya.wayaauthenticationservice.util.EnumValue;
 import com.waya.wayaauthenticationservice.util.ValidPhone;
-
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+
+import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_400;
+import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_422;
 
 @Tag(name = "PROFILE RESOURCE", description = "REST API for Profile Service API")
 @CrossOrigin
@@ -106,10 +90,11 @@ public class ProfileController {
 	 * @return Object
 	 */
 	@ResponseStatus(HttpStatus.CREATED)
-	@ApiOperation(value = "${api.corporate-profile.create-corporate-profile.description}", notes = "${api.corporate-profile.create-corporate-profile.notes}", tags = {
+	@ApiOperation(value = "${api.corporate-profile.create-corporate-profile.description}",
+			notes = "${api.corporate-profile.create-corporate-profile.notes}", tags = {
 			"PROFILE RESOURCE" })
-	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
-			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
+	@ApiResponses(value = { @ApiResponse(code = 400, message = MESSAGE_400),
+			@ApiResponse(code = 422, message = MESSAGE_422) })
 	@PostMapping("corporate-profile")
 	ApiResponseBody<String> createCorporateProfile(final HttpServletRequest request,
 			@Valid @RequestBody CorporateProfileRequest corporateProfileRequest) {
@@ -126,8 +111,8 @@ public class ProfileController {
 	 */
 	@ApiOperation(value = "${api.profile.update-user-profile.description}", notes = "${api.profile.update-user-profile.notes}", tags = {
 			"PROFILE RESOURCE" })
-	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
-			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
+	@ApiResponses(value = { @ApiResponse(code = 400, message = MESSAGE_400),
+			@ApiResponse(code = 422, message = MESSAGE_422) })
 	@PutMapping("update-personal-profile/{userId}")
 	ResponseEntity<ApiResponseBody<Object>> updateProfile(
 			@Valid @RequestBody UpdatePersonalProfileRequest updatePersonalProfileRequest,

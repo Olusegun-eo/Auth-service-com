@@ -1,6 +1,11 @@
 spring:
   application:
     name: auth-service
+  data:
+    redis:
+      repositories:
+        enabled: false
+        type: none
   datasource:
     url: ${POSTGRES_URL}
     username: ${POSTGRES_USERNAME}
@@ -109,6 +114,12 @@ feign:
 logging:
   level:
     net.sf.jmimemagic.MagicParser: ERROR
+    org:
+      apache:
+        kafka:
+          clients:
+            producer:
+              ProducerConfig: ERROR
 
 jwt:
   secret: ${JWT_SECRET:wayas3cr3t}

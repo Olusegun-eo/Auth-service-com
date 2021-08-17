@@ -124,6 +124,8 @@ public class OTPTokenServiceImpl implements OTPTokenService {
     @Override
     public OTPVerificationResponse verifyEmailToken(String email, Integer otp, OTPRequestType otpRequestType) {
         try {
+        	if(email == null || email.isBlank()) return new OTPVerificationResponse(false, "Invalid Email");
+        	
             Optional<OTPBase> otpBase = otpRepository.getOtpDetailsViaEmail(email, otp, String.valueOf(otpRequestType));
             if (otpBase.isPresent()) {
                 OTPBase token = otpBase.get();
@@ -152,6 +154,8 @@ public class OTPTokenServiceImpl implements OTPTokenService {
      */
     @Override
     public OTPBase generateEmailToken(String email, OTPRequestType otpRequestType) {
+    	if(email == null || email.isBlank()) return null;
+    	
         OTPBase otp = new OTPBase();
         otp.setCode(generateCode());
         otp.setEmail(email);
@@ -175,7 +179,9 @@ public class OTPTokenServiceImpl implements OTPTokenService {
      */
     @Override
     public OTPBase generateSMSOTP(String phoneNumber, OTPRequestType otpRequestType) {
-        OTPBase otp = new OTPBase();
+    	phoneNumber = phoneNumber == null ? "" : phoneNumber;
+
+    	OTPBase otp = new OTPBase();
         otp.setCode(generateCode());
         otp.setPhoneNumber(phoneNumber);
         otp.setValid(true);
@@ -199,6 +205,9 @@ public class OTPTokenServiceImpl implements OTPTokenService {
      */
     @Override
     public OTPBase generateOTP(String phoneNumber, String email, OTPRequestType otpRequestType) {
+    	phoneNumber = phoneNumber == null ? "" : phoneNumber;
+    	email = email == null ? "" : email;
+    	
         OTPBase otp = new OTPBase();
         otp.setCode(generateCode());
         otp.setPhoneNumber(phoneNumber);
@@ -212,7 +221,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
 
         otpRepository.invalidatePreviousRecords(phoneNumber, email, newExpiryDate,
                 false, String.valueOf(otpRequestType));
-        otpRepository.save(otp);
+        otp = otpRepository.save(otp);
         return otp;
     }
 
@@ -336,7 +345,10 @@ public class OTPTokenServiceImpl implements OTPTokenService {
     @Override
     public void sendAccountVerificationToken(Users profile, OTPRequestType otpRequestType, String baseUrl) {
         try{
-            OTPBase otp = generateOTP(profile.getPhoneNumber(), profile.getEmail(), otpRequestType);
+        	String phoneNumber = profile.getPhoneNumber() == null ? "" : profile.getPhoneNumber();
+        	String email = profile.getEmail() == null ? "" : profile.getEmail();
+        	
+            OTPBase otp = generateOTP(phoneNumber, email, otpRequestType);
 
             String fullName = String.format("%s %s", profile.getFirstName(),
                     profile.getSurname());

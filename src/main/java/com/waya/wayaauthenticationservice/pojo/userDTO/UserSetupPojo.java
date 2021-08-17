@@ -4,9 +4,6 @@ import java.math.BigDecimal;
 
 import javax.validation.constraints.NotNull;
 
-import com.waya.wayaauthenticationservice.enums.Type;
-import com.waya.wayaauthenticationservice.util.CustomValidator;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,8 +17,8 @@ public class UserSetupPojo {
 	
 	private long id;
 
-    @CustomValidator(message = "UserId Passed must be numeric", type = Type.NUMERIC_STRING)
-    private String userId;
+	@NotNull(message = "UserId passed cannot be null")
+    private Long userId;
     
     @NotNull(message = "Transaction Limit cannot be null")
     private BigDecimal transactionLimit;

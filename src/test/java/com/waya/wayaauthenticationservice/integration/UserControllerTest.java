@@ -8,6 +8,7 @@ import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.hamcrest.core.Is;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ActiveProfiles("test")
@@ -83,12 +85,14 @@ public class UserControllerTest {
 		String token = generateToken(user);
 		
 		UserSetupPojo pojo = new UserSetupPojo();
-		pojo.setUserId(String.valueOf(user.getId()));
+		pojo.setUserId(user.getId());
 		pojo.setTransactionLimit(new BigDecimal("300000"));
+
+		saveUserSetUp(pojo, token,"$.message", "Successful",
+				"$.status", true, status().isCreated());
 		
-		saveUserSetUp(pojo, token, status().isCreated());
-		
-		findUserSetup(user.getId(), token, status().isOk());
+		findUserSetup(user.getId(), token,"$.message", "Successful",
+				"$.status", true, status().isOk());
 	}
 
 	@Test
@@ -96,52 +100,67 @@ public class UserControllerTest {
 	public void saveUserSetup() throws Exception {
 		String token = generateToken(user);
 		UserSetupPojo pojo = new UserSetupPojo();
-		pojo.setUserId(String.valueOf(user.getId()));
+		pojo.setUserId(user.getId());
 		pojo.setTransactionLimit(new BigDecimal("300000"));
 		
-		saveUserSetUp(pojo, token, status().isCreated());
+		saveUserSetUp(pojo, token,"$.message", "Successful",
+				"$.status", true, status().isCreated());
 	}
 	
 	@Test
 	@DisplayName("test User Controller Get User Setup: FAIL")
 	public void getUserSetUpfAIL() throws Exception {
 		String token = generateToken(user);
-		
+		long id = 4567;
+
 		UserSetupPojo pojo = new UserSetupPojo();
-		pojo.setUserId(String.valueOf(4567));
+		pojo.setUserId(id);
 		pojo.setTransactionLimit(new BigDecimal("300000"));
 		
-		saveUserSetUp(pojo, token, status().isNotFound());
+		saveUserSetUp(pojo, token,"$.message", "Record with " +
+				"Provided input not Found For User with " + id,
+				"$.status", false, status().isNotFound());
 		
-		findUserSetup(4567, token, status().isNotFound());
+		findUserSetup(id, token,"$.message", "No Setup Exists",
+				"$.status", false, status().isNotFound());
 	}
 
 	@Test
 	@DisplayName("test User Controller Save User Setup: FAIL")
 	public void saveUserSetupFAIL() throws Exception {
+		long id = 4567;
 		String token = generateToken(user);
 		UserSetupPojo pojo = new UserSetupPojo();
-		pojo.setUserId(String.valueOf(4567));
+		pojo.setUserId(id);
 		pojo.setTransactionLimit(new BigDecimal("300000"));
-		
-		saveUserSetUp(pojo, token, status().isNotFound());
+
+		saveUserSetUp(pojo, token,"$.message", "Record with " +
+						"Provided input not Found For User with " + id,
+				"$.status", false, status().isNotFound());
 	}
 
-	private void saveUserSetUp(UserSetupPojo pojo, String token, ResultMatcher expectedStatus) throws Exception {
+	private void saveUserSetUp(UserSetupPojo pojo, String token,final String jsonPath0, final String jsonPathMessage0,
+							   final String jsonPath1, final boolean jsonPathMessage1, ResultMatcher expectedStatus) throws Exception {
 		
-		mockMvc.perform(post("/setup")
+		mockMvc.perform(post("/api/v1/user/setup")
 				.header("Authorization", token)
 				.contentType(APPLICATION_JSON)
 				.content(asJsonString(pojo)))
-		.andExpect(expectedStatus)
-		.andDo(print());
+				.andExpect(expectedStatus)
+				.andExpect(jsonPath(jsonPath0, Is.is(jsonPathMessage0)))
+				.andExpect(jsonPath(jsonPath1, Is.is(jsonPathMessage1)))
+				.andDo(print());
 	}
 
-	private void findUserSetup(long Id, String token, ResultMatcher expectedStatus) throws Exception {
-		mockMvc.perform(get("/setup?id=" + Id)
+	private void findUserSetup(long Id, String token, final String jsonPath0, final String jsonPathMessage0,
+							   final String jsonPath1, final boolean jsonPathMessage1, ResultMatcher expectedStatus) throws Exception {
+		mockMvc.perform(get("/api/v1/user/setup?id=" + Id)
 				.header("Authorization", token)
 				.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(expectedStatus).andDo(print());
+				.andExpect(expectedStatus)
+				.andExpect(jsonPath(jsonPath0, Is.is(jsonPathMessage0)))
+				.andExpect(jsonPath(jsonPath1, Is.is(jsonPathMessage1)))
+				.andDo(print());
 	}
 
 	private String generateToken(Users user) {
