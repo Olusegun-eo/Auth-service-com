@@ -41,10 +41,18 @@ public class HelperUtils {
     }
 
     public static boolean isEmail(String value) {
+        if(value == null)
+            return false;
+
         Matcher matcher = emailPattern.matcher(value);
         return matcher.matches();
     }
 
+    /**
+     * Return true if value passed is null as this helper method is used to validate optional inputs
+     * @param value
+     * @return boolean
+     */
     public static boolean isEmailOrPhoneNumber(String value) {
     	if(value == null)
             return true;

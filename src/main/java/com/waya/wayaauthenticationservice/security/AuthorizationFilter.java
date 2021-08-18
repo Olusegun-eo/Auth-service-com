@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import static com.waya.wayaauthenticationservice.util.HelperUtils.isEmail;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.getSecret;
 
 @Slf4j
 public class AuthorizationFilter extends BasicAuthenticationFilter {
@@ -48,37 +49,39 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
 		String userToken;
 		if (token != null && validateToken(token)) {
 			userToken = getUserNameFromToken(token);
-			if(!isEmail(userToken)) {
-				if(userToken.startsWith("+")) {
-					userToken = userToken.substring(1);
+			if(userToken != null) {
+				if(!isEmail(userToken)) {
+					if(userToken.startsWith("+")) {
+						userToken = userToken.substring(1);
+					}
+					if(userToken.length() > 10) {
+						userToken = userToken.substring(userToken.length() - 10);
+					}
 				}
-				if(userToken.length() > 10) {
-					userToken = userToken.substring(userToken.length() - 10);
+				UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
+
+				Users user = userLoginRepo.findByEmailOrPhoneNumber(userToken).orElse(null);
+
+				if (user != null) {
+					UserPrincipal userPrincipal = new UserPrincipal(user);
+					UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+							userPrincipal, null, userPrincipal.getAuthorities());
+
+					authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+					SecurityContextHolder.getContext().setAuthentication(authentication);
+
+					log.info(userPrincipal.toString());
+					return authentication;
 				}
+				return null;
 			}
-			UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
-
-			Users user = userLoginRepo.findByEmailOrPhoneNumber(userToken).orElse(null);
-
-			if (user != null) {
-				UserPrincipal userPrincipal = new UserPrincipal(user);
-				UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-						userPrincipal, null, userPrincipal.getAuthorities());
-
-				authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-				SecurityContextHolder.getContext().setAuthentication(authentication);
-
-				log.info(userPrincipal.toString());
-				return authentication;
-			}
-			return null;
 		}
 		return new UsernamePasswordAuthenticationToken(null, null, null);
 	}
 
 	private boolean validateToken(String authToken) {
 		try {
-			Jwts.parser().setSigningKey(SecurityConstants.getSecret()).parseClaimsJws(authToken);
+			Jwts.parser().setSigningKey(getSecret()).parseClaimsJws(authToken);
 			return true;
 		} catch (SignatureException ex) {
 			log.error("Invalid JWT signature");
@@ -104,6 +107,6 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
 	}
 
 	private String getUserNameFromToken(String token) {
-		return Jwts.parser().setSigningKey(SecurityConstants.getSecret()).parseClaimsJws(token).getBody().getSubject();
+		return Jwts.parser().setSigningKey(getSecret()).parseClaimsJws(token).getBody().getSubject();
 	}
 }

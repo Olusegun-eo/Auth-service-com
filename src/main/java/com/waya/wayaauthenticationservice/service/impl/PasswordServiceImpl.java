@@ -1,7 +1,6 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
 import com.waya.wayaauthenticationservice.entity.OTPBase;
-import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.OTPRequestType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
@@ -312,16 +311,10 @@ public class PasswordServiceImpl implements PasswordService {
 			if (!user.isPinCreated())
 				return new ResponseEntity<>(new ErrorResponse("Transaction PIN Not Setup yet"), HttpStatus.BAD_REQUEST);
 
-			Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
-			if (profile == null)
-				return new ResponseEntity<>(new ErrorResponse(
-						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For Profile with userId: " + user.getId(),
-						null), HttpStatus.BAD_REQUEST);
-
 			// Build Mail Context to send Email to
 			PinResetContext emailContext = new PinResetContext();
 			Integer otpToken = generateEmailOTP(email, PIN_CHANGE_EMAIL);
-			emailContext.init(profile);
+			emailContext.init(user);
 			emailContext.redirectTo(redirectUrl);
 			emailContext.seToken(String.valueOf(otpToken));
 
@@ -538,15 +531,9 @@ public class PasswordServiceImpl implements PasswordService {
 						new ErrorResponse(ErrorMessages.RECORD_ALREADY_EXISTS.getErrorMessage() + " For Pin", null),
 						HttpStatus.BAD_REQUEST);
 
-			Profile profile = profileRepo.findByUserId(false, String.valueOf(user.getId())).orElse(null);
-			if (profile == null)
-				return new ResponseEntity<>(new ErrorResponse(
-						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For Profile with userId: " + user.getId(),
-						null), HttpStatus.BAD_REQUEST);
-
 			PinResetContext emailContext = new PinResetContext();
 			Integer otpToken = generateEmailOTP(email, PIN_CREATE_EMAIL);
-			emailContext.init(profile);
+			emailContext.init(user);
 			emailContext.redirectTo(redirectUrl);
 			emailContext.seToken(String.valueOf(otpToken));
 			// Send the Mail

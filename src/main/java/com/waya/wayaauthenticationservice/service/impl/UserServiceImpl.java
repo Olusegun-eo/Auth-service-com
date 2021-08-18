@@ -13,13 +13,11 @@ import com.waya.wayaauthenticationservice.enums.ERole;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
+import com.waya.wayaauthenticationservice.pojo.log.LogRequest;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordCreateContext;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.pojo.userDTO.*;
-import com.waya.wayaauthenticationservice.proxy.AccessProxy;
-import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
-import com.waya.wayaauthenticationservice.proxy.WalletProxy;
-import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
+import com.waya.wayaauthenticationservice.proxy.*;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.repository.UserSetupRepository;
@@ -104,6 +102,8 @@ public class UserServiceImpl implements UserService {
 	private WayagramProxy wayagramProxy;
 	@Autowired
 	private AccessProxy accessProxy;
+	@Autowired
+	LoggingProxy loggingProxy;
 	@Autowired
 	MessagingService messagingService;
 	@Autowired
@@ -648,6 +648,15 @@ public class UserServiceImpl implements UserService {
 			return accessProxy.GetUsersAccess(userId);
 		} catch (Exception e) {
 			return new ApiResponseBody<>(Constant.ERROR_MESSAGE, false);
+		}
+	}
+
+	@Override
+	public void saveLog(LogRequest logPojo) {
+		try{
+			loggingProxy.saveNewLog(logPojo);
+		}catch(Exception e){
+			log.error("Error saving Logs:: {}", e.getMessage());
 		}
 	}
 

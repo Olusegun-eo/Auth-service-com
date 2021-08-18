@@ -77,7 +77,8 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			return;
 		UserAccessResponse access = userPrincipal.getAccess();
 
-		String userName = user.getEmail();
+		String userName = (user.getEmail() == null || user.getEmail().isBlank()) ? user.getPhoneNumber() :  user.getEmail();
+
 		String token = Jwts.builder().setSubject(userName)
 				.setExpiration(new Date(System.currentTimeMillis() + getExpiration()))
 				.signWith(SignatureAlgorithm.HS256, getSecret()).compact();

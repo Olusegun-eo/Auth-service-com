@@ -1,14 +1,21 @@
 package com.waya.wayaauthenticationservice.config;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.waya.wayaauthenticationservice.SpringApplicationContext;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.log.LogRequest;
+import com.waya.wayaauthenticationservice.response.ErrorResponse;
+import com.waya.wayaauthenticationservice.security.UserPrincipal;
+import com.waya.wayaauthenticationservice.service.UserService;
+import com.waya.wayaauthenticationservice.util.ReqIPUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.HandlerExecutionChain;
@@ -16,15 +23,12 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 import org.springframework.web.util.WebUtils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.waya.wayaauthenticationservice.response.ErrorResponse;
-import com.waya.wayaauthenticationservice.util.ReqIPUtils;
-
-import lombok.extern.slf4j.Slf4j;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.Objects;
 
 @Slf4j
 public class LoggableDispatcherServlet extends DispatcherServlet {
@@ -75,34 +79,40 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
                      long timeTaken) {
     	
     	final String path = request.getRequestURI();
-    	if(path.startsWith("/swagger") || path.startsWith("/v2/api-docs")) 
+    	if(path.startsWith("/swagger") || path.startsWith("/v2/api-docs")
+                || path.startsWith("/api/v1/auth/validate-user"))
     		return;
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        int status = response.getStatus();
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("httpStatus", status);
-        jsonObject.addProperty("path", path);
-        jsonObject.addProperty("httpMethod", request.getMethod());
-        jsonObject.addProperty("timeTakenMs", timeTaken);
-        jsonObject.addProperty("clientIP", reqUtil.getClientIP(request));
-        jsonObject.addProperty("javaMethod", handler == null ? "null" : handler.getHandler().toString());
-        jsonObject.addProperty("response", getResponsePayload(response));
+        LogMessage logMessage = new LogMessage();
+        logMessage.setHttpStatus(response.getStatus());
+        logMessage.setHttpMethod(request.getMethod());
+        logMessage.setClientIP(reqUtil.getClientIP(request));
+        logMessage.setTimeTakenMs(timeTaken);
+        logMessage.setPath(path);
+        logMessage.setResponse(getResponsePayload(response));
+        logMessage.setJavaMethod(handler == null ? "null" : handler.getHandler().toString());
+        logMessage.setRequestParams(request.getQueryString());
 
-        if (status > 299) {
-            String requestData = null;
-            try {
-                jsonObject.addProperty("request", request.getReader().readLine());
-                //requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-                requestData = getRequestData(request);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            jsonObject.addProperty("requestBody", requestData);
-            jsonObject.addProperty("requestParams", request.getQueryString());
+        String requestData = null;
+        try {
+            requestData = getRequestData(request);
+        } catch (IOException e) {
+            log.error("An error Occurred in reading request Input :: {}", e.getMessage());
         }
-        String json = gson.toJson(jsonObject);
+        logMessage.setRequestBody(Objects.toString(requestData, "null"));
+        String json = gson.toJson(logMessage);
+        // Log to Console/File
         log.info(json);
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication != null && authentication.getPrincipal() instanceof UserPrincipal){
+            UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+            Users user = principal.getUser().orElse(null);
+            if(user != null){
+                logRequestAndResponse(logMessage, user.getId());
+            }
+        }
     }
 
     private String getResponsePayload(HttpServletResponse response) {
@@ -143,11 +153,45 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
         responseWrapper.copyBodyToResponse();
     }
 
-    public String convertObjectToJson(Object object) throws JsonProcessingException {
+    private String convertObjectToJson(Object object) throws JsonProcessingException {
         if (object == null) {
             return null;
         }
         ObjectMapper mapper = new ObjectMapper();
         return mapper.writeValueAsString(object);
+    }
+
+    private void logRequestAndResponse(LogMessage message, Long id){
+        String httpMethod = message.getHttpMethod(), action;
+
+        switch(httpMethod){
+            case "GET":
+            case "PUT":
+                action = "MODIFY";
+                break;
+            case "POST":
+                action = "CREATE";
+                break;
+            case "DELETE":
+                action = "DELETE";
+                break;
+            default:
+                action = "";
+        }
+        UserService userService = ((UserService) SpringApplicationContext.getBean("userServiceImpl"));
+        LogRequest pojo = new LogRequest();
+        pojo.setAction(action);
+        String mess = "Auth Service: " + message.getPath();
+        pojo.setMessage(mess);
+        pojo.setJsonRequest(message.getRequestBody());
+        pojo.setJsonResponse(message.getResponse());
+        pojo.setUserId(id);
+
+        String controller = message.getJavaMethod();
+        if(controller != null && !controller.isBlank() && controller.length() > 45){
+            controller = controller.substring(46, controller.indexOf("#"));
+        }
+        pojo.setModule(controller);
+        userService.saveLog(pojo);
     }
 }

@@ -135,6 +135,8 @@ app:
   config:
     access-service:
       base-url: http://46.101.41.187:8061
+    logging-service:
+      base-url: http://46.101.41.187:8083
     wayagram-profile:
       base-url: http://157.245.84.14:1000
     file-resource:
