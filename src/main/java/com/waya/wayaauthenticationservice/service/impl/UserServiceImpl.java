@@ -9,6 +9,7 @@ import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.UserSetup;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
+import com.waya.wayaauthenticationservice.enums.ERole;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
@@ -67,8 +68,7 @@ import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
 import static com.waya.wayaauthenticationservice.util.HelperUtils.phoneNumPattern;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.*;
 
 @Service
 @Slf4j
@@ -185,7 +185,7 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<?> getUserByEmail(String email) {
 		Users user = usersRepository.findByEmailIgnoreCase(email).orElse(null);
 		if (user == null) {
-			return new ResponseEntity<>(new ErrorResponse("Invalid email"), HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(new ErrorResponse("Invalid email"), NOT_FOUND);
 		} else {
 			UserProfileResponsePojo userDto = this.toModelDTO(user);
 			return new ResponseEntity<>(new SuccessResponse("User info fetched", userDto), HttpStatus.OK);
@@ -203,7 +203,7 @@ public class UserServiceImpl implements UserService {
 		}
 		Users user = usersRepository.findByPhoneNumber(principal).orElse(null);
 		if (user == null) {
-			return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), NOT_FOUND);
 		}
 		UserProfileResponsePojo userDtO = toModelDTO(user);
 		return new ResponseEntity<>(new SuccessResponse("User info fetched", userDtO), HttpStatus.OK);
@@ -223,7 +223,7 @@ public class UserServiceImpl implements UserService {
 		}
 		Users user = usersRepository.findByEmailOrPhoneNumber(principal).orElse(null);
 		if (user == null)
-			return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(new ErrorResponse("Invalid Phone number"), NOT_FOUND);
 		UserProfileResponsePojo userDtO = toModelDTO(user);
 		if (userDtO != null) {
 			return new ResponseEntity<>(new SuccessResponse("User info fetched", userDtO), HttpStatus.OK);
@@ -235,7 +235,7 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<?> getUserInfoByUserIdForServiceConsumption(Long id) {
 		Users user = usersRepository.findById(false, id).orElse(null);
 		if (user == null)
-			return new ResponseEntity<>(new ErrorResponse("Invalid User ID"), HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(new ErrorResponse("Invalid User ID"), NOT_FOUND);
 		UserProfileResponsePojo userDtO = toModelDTO(user);
 		if (userDtO != null) {
 			return new ResponseEntity<>(new SuccessResponse("User info fetched", userDtO), HttpStatus.OK);
@@ -262,7 +262,7 @@ public class UserServiceImpl implements UserService {
 
 		Users user = usersRepository.findById(userId).orElse(null);
 		if (user == null) {
-			return new ResponseEntity<>(new ErrorResponse("Invalid User Id Passed"), HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(new ErrorResponse("Invalid User Id Passed"), NOT_FOUND);
 		}
 		UserProfileResponsePojo userDtO = toModelDTO(user);
 		return new ResponseEntity<>(new SuccessResponse("User info fetched", userDtO), HttpStatus.OK);
@@ -279,7 +279,7 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<?> deleteUser(Long userId) {
 		try {
 			Users user = usersRepository.findById(false, userId).orElseThrow(
-					() -> new CustomException("User with id " + userId + " not found", HttpStatus.NOT_FOUND));
+					() -> new CustomException("User with id " + userId + " not found", NOT_FOUND));
 
 			// Generate token to use for deactivation of other Services tied to the UserId
 			String token = this.authService.generateToken(authenticatedUserFacade.getUser());
@@ -388,7 +388,7 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<?> unDeleteUser(Long id) {
 		try {
 			Users user = usersRepository.findById(true, id).orElseThrow(
-					() -> new CustomException("User with deleted id " + id + " not found", HttpStatus.NOT_FOUND));
+					() -> new CustomException("User with deleted id " + id + " not found", NOT_FOUND));
 
 			if (usersRepository.existsByEmail(user.getEmail())
 					|| usersRepository.existsByPhoneNumber(user.getPhoneNumber()))
@@ -467,8 +467,14 @@ public class UserServiceImpl implements UserService {
 
 	public ResponseEntity<?> isUserAdmin(Long userId) {
 		Users user = usersRepository.findById(false, userId)
-				.orElseThrow(() -> new CustomException("User with id  not found", BAD_REQUEST));
-		return new ResponseEntity<>(new SuccessResponse("IsUserAdmin", user.isAdmin()), HttpStatus.OK);
+				.orElseThrow(() -> new CustomException("User with id  not found", NOT_FOUND));
+
+		boolean isUserAdmin = roleCheck(user.getRoleList(), ERole.ROLE_APP_ADMIN.getRole());
+		return new ResponseEntity<>(new SuccessResponse("IsUserAdmin", isUserAdmin), HttpStatus.OK);
+	}
+
+	private boolean roleCheck(Collection<Role> roleList, String role) {
+		return roleList.stream().anyMatch(e -> e.getName().equals(role));
 	}
 
 	@Override
@@ -506,7 +512,7 @@ public class UserServiceImpl implements UserService {
 				}
 				usersRepository.save(mUser);
 				return new SuccessResponse("User Role Updated", user);
-			}).orElseThrow(() -> new CustomException("User Id provided not found", HttpStatus.NOT_FOUND));
+			}).orElseThrow(() -> new CustomException("User Id provided not found", NOT_FOUND));
 		} catch (Exception e) {
 			log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
 			throw new CustomException(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
@@ -962,7 +968,7 @@ public class UserServiceImpl implements UserService {
 						setup.getTransactionLimit());
 				return new ResponseEntity<>(new SuccessResponse(pojo), HttpStatus.OK);
 			}
-			return new ResponseEntity<>(new ErrorResponse("No Setup Exists"), HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(new ErrorResponse("No Setup Exists"), NOT_FOUND);
 		} catch (Exception e) {
 			log.error("Error in Fetching User's Setup::{}", e.getMessage());
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
@@ -975,7 +981,7 @@ public class UserServiceImpl implements UserService {
 			Optional<Users> userOpt = usersRepository.findById(Long.valueOf(pojo.getUserId()));
 			if (userOpt.isEmpty()) {
 				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User with " + pojo.getUserId()),
-						HttpStatus.NOT_FOUND);
+						NOT_FOUND);
 			}
 			Users user = usersRepository.getOne(Long.valueOf(pojo.getUserId()));
 			UserSetup setup = userSetupRepository.findByUserId(user.getId());
