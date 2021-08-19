@@ -36,7 +36,6 @@ public class UserController {
     @Autowired
     UserService userService;
 
-
     @ApiOperation(value = "Save users to redis", hidden = false, tags = {
             "USER SERVICE"})
     @PostMapping

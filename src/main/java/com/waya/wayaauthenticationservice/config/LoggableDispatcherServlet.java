@@ -169,14 +169,11 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
             case "PUT":
                 action = "MODIFY";
                 break;
-            case "POST":
-                action = "CREATE";
-                break;
             case "DELETE":
                 action = "DELETE";
                 break;
             default:
-                action = "";
+                action = "CREATE";
         }
         UserService userService = ((UserService) SpringApplicationContext.getBean("userServiceImpl"));
         LogRequest pojo = new LogRequest();

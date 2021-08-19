@@ -13,12 +13,12 @@ public class LogRequest {
     private String jsonResponse;
     private String message;
     private String module;
-    private LocalDateTime requestDate;
-    private LocalDateTime responseDate;
+    private String requestDate;
+    private String responseDate;
     private Long userId;
 
     public LogRequest() {
-        this.requestDate = LocalDateTime.now();
-        this.responseDate = LocalDateTime.now();
+        this.requestDate = LocalDateTime.now().toString();
+        this.responseDate = LocalDateTime.now().toString();
     }
 }
