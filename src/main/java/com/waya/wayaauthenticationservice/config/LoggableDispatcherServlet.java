@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class LoggableDispatcherServlet extends DispatcherServlet {
@@ -110,7 +111,7 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
             UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
             Users user = principal.getUser().orElse(null);
             if(user != null){
-                logRequestAndResponse(logMessage, user.getId());
+                CompletableFuture.runAsync(() ->logRequestAndResponse(logMessage, user.getId()));
             }
         }
     }
@@ -183,7 +184,6 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
         pojo.setJsonRequest(message.getRequestBody());
         pojo.setJsonResponse(message.getResponse());
         pojo.setUserId(id);
-
         String controller = message.getJavaMethod();
         if(controller != null && !controller.isBlank() && controller.length() > 45){
             controller = controller.substring(46, controller.indexOf("#"));

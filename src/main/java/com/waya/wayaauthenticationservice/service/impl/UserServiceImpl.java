@@ -712,7 +712,8 @@ public class UserServiceImpl implements UserService {
 		searchCriteria.add(new SearchCriteria("isDeleted", SearchOperation.EQUALITY, "false"));
 
 		List<SearchSpecification> specList = searchCriteria.stream()
-				.map(criterion -> new SearchSpecification(criterion)).collect(Collectors.toList());
+				.map(criterion -> new SearchSpecification(criterion))
+				.collect(Collectors.toList());
 		Specification<Users> specs = searchService.andSpecification(specList).orElse(null);
 
 		List<Sort> sortList = searchService.generateSortList(searchCriteria);

@@ -18,7 +18,7 @@ public class SearchService {
 
 	private static String wordRegex = "[a-zA-Z]\\w*";
 	private static String valueRegex = "\\w+";
-	private static String operatorRegex = "(:|<|>|!|\\+|-|~|\\s)";
+	private static String operatorRegex = "(:|<|>|!|\\+|-|~|HAS)";
 	private static String timestampRegex = "[0-9]{2}-[0-9]{2}-[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}";
 	private static String fullRegex = "(" + wordRegex + ")" + operatorRegex + "(" + timestampRegex + "|" + valueRegex + ")?,";
 	private static final Pattern searchPattern = Pattern.compile(fullRegex);
@@ -35,9 +35,13 @@ public class SearchService {
 	        Matcher matcher = searchPattern.matcher(searchString + ",");
 	        while (matcher.find()) {
 	            SearchCriteria searchCriteria = new SearchCriteria();
-	            searchCriteria.setKey(matcher.group(1));
-	            searchCriteria.setOperation(SearchOperation.getSimpleOperation(matcher.group(2)));
-	            searchCriteria.setValue(matcher.group(3));
+				String key = matcher.group(1);
+	            String operation = matcher.group(2);
+				String value = matcher.group(3);
+
+	            searchCriteria.setKey(key);
+	            searchCriteria.setOperation(SearchOperation.getSimpleOperation(operation));
+	            searchCriteria.setValue(value);
 	            if ((searchCriteria.getOperation() != SearchOperation.SORT_DESC && searchCriteria.getOperation() != SearchOperation.SORT_ASC) || searchCriteria.getValue() == null) {
 	                searchCriterion.add(searchCriteria);
 	            }

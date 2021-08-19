@@ -1,22 +1,16 @@
 package com.waya.wayaauthenticationservice.service.impl.search;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-
-import org.springframework.data.jpa.domain.Specification;
-
 import com.waya.wayaauthenticationservice.entity.Users;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
+
+import javax.persistence.criteria.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -46,6 +40,8 @@ public class SearchSpecification implements Specification<Users> {
 				return criteriaBuilder.notEqual(root.get(criteria.getKey()), criteria.getValue().toString());
 			case LESS_THAN:
 				return criteriaBuilder.lessThanOrEqualTo(root.get(criteria.getKey()), criteria.getValue().toString());
+			case CONTAINS:
+				return toInPredicate(root, criteria, criteriaBuilder);
 			case GREATER_THAN:
 				return criteriaBuilder.greaterThanOrEqualTo(root.get(criteria.getKey()),
 						criteria.getValue().toString());
@@ -91,6 +87,38 @@ public class SearchSpecification implements Specification<Users> {
 		default:
 			return null;
 		}
+	}
+
+	private Predicate toInPredicate(Root<Users> root, SearchCriteria criteria, CriteriaBuilder criteriaBuilder) {
+		Join<Object, Object> bListJoin = root.join("roleList", JoinType.INNER);
+		return criteriaBuilder.equal(bListJoin.get("name"), criteria.getValue().toString().toUpperCase());
+//		return criteriaBuilder.and(criteriaBuilder.and(), criteriaBuilder.function("CONTAINS", Boolean.class,
+//				root.get(criteria.getKey()), criteriaBuilder.literal(criteria.getValue().toString().toUpperCase())));
+	}
+
+	private Predicate inPredicate(Root<Users> root, SearchCriteria criteria) {
+		if (criteria.getValue() instanceof List<?>) {
+			return getFieldPath(criteria.getKey(), root)
+					.in(((List<?>) criteria.getValue()).toArray());
+		}
+		return null;
+	}
+
+	private Path<?> getFieldPath(String key, Root<Users> root) {
+		Path<?> fieldPath = root.get(key);
+//		if (key.contains(".")) {
+//			String[] fields = key.split("\\.");
+//			for (String field : fields) {
+//				if (fieldPath == null) {
+//					fieldPath = root.get(field);
+//				} else {
+//					fieldPath = fieldPath.get(field);
+//				}
+//			}
+//		} else {
+//			fieldPath = root.get(key);
+//		}
+		return fieldPath;
 	}
 
 }
