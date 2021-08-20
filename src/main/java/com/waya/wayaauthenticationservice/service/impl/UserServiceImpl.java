@@ -636,8 +636,9 @@ public class UserServiceImpl implements UserService {
 				permits.add(access.getPermissionName());
 
 				boolean isAdmin = roleCheck(userRoles, ERole.ROLE_APP_ADMIN.getRole());
-				if (isAdmin)
+				if (isAdmin) {
 					tranLimit = access.getTransactionLimit();
+				}
 			}
 			if (tranLimit == null) {
 				UserSetup setUp = userSetupRepository.findByUserId(user.getId());
