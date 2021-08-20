@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 
@@ -549,6 +550,10 @@ public class PasswordServiceImpl implements PasswordService {
 	@Override
 	public ResponseEntity<?> changePassword(@Valid ChangePasswordPojo passPojo) {
 		try {
+			if(Objects.isNull(passPojo.getOldPassword()) || passPojo.getOldPassword().isBlank()){
+				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.MISSING_REQUIRED_FIELD.getErrorMessage()
+						+ " Old Password: can not be null or empty ", null), HttpStatus.BAD_REQUEST);
+			}
 			Users user = usersRepo.findByEmailOrPhoneNumber(passPojo.getPhoneOrEmail()).orElse(null);
 			if (user == null) {
 				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
@@ -561,6 +566,24 @@ public class PasswordServiceImpl implements PasswordService {
 			String newPassword = passwordEncoder.encode(passPojo.getNewPassword());
 			user.setPassword(newPassword);
 			user.setCredentialsNonExpired(true);
+			user.setAccountStatus(1);
+			usersRepo.save(user);
+			return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);
+		} catch (Exception ex) {
+			return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	@Override
+	public ResponseEntity<?> resetPassword(@Valid ChangePasswordPojo passPojo) {
+		try {
+			Users user = usersRepo.findByEmailOrPhoneNumber(passPojo.getPhoneOrEmail()).orElse(null);
+			if (user == null) {
+				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
+						+ " For User with identity: " + passPojo.getPhoneOrEmail(), null), HttpStatus.BAD_REQUEST);
+			}
+			String newPassword = passwordEncoder.encode(passPojo.getNewPassword());
+			user.setPassword(newPassword);
 			user.setAccountStatus(1);
 			usersRepo.save(user);
 			return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);
