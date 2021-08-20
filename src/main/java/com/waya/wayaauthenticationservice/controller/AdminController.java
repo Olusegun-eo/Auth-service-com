@@ -244,14 +244,14 @@ public class AdminController {
 
 	@ApiOperation(value = "To Toggle Activation and Deactivation of a single User", notes = "To Toggle Activation and Deactivation of a single User", tags = {
 			"ADMIN" })
-	@PostMapping(path = "users/activation-toggle", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping("/users/activation-toggle")
 	public ResponseEntity<?> toggleActivation(@RequestParam("userId") Long userId) {
 		return adminService.toggleActivation(userId);
 	}
 
 	@ApiOperation(value = "To Toggle User Lock and Unlock Actions of a single User", notes = "To Toggle User Lock and Unlock Actions of a single User", tags = {
 			"ADMIN" })
-	@PostMapping(path = "users/activation-toggle", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping("/users/lock-toggle")
 	public ResponseEntity<?> toggleLock(@RequestParam("userId") Long userId) {
 		return adminService.toggleLock(userId);
 	}
