@@ -1,51 +1,14 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import static com.waya.wayaauthenticationservice.enums.OTPRequestType.EMAIL_VERIFICATION;
-import static com.waya.wayaauthenticationservice.enums.OTPRequestType.JOINT_VERIFICATION;
-import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PHONE_VERIFICATION;
-import static com.waya.wayaauthenticationservice.util.Constant.VIRTUAL_ACCOUNT_TOPIC;
-import static com.waya.wayaauthenticationservice.util.Constant.WAYAGRAM_PROFILE_TOPIC;
-import static com.waya.wayaauthenticationservice.util.HelperUtils.generateRandomNumber;
-import static com.waya.wayaauthenticationservice.util.SecurityConstants.TOKEN_PREFIX;
-import static com.waya.wayaauthenticationservice.util.SecurityConstants.getExpiration;
-import static com.waya.wayaauthenticationservice.util.SecurityConstants.getSecret;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mobile.device.Device;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
 import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.enums.ERole;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordCreateContext;
 import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
-import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.CreateAccountPojo;
-import com.waya.wayaauthenticationservice.pojo.others.DevicePojo;
-import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.VirtualAccountPojo;
-import com.waya.wayaauthenticationservice.pojo.others.WayagramPojo;
+import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
@@ -62,42 +25,75 @@ import com.waya.wayaauthenticationservice.service.MessagingService;
 import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.util.ReqIPUtils;
-
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mobile.device.Device;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.*;
+import static com.waya.wayaauthenticationservice.util.Constant.VIRTUAL_ACCOUNT_TOPIC;
+import static com.waya.wayaauthenticationservice.util.Constant.WAYAGRAM_PROFILE_TOPIC;
+import static com.waya.wayaauthenticationservice.util.HelperUtils.generateRandomNumber;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
 
 @Service
 @Slf4j
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-	@Autowired
-	KafkaMessageProducer kafkaMessageProducer;
-	@Autowired
-	ProfileServiceDAO profileServiceDAO;
-	@Autowired
-	private UserRepository userRepo;
-	@Autowired
-	private RolesRepository rolesRepo;
-	@Autowired
-	private BCryptPasswordEncoder passwordEncoder;
-	@Autowired
-	private RedisUserDao redisUserDao;
-	@Autowired
-	private WalletProxy walletProxy;
-	@Autowired
-	private VirtualAccountProxy virtualAccountProxy;
-	@Autowired
-	private ReqIPUtils reqUtil;
-	@Autowired
-	private MessagingService messagingService;
-	@Autowired
-	private ProfileService profileService;
-	@Autowired
-	private OTPTokenService otpTokenService;
+	private final KafkaMessageProducer kafkaMessageProducer;
+	private final  UserRepository userRepo;
+	private final RolesRepository rolesRepo;
+	private final BCryptPasswordEncoder passwordEncoder;
+	private final RedisUserDao redisUserDao;
+	private final WalletProxy walletProxy;
+	private final VirtualAccountProxy virtualAccountProxy;
+	private final ReqIPUtils reqUtil;
+	private final MessagingService messagingService;
+	private final ProfileService profileService;
+	private final OTPTokenService otpTokenService;
 
 	@Value("${api.server.deployed}")
 	private String urlRedirect;
+
+	public AuthenticationServiceImpl(KafkaMessageProducer kafkaMessageProducer, UserRepository userRepo,
+									 RolesRepository rolesRepo, BCryptPasswordEncoder passwordEncoder,
+									 RedisUserDao redisUserDao, WalletProxy walletProxy, VirtualAccountProxy virtualAccountProxy,
+									 ReqIPUtils reqUtil, MessagingService messagingService,
+									 ProfileService profileService, OTPTokenService otpTokenService) {
+		this.kafkaMessageProducer = kafkaMessageProducer;
+		this.userRepo = userRepo;
+		this.rolesRepo = rolesRepo;
+		this.passwordEncoder = passwordEncoder;
+		this.redisUserDao = redisUserDao;
+		this.walletProxy = walletProxy;
+		this.virtualAccountProxy = virtualAccountProxy;
+		this.reqUtil = reqUtil;
+		this.messagingService = messagingService;
+		this.profileService = profileService;
+		this.otpTokenService = otpTokenService;
+	}
+
+	private static CustomException getRoleError() {
+		return new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST);
+	}
 
 	private String getBaseUrl(HttpServletRequest request) {
 		return "http://" + urlRedirect + ":" + request.getServerPort() + request.getContextPath();
@@ -127,26 +123,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			}
 
 			List<Role> roleList = new ArrayList<>();
-			Role userRole = rolesRepo.findByName("ROLE_USER")
-					.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+			Role userRole = rolesRepo.findByName(ERole.ROLE_USER.name())
+					.orElseThrow(AuthenticationServiceImpl::getRoleError);
 			roleList.add(userRole);
 
 			if (mUser.isAdmin() || mUser.isWayaAdmin()) {
-				Role adminRole = rolesRepo.findByName("ROLE_APP_ADMIN")
-						.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+				Role adminRole = rolesRepo.findByName(ERole.ROLE_APP_ADMIN.name())
+						.orElseThrow(AuthenticationServiceImpl::getRoleError);
 
 				roleList.add(adminRole);
 			}
 			if (mUser.isWayaAdmin() && adminAction) {
-				Role ownerRole = rolesRepo.findByName("ROLE_OWNER_ADMIN")
-						.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
-
-				List<Users> usersWithOwnerRole = userRepo.findByRoleList_(ownerRole);
-				if (usersWithOwnerRole.isEmpty()) {
-					roleList.add(ownerRole);
-				}
-				Role superAdminRole = rolesRepo.findByName("ROLE_SUPER_ADMIN")
-						.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+				Role ownerRole = rolesRepo.findByName(ERole.ROLE_OWNER_ADMIN.name())
+						.orElseThrow(AuthenticationServiceImpl::getRoleError);
+				roleList.add(ownerRole);
+				Role superAdminRole = rolesRepo.findByName(ERole.ROLE_SUPER_ADMIN.name())
+						.orElseThrow(AuthenticationServiceImpl::getRoleError);
 				roleList.add(superAdminRole);
 			}
 
@@ -177,10 +169,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				user.setAccountStatus(-1);
 			}
 			Users regUser = userRepo.saveAndFlush(user);
-
-			if (regUser == null)
-				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.COULD_NOT_INSERT_RECORD.getErrorMessage()),
-						HttpStatus.INTERNAL_SERVER_ERROR);
 
 			if (adminAction)
 				CompletableFuture.runAsync(
@@ -220,16 +208,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 						HttpStatus.BAD_REQUEST);
 			}
 
-			Role userRole = rolesRepo.findByName("ROLE_USER")
+			Role userRole = rolesRepo.findByName(ERole.ROLE_USER.name())
 					.orElseThrow(() -> new CustomException("Merchant Role Not Available", HttpStatus.BAD_REQUEST));
 
-			Role merchRole = rolesRepo.findByName("ROLE_CORP")
-					.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+			Role merchRole = rolesRepo.findByName(ERole.ROLE_CORP.name())
+					.orElseThrow(AuthenticationServiceImpl::getRoleError);
 
 			List<Role> roleList = new ArrayList<>(Arrays.asList(userRole, merchRole));
 			if (mUser.isAdmin()) {
-				Role corpAdminRole = rolesRepo.findByName("ROLE_CORP_ADMIN")
-						.orElseThrow(() -> new CustomException("User Role Not Available", HttpStatus.BAD_REQUEST));
+				Role corpAdminRole = rolesRepo.findByName(ERole.ROLE_CORP_ADMIN.name())
+						.orElseThrow(AuthenticationServiceImpl::getRoleError);
 				roleList.add(corpAdminRole);
 			}
 			final String ip = reqUtil.getClientIP(request);
@@ -263,10 +251,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				user.setAccountStatus(-1);
 			}
 			Users regUser = userRepo.saveAndFlush(user);
-
-			if (regUser == null)
-				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.COULD_NOT_INSERT_RECORD.getErrorMessage()),
-						HttpStatus.INTERNAL_SERVER_ERROR);
 
 			if (adminAction)
 				CompletableFuture.runAsync(
@@ -501,8 +485,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	}
 
 	private OTPVerificationResponse verifyOTP(String phoneNumber, Integer otp) {
-		OTPVerificationResponse verify = otpTokenService.verifySMSOTP(phoneNumber, otp, PHONE_VERIFICATION);
-		return verify;
+		return otpTokenService.verifySMSOTP(phoneNumber, otp, PHONE_VERIFICATION);
 	}
 
 	private OTPVerificationResponse verifyEmail(String email, Integer otp) {

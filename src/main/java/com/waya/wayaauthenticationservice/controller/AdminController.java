@@ -89,6 +89,7 @@ public class AdminController {
 	@PostMapping("/users/create-private")
 	public ResponseEntity<?> createNewPrivateUser(@Valid @RequestBody BaseUserPojo userPojo, HttpServletRequest request,
 			Device device) {
+		userPojo.setWayaAdmin(false);
 		return adminService.createUser(userPojo, request, device);
 	}
 
