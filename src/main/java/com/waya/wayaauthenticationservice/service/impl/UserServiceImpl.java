@@ -634,7 +634,9 @@ public class UserServiceImpl implements UserService {
 			if (access != null) {
 				roles.add(access.getRoleName());
 				permits.add(access.getPermissionName());
-				if (user.isAdmin())
+
+				boolean isAdmin = roleCheck(userRoles, ERole.ROLE_APP_ADMIN.getRole());
+				if (isAdmin)
 					tranLimit = access.getTransactionLimit();
 			}
 			if (tranLimit == null) {
@@ -1028,5 +1030,4 @@ public class UserServiceImpl implements UserService {
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
 		}
 	}
-
 }
