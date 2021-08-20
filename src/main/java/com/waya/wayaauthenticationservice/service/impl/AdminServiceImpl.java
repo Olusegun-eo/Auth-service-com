@@ -1,29 +1,5 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import static com.waya.wayaauthenticationservice.enums.OTPRequestType.ADMIN_VERIFICATION;
-import static com.waya.wayaauthenticationservice.util.HelperUtils.generateRandomPassword;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mobile.device.Device;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.waya.wayaauthenticationservice.entity.OTPBase;
 import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
@@ -39,14 +15,31 @@ import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
-import com.waya.wayaauthenticationservice.service.AdminService;
-import com.waya.wayaauthenticationservice.service.AuthenticationService;
-import com.waya.wayaauthenticationservice.service.MessagingService;
-import com.waya.wayaauthenticationservice.service.OTPTokenService;
-import com.waya.wayaauthenticationservice.service.UserService;
+import com.waya.wayaauthenticationservice.service.*;
 import com.waya.wayaauthenticationservice.util.ExcelHelper;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mobile.device.Device;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.ADMIN_VERIFICATION;
+import static com.waya.wayaauthenticationservice.util.HelperUtils.generateRandomPassword;
 
 
 @Service
@@ -266,6 +259,16 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public List<Role> getAllAuthRolesDB() {
         return rolesRepository.findAll();
+    }
+
+    @Override
+    public ResponseEntity<?> toggleActivation(Long userId) {
+        return this.userService.toggleActivation(userId);
+    }
+
+    @Override
+    public ResponseEntity<?> toggleLock(Long userId) {
+        return this.userService.toggleLock(userId);
     }
 
 }

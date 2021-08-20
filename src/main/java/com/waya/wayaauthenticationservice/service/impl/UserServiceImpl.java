@@ -450,15 +450,33 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ResponseEntity<?> activateAccount(Long id) {
+	public ResponseEntity<?> toggleActivation(Long id) {
 		try {
 			Users dbUser = usersRepository.findById(false, id).orElse(null);
-			if (dbUser != null && !dbUser.isActive()) {
-				dbUser.setActive(true);
+			if (dbUser != null) {
+				dbUser.setActive(!dbUser.isActive());
+				dbUser.setDateOfActivation(LocalDateTime.now());
 				usersRepository.saveAndFlush(dbUser);
-				return new ResponseEntity<>(new SuccessResponse("Account Activated"), OK);
+				return new ResponseEntity<>(new SuccessResponse("Account activation status Changed Successfully"), OK);
 			}
-			return new ResponseEntity<>(new ErrorResponse("User Does not exists or is still Active"), BAD_REQUEST);
+			return new ResponseEntity<>(new ErrorResponse("User Does not exists"), NOT_FOUND);
+		} catch (Exception e) {
+			log.error("An Exception Occurred :: {}", e.getMessage());
+			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
+		}
+	}
+
+	@Override
+	public ResponseEntity<?> toggleLock(Long id) {
+		try {
+			Users dbUser = usersRepository.findById(false, id).orElse(null);
+			if (dbUser != null) {
+				dbUser.setAccountNonLocked(!dbUser.isAccountNonLocked());
+				dbUser.setAccountLockDate(LocalDateTime.now());
+				usersRepository.saveAndFlush(dbUser);
+				return new ResponseEntity<>(new SuccessResponse("Account activation status Changed Successfully"), OK);
+			}
+			return new ResponseEntity<>(new ErrorResponse("User Does not exists"), NOT_FOUND);
 		} catch (Exception e) {
 			log.error("An Exception Occurred :: {}", e.getMessage());
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);

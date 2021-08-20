@@ -15,6 +15,7 @@ import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -47,7 +48,11 @@ public interface UserService {
 	// Get user details for Roles service
 	UserEditPojo getUserForRole(Long id);
 
-	ResponseEntity<?> activateAccount(Long userId);
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#userId, authentication)")
+	ResponseEntity<?> toggleActivation(Long userId);
+
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#userId, authentication)")
+	ResponseEntity<?> toggleLock(Long userId);
 
 	ResponseEntity<?> isUserAdmin(Long userId);
 

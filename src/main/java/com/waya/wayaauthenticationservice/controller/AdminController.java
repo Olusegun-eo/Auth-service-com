@@ -1,10 +1,19 @@
 package com.waya.wayaauthenticationservice.controller;
 
-import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-
+import com.waya.wayaauthenticationservice.assembler.UserAssembler;
+import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.userDTO.*;
+import com.waya.wayaauthenticationservice.response.UserProfileResponse;
+import com.waya.wayaauthenticationservice.service.AdminService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.service.UserService;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.core.io.InputStreamResource;
@@ -19,38 +28,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.waya.wayaauthenticationservice.assembler.UserAssembler;
-import com.waya.wayaauthenticationservice.entity.Role;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
-import com.waya.wayaauthenticationservice.repository.RedisUserDao;
-import com.waya.wayaauthenticationservice.response.UserProfileResponse;
-import com.waya.wayaauthenticationservice.service.AdminService;
-import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.service.UserService;
-
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import java.util.List;
 
 @CrossOrigin
 @RestController
@@ -60,9 +43,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @PreAuthorize(value = "hasRole('APP_ADMIN')")
 @Validated
 public class AdminController {
-
-	@Autowired
-	RedisUserDao dao;
 
 	@Autowired
 	UserService userService;
@@ -235,7 +215,7 @@ public class AdminController {
 		return adminService.manageUserPass(userId);
 	}
 
-	@ApiOperation(value = "Download Template for Bulk User Deactivation ", tags = { "ADMIN" })
+	@ApiOperation(value = "Download Template for Bulk User Activation/Deactivation ", tags = { "ADMIN" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("/account-deactivation/bulk-user-excel")
 	public ResponseEntity<Resource> getFile() {
@@ -255,11 +235,25 @@ public class AdminController {
 		return adminService.bulkDeactivation(file);
 	}
 
-	@ApiOperation(value = "Deactivate Users via Excel Upload", notes = "To deactivate bulk accounts via excel upload", tags = {
+	@ApiOperation(value = "Re-activate Users via Excel Upload", notes = "To reactivate bulk accounts via excel upload", tags = {
 			"ADMIN" })
 	@PostMapping(path = "bulk/account-activation", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<?> bulkActivation(@RequestPart("file") MultipartFile file) {
 		return adminService.bulkActivation(file);
+	}
+
+	@ApiOperation(value = "To Toggle Activation and Deactivation of a single User", notes = "To Toggle Activation and Deactivation of a single User", tags = {
+			"ADMIN" })
+	@PostMapping(path = "users/activation-toggle", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<?> toggleActivation(@RequestParam("userId") Long userId) {
+		return adminService.toggleActivation(userId);
+	}
+
+	@ApiOperation(value = "To Toggle User Lock and Unlock Actions of a single User", notes = "To Toggle User Lock and Unlock Actions of a single User", tags = {
+			"ADMIN" })
+	@PostMapping(path = "users/activation-toggle", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<?> toggleLock(@RequestParam("userId") Long userId) {
+		return adminService.toggleLock(userId);
 	}
 
 	@ApiOperation(value = "Fetch all Auth Users Roles (Admin Endpoint)", tags = { "ADMIN" })

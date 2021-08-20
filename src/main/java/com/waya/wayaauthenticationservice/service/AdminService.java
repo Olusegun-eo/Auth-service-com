@@ -45,5 +45,9 @@ public interface AdminService {
 
     List<Role> getAllAuthRolesDB();
 
+    ResponseEntity<?> toggleActivation(Long userId);
+
+    ResponseEntity<?> toggleLock(Long userId);
+
     //ResponseEntity<?> createWayaUser(BaseUserPojo userPojo, HttpServletRequest request, Device device);
 }

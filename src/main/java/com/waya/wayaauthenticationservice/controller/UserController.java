@@ -13,7 +13,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -149,15 +148,24 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserForRole(id));
     }
 
-    @ApiOperation(value = "To Activate Users Account by UserId (For In App service consumption)",
-            notes = "To Activate Users Account by UserId (For In App service consumption)", tags = {
+    @ApiOperation(value = "To toggle Activation of Users Account by UserId (For In App service consumption)",
+            notes = "To toggle Activation of Users Account by UserId (For In App service consumption)", tags = {
             "USER SERVICE"})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "authorization", dataTypeClass = String.class, value = "token", paramType = "header", required = true)})
-    @PostMapping("activate/{userId}")
-    @PreAuthorize(value = "@userSecurity.useHierarchy(#id, authentication)")
-    public  ResponseEntity<?> activateUserAccount(@PathVariable("userId") Long id){
-        return new ResponseEntity<>(userService.activateAccount(id), HttpStatus.OK);
+    @PostMapping("toggle-activation/{userId}")
+    public  ResponseEntity<?> toggleActivateUserAccount(@PathVariable("userId") Long id){
+        return userService.toggleActivation(id);
+    }
+
+    @ApiOperation(value = "To toggle Account Lock of Users Account by UserId (For In App service consumption)",
+            notes = "To toggle Account Lock of Users Account by UserId (For In App service consumption)", tags = {
+            "USER SERVICE"})
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "authorization", dataTypeClass = String.class, value = "token", paramType = "header", required = true)})
+    @PostMapping("toggle-lock/{userId}")
+    public  ResponseEntity<?> toggleLockUserAccount(@PathVariable("userId") Long id){
+        return userService.toggleLock(id);
     }
     
     @ApiOperation(value = "Get Users Setup (In-app use only)", tags = {"USER SERVICE"})
