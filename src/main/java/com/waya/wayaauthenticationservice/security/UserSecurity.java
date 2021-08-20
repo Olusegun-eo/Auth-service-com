@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
+import java.util.Objects;
 
 import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
 
@@ -17,8 +18,8 @@ import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
 @Slf4j
 public class UserSecurity {
 
-	private UserRepository userRepo;
-	private RolesRepository rolesRepository;
+	private final UserRepository userRepo;
+	private final RolesRepository rolesRepository;
 
 	public UserSecurity(UserRepository userRepo, RolesRepository rolesRepository) {
 		this.userRepo = userRepo;
@@ -66,7 +67,8 @@ public class UserSecurity {
 		if (user == null)
 			return false;
 
-		String principal = emailOrPhoneNumber.replaceAll("\\s+", "").trim();
+		String principal = emailOrPhoneNumber.replaceAll("\\s+", "")
+				.toLowerCase().trim();
 		boolean isEmail = emailPattern.matcher(principal).matches();
 		if (!isEmail) {
 			if (principal.startsWith("+")) {
@@ -78,10 +80,11 @@ public class UserSecurity {
 		}
 		
 		String userPhone = user.getPhoneNumber();
-		if (userPhone != null && userPhone.length() > 10) {
+		String email = user.getEmail() != null ? user.getEmail().toLowerCase() : "";
+		if (userPhone != null && userPhone.length() > 10)
 			userPhone = userPhone.substring(userPhone.length() - 10);
-		}
-		if (user.getEmail().equals(principal) || userPhone.equals(principal)){
+
+		if (Objects.equals(email, principal) || Objects.equals(userPhone, principal)){
 			log.info("Same User request");
 			return true;
 		}
@@ -99,7 +102,7 @@ public class UserSecurity {
 		String[] roles = ERole.getRoleHierarchy().split(">");
 
 		Integer authEmpLevel = 0;
-		Integer returnEmp = 0;
+		int returnEmp = 0;
 
 		for (int i = roles.length - 1; i >= 0; i--) {
 			boolean authCheck = roleCheck(authEmp.getRoleList(), roles[i].trim());

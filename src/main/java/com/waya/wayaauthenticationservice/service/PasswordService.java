@@ -43,11 +43,8 @@ public interface PasswordService {
 
     ResponseEntity<?> sendPinCreationOTPEmail(String email, String redirectUrl);
 
-//    @PreAuthorize(value = "hasRole('ROLE_APP_ADMIN') and " +
-//            "@userSecurity.useHierarchy(#pojo.phoneOrEmail, authentication)")
 	ResponseEntity<?> changePassword(@Valid ChangePasswordPojo pojo);
 
-    @PreAuthorize(value = "hasRole('ROLE_APP_ADMIN') and " +
-            "@userSecurity.useHierarchy(#pojo.phoneOrEmail, authentication)")
+    //@PreAuthorize(value = "@userSecurity.useHierarchy(#pojo.phoneOrEmail, authentication)")
     ResponseEntity<?> resetPassword(@Valid ChangePasswordPojo pojo);
 }

@@ -9,6 +9,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -81,8 +82,9 @@ public class PasswordController {
 
     @ApiOperation(value = "Reset password post Request {ADMIN ACTION}", notes = "Reset password post Request")
     @PostMapping("/reset")
-    public ResponseEntity<?> resetPassword(@Valid @RequestBody ChangePasswordPojo passwordPojo) {
-        return passwordService.resetPassword(passwordPojo);
+    @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN') and @userSecurity.useHierarchy(#pojo.phoneOrEmail, authentication)")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ChangePasswordPojo pojo) {
+        return passwordService.resetPassword(pojo);
     }
 
 }
