@@ -154,8 +154,8 @@ public class UserController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "authorization", dataTypeClass = String.class, value = "token", paramType = "header", required = true)})
     @PostMapping("toggle-activation/{userId}")
-    public  ResponseEntity<?> toggleActivateUserAccount(@PathVariable("userId") Long id){
-        return userService.toggleActivation(id);
+    public  ResponseEntity<?> toggleActivateUserAccount(@PathVariable("userId") Long userId){
+        return userService.toggleActivation(userId);
     }
 
     @ApiOperation(value = "To toggle Account Lock of Users Account by UserId (For In App service consumption)",
@@ -164,8 +164,8 @@ public class UserController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "authorization", dataTypeClass = String.class, value = "token", paramType = "header", required = true)})
     @PostMapping("toggle-lock/{userId}")
-    public  ResponseEntity<?> toggleLockUserAccount(@PathVariable("userId") Long id){
-        return userService.toggleLock(id);
+    public  ResponseEntity<?> toggleLockUserAccount(@PathVariable("userId") Long userId){
+        return userService.toggleLock(userId);
     }
     
     @ApiOperation(value = "Get Users Setup (In-app use only)", tags = {"USER SERVICE"})
