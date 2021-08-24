@@ -179,7 +179,7 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
         UserService userService = ((UserService) SpringApplicationContext.getBean("userServiceImpl"));
         LogRequest pojo = new LogRequest();
         pojo.setAction(action);
-        String mess = "Auth Service: " + message.getPath();
+        String mess = "Authentication Service: " + message.getPath();
         pojo.setMessage(mess);
         pojo.setJsonRequest(message.getRequestBody());
         pojo.setJsonResponse(message.getResponse());
