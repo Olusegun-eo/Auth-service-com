@@ -147,7 +147,7 @@ app:
     access-service:
       base-url: http://46.101.41.187:8061
     fraud-service:
-      base-url: http://127.0.0.1:8084
+      base-url: http://157.230.223.54:8084
     logging-service:
       base-url: http://46.101.41.187:8083
     wayagram-profile:
