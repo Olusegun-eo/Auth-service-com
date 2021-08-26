@@ -13,7 +13,10 @@ public interface ReferralCodeRepository extends JpaRepository<ReferralCode, UUID
     Optional<ReferralCode> findByUserId(String userId);
 
     @Query(value = "select * from m_referral_tbl where user_id =:userId", nativeQuery = true)
-    ReferralCode getReferralCodeByUserId(String userId);
+    Optional<ReferralCode> getReferralCodeByUserId(String userId);
+
+    @Query("select u from ReferralCode u where u.referralCode =:code")
+    Optional<ReferralCode> getReferralCodeByCode(String code);
 
     @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM ReferralCode u " +
             "WHERE UPPER(u.referralCode) = UPPER(:referralCode) OR u.userId = :userId")

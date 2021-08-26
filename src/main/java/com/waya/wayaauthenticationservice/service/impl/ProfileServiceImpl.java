@@ -117,7 +117,7 @@ public class ProfileServiceImpl implements ProfileService {
             // ReferralCodePojo referralCodePojo =
             // referralProxy.getReferralCodeByUserId(userId);
 
-            ReferralCode referrals = referralCodeRepository.getReferralCodeByUserId(userId);
+            ReferralCode referrals = referralCodeRepository.getReferralCodeByUserId(userId).orElse(null);
             if (referrals == null) {
                 return Collections.emptyList();
             }
@@ -147,7 +147,7 @@ public class ProfileServiceImpl implements ProfileService {
                 throw new CustomException("Profile with Provided User ID already Exists", HttpStatus.BAD_REQUEST);
 
             if (request.getReferralCode() != null && !request.getReferralCode().isBlank()) {
-                ReferralCode referralCode1 = referralCodeRepository.getReferralCodeByUserId(request.getReferralCode());
+                ReferralCode referralCode1 = referralCodeRepository.getReferralCodeByCode(request.getReferralCode()).orElse(null);
                 if (referralCode1 == null)
                     request.setReferralCode(null);
             }
@@ -221,7 +221,7 @@ public class ProfileServiceImpl implements ProfileService {
 
             if (profileRequest.getReferralCode() != null && !profileRequest.getReferralCode().isBlank()) {
                 ReferralCode referralCode1 = referralCodeRepository
-                        .getReferralCodeByUserId(profileRequest.getReferralCode());
+                        .getReferralCodeByCode(profileRequest.getReferralCode()).orElse(null);
                 if (referralCode1 == null)
                     profileRequest.setReferralCode(null);
             }
@@ -892,32 +892,20 @@ public class ProfileServiceImpl implements ProfileService {
         } catch (Exception e) {
             log.error("An Error Occurred:: {}", e.getMessage());
         }
-        // mailService.sendMail(user.getEmail(), message);
         log.info("Welcome email sent!! \n");
-
     }
 
     @Override
     public UserProfileResponse getProfileByReferralCode(String referralCode) {
-        ReferralCode referralCode1;
-        Optional<Profile> profile;
         try {
-            referralCode1 = referralCodeRepository.getReferralCodeByUserId(referralCode);
-
-            if (referralCode1 == null) {
-                throw new CustomException("Null", HttpStatus.BAD_REQUEST);
+            ReferralCode referral = referralCodeRepository.getReferralCodeByCode(referralCode).orElse(null);
+            if (referral == null) {
+                throw new CustomException("Referral Code Supplied does not exist", HttpStatus.BAD_REQUEST);
             }
-
-            profile = profileRepository.findByUserId(false, referralCode1.getUserId());
-
-            if (!profile.isPresent()) {
-                throw new CustomException("Null", HttpStatus.BAD_REQUEST);
-            }
+            return setProfileResponse(referral.getProfile());
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
-
-        return setProfileResponse(profile.get());
 
     }
 

@@ -30,6 +30,7 @@ public class ReferralCode {
     private String userId;
 
     @OneToOne
+    @JoinColumn(name = "profile_id", referencedColumnName = "id", unique = true, nullable = false)
     private Profile profile;
 
     @CreationTimestamp
