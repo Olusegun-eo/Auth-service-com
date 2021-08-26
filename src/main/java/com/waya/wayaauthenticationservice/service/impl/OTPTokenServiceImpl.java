@@ -11,7 +11,6 @@ import com.waya.wayaauthenticationservice.pojo.mail.context.AccountVerificationE
 import com.waya.wayaauthenticationservice.repository.OTPRepository;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
 import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
-import com.waya.wayaauthenticationservice.service.MessagingService;
 import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import com.waya.wayaauthenticationservice.streams.RecipientsSMS;
 import com.waya.wayaauthenticationservice.streams.StreamDataSMS;

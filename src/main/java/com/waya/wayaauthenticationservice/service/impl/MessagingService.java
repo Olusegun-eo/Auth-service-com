@@ -1,7 +1,8 @@
-package com.waya.wayaauthenticationservice.service;
+package com.waya.wayaauthenticationservice.service.impl;
 
 import com.waya.wayaauthenticationservice.enums.StreamsEventType;
 import com.waya.wayaauthenticationservice.pojo.mail.AbstractEmailContext;
+import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
 import com.waya.wayaauthenticationservice.streams.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
