@@ -148,7 +148,7 @@ public class AuthenticationController {
 			"AUTH" })
 	@PostMapping("/wallet/{userId}/{key}")
 	public ResponseEntity<?> validateWalletUserCall(@PathVariable Long userId, @PathVariable String key) {
-		return userService.validateWalletUserCall(userId, key);
+		return userService.validateServiceUserCall(userId, key);
 	}
 
 	private String getBaseUrl(HttpServletRequest request) {

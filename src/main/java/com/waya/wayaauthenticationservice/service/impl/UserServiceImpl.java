@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.controller.UserController;
-import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
+import com.waya.wayaauthenticationservice.entity.Privilege;
 import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.UserSetup;
 import com.waya.wayaauthenticationservice.entity.Users;
@@ -36,9 +36,8 @@ import com.waya.wayaauthenticationservice.service.impl.search.SearchService;
 import com.waya.wayaauthenticationservice.service.impl.search.SearchSpecification;
 import com.waya.wayaauthenticationservice.util.Constant;
 import com.waya.wayaauthenticationservice.util.HelperUtils;
-import com.waya.wayaauthenticationservice.util.ReqIPUtils;
+import com.waya.wayaauthenticationservice.util.Utils;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -51,7 +50,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
@@ -73,14 +71,6 @@ import static org.springframework.http.HttpStatus.*;
 public class UserServiceImpl implements UserService {
 
 	@Autowired
-	RestTemplate restTemplate;
-	@Autowired
-	ModelMapper modelMapper;
-	@Autowired
-	KafkaMessageProducer kafkaMessageProducer;
-	@Autowired
-	ProfileServiceDAO profileServiceDAO;
-	@Autowired
 	ProfileService profileService;
 	@Autowired
 	VirtualAccountProxy virtualAccountProxy;
@@ -93,7 +83,7 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private WalletProxy walletProxy;
 	@Autowired
-	private ReqIPUtils reqUtil;
+	private Utils utils;
 	@Autowired
 	private BCryptPasswordEncoder passwordEncoder;
 	@Autowired
@@ -143,7 +133,7 @@ public class UserServiceImpl implements UserService {
 		if (!validateAdmin(user)) {
 			return new ResponseEntity<>(new ErrorResponse("Invalid Access"), BAD_REQUEST);
 		}
-		List<UserProfileResponsePojo> users = usersRepository.findAll().stream().map(u -> this.toModelDTO(u))
+		List<UserProfileResponsePojo> users = usersRepository.findAll().stream().map(this::toModelDTO)
 				.collect(Collectors.toList());
 		return new ResponseEntity<>(new SuccessResponse("User info fetched", users), HttpStatus.OK);
 	}
@@ -155,7 +145,7 @@ public class UserServiceImpl implements UserService {
 		Role adminRole = rolesRepo.findByName("ROLE_APP_ADMIN")
 				.orElseThrow(() -> new CustomException("User Role Not Available", BAD_REQUEST));
 		Optional<Collection<Role>> roles = Optional.ofNullable(user.getRoleList());
-		if (!roles.isPresent())
+		if (roles.isEmpty())
 			return false;
 
 		return roles.get().contains(adminRole);
@@ -168,16 +158,12 @@ public class UserServiceImpl implements UserService {
 			return new ResponseEntity<>(new ErrorResponse("Invalid Role"), BAD_REQUEST);
 		}
 		List<UserProfileResponsePojo> userList = new ArrayList<>();
-		rolesRepo.findAll().forEach(roles -> {
-			usersRepository.findAll().forEach(us -> {
-				us.getRoleList().forEach(usRole -> {
-					if (usRole.getId().equals(roleId)) {
-						UserProfileResponsePojo u = this.toModelDTO(us);
-						userList.add(u);
-					}
-				});
-			});
-		});
+		rolesRepo.findAll().forEach(roles -> usersRepository.findAll().forEach(us -> us.getRoleList().forEach(usRole -> {
+			if (usRole.getId().equals(roleId)) {
+				UserProfileResponsePojo u = this.toModelDTO(us);
+				userList.add(u);
+			}
+		})));
 		return new ResponseEntity<>(new SuccessResponse("User by roles fetched", userList), HttpStatus.OK);
 	}
 
@@ -256,16 +242,20 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ResponseEntity<?> validateWalletUserCall(Long userId, String key) {
-		if (!key.equalsIgnoreCase("WALMIFOS"))
-			return new ResponseEntity<>(new ErrorResponse("Invalid KEY Passed"), HttpStatus.BAD_REQUEST);
+	public ResponseEntity<?> validateServiceUserCall(Long userId, String key) {
+		try {
+			if(!utils.verifySignedData(key.trim()))
+				return new ResponseEntity<>(new ErrorResponse("Invalid KEY Passed"), HttpStatus.BAD_REQUEST);
 
-		Users user = usersRepository.findById(userId).orElse(null);
-		if (user == null) {
-			return new ResponseEntity<>(new ErrorResponse("Invalid User Id Passed"), NOT_FOUND);
+			Users user = usersRepository.findById(userId).orElse(null);
+			if (user == null)
+				return new ResponseEntity<>(new ErrorResponse("Invalid User Id Passed"), NOT_FOUND);
+
+			UserProfileResponsePojo userDtO = toModelDTO(user);
+			return new ResponseEntity<>(new SuccessResponse("User info fetched", userDtO), HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
 		}
-		UserProfileResponsePojo userDtO = toModelDTO(user);
-		return new ResponseEntity<>(new SuccessResponse("User info fetched", userDtO), HttpStatus.OK);
 	}
 
 	@Override
@@ -378,10 +368,8 @@ public class UserServiceImpl implements UserService {
 						return new ApiResponseBody<>("An error has occurred", false);
 					}
 					return res;
-				}).thenAccept(p -> {
-					log.debug("Response from API Call to Delete Virtual Account is: {}, status is: {} data is {}",
-							p.getMessage(), p.getStatus(), p.getData());
-				});
+				}).thenAccept(p -> log.debug("Response from API Call to Delete Virtual Account is: {}, status is: {} data is {}",
+						p.getMessage(), p.getStatus(), p.getData()));
 	}
 
 	@Override
@@ -474,7 +462,7 @@ public class UserServiceImpl implements UserService {
 				dbUser.setAccountNonLocked(!dbUser.isAccountNonLocked());
 				dbUser.setAccountLockDate(LocalDateTime.now());
 				usersRepository.saveAndFlush(dbUser);
-				return new ResponseEntity<>(new SuccessResponse("Account activation status Changed Successfully"), OK);
+				return new ResponseEntity<>(new SuccessResponse("Account Lock status Changed Successfully"), OK);
 			}
 			return new ResponseEntity<>(new ErrorResponse("User Does not exists"), NOT_FOUND);
 		} catch (Exception e) {
@@ -498,16 +486,12 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public Integer getUsersCount(String roleName) {
 		try {
-			List<Users> users = new ArrayList<Users>();
-			rolesRepo.findAll().forEach(role -> {
-				usersRepository.findAll().forEach(user -> {
-					user.getRoleList().forEach(uRole -> {
-						if (uRole.getName().equals(roleName)) {
-							users.add(user);
-						}
-					});
-				});
-			});
+			List<Users> users = new ArrayList<>();
+			rolesRepo.findAll().forEach(role -> usersRepository.findAll().forEach(user -> user.getRoleList().forEach(uRole -> {
+				if (uRole.getName().equals(roleName)) {
+					users.add(user);
+				}
+			})));
 			return users.size();
 		} catch (Exception e) {
 			log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
@@ -618,7 +602,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public ResponseEntity<?> validateUser() {
 		UserPrincipal userPrincipal = (UserPrincipal) authenticatedUserFacade.getAuthentication().getPrincipal();
-		if (userPrincipal == null || !userPrincipal.getUser().isPresent()) {
+		if (userPrincipal == null || userPrincipal.getUser().isEmpty()) {
 			return new ResponseEntity<>(new ErrorResponse("Invalid user."), HttpStatus.OK);
 		} else {
 			Users user = userPrincipal.getUser().get();
@@ -627,7 +611,7 @@ public class UserServiceImpl implements UserService {
 			Set<String> permits = new HashSet<>();
 			for (Role r : userRoles) {
 				roles.add(r.getName());
-				permits.addAll(r.getPrivileges().stream().map(p -> p.getName()).collect(Collectors.toSet()));
+				permits.addAll(r.getPrivileges().stream().map(Privilege::getName).collect(Collectors.toSet()));
 			}
 			BigDecimal tranLimit = null;
 			UserAccessResponse access = userPrincipal.getAccess();
@@ -686,11 +670,9 @@ public class UserServiceImpl implements UserService {
 		if (user == null)
 			return null;
 
-		Set<String> roles = user.getRoleList().stream().map(u -> u.getName()).collect(Collectors.toSet());
+		Set<String> roles = user.getRoleList().stream().map(Role::getName).collect(Collectors.toSet());
 		Set<String> permits = new HashSet<>();
-		user.getRoleList().forEach(u -> {
-			permits.addAll(u.getPrivileges().stream().map(p -> p.getName()).collect(Collectors.toSet()));
-		});
+		user.getRoleList().forEach(u -> permits.addAll(u.getPrivileges().stream().map(Privilege::getName).collect(Collectors.toSet())));
 		String phoneNumber = user.getPhoneNumber().contains("+") ? user.getPhoneNumber()
 				: (user.getPhoneNumber().startsWith("234") ? String.format("+%s", user.getPhoneNumber())
 						: user.getPhoneNumber());
@@ -733,7 +715,7 @@ public class UserServiceImpl implements UserService {
 		searchCriteria.add(new SearchCriteria("isDeleted", SearchOperation.EQUALITY, "false"));
 
 		List<SearchSpecification> specList = searchCriteria.stream()
-				.map(criterion -> new SearchSpecification(criterion))
+				.map(SearchSpecification::new)
 				.collect(Collectors.toList());
 		Specification<Users> specs = searchService.andSpecification(specList).orElse(null);
 
@@ -744,9 +726,6 @@ public class UserServiceImpl implements UserService {
 		Page<Users> userPage;
 		try {
 			userPage = usersRepository.findAll(specs, pageableRequest);
-			if (userPage == null) {
-				userPage = Page.empty(pageableRequest);
-			}
 		} catch (Exception ex) {
 			log.error(ex.getCause() + "message");
 			String errorMessages = String.format("%s %s", ErrorMessages.INTERNAL_SERVER_ERROR.getErrorMessage(),
@@ -762,8 +741,8 @@ public class UserServiceImpl implements UserService {
 		int count = 0;
 		List<String> messages = new ArrayList<>();
 		try {
-			DevicePojo dev = reqUtil.GetDevice(device);
-			final String ip = reqUtil.getClientIP(request);
+			DevicePojo dev = utils.GetDevice(device);
+			final String ip = utils.getClientIP(request);
 			for (CorporateUserPojo mUser : userList.getUsersList()) {
 
 				if(mUser.getPhoneNumber() != null){
@@ -804,7 +783,7 @@ public class UserServiceImpl implements UserService {
 				}
 
 				if(mUser.getEmail() == null && mUser.getPhoneNumber() == null){
-					messages.add(String.format("Both Email and Phone Number cannot be null"));
+					messages.add("Both Email and Phone Number cannot be null");
 					continue;
 				}
 
@@ -847,8 +826,6 @@ public class UserServiceImpl implements UserService {
 				String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
 				user.setName(fullName);
 				Users regUser = usersRepository.save(user);
-				if (regUser == null)
-					continue;
 
 				CompletableFuture.runAsync(() -> sendNewPassword(mUser.getPassword(), regUser));
 
@@ -875,8 +852,8 @@ public class UserServiceImpl implements UserService {
 			if (userList == null || userList.getUsersList().isEmpty())
 				return new ResponseEntity<>(new ErrorResponse("User List cannot be null or Empty"), BAD_REQUEST);
 
-			DevicePojo dev = reqUtil.GetDevice(device);
-			final String ip = reqUtil.getClientIP(request);
+			DevicePojo dev = utils.GetDevice(device);
+			final String ip = utils.getClientIP(request);
 			for (BaseUserPojo mUser : userList.getUsersList()) {
 
 				if(mUser.getPhoneNumber() != null){
@@ -917,7 +894,7 @@ public class UserServiceImpl implements UserService {
 				}
 
 				if(mUser.getEmail() == null && mUser.getPhoneNumber() == null){
-					messages.add(String.format("Both Email and Phone Number cannot be null"));
+					messages.add("Both Email and Phone Number cannot be null");
 					continue;
 				}
 
@@ -957,8 +934,6 @@ public class UserServiceImpl implements UserService {
 				user.setRoleList(roleList);
 
 				Users regUser = usersRepository.save(user);
-				if (regUser == null)
-					continue;
 
 				String token = this.authService.generateToken(authenticatedUserFacade.getUser());
 				this.authService.createPrivateUser(mUser, regUser.getId(), token, getBaseUrl(request));
@@ -1009,12 +984,12 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public ResponseEntity<?> maintainUserSetup(UserSetupPojo pojo) {
 		try {
-			Optional<Users> userOpt = usersRepository.findById(Long.valueOf(pojo.getUserId()));
+			Optional<Users> userOpt = usersRepository.findById(pojo.getUserId());
 			if (userOpt.isEmpty()) {
 				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User with " + pojo.getUserId()),
 						NOT_FOUND);
 			}
-			Users user = usersRepository.getOne(Long.valueOf(pojo.getUserId()));
+			Users user = usersRepository.getOne(pojo.getUserId());
 			UserSetup setup = userSetupRepository.findByUserId(user.getId());
 			if (setup == null) {
 				setup = new UserSetup();

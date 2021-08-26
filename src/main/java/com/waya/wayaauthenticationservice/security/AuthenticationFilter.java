@@ -71,55 +71,57 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	protected void successfulAuthentication(HttpServletRequest req, HttpServletResponse res, FilterChain chain,
 			Authentication auth) throws IOException, SignatureException {
 		// Inspect Here
-		UserPrincipal userPrincipal = ((UserPrincipal) auth.getPrincipal());
-		Users user = userPrincipal.getUser().orElse(null);
-		if (user == null)
-			return;
-		UserAccessResponse access = userPrincipal.getAccess();
+		if (auth != null && auth.getPrincipal() instanceof UserPrincipal) {
+			UserPrincipal userPrincipal = ((UserPrincipal) auth.getPrincipal());
+			Users user = userPrincipal.getUser().orElse(null);
+			if (user == null)
+				return;
+			UserAccessResponse access = userPrincipal.getAccess();
 
-		String userName = (user.getEmail() == null || user.getEmail().isBlank()) ? user.getPhoneNumber() :  user.getEmail();
+			String userName = (user.getEmail() == null || user.getEmail().isBlank()) ? user.getPhoneNumber() :  user.getEmail();
 
-		String token = Jwts.builder().setSubject(userName)
-				.setExpiration(new Date(System.currentTimeMillis() + getExpiration()))
-				.signWith(SignatureAlgorithm.HS256, getSecret()).compact();
-		// Check for First Login Attempt and Update User Table
-		UserRepository userRepository = (UserRepository) SpringApplicationContext.getBean("userRepository");
-		if (user.isFirstTimeLogin()) {
-			user.setFirstTimeLogin(false);
-			user.setFirstTimeLoginDate(LocalDateTime.now());
-			userRepository.save(user);
+			String token = Jwts.builder().setSubject(userName)
+					.setExpiration(new Date(System.currentTimeMillis() + getExpiration()))
+					.signWith(SignatureAlgorithm.HS256, getSecret()).compact();
+			// Check for First Login Attempt and Update User Table
+			UserRepository userRepository = (UserRepository) SpringApplicationContext.getBean("userRepository");
+			if (user.isFirstTimeLogin()) {
+				user.setFirstTimeLogin(false);
+				user.setFirstTimeLoginDate(LocalDateTime.now());
+				userRepository.save(user);
+			}
+			ProfileRepository profileRepository = (ProfileRepository) SpringApplicationContext.getBean("profileRepository");
+			Profile profile = profileRepository.findByUserId(false, String.valueOf(user.getId())).orElse(new Profile());
+
+			LoginResponsePojo loginResponsePojo = new LoginResponsePojo();
+			Map<String, Object> m = new HashMap<>();
+
+			Set<String> permit = getPrivileges(user.getRoleList());
+			Set<String> roles = user.getRoleList().stream().map(u -> u.getName()).collect(Collectors.toSet());
+
+			loginResponsePojo.setCode(0);
+			loginResponsePojo.setStatus(true);
+			loginResponsePojo.setMessage("Login Successful");
+
+			m.put("token", TOKEN_PREFIX + token);
+			m.put("privilege", permit);
+			m.put("roles", roles);
+			m.put("access", access);
+			m.put("pinCreated", user.isPinCreated());
+			m.put("corporate", user.isCorporate());
+
+			res.addHeader(HEADER_STRING, TOKEN_PREFIX + token);
+			UserProfileResponsePojo userProfile = convert(user, profile);
+
+			m.put("user", userProfile);
+			loginResponsePojo.setData(m);
+			String str = gson.toJson(loginResponsePojo);
+			PrintWriter pr = res.getWriter();
+			res.setContentType("application/json");
+			res.setCharacterEncoding("UTF-8");
+
+			pr.write(str);
 		}
-		ProfileRepository profileRepository = (ProfileRepository) SpringApplicationContext.getBean("profileRepository");
-		Profile profile = profileRepository.findByUserId(false, String.valueOf(user.getId())).orElse(new Profile());
-
-		LoginResponsePojo loginResponsePojo = new LoginResponsePojo();
-		Map<String, Object> m = new HashMap<>();
-
-		Set<String> permit = getPrivileges(user.getRoleList());
-		Set<String> roles = user.getRoleList().stream().map(u -> u.getName()).collect(Collectors.toSet());
-		
-		loginResponsePojo.setCode(0);
-		loginResponsePojo.setStatus(true);
-		loginResponsePojo.setMessage("Login Successful");
-
-		m.put("token", TOKEN_PREFIX + token);
-		m.put("privilege", permit);
-		m.put("roles", roles);
-		m.put("access", access);
-		m.put("pinCreated", user.isPinCreated());
-		m.put("corporate", user.isCorporate());
-
-		res.addHeader(HEADER_STRING, TOKEN_PREFIX + token);
-		UserProfileResponsePojo userProfile = convert(user, profile);
-
-		m.put("user", userProfile);
-		loginResponsePojo.setData(m);
-		String str = gson.toJson(loginResponsePojo);
-		PrintWriter pr = res.getWriter();
-		res.setContentType("application/json");
-		res.setCharacterEncoding("UTF-8");
-
-		pr.write(str);
 	}
 
 	@Override

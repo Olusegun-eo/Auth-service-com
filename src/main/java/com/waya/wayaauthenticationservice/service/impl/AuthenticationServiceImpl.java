@@ -24,7 +24,7 @@ import com.waya.wayaauthenticationservice.service.AuthenticationService;
 import com.waya.wayaauthenticationservice.service.MessagingService;
 import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.util.ReqIPUtils;
+import com.waya.wayaauthenticationservice.util.Utils;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
@@ -65,7 +65,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	private final RedisUserDao redisUserDao;
 	private final WalletProxy walletProxy;
 	private final VirtualAccountProxy virtualAccountProxy;
-	private final ReqIPUtils reqUtil;
+	private final Utils reqUtil;
 	private final MessagingService messagingService;
 	private final ProfileService profileService;
 	private final OTPTokenService otpTokenService;
@@ -74,10 +74,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	private String urlRedirect;
 
 	public AuthenticationServiceImpl(KafkaMessageProducer kafkaMessageProducer, UserRepository userRepo,
-									 RolesRepository rolesRepo, BCryptPasswordEncoder passwordEncoder,
-									 RedisUserDao redisUserDao, WalletProxy walletProxy, VirtualAccountProxy virtualAccountProxy,
-									 ReqIPUtils reqUtil, MessagingService messagingService,
-									 ProfileService profileService, OTPTokenService otpTokenService) {
+                                     RolesRepository rolesRepo, BCryptPasswordEncoder passwordEncoder,
+                                     RedisUserDao redisUserDao, WalletProxy walletProxy, VirtualAccountProxy virtualAccountProxy,
+                                     Utils reqUtil, MessagingService messagingService,
+                                     ProfileService profileService, OTPTokenService otpTokenService) {
 		this.kafkaMessageProducer = kafkaMessageProducer;
 		this.userRepo = userRepo;
 		this.rolesRepo = rolesRepo;

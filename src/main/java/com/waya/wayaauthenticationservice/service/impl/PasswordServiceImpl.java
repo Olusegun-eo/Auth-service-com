@@ -9,12 +9,13 @@ import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordChangeEmailC
 import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordResetContext;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PinResetContext;
 import com.waya.wayaauthenticationservice.pojo.password.*;
-import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
+import com.waya.wayaauthenticationservice.security.UserPrincipal;
+import com.waya.wayaauthenticationservice.service.FraudService;
 import com.waya.wayaauthenticationservice.service.MessagingService;
 import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import com.waya.wayaauthenticationservice.service.PasswordService;
@@ -22,6 +23,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -42,7 +44,7 @@ public class PasswordServiceImpl implements PasswordService {
 
 	private final OTPTokenService OTPTokenService;
 	private final UserRepository usersRepo;
-	private final ProfileRepository profileRepo;
+	private final FraudService fraudService;
 	private final MessagingService messagingService;
 	private final BCryptPasswordEncoder passwordEncoder;
 	private final AuthenticatedUserFacade authenticatedUserFacade;
@@ -67,7 +69,7 @@ public class PasswordServiceImpl implements PasswordService {
 			Map<String, Object> map = doValidations(passPojo.getPhoneOrEmail(), String.valueOf(passPojo.getOtp()),
 					isEmail, otpRequestType);
 
-			boolean success = Boolean.valueOf(map.get("success").toString());
+			boolean success = Boolean.parseBoolean(map.get("success").toString());
 			if (!success) {
 				String errorMessage = ErrorMessages.NOT_VALID.getErrorMessage().replace("placeholder",
 						"token: " + passPojo.getOtp()) + "for: " + passPojo.getPhoneOrEmail() + ". Message is: "
@@ -148,7 +150,7 @@ public class PasswordServiceImpl implements PasswordService {
 			Map<String, Object> map = doValidations(passPojo.getPhoneOrEmail(), String.valueOf(passPojo.getOtp()),
 					isEmail, otpRequestType);
 
-			if (!Boolean.valueOf(map.get("success").toString())) {
+			if (!Boolean.parseBoolean(map.get("success").toString())) {
 				String errorMessage = ErrorMessages.NOT_VALID.getErrorMessage().replace("placeholder",
 						"token: " + passPojo.getOtp()) + "for: " + passPojo.getPhoneOrEmail() + ". Message is: "
 						+ map.get("message").toString();
@@ -350,7 +352,7 @@ public class PasswordServiceImpl implements PasswordService {
 			Map<String, Object> map = doValidations(pinPojo.getPhoneOrEmail(), pinPojo.getOtp(), isEmail,
 					otpRequestType);
 
-			if (!Boolean.valueOf(map.get("success").toString())) {
+			if (!Boolean.parseBoolean(map.get("success").toString())) {
 				String errorMessage = ErrorMessages.NOT_VALID.getErrorMessage().replace("placeholder",
 						"token: " + pinPojo.getOtp()) + "for: " + pinPojo.getPhoneOrEmail() + ". Message is: "
 						+ map.get("message").toString();
@@ -376,7 +378,7 @@ public class PasswordServiceImpl implements PasswordService {
 		} else {
 			otpResponse = this.OTPTokenService.verifySMSOTP(phoneOrEmail, Integer.parseInt(otp), otpRequestType);
 		}
-		success = otpResponse != null ? otpResponse.isValid() : false;
+		success = otpResponse != null && otpResponse.isValid();
 		message = otpResponse != null ? otpResponse.getMessage() : "Failure";
 		map.put("success", success);
 		map.put("message", message);
@@ -402,7 +404,7 @@ public class PasswordServiceImpl implements PasswordService {
 		OTPRequestType otpRequestType = isEmail ? PIN_CHANGE_EMAIL : PIN_CHANGE_PHONE;
 
 		Map<String, Object> map = doValidations(pinPojo.getPhoneOrEmail(), pinPojo.getOtp(), isEmail, otpRequestType);
-		if (!Boolean.valueOf(map.get("success").toString())) {
+		if (!Boolean.parseBoolean(map.get("success").toString())) {
 			String errorMessage = ErrorMessages.NOT_VALID.getErrorMessage().replace("placeholder",
 					"token: " + pinPojo.getOtp()) + "for: " + pinPojo.getPhoneOrEmail() + ". Message is: "
 					+ map.get("message").toString();
@@ -433,7 +435,7 @@ public class PasswordServiceImpl implements PasswordService {
 
 				Map<String, Object> map = doValidations(pinPojo.getPhoneOrEmail(), pinPojo.getOtp(), isEmail,
 						otpRequestType);
-				if (!Boolean.valueOf(map.get("success").toString())) {
+				if (!Boolean.parseBoolean(map.get("success").toString())) {
 					String errorMessage = ErrorMessages.NOT_VALID.getErrorMessage().replace("placeholder",
 							"token: " + pinPojo.getOtp()) + "for: " + pinPojo.getPhoneOrEmail() + ". Message is: "
 							+ map.get("message").toString();
@@ -465,10 +467,24 @@ public class PasswordServiceImpl implements PasswordService {
 		if (!users.isPinCreated())
 			return new ResponseEntity<>(new ErrorResponse("Transaction pin Not Setup yet"), HttpStatus.BAD_REQUEST);
 
+		UserPrincipal principal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
 		boolean isPinMatched = passwordEncoder.matches(String.valueOf(pin), users.getPinHash());
 		if (isPinMatched) {
+			if(principal != null && principal.getUser().isPresent() && principal.getUser().get().getId() != null) {
+				Long authId = principal.getUser().get().getId();
+				if(authId.equals(userId)){
+					fraudService.actionOnPinValidateSuccess(users);
+				}
+			}
 			return new ResponseEntity<>(new SuccessResponse("Pin valid."), HttpStatus.OK);
 		} else {
+			if(principal != null && principal.getUser().isPresent() && principal.getUser().get().getId() != null) {
+				Long authId = principal.getUser().get().getId();
+				if(authId.equals(userId)){
+					fraudService.actionOnInvalidPin(users);
+				}
+			}
 			return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -484,8 +500,10 @@ public class PasswordServiceImpl implements PasswordService {
 
 		boolean isPinMatched = passwordEncoder.matches(String.valueOf(pin), users.getPinHash());
 		if (isPinMatched) {
+			fraudService.actionOnPinValidateSuccess(users);
 			return new ResponseEntity<>(new SuccessResponse("Pin valid."), HttpStatus.OK);
 		} else {
+			fraudService.actionOnInvalidPin(users);
 			return new ResponseEntity<>(new ErrorResponse("Invalid Pin."), HttpStatus.BAD_REQUEST);
 		}
 	}

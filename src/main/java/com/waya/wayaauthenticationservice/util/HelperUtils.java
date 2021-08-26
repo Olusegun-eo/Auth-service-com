@@ -1,11 +1,13 @@
 package com.waya.wayaauthenticationservice.util;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.security.SecureRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 public class HelperUtils {
-
 
     public static Pattern phoneNumPattern = Pattern.compile("^[0-9]*$");
     public static Pattern emailPattern = Pattern.compile("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\." + "[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@"
@@ -33,7 +35,7 @@ public class HelperUtils {
 
         SecureRandom random = new SecureRandom();
         return random.ints(randNumOrigin, randNumBound + 1)
-                .filter(i -> Character.isDigit(i))
+                .filter(Character::isDigit)
                 .limit(length)
                 .collect(StringBuilder::new, StringBuilder::appendCodePoint,
                         StringBuilder::append)
@@ -50,7 +52,7 @@ public class HelperUtils {
 
     /**
      * Return true if value passed is null as this helper method is used to validate optional inputs
-     * @param value
+     * @param value value of the email or PhoneNumber
      * @return boolean
      */
     public static boolean isEmailOrPhoneNumber(String value) {

@@ -27,6 +27,9 @@ public class UserSecurity {
 	}
 
 	public boolean useHierarchy(Long id, Authentication authentication) {
+		if(authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal)){
+			return true;
+		}
 		Users user = ((UserPrincipal) authentication.getPrincipal()).getUser().orElse(null);
 
 		if (user == null)
@@ -48,6 +51,9 @@ public class UserSecurity {
 	}
 
 	public boolean useHierarchyForRoles(String roleName, Authentication authentication) {
+		if(authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal)){
+			return true;
+		}
 		Users user = ((UserPrincipal) authentication.getPrincipal()).getUser().orElse(null);
 		if (user == null)
 			return false;
@@ -62,7 +68,9 @@ public class UserSecurity {
 	}
 
 	public boolean useHierarchy(String emailOrPhoneNumber, Authentication authentication) {
-
+		if(authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal)){
+			return true;
+		}
 		Users user = ((UserPrincipal) authentication.getPrincipal()).getUser().orElse(null);
 		if (user == null)
 			return false;

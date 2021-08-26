@@ -10,7 +10,7 @@ import com.waya.wayaauthenticationservice.pojo.log.LogRequest;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.security.UserPrincipal;
 import com.waya.wayaauthenticationservice.service.UserService;
-import com.waya.wayaauthenticationservice.util.ReqIPUtils;
+import com.waya.wayaauthenticationservice.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -37,7 +37,7 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
     private static final long serialVersionUID = 2453821271976611591L;
 
     @Autowired
-    ReqIPUtils reqUtil;
+    Utils reqUtil;
 
     @Override
     protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {

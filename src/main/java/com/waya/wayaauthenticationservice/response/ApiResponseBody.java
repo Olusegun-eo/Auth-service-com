@@ -1,17 +1,16 @@
 package com.waya.wayaauthenticationservice.response;
 
-import java.util.Date;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-
 import lombok.ToString;
+
+import java.util.Date;
 
 @ToString
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ApiResponseBody<T> {
-    private Date timestamp = new Date();
+    private String timestamp = new Date().toString();
     private String message;
     private boolean status;
     private T data;
@@ -20,7 +19,7 @@ public class ApiResponseBody<T> {
     }
 
     public ApiResponseBody(T data, String message, boolean status) {
-        timestamp = new Date();
+        timestamp = new Date().toString();
         this.status = status;
         this.message = message;
         this.data = data;
@@ -28,13 +27,13 @@ public class ApiResponseBody<T> {
 
     public ApiResponseBody(String message, boolean status) {
 
-        timestamp = new Date();
+        timestamp = new Date().toString();
         this.status = status;
         this.message = message;
         this.data = null;
     }
 
-    public Date getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 

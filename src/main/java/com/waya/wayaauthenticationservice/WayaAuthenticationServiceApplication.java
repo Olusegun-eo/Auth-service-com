@@ -3,7 +3,9 @@ package com.waya.wayaauthenticationservice;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.crypto.tink.config.TinkConfig;
 import com.waya.wayaauthenticationservice.config.LoggableDispatcherServlet;
+import com.waya.wayaauthenticationservice.util.Utils;
 import feign.RequestInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
@@ -110,6 +112,15 @@ public class WayaAuthenticationServiceApplication {
 	@Bean
 	public RequestInterceptor requestInterceptor(){
 		return requestTemplate -> requestTemplate.header(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.getMimeType());
+	}
+
+	@Bean(name = "encryptSignature")
+	public byte[] signData() throws Exception {
+		TinkConfig.register();
+
+		Utils utils = (Utils) SpringApplicationContext.getBean("utils");
+		utils.generateKeySet();
+		return utils.encryptData();
 	}
 
 }
