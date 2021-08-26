@@ -11,4 +11,5 @@ public interface AuthenticatedUserFacade {
 
     Users getUser();
 
+    UserPrincipal getUserPrincipal();
 }

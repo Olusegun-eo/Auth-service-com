@@ -600,9 +600,9 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public ResponseEntity<?> validateUser() {
-		UserPrincipal userPrincipal = (UserPrincipal) authenticatedUserFacade.getAuthentication().getPrincipal();
+		UserPrincipal userPrincipal = authenticatedUserFacade.getUserPrincipal();
 		if (userPrincipal == null || userPrincipal.getUser().isEmpty()) {
-			return new ResponseEntity<>(new ErrorResponse("Invalid user."), HttpStatus.OK);
+			return new ResponseEntity<>(new ErrorResponse("Invalid user."), HttpStatus.BAD_REQUEST);
 		} else {
 			Users user = userPrincipal.getUser().get();
 			Set<String> roles = new HashSet<>();

@@ -26,4 +26,12 @@ public class AuthenticatedUserFacadeImpl implements AuthenticatedUserFacade {
         }
         return null;
     }
+
+    @Override
+    public UserPrincipal getUserPrincipal() {
+        if (this.getAuthentication() != null && this.getAuthentication().getPrincipal() instanceof UserPrincipal) {
+            return (UserPrincipal) this.getAuthentication().getPrincipal();
+        }
+        return null;
+    }
 }

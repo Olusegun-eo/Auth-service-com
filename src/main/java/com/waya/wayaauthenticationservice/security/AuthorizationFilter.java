@@ -61,7 +61,6 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
 				UserRepository userLoginRepo = (UserRepository) SpringApplicationContext.getBean("userRepository");
 
 				Users user = userLoginRepo.findByEmailOrPhoneNumber(userToken).orElse(null);
-
 				if (user != null) {
 					UserPrincipal userPrincipal = new UserPrincipal(user);
 					UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
