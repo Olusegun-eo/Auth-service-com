@@ -1,33 +1,18 @@
 package com.waya.wayaauthenticationservice.entity;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Objects;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-import javax.validation.constraints.NotNull;
-
-import org.hibernate.annotations.CreationTimestamp;
-
 import com.waya.wayaauthenticationservice.model.AuthProvider;
-
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.CreationTimestamp;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -43,9 +28,6 @@ public class Users extends AuditModel implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", unique = true, nullable = false)
     private Long id;
-
-    //@Column(name = "user_id", unique = true, nullable = false)
-    //private String userId;
 
     private String email;
 
@@ -141,9 +123,9 @@ public class Users extends AuditModel implements Serializable {
     @JoinTable(name = "m_users_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private Collection<Role> roleList;
 
-    @CreationTimestamp
-    @ApiModelProperty(hidden = true)
-    private LocalDateTime dateCreated;
+//    @CreationTimestamp
+//    @ApiModelProperty(hidden = true)
+//    private LocalDateTime dateCreated;
 
     private LocalDateTime pinCreatedDate;
 
@@ -165,7 +147,7 @@ public class Users extends AuditModel implements Serializable {
             return false;
         }
         Users other = (Users) obj;
-        return Objects.equals(email, other.email) && id == other.id && Objects.equals(phoneNumber, other.phoneNumber)
+        return Objects.equals(email, other.email) && id.equals(other.id) && Objects.equals(phoneNumber, other.phoneNumber)
                 && Objects.equals(surname, other.surname);
     }
 

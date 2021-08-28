@@ -29,7 +29,7 @@ spring:
       fail-on-empty-beans: false
 
   datasource:
-#    url: jdbc:postgresql://127.0.0.1:5432/app_dev
+#    url: jdbc:postgresql://127.0.0.1:5432/auth_service
 #    username: app_dev
 #    password: e1bc9e7f864d
 #    driver-class-name: org.postgresql.Driver

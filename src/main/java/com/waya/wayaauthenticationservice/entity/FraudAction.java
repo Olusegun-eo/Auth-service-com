@@ -1,9 +1,7 @@
 package com.waya.wayaauthenticationservice.entity;
 
 import com.waya.wayaauthenticationservice.enums.FraudType;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -14,7 +12,9 @@ import java.util.UUID;
 @Setter
 @ToString
 @Table(name = "m_auth_fraud_base")
-public class FraudAction  extends AuditModel implements Serializable {
+@AllArgsConstructor
+@NoArgsConstructor
+public class FraudAction extends AuditModel implements Serializable {
 
     private static final long serialVersionUID = -2675537776836756234L;
 
@@ -27,7 +27,7 @@ public class FraudAction  extends AuditModel implements Serializable {
 
     private Integer attempts;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private Users user;
 

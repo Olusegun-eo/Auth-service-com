@@ -154,7 +154,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			user.setPhoneNumber(mUser.getPhoneNumber());
 			user.setReferenceCode(mUser.getReferenceCode());
 			user.setSurname(mUser.getSurname());
-			user.setDateCreated(LocalDateTime.now());
 			user.setAccountStatus(1);
 			user.setRegDeviceIP(ip);
 			String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
@@ -228,7 +227,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			user.setAdmin(false);
 			user.setId(0L);
 			user.setCorporate(true);
-			user.setDateCreated(LocalDateTime.now());
 			user.setRegDeviceIP(ip);
 			user.setAccountStatus(1);
 			user.setRegDevicePlatform(dev.getPlatform());
@@ -263,7 +261,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 					"Corporate Account Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
 					HttpStatus.CREATED);
 		} catch (Exception e) {
-			log.error("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+			log.error("Error::: {}", e.getMessage());
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
 	}

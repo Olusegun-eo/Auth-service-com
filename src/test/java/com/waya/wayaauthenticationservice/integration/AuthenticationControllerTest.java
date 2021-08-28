@@ -94,10 +94,10 @@ public class AuthenticationControllerTest {
         doNothing().when(otpService).sendAccountVerificationToken(any(), any(), any());
     	
         BaseUserPojo user = new BaseUserPojo();
-        user.setEmail("emmox55@gmail.com");
+        user.setEmail("emmox5523@gmail.com");
         user.setFirstName("Stan");
         user.setSurname("Toju");
-        user.setPhoneNumber("2348104728022");
+        user.setPhoneNumber("2348104700022");
         user.setPassword("test@123");
 
         createNewUser(user, "$.message", "Successful", status().isCreated());
@@ -131,7 +131,7 @@ public class AuthenticationControllerTest {
         user.setEmail("micro@toju.com");
         user.setFirstName("Stan");
         user.setSurname("Toju");
-        user.setPhoneNumber("2347030355396");
+        user.setPhoneNumber("2347030366396");
         user.setPassword("test@123");
         user.setCity("Shomolu");
         user.setBusinessType("Banking");

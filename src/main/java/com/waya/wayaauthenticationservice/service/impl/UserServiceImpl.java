@@ -805,7 +805,6 @@ public class UserServiceImpl implements UserService {
 
 				user = new Users();
 				user.setCorporate(true);
-				user.setDateCreated(LocalDateTime.now());
 				user.setRegDeviceIP(ip);
 				user.setRegDevicePlatform(dev.getPlatform());
 				user.setRegDeviceType(dev.getDeviceType());
@@ -921,7 +920,6 @@ public class UserServiceImpl implements UserService {
 				user.setPhoneNumber(mUser.getPhoneNumber());
 				user.setReferenceCode(mUser.getReferenceCode());
 				user.setSurname(mUser.getSurname());
-				user.setDateCreated(LocalDateTime.now());
 				user.setRegDeviceIP(ip);
 				String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
 				user.setName(fullName);
