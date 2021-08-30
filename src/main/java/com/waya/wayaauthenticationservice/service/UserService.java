@@ -19,6 +19,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 public interface UserService {
@@ -76,9 +77,9 @@ public interface UserService {
 
     ResponseEntity<?> unDeleteUser(Long id);
 
-    ResponseEntity<?> deactivateAccounts(BulkPrivateUserCreationDTO excelToPrivateUserPojo);
+    ResponseEntity<?> deactivateAccounts(Set<String> bulkUpload);
 
-    ResponseEntity<?> activateAccounts(BulkPrivateUserCreationDTO excelToPrivateUserPojo);
+    ResponseEntity<?> activateAccounts(Set<String> bulkUpload);
 
 	ResponseEntity<?> validateServiceUserCall(Long userId, String key);
 

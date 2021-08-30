@@ -397,11 +397,11 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ResponseEntity<?> deactivateAccounts(BulkPrivateUserCreationDTO bulkUpload) {
-		if (bulkUpload != null && !bulkUpload.getUsersList().isEmpty()) {
+	public ResponseEntity<?> deactivateAccounts(Set<String> bulkUpload) {
+		if (bulkUpload != null && !bulkUpload.isEmpty()) {
 			try {
-				bulkUpload.getUsersList().forEach(user -> {
-					Users dbUser = usersRepository.findByEmailIgnoreCase(user.getEmail()).orElse(null);
+				bulkUpload.forEach(user -> {
+					Users dbUser = usersRepository.findByEmailOrPhoneNumber(user).orElse(null);
 					if (dbUser != null && dbUser.isActive()) {
 						dbUser.setActive(false);
 						usersRepository.saveAndFlush(dbUser);
@@ -417,11 +417,11 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ResponseEntity<?> activateAccounts(BulkPrivateUserCreationDTO bulkUpload) {
-		if (bulkUpload != null && !bulkUpload.getUsersList().isEmpty()) {
+	public ResponseEntity<?> activateAccounts(Set<String> bulkUpload) {
+		if (bulkUpload != null && !bulkUpload.isEmpty()) {
 			try {
-				bulkUpload.getUsersList().forEach(user -> {
-					Users dbUser = usersRepository.findByEmailIgnoreCase(user.getEmail()).orElse(null);
+				bulkUpload.forEach(user -> {
+					Users dbUser = usersRepository.findByEmailOrPhoneNumber(user).orElse(null);
 					if (dbUser != null && !dbUser.isActive()) {
 						dbUser.setActive(true);
 						usersRepository.saveAndFlush(dbUser);

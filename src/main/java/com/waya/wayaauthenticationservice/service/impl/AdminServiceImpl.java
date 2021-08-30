@@ -8,14 +8,16 @@ import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.mail.context.AdminCheckContext;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
-import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
-import com.waya.wayaauthenticationservice.service.*;
+import com.waya.wayaauthenticationservice.service.AdminService;
+import com.waya.wayaauthenticationservice.service.AuthenticationService;
+import com.waya.wayaauthenticationservice.service.OTPTokenService;
+import com.waya.wayaauthenticationservice.service.UserService;
 import com.waya.wayaauthenticationservice.util.ExcelHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,9 +53,6 @@ public class AdminServiceImpl implements AdminService {
 
     @Autowired
     RolesRepository rolesRepository;
-
-    @Autowired
-    ProfileRepository profileRepo;
 
     @Autowired
     AuthenticationService authenticationService;
@@ -186,8 +185,7 @@ public class AdminServiceImpl implements AdminService {
                     if (!user.getRoleList().contains(mRole.get()))
                         user.getRoleList().add(mRole.get());
                 } else {
-                    if (user.getRoleList().contains(mRole.get()))
-                        user.getRoleList().remove(mRole.get());
+                    user.getRoleList().remove(mRole.get());
                 }
                 userRepository.save(user);
             }
@@ -223,7 +221,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public InputStream createDeactivationExcelSheet() {
-        return ExcelHelper.createExcelSheet(ExcelHelper.PRIVATE_USER_HEADERS);
+        return ExcelHelper.createExcelSheet(ExcelHelper.ACTIVATION_LIST);
     }
 
     @Override
@@ -231,7 +229,7 @@ public class AdminServiceImpl implements AdminService {
         String message;
         if (ExcelHelper.hasExcelFormat(file)) {
             try {
-                return userService.deactivateAccounts(ExcelHelper.excelToPrivateUserPojo(file.getInputStream(),
+                return userService.deactivateAccounts(ExcelHelper.excelActivation(file.getInputStream(),
                             file.getOriginalFilename()));
             } catch (Exception e) {
                 throw new CustomException("failed to Parse excel data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -246,7 +244,7 @@ public class AdminServiceImpl implements AdminService {
         String message;
         if (ExcelHelper.hasExcelFormat(file)) {
             try {
-                return userService.activateAccounts(ExcelHelper.excelToPrivateUserPojo(file.getInputStream(),
+                return userService.activateAccounts(ExcelHelper.excelActivation(file.getInputStream(),
                         file.getOriginalFilename()));
             } catch (Exception e) {
                 throw new CustomException("failed to Parse excel data: " + e.getMessage(), HttpStatus.BAD_REQUEST);

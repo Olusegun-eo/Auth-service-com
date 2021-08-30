@@ -218,7 +218,7 @@ public class AdminController {
 
 	@ApiOperation(value = "Download Template for Bulk User Activation/Deactivation ", tags = { "ADMIN" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
-	@GetMapping("/account-deactivation/bulk-user-excel")
+	@GetMapping("/bulk/account-activation/bulk-user-excel")
 	public ResponseEntity<Resource> getFile() {
 		String filename = "bulk-user-excel.xlsx";
 		InputStreamResource file = new InputStreamResource(adminService.createDeactivationExcelSheet());
