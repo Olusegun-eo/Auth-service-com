@@ -1,7 +1,71 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
-<head></head>
-<body>
-<span th:text="${message}"></span>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./static/css/style.css" />
+    <title>Waya Password</title>
+</head>
+<body onload="getYear()">
+<div class="main">
+    <div class="content">
+        <div class="message">
+            <header>
+                <img src="./static/assets/wayapay logo 1.svg" alt="" style="height: 41px" />
+            </header>
+            <div class="message-content" style="margin-top: 25px;">
+                <b>Dear Philip,</b>
+                <p style=" margin-bottom: 30px">
+                    Waya official account has been successfully created for you.
+                    kindly enter the password "p@sswOrd123" with your email address to
+                    login.
+                </p>
+                <p><a href="#" style="color: #ff4b01; font-weight:600">Go to Login Page</a></p>
+
+                <div class="sign-message">With love,<br/> Katie from Waya PayChat</div>
+            </div>
+            <hr />
+            <footer>
+                <div class="btn-group">
+                    <button class="btn">
+                        <img src="./static/assets/apple.svg" alt="" />
+                        <div class="btn-m">
+                            <span style="color: #c5c2c2">get it from</span> <span>App Store</span>
+                        </div>
+                    </button>
+                    <button class="btn">
+                        <img src="./static/assets/android.svg" alt="" />
+                        <div class="btn-m">
+                            <span style="color: #c5c2c2">get it on</span> <span>android</span>
+                        </div>
+                    </button>
+                </div>
+                <div class="connect">
+                    <a href="#" target="_blank" rel="noopener noreferrer"><img class="connect-img" src="assets/Group 18.svg" alt=""
+                    /></a>
+                    <a href="#" target="_blank" rel="noopener noreferrer"><img class="connect-img" src="assets/facebook.svg" alt="" /></a>
+                    <a href="#" target="_blank" rel="noopener noreferrer"><img class="connect-img" src="assets/instagram.svg" alt="" /></a>
+                    <a href="#" target="_blank" rel="noopener noreferrer"><img class="connect-img" src="assets/vector.svg" alt="" /></a>
+                    <a href="#" target="_blank" rel="noopener noreferrer"></a><img class="connect-img" src="assets/wayapay logo 2.svg" alt="" /></a>
+                </div>
+                <h5 class="copyright">
+                    Copyright &copy; Waya <span id="date"></span> All rights reserved
+                </h5>
+                <div>
+                    You are receiving this message because you signed up on Waya
+                    PayChat, if you would like to stop receiving messages, you can opt
+                    out by clicking <a href="#" style="color: #ff4b01; text-decoration:none" target="_blank" rel="noopener noreferrer">unsubscribe</a>. For more information about how we
+                    <br/>
+                    <div style="text-align: center;">data, please see our <a href="#" style="color: #ff4b01; text-decoration:none" target="_blank" rel="noopener noreferrer">Privacy Policy</a>. </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+<script>
+      const date = new Date().getFullYear();
+      document.getElementById("date").innerHTML = date;
+    </script>
 </body>
 </html>

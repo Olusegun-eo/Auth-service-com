@@ -181,7 +181,7 @@ public class ProfileServiceImpl implements ProfileService {
                 // create waya gram profile
                 CompletableFuture.runAsync(
                         () -> createWayagramProfile(savedProfile.getUserId(), savedProfile.getSurname(), fullName))
-                        .orTimeout(3, TimeUnit.MINUTES).handle((res, ex) -> {
+                        .orTimeout(5, TimeUnit.MINUTES).handle((res, ex) -> {
                     if (ex != null) {
                         log.error("Error With Setting up Wayagram Profile:: {}", ex.getMessage());
                     }
@@ -236,14 +236,26 @@ public class ProfileServiceImpl implements ProfileService {
             ApiResponseBody<String> validationCheck = validationCheckOnProfile(profile, referralCode);
 
             if (validationCheck.getStatus()) {
-                Profile newCorporateProfile = saveCorporateProfile(profileRequest);
+                Profile savedProfile = saveCorporateProfile(profileRequest);
 
                 // save the referral code make request to the referral service
-                saveReferralCode(newCorporateProfile, profileRequest.getUserId());
+                saveReferralCode(savedProfile, profileRequest.getUserId());
 
                 // send otp to Phone and Email
                 CompletableFuture.runAsync(() -> otpTokenService.sendAccountVerificationToken(user,
                         JOINT_VERIFICATION, baseUrl));
+
+                String fullName = String.format("%s %s", savedProfile.getFirstName(), savedProfile.getSurname());
+
+                // create waya gram profile
+                CompletableFuture.runAsync(
+                        () -> createWayagramProfile(savedProfile.getUserId(), savedProfile.getSurname(), fullName))
+                        .orTimeout(5, TimeUnit.MINUTES).handle((res, ex) -> {
+                    if (ex != null) {
+                        log.error("Error With Setting up Wayagram Profile:: {}", ex.getMessage());
+                    }
+                    return res;
+                });
 
                 return new ApiResponseBody<>(null, CREATE_PROFILE_SUCCESS_MSG, true);
             } else {
