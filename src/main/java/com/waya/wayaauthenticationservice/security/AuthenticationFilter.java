@@ -3,14 +3,12 @@ package com.waya.wayaauthenticationservice.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
-import com.waya.wayaauthenticationservice.entity.Profile;
-import com.waya.wayaauthenticationservice.entity.Role;
-import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.entity.*;
 import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
 import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
 import com.waya.wayaauthenticationservice.pojo.others.LoginResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
-import com.waya.wayaauthenticationservice.repository.ProfileRepository;
+import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -83,21 +81,25 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			String token = Jwts.builder().setSubject(userName)
 					.setExpiration(new Date(System.currentTimeMillis() + getExpiration()))
 					.signWith(SignatureAlgorithm.HS256, getSecret()).compact();
+
 			// Check for First Login Attempt and Update User Table
 			UserRepository userRepository = (UserRepository) SpringApplicationContext.getBean("userRepository");
 			if (user.isFirstTimeLogin()) {
 				user.setFirstTimeLogin(false);
 				user.setFirstTimeLoginDate(LocalDateTime.now());
-				userRepository.save(user);
+				if (userRepository != null){
+					userRepository.save(user);
+				}
 			}
-			ProfileRepository profileRepository = (ProfileRepository) SpringApplicationContext.getBean("profileRepository");
-			Profile profile = profileRepository.findByUserId(false, String.valueOf(user.getId())).orElse(new Profile());
+			ReferralCodeRepository referralRepo = SpringApplicationContext.getBean(ReferralCodeRepository.class);
+			ReferralCode referral = Objects.requireNonNull(referralRepo).getReferralCodeByUserId(String.valueOf(user.getId()))
+					.orElse(new ReferralCode());
 
 			LoginResponsePojo loginResponsePojo = new LoginResponsePojo();
 			Map<String, Object> m = new HashMap<>();
 
 			Set<String> permit = getPrivileges(user.getRoleList());
-			Set<String> roles = user.getRoleList().stream().map(u -> u.getName()).collect(Collectors.toSet());
+			Set<String> roles = user.getRoleList().stream().map(Role::getName).collect(Collectors.toSet());
 
 			loginResponsePojo.setCode(0);
 			loginResponsePojo.setStatus(true);
@@ -111,7 +113,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			m.put("corporate", user.isCorporate());
 
 			res.addHeader(HEADER_STRING, TOKEN_PREFIX + token);
-			UserProfileResponsePojo userProfile = convert(user, profile);
+			UserProfileResponsePojo userProfile = convert(user, referral);
 
 			m.put("user", userProfile);
 			loginResponsePojo.setData(m);
@@ -143,28 +145,27 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		pr.write(str);
 	}
 
-	public boolean roleCheck(Collection<Role> roleList, String role) {
-		return roleList.stream().anyMatch(e -> e.getName().equals(role));
-	}
-
 	private Set<String> getPrivileges(final Collection<Role> roles) {
 		Set<String> privileges = new HashSet<>();
 		for (Role role : roles) {
-			privileges.addAll(role.getPrivileges().stream().map(p -> p.getName()).collect(Collectors.toSet()));
+			privileges.addAll(role.getPrivileges().stream().map(Privilege::getName).collect(Collectors.toSet()));
 		}
 		return privileges;
 	}
 
-	private UserProfileResponsePojo convert(Users user, Profile profile) {
+	private UserProfileResponsePojo convert(Users user, ReferralCode referral) {
+		Profile profile = referral.getProfile();
+		String referralCode = referral.getReferralCode();
+
 		Set<String> permit = getPrivileges(user.getRoleList());
-		Set<String> roles = user.getRoleList().stream().map(u -> u.getName()).collect(Collectors.toSet());
+		Set<String> roles = user.getRoleList().stream().map(Role::getName).collect(Collectors.toSet());
 
 		UserProfileResponsePojo userProfile = new UserProfileResponsePojo();
 
 		userProfile.setId(user.getId());
 		userProfile.setEmail(Objects.toString(user.getEmail(), ""));
 		userProfile.setPhoneNumber(Objects.toString(user.getPhoneNumber(), ""));
-		userProfile.setReferenceCode(Objects.toString(user.getReferenceCode(), ""));
+		userProfile.setReferenceCode(Objects.toString(referralCode, ""));
 		userProfile.setFirstName(user.getFirstName());
 		userProfile.setLastName(user.getSurname());
 		userProfile.setAdmin(user.isAdmin());

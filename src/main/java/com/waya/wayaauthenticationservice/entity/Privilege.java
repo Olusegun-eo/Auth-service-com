@@ -1,10 +1,7 @@
 package com.waya.wayaauthenticationservice.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -14,6 +11,7 @@ import java.util.Collection;
 @Setter
 @Getter
 @Table(name = "m_privilege")
+@ToString(exclude = {"roles"})
 @JsonIgnoreType
 @AllArgsConstructor
 @NoArgsConstructor

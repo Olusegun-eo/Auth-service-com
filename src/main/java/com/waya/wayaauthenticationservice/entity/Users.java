@@ -1,5 +1,7 @@
 package com.waya.wayaauthenticationservice.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.waya.wayaauthenticationservice.entity.listener.UserListener;
 import com.waya.wayaauthenticationservice.model.AuthProvider;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -17,9 +19,11 @@ import java.util.Objects;
 @Getter
 @Setter
 @Entity
+@EntityListeners(UserListener.class)
 @ToString(exclude = {"password", "pinHash", "roleList"})
 @Table(name = "m_users", uniqueConstraints = {
-        @UniqueConstraint(name = "UniqueEmailAndPhoneNumberAndDelFlg", columnNames = {"id", "phone_number", "email", "is_deleted"})})
+        @UniqueConstraint(name = "UniqueEmailAndPhoneNumberAndDelFlg",
+                columnNames = {"id", "phone_number", "email", "is_deleted"})})
 public class Users extends AuditModel implements Serializable {
 
     private static final long serialVersionUID = -2675537776836756234L;
@@ -43,8 +47,10 @@ public class Users extends AuditModel implements Serializable {
     private String surname;
 
     @Column(nullable = false)
+    @JsonIgnore
     private String password;
 
+    @JsonIgnore
     private String pinHash;
 
     @Column(nullable = false)
@@ -119,13 +125,10 @@ public class Users extends AuditModel implements Serializable {
     @Column(name = "password_never_expires", nullable = false)
     private boolean passwordNeverExpires;
 
+    @JsonIgnore
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "m_users_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private Collection<Role> roleList;
-
-//    @CreationTimestamp
-//    @ApiModelProperty(hidden = true)
-//    private LocalDateTime dateCreated;
 
     private LocalDateTime pinCreatedDate;
 
@@ -147,7 +150,7 @@ public class Users extends AuditModel implements Serializable {
             return false;
         }
         Users other = (Users) obj;
-        return Objects.equals(email, other.email) && id.equals(other.id) && Objects.equals(phoneNumber, other.phoneNumber)
+        return Objects.equals(email, other.email) && Objects.equals(id, other.id) && Objects.equals(phoneNumber, other.phoneNumber)
                 && Objects.equals(surname, other.surname);
     }
 

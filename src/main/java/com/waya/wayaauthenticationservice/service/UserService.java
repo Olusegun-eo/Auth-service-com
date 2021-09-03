@@ -44,8 +44,6 @@ public interface UserService {
 
 	SuccessResponse UpdateUser(UserRoleUpdateRequest user);
 
-	UserEditPojo UpdateUserDetails(UserEditPojo userEditPojo);
-
 	// Get user details for Roles service
 	UserEditPojo getUserForRole(Long id);
 

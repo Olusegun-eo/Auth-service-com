@@ -225,7 +225,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 			Users user = new Users();
 			user.setAdmin(false);
-			user.setId(0L);
 			user.setCorporate(true);
 			user.setRegDeviceIP(ip);
 			user.setAccountStatus(1);

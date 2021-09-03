@@ -1,19 +1,22 @@
 package com.waya.wayaauthenticationservice.entity;
 
+import com.waya.wayaauthenticationservice.entity.listener.ProfileListener;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
+import java.io.Serializable;
 import java.util.UUID;
 
 @Getter
 @Setter
 @Entity
+@EntityListeners(ProfileListener.class)
 @ToString
 @Table(name = "m_user_profile")
-public class Profile extends AuditModel {
+public class Profile extends AuditModel implements Serializable {
 
 	private static final long serialVersionUID = 1122422343339889166L;
 

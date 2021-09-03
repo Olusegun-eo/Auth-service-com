@@ -13,6 +13,7 @@ import com.waya.wayaauthenticationservice.util.Constant;
 import com.waya.wayaauthenticationservice.util.TestHelper;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EmbeddedKafka(partitions = 1, brokerProperties = { "listeners=PLAINTEXT://localhost:9092", "port=9092" })
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
+@Slf4j
 class ProfileControllerTest {
 
 	@Autowired
