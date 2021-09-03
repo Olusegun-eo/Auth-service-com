@@ -260,13 +260,13 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public ResponseEntity<?> toggleActivation(Long userId) {
-        return this.userService.toggleActivation(userId);
+    public ResponseEntity<?> toggleActivation(Long id) {
+        return this.userService.toggleActivation(id);
     }
 
     @Override
-    public ResponseEntity<?> toggleLock(Long userId) {
-        return this.userService.toggleLock(userId);
+    public ResponseEntity<?> toggleLock(Long id) {
+        return this.userService.toggleLock(id);
     }
 
 }

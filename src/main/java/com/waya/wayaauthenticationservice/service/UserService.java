@@ -49,11 +49,11 @@ public interface UserService {
 	// Get user details for Roles service
 	UserEditPojo getUserForRole(Long id);
 
-	@PreAuthorize(value = "@userSecurity.useHierarchy(#userId, authentication)")
-	ResponseEntity<?> toggleActivation(Long userId);
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#id, authentication)")
+	ResponseEntity<?> toggleActivation(Long id);
 
-	@PreAuthorize(value = "@userSecurity.useHierarchy(#userId, authentication)")
-	ResponseEntity<?> toggleLock(Long userId);
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#id, authentication)")
+	ResponseEntity<?> toggleLock(Long id);
 
 	ResponseEntity<?> isUserAdmin(Long userId);
 
