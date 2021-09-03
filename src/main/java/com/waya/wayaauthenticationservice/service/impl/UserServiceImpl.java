@@ -3,11 +3,9 @@ package com.waya.wayaauthenticationservice.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import com.waya.wayaauthenticationservice.SpringApplicationContext;
 import com.waya.wayaauthenticationservice.controller.UserController;
-import com.waya.wayaauthenticationservice.entity.Privilege;
-import com.waya.wayaauthenticationservice.entity.Role;
-import com.waya.wayaauthenticationservice.entity.UserSetup;
-import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.entity.*;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
 import com.waya.wayaauthenticationservice.enums.ERole;
 import com.waya.wayaauthenticationservice.exception.CustomException;
@@ -18,6 +16,7 @@ import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordCreateContex
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.pojo.userDTO.*;
 import com.waya.wayaauthenticationservice.proxy.*;
+import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.repository.UserSetupRepository;
@@ -424,7 +423,7 @@ public class UserServiceImpl implements UserService {
 					Users dbUser = usersRepository.findByEmailOrPhoneNumber(user).orElse(null);
 					if (dbUser != null && !dbUser.isActive()) {
 						dbUser.setActive(true);
-						usersRepository.saveAndFlush(dbUser);
+						usersRepository.save(dbUser);
 					}
 				});
 				return new ResponseEntity<>(new SuccessResponse("Accounts Activated", OK), OK);
@@ -443,7 +442,7 @@ public class UserServiceImpl implements UserService {
 			if (dbUser != null) {
 				dbUser.setActive(!dbUser.isActive());
 				dbUser.setDateOfActivation(LocalDateTime.now());
-				usersRepository.saveAndFlush(dbUser);
+				usersRepository.save(dbUser);
 				return new ResponseEntity<>(new SuccessResponse("Account activation status Changed Successfully"), OK);
 			}
 			return new ResponseEntity<>(new ErrorResponse("User Does not exists"), NOT_FOUND);
@@ -460,7 +459,7 @@ public class UserServiceImpl implements UserService {
 			if (dbUser != null) {
 				dbUser.setAccountNonLocked(!dbUser.isAccountNonLocked());
 				dbUser.setAccountLockDate(LocalDateTime.now());
-				usersRepository.saveAndFlush(dbUser);
+				usersRepository.save(dbUser);
 				return new ResponseEntity<>(new SuccessResponse("Account Lock status Changed Successfully"), OK);
 			}
 			return new ResponseEntity<>(new ErrorResponse("User Does not exists"), NOT_FOUND);
@@ -518,24 +517,6 @@ public class UserServiceImpl implements UserService {
 			log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
 			throw new CustomException(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
 		}
-	}
-
-	@Override
-	public UserEditPojo UpdateUserDetails(UserEditPojo userEditPojo) {
-		Users user = usersRepository.findById(false, userEditPojo.getId())
-				.orElseThrow(() -> new CustomException("", HttpStatus.UNPROCESSABLE_ENTITY));
-		user.setCorporate(userEditPojo.isCorporate());
-		user.setEmail(userEditPojo.getEmail());
-		user.setFirstName(userEditPojo.getFirstName());
-		user.setPhoneNumber(userEditPojo.getPhoneNumber());
-		user.setPhoneVerified(userEditPojo.isPhoneVerified());
-		user.setPinCreated(userEditPojo.isPinCreated());
-		user.setReferenceCode(userEditPojo.getReferenceCode());
-		user.setSurname(userEditPojo.getSurname());
-		user = usersRepository.save(user);
-		return new UserEditPojo(user.getId(), user.getEmail(), user.getPhoneNumber(), user.getReferenceCode(),
-				user.getFirstName(), user.getSurname(), user.isPhoneVerified(), user.isEmailVerified(),
-				user.isPinCreated(), user.isCorporate(), (List<Role>) user.getRoleList());
 	}
 
 	@Override
@@ -627,6 +608,10 @@ public class UserServiceImpl implements UserService {
 				UserSetup setUp = userSetupRepository.findByUserId(user.getId());
 				tranLimit = setUp == null ? new BigDecimal("0.00") : setUp.getTransactionLimit();
 			}
+			ReferralCodeRepository referralRepo = SpringApplicationContext.getBean(ReferralCodeRepository.class);
+			ReferralCode referral = Objects.requireNonNull(referralRepo).getReferralCodeByUserId(String.valueOf(user.getId()))
+					.orElse(new ReferralCode());
+
 			ValidateUserPojo validateUserPojo = new ValidateUserPojo();
 			validateUserPojo.setCorporate(user.isCorporate());
 			validateUserPojo.setEmail(Objects.toString(user.getEmail(), ""));
@@ -636,7 +621,7 @@ public class UserServiceImpl implements UserService {
 			validateUserPojo.setPhoneVerified(user.isPhoneVerified());
 			validateUserPojo.setPinCreated(user.isPinCreated());
 			validateUserPojo.setId(Objects.toString(user.getId(), "0"));
-			validateUserPojo.setReferenceCode(Objects.toString(user.getReferenceCode(), ""));
+			validateUserPojo.setReferenceCode(Objects.toString(referral.getReferralCode(), ""));
 			validateUserPojo.setPhoneNumber(Objects.toString(user.getPhoneNumber(), ""));
 			validateUserPojo.setRoles(roles);
 			validateUserPojo.setPermits(permits);

@@ -33,9 +33,10 @@ public class UserHistory {
 
     @Id
     @GeneratedValue
-    private Long audit_id;
+    @Column(name = "audit_id")
+    private Long auditId;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private Users user;
 

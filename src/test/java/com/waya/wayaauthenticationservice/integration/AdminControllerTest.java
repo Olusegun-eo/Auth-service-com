@@ -7,6 +7,7 @@ import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -32,6 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@DirtiesContext
+@Slf4j
 public class AdminControllerTest {
 
     Users user = new Users();
@@ -52,7 +56,7 @@ public class AdminControllerTest {
     public void setUp() {
 
         Role role = rolesRepository.findByName(ERole.ROLE_SUPER_ADMIN.name()).orElse(null);
-
+        log.info(role.toString());
         user.setEmail("stan@toju.com");
         user.setFirstName("Stan");
         user.setSurname("Toju");
@@ -60,10 +64,9 @@ public class AdminControllerTest {
         user.setPhoneNumber("2348166302445");
         user.setPassword(passwordEncoder.encode("test@123"));
         user.setName(String.format("%s %s", user.getFirstName(), user.getSurname()));
-        user.setId(1l);
         user.setRoleList(Collections.singleton(role));
 
-        userRepository.save(user);
+        user = userRepository.save(user);
     }
 
     @Test
@@ -95,11 +98,10 @@ public class AdminControllerTest {
 
     public String generateToken(Users user) {
         try {
-            System.out.println("::::::GENERATE TOKEN:::::");
             String token = Jwts.builder().setSubject(user.getEmail())
                     .setExpiration(new Date(System.currentTimeMillis() + getExpiration() * 1000))
                     .signWith(SignatureAlgorithm.HS512, getSecret()).compact();
-            System.out.println(":::::Token:::::");
+            System.out.println(":::::Token:::::" + TOKEN_PREFIX + token);
             return TOKEN_PREFIX + token;
         } catch (Exception e) {
             throw new RuntimeException(e.fillInStackTrace());

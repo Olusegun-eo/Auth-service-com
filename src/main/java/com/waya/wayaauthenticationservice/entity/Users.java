@@ -150,7 +150,7 @@ public class Users extends AuditModel implements Serializable {
             return false;
         }
         Users other = (Users) obj;
-        return Objects.equals(email, other.email) && id.equals(other.id) && Objects.equals(phoneNumber, other.phoneNumber)
+        return Objects.equals(email, other.email) && Objects.equals(id, other.id) && Objects.equals(phoneNumber, other.phoneNumber)
                 && Objects.equals(surname, other.surname);
     }
 
