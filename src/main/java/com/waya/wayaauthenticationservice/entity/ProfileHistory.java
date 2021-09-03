@@ -21,7 +21,7 @@ import static javax.persistence.TemporalType.TIMESTAMP;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "m_profile_his")
+@Table(name = "m_user_profile_his")
 @Getter
 @Setter
 @TypeDefs({
