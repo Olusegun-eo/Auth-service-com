@@ -19,7 +19,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-#        show-sql: true
+        show-sql: true
         jdbc:
           time_zone: UTC
     open-in-view: false #this config disables database queries which  may be performed during view rendering
