@@ -77,7 +77,7 @@ class SearchControllerTest {
     @Order(4)
     @Test
     void searchByOrganisationName() throws Exception {
-        searchAndVerifyProfileOrganisationName("name", status().isOk());
+        searchAndVerifyProfileOrganisationName("organisation name", status().isOk());
     }
 
     private void searchAndVerifyProfileByName(
@@ -141,7 +141,6 @@ class SearchControllerTest {
         otherDetails.setOrganisationName("organisation name");
 
         Profile corporate = new Profile();
-        corporate.setOrganisationName("name");
         corporate.setCity("city");
         corporate.setReferral("");
         corporate.setUserId("42114");

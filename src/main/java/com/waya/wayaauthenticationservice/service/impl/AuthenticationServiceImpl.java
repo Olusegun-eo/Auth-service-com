@@ -73,10 +73,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	private String urlRedirect;
 
 	public AuthenticationServiceImpl(KafkaMessageProducer kafkaMessageProducer, UserRepository userRepo,
-                                     RolesRepository rolesRepo, BCryptPasswordEncoder passwordEncoder,
-                                     RedisUserDao redisUserDao, WalletProxy walletProxy, VirtualAccountProxy virtualAccountProxy,
-                                     Utils reqUtil, MessagingService messagingService,
-                                     ProfileService profileService, OTPTokenService otpTokenService) {
+									 RolesRepository rolesRepo, BCryptPasswordEncoder passwordEncoder,
+									 RedisUserDao redisUserDao, WalletProxy walletProxy, VirtualAccountProxy virtualAccountProxy,
+									 Utils reqUtil, MessagingService messagingService,
+									 ProfileService profileService, OTPTokenService otpTokenService) {
 		this.kafkaMessageProducer = kafkaMessageProducer;
 		this.userRepo = userRepo;
 		this.rolesRepo = rolesRepo;
@@ -266,26 +266,31 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	}
 
 	public void createCorporateUser(CorporateUserPojo mUser, Long userId, String token, String baseUrl) {
+
 		String Id = String.valueOf(userId);
 		// Implementation for internal calls begin here
-		CorporateProfileRequest corporateProfileRequest = new CorporateProfileRequest();
-		corporateProfileRequest.setBusinessType(mUser.getBusinessType());
-		corporateProfileRequest.setOrganisationEmail(mUser.getOrgEmail());
-		corporateProfileRequest.setOrganisationName(mUser.getOrgName());
-		corporateProfileRequest.setOrganisationType(mUser.getOrgType());
-		corporateProfileRequest.setReferralCode(mUser.getReferenceCode());
-		corporateProfileRequest.setEmail(mUser.getEmail());
-		corporateProfileRequest.setSurname(mUser.getSurname());
-		corporateProfileRequest.setUserId(Id);
-		corporateProfileRequest.setPhoneNumber(mUser.getPhoneNumber());
-		corporateProfileRequest.setFirstName(mUser.getFirstName());
-		corporateProfileRequest.setGender(mUser.getGender());
+		CorporateProfileRequest profileRequest = new CorporateProfileRequest();
+		profileRequest.setBusinessType(mUser.getBusinessType());
+		profileRequest.setOrganisationEmail(mUser.getOrgEmail());
+		profileRequest.setOrganisationName(mUser.getOrgName());
+		profileRequest.setOrganisationType(mUser.getOrgType());
+		profileRequest.setOrganisationPhone(mUser.getOrgPhone());
+		profileRequest.setOrganizationCity(mUser.getCity());
+		profileRequest.setOfficeAddress(mUser.getOfficeAddress());
+		profileRequest.setOrganizationState(mUser.getState());
+		profileRequest.setReferralCode(mUser.getReferenceCode());
+		profileRequest.setEmail(mUser.getEmail());
+		profileRequest.setSurname(mUser.getSurname());
+		profileRequest.setUserId(Id);
+		profileRequest.setPhoneNumber(mUser.getPhoneNumber());
+		profileRequest.setFirstName(mUser.getFirstName());
+		profileRequest.setGender(mUser.getGender());
 		LocalDate dateOfBirth = mUser.getDateOfBirth() == null ? LocalDate.now() : mUser.getDateOfBirth();
-		corporateProfileRequest.setDateOfBirth(dateOfBirth);
+		profileRequest.setDateOfBirth(dateOfBirth);
 
 		// Implementation for internal call
-		log.info("CorporateProfile account creation starts: " + corporateProfileRequest);
-		ApiResponseBody<String> corporateResponse = profileService.createProfile(corporateProfileRequest, baseUrl);
+		log.info("CorporateProfile account creation starts: " + profileRequest);
+		ApiResponseBody<String> corporateResponse = profileService.createProfile(profileRequest, baseUrl);
 		log.info("CorporateProfile account creation ends: " + corporateResponse);
 
 		// Create External Virtual Accounts

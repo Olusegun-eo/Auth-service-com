@@ -42,6 +42,12 @@ public class HelperUtils {
                 .toString();
     }
 
+    public static boolean isNullOrEmpty(String str) {
+        if (str == null)
+            return true;
+        return str.isBlank();
+    }
+
     public static boolean isEmail(String value) {
         if(value == null)
             return false;

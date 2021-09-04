@@ -24,6 +24,6 @@ public class UserProfileResponse {
     private String city;
     private boolean corporate;
 
-    private OtherdetailsResponse otherDetails;
+    private OtherDetailsResponse otherDetails;
 
 }

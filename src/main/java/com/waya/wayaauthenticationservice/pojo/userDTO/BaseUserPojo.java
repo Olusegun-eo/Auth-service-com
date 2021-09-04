@@ -7,11 +7,16 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+import com.waya.wayaauthenticationservice.SpringApplicationContext;
+import com.waya.wayaauthenticationservice.entity.ReferralCode;
 import com.waya.wayaauthenticationservice.enums.Gender;
 import com.waya.wayaauthenticationservice.enums.Type;
+import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
 import com.waya.wayaauthenticationservice.util.CustomValidator;
 import com.waya.wayaauthenticationservice.util.EnumValue;
 import com.waya.wayaauthenticationservice.util.ValidPhone;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -19,7 +24,10 @@ import java.time.LocalDate;
 import java.util.Objects;
 
 import static com.waya.wayaauthenticationservice.enums.Gender.MALE;
+import static com.waya.wayaauthenticationservice.util.HelperUtils.isNullOrEmpty;
 
+@Getter
+@Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BaseUserPojo {
 
@@ -61,16 +69,8 @@ public class BaseUserPojo {
 	@EnumValue(enumClass = Gender.class, message = "Must be either of type MALE or FEMALE")
 	private String gender = MALE.name();
 
-	public String getEmail() {
-		return email;
-	}
-
 	public void setEmail(String email) {
 		this.email = email.replaceAll("\\s+", "").trim();
-	}
-
-	public String getPhoneNumber() {
-		return phoneNumber;
 	}
 
 	public void setPhoneNumber(String phoneNumber) {
@@ -82,68 +82,22 @@ public class BaseUserPojo {
 		this.phoneNumber = phoneNumber;
 	}
 
-	public String getReferenceCode() {
-		return referenceCode;
-	}
-
 	public void setReferenceCode(String referenceCode) {
-		this.referenceCode = referenceCode.replaceAll("\\s+", "").trim();
-	}
-
-	public String getFirstName() {
-		return firstName;
+		ReferralCode savedReferral = null;
+		if (!isNullOrEmpty(referenceCode)) {
+			ReferralCodeRepository refRepo =  SpringApplicationContext.getBean(ReferralCodeRepository.class);
+			savedReferral = (refRepo == null) ? null :
+					refRepo.getReferralCodeByCode(referenceCode).orElse(null);
+		}
+		this.referenceCode = (savedReferral == null) ? null : savedReferral.getReferralCode();
 	}
 
 	public void setFirstName(String firstName) {
 		this.firstName = firstName.replaceAll("\\s+", "").trim();
 	}
 
-	public String getSurname() {
-		return surname;
-	}
-
 	public void setSurname(String surname) {
 		this.surname = surname.replaceAll("\\s+", "").trim();
-	}
-
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-	}
-
-	public boolean isAdmin() {
-		return isAdmin;
-	}
-
-	public void setAdmin(boolean admin) {
-		isAdmin = admin;
-	}
-
-	public boolean isWayaAdmin() {
-		return isWayaAdmin;
-	}
-
-	public void setWayaAdmin(boolean wayaAdmin) {
-		isWayaAdmin = wayaAdmin;
-	}
-
-	public LocalDate getDateOfBirth() {
-		return dateOfBirth;
-	}
-
-	public void setDateOfBirth(LocalDate dateOfBirth) {
-		this.dateOfBirth = dateOfBirth;
-	}
-
-	public String getGender() {
-		return gender;
-	}
-
-	public void setGender(String gender) {
-		this.gender = gender;
 	}
 
 	@Override

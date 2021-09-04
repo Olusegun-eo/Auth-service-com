@@ -35,8 +35,6 @@ public class Profile extends AuditModel implements Serializable {
 
     private String phoneNumber;
 
-    private String organisationName;
-
     private String middleName;
 
     private String profileImage;
@@ -44,9 +42,7 @@ public class Profile extends AuditModel implements Serializable {
     private String dateOfBirth;
 
     private String gender;
-
-    private String age;
-
+    //private String age;
     private String district;
 
     private String address;
@@ -55,7 +51,7 @@ public class Profile extends AuditModel implements Serializable {
 
     private String state;
 
-    private boolean deleted;
+    private boolean deleted = false;
 
     @Column(nullable = false, unique = true)
     private String userId;

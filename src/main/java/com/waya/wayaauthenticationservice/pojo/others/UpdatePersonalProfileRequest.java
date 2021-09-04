@@ -51,6 +51,10 @@ public class UpdatePersonalProfileRequest {
 
     private String district;
 
+    private String state;
+
+    private String city;
+
     private String address;
 
     public String getEmail() {

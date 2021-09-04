@@ -246,7 +246,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
             post.setData(data);
 
             messageQueueProducer.send(SMS_TOPIC, post);
-            log.info("otp sent to kafka message queue::: {}", post);
+            //log.info("otp sent to kafka message queue::: {}", post);
             return true;
         } catch (Exception exception) {
             log.error("could not process data {}", exception.getMessage());
@@ -279,7 +279,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
             post.setData(data);
 
             messageQueueProducer.send(SMS_TOPIC, post);
-            log.info("otp sent to kafka message queue::: {}", post);
+            //log.info("otp sent to kafka message queue::: {}", post);
             return true;
 
         } catch (Exception exception) {

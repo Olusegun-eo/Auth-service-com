@@ -5,8 +5,14 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class OtherdetailsResponse  {
+public class OtherDetailsResponse {
+
     private String organisationName;
+    private String organisationEmail;
+    private String organisationPhone;
+    private String organizationCity;
+    private String organizationAddress;
+    private String organizationState;
     private String organisationType;
     private String businessType;
 

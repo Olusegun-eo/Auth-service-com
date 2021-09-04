@@ -48,7 +48,9 @@ public interface ProfileRepository extends JpaRepository<Profile, UUID> {
     @Query(value = "select * from m_user_profile where lower(email) LIKE :email and deleted =:deleted", nativeQuery = true)
     List<Profile> searchByEmail(String email, boolean deleted);
 
-    @Query(value = "select * from m_user_profile where lower(organisation_name) LIKE :organizationName and deleted =:deleted", nativeQuery = true)
+    @Query("select p from Profile p JOIN FETCH p.otherDetails o where lower(o.organisationName) " +
+            "LIKE :organizationName and p.deleted =:deleted")
+    //@Query(value = "select * from m_user_profile where lower(organisation_name) LIKE :organizationName and deleted =:deleted", nativeQuery = true)
     List<Profile> searchByCompanyName(String organizationName, boolean deleted);
 
     @Query(value = "select * from m_user_profile where referral =:referralCode and deleted =:deleted LIMIT :limit OFFSET :offset", nativeQuery = true)

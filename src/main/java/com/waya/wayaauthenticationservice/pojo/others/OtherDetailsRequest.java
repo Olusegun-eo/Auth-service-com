@@ -1,6 +1,5 @@
 package com.waya.wayaauthenticationservice.pojo.others;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,6 +11,11 @@ import java.util.UUID;
 public class OtherDetailsRequest {
     @NotBlank(message = "please enter your organisation name")
     private String organisationName;
+    private String organisationEmail;
+    private String organisationPhone;
+    private String organizationCity;
+    private String organizationAddress;
+    private String organizationState;
 
     @NotBlank(message = "please enter your organisation type")
     private String organisationType;
@@ -20,6 +24,5 @@ public class OtherDetailsRequest {
     private String businessType;
 
     @NotBlank(message = "please enter the other details id")
-    @JsonIgnore
     private UUID otherDetailsId;
 }
