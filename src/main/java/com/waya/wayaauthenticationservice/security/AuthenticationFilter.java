@@ -131,14 +131,15 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
 			AuthenticationException failed) throws IOException {
 		UserRepository userRepository = (UserRepository) SpringApplicationContext.getBean("userRepository");
-		Users user = userRepository.findByEmailOrPhoneNumber(this.loginPrincipal).orElse(null);
-
-		String errorMessage = "";
+		Users user = null;
+		if(userRepository != null){
+			user = userRepository.findByEmailOrPhoneNumber(this.loginPrincipal).orElse(null);
+		}
+		String errorMessage = failed != null ? failed.getMessage() : "Invalid Login";
 		if(user != null){
 			if(!user.isAccountNonExpired()) errorMessage = "Account is Expired";
 			else if(!user.isAccountNonLocked())  errorMessage = "Account is Locked, Contact WAYA Support";
-			else if(!user.isActive()) errorMessage = "User Account needs to be Verified";
-			else errorMessage = failed != null ? failed.getMessage() : "Invalid Login";
+			else if(!user.isActive()) errorMessage = "Account not Verified";
 		}
 
 		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
