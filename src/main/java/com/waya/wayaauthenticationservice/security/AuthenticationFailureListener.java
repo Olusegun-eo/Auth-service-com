@@ -24,7 +24,9 @@ public class AuthenticationFailureListener implements ApplicationListener<Authen
         log.error("Login Failed: {} - {}", event.getException().getMessage(), event.getAuthentication());
         Object obj = event.getAuthentication().getPrincipal();
         String principal = Objects.toString(obj);
+        System.out.println("principal :: {} " + principal);
         Users user = userRepository.findByEmailOrPhoneNumber(principal).orElse(null);
+        System.out.println("Users :: {} " + user);
         fraudService.actionOnInvalidPassword(user);
     }
 }

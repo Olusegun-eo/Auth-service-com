@@ -37,6 +37,7 @@ import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 	private final Gson gson = new Gson();
+	private String loginPrincipal = "";
 	// private boolean isAdmin = false;
 
 	public AuthenticationFilter(AuthenticationManager manager) {
@@ -58,6 +59,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 					principal = principal.substring(principal.length() - 10);
 				}
 			}
+			loginPrincipal = principal;
 			return getAuthenticationManager().authenticate(new UsernamePasswordAuthenticationToken(
 					principal, creds.getPassword(), new ArrayList<>()));
 		} catch (IOException e) {
@@ -130,13 +132,24 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
 			AuthenticationException failed) throws IOException {
 
+		UserRepository userRepository = (UserRepository) SpringApplicationContext.getBean("userRepository");
+		Users user = userRepository.findByEmailOrPhoneNumber(this.loginPrincipal).orElse(null);
+
+		String errorMessage = "";
+		if(user != null){
+			if(!user.isAccountNonExpired()) errorMessage = "Account is Expired";
+			else if(!user.isAccountNonLocked())  errorMessage = "Account is Locked, Contact WAYA Support";
+			else if(!user.isActive()) errorMessage = "Account not verifield";
+			else errorMessage = failed != null ? failed.getMessage() : "Invalid Login";
+		}
+
+
 		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 		response.setContentType(MediaType.ALL_VALUE);
 		@SuppressWarnings("rawtypes")
 		Map<String, Comparable> m = new HashMap<>();
 		m.put("code", -1);
 		m.put("status", false);
-		String errorMessage = failed != null ? failed.getMessage() : "Invalid Login";
 		m.put("message", errorMessage);
 		String str = gson.toJson(m);
 		PrintWriter pr = response.getWriter();

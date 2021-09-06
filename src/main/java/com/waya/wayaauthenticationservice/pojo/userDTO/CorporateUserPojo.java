@@ -31,7 +31,6 @@ public class CorporateUserPojo extends BaseUserPojo {
 	@NotBlank(message = "please enter your organisation Phone Number")
 	private String orgPhone;
 
-	@NotBlank(message = "please enter your organisation type")
 	private String orgType;
 
 	@NotBlank(message = "Business Type Cannot be null or blank")
