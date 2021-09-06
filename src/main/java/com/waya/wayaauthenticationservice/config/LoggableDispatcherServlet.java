@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
-import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.log.LogRequest;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.security.UserPrincipal;
@@ -35,6 +34,7 @@ import java.util.concurrent.CompletableFuture;
 public class LoggableDispatcherServlet extends DispatcherServlet {
 
     private static final long serialVersionUID = 2453821271976611591L;
+    private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     @Autowired
     Utils reqUtil;
@@ -84,7 +84,7 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
                 || path.startsWith("/api/v1/auth/validate-user"))
     		return;
 
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        //Gson gson = new GsonBuilder().setPrettyPrinting().create();
         LogMessage logMessage = new LogMessage();
         logMessage.setHttpStatus(response.getStatus());
         logMessage.setHttpMethod(request.getMethod());
@@ -109,10 +109,9 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if(authentication != null && authentication.getPrincipal() instanceof UserPrincipal){
             UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
-            Users user = principal.getUser().orElse(null);
-            if(user != null){
-                CompletableFuture.runAsync(() ->logRequestAndResponse(logMessage, user.getId()));
-            }
+            principal.getUser().ifPresent(user ->
+                    CompletableFuture.runAsync(() ->
+                            logRequestAndResponse(logMessage, user.getId())));
         }
     }
 
@@ -125,8 +124,6 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
                 int length = Math.min(buf.length, 5120);
                 try {
                     return new String(buf, 0, length, wrapper.getCharacterEncoding());
-                } catch (UnsupportedEncodingException ex) {
-                    log.error("Error Occurred in Encoding Response Body: {}", ex.getMessage());
                 } catch (Exception ex) {
                     log.error("Error Occurred in Encoding Response Body: {}", ex.getMessage());
                 }
@@ -189,6 +186,7 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
             controller = controller.substring(46, controller.indexOf("#"));
         }
         pojo.setModule(controller);
-        userService.saveLog(pojo);
+        if(userService != null)
+            userService.saveLog(pojo);
     }
 }

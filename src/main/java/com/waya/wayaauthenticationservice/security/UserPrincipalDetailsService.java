@@ -1,20 +1,19 @@
 package com.waya.wayaauthenticationservice.security;
 
-import javax.transaction.Transactional;
-
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.exception.ErrorMessages;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.exception.ErrorMessages;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
+import javax.transaction.Transactional;
 
 @Service
 @Transactional
-public class UserPrincipalDetailsService implements UserDetailsService {
+public class   UserPrincipalDetailsService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;

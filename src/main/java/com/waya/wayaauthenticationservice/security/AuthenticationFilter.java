@@ -37,7 +37,7 @@ import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 	private final Gson gson = new Gson();
-	// private boolean isAdmin = false;
+	private String loginPrincipal = "";
 
 	public AuthenticationFilter(AuthenticationManager manager) {
 		super.setAuthenticationManager(manager);
@@ -58,6 +58,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 					principal = principal.substring(principal.length() - 10);
 				}
 			}
+			loginPrincipal = principal;
 			return getAuthenticationManager().authenticate(new UsernamePasswordAuthenticationToken(
 					principal, creds.getPassword(), new ArrayList<>()));
 		} catch (IOException e) {
@@ -129,6 +130,16 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	@Override
 	protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
 			AuthenticationException failed) throws IOException {
+		UserRepository userRepository = (UserRepository) SpringApplicationContext.getBean("userRepository");
+		Users user = userRepository.findByEmailOrPhoneNumber(this.loginPrincipal).orElse(null);
+
+		String errorMessage = "";
+		if(user != null){
+			if(!user.isAccountNonExpired()) errorMessage = "Account is Expired";
+			else if(!user.isAccountNonLocked())  errorMessage = "Account is Locked, Contact WAYA Support";
+			else if(!user.isActive()) errorMessage = "User Account needs to be Verified";
+			else errorMessage = failed != null ? failed.getMessage() : "Invalid Login";
+		}
 
 		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 		response.setContentType(MediaType.ALL_VALUE);
@@ -136,7 +147,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		Map<String, Comparable> m = new HashMap<>();
 		m.put("code", -1);
 		m.put("status", false);
-		String errorMessage = failed != null ? failed.getMessage() : "Invalid Login";
 		m.put("message", errorMessage);
 		String str = gson.toJson(m);
 		PrintWriter pr = response.getWriter();
