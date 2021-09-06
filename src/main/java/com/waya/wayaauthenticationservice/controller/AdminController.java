@@ -252,7 +252,7 @@ public class AdminController {
 
 	@ApiOperation(value = "To Toggle User Lock and Unlock Actions of a single User", notes = "To Toggle User Lock and Unlock Actions of a single User", tags = {
 			"ADMIN" })
-	@PostMapping("/users/lock-toggle")
+	@PostMapping("/users/lock-toggle/un-lock")
 	public ResponseEntity<?> toggleLock(@RequestParam("userId") Long userId) {
 		return adminService.toggleLock(userId);
 	}

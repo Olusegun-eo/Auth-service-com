@@ -116,4 +116,6 @@ public class BaseUserPojo {
 		BaseUserPojo other = (BaseUserPojo) obj;
 		return Objects.equals(email, other.email) && Objects.equals(phoneNumber, other.phoneNumber);
 	}
+
+	
 }

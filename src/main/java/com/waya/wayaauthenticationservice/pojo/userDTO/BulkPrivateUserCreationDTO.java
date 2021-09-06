@@ -19,4 +19,5 @@ public class BulkPrivateUserCreationDTO {
 	@NotEmpty(message= "List Should Not be Empty")
 	private Set<@Valid BaseUserPojo> usersList;
 	
+	
 }

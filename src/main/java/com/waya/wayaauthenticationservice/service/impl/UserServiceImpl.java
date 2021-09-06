@@ -1,11 +1,60 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
+import static com.waya.wayaauthenticationservice.util.HelperUtils.phoneNumPattern;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.OK;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mobile.device.Device;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.javafaker.Faker;
+import com.github.javafaker.service.FakeValuesService;
+import com.github.javafaker.service.RandomService;
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
 import com.waya.wayaauthenticationservice.controller.UserController;
-import com.waya.wayaauthenticationservice.entity.*;
+import com.waya.wayaauthenticationservice.entity.Privilege;
+import com.waya.wayaauthenticationservice.entity.ReferralCode;
+import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.UserSetup;
+import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
 import com.waya.wayaauthenticationservice.enums.ERole;
 import com.waya.wayaauthenticationservice.exception.CustomException;
@@ -13,9 +62,29 @@ import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
 import com.waya.wayaauthenticationservice.pojo.log.LogRequest;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordCreateContext;
-import com.waya.wayaauthenticationservice.pojo.others.*;
-import com.waya.wayaauthenticationservice.pojo.userDTO.*;
-import com.waya.wayaauthenticationservice.proxy.*;
+import com.waya.wayaauthenticationservice.pojo.others.ContactPojo;
+import com.waya.wayaauthenticationservice.pojo.others.ContactPojoReq;
+import com.waya.wayaauthenticationservice.pojo.others.DeleteRequest;
+import com.waya.wayaauthenticationservice.pojo.others.DevicePojo;
+import com.waya.wayaauthenticationservice.pojo.others.FakePojo;
+import com.waya.wayaauthenticationservice.pojo.others.FakeUserPojo;
+import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
+import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
+import com.waya.wayaauthenticationservice.pojo.others.ValidateUserPojo;
+import com.waya.wayaauthenticationservice.pojo.others.WalletAccessPojo;
+import com.waya.wayaauthenticationservice.pojo.others.WalletAccount;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserIDPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserSetupPojo;
+import com.waya.wayaauthenticationservice.proxy.AccessProxy;
+import com.waya.wayaauthenticationservice.proxy.LoggingProxy;
+import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
+import com.waya.wayaauthenticationservice.proxy.WalletProxy;
+import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
 import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
@@ -35,34 +104,8 @@ import com.waya.wayaauthenticationservice.service.impl.search.SearchSpecificatio
 import com.waya.wayaauthenticationservice.util.Constant;
 import com.waya.wayaauthenticationservice.util.HelperUtils;
 import com.waya.wayaauthenticationservice.util.Utils;
+
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mobile.device.Device;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import javax.servlet.http.HttpServletRequest;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
-import static com.waya.wayaauthenticationservice.util.HelperUtils.phoneNumPattern;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-import static org.springframework.http.HttpStatus.*;
 
 @Service
 @Slf4j
@@ -101,6 +144,9 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	SearchService searchService;
+
+	@Autowired
+	UserService userService;
 
 	@Value("${api.server.deployed}")
 	private String urlRedirect;
@@ -156,12 +202,13 @@ public class UserServiceImpl implements UserService {
 			return new ResponseEntity<>(new ErrorResponse("Invalid Role"), BAD_REQUEST);
 		}
 		List<UserProfileResponsePojo> userList = new ArrayList<>();
-		rolesRepo.findAll().forEach(roles -> usersRepository.findAll().forEach(us -> us.getRoleList().forEach(usRole -> {
-			if (usRole.getId().equals(roleId)) {
-				UserProfileResponsePojo u = this.toModelDTO(us);
-				userList.add(u);
-			}
-		})));
+		rolesRepo.findAll()
+				.forEach(roles -> usersRepository.findAll().forEach(us -> us.getRoleList().forEach(usRole -> {
+					if (usRole.getId().equals(roleId)) {
+						UserProfileResponsePojo u = this.toModelDTO(us);
+						userList.add(u);
+					}
+				})));
 		return new ResponseEntity<>(new SuccessResponse("User by roles fetched", userList), HttpStatus.OK);
 	}
 
@@ -242,7 +289,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public ResponseEntity<?> validateServiceUserCall(Long userId, String key) {
 		try {
-			if(!utils.verifySignedData(key.trim()))
+			if (!utils.verifySignedData(key.trim()))
 				return new ResponseEntity<>(new ErrorResponse("Invalid KEY Passed"), HttpStatus.BAD_REQUEST);
 
 			Users user = usersRepository.findById(userId).orElse(null);
@@ -266,8 +313,8 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public ResponseEntity<?> deleteUser(Long userId) {
 		try {
-			Users user = usersRepository.findById(false, userId).orElseThrow(
-					() -> new CustomException("User with id " + userId + " not found", NOT_FOUND));
+			Users user = usersRepository.findById(false, userId)
+					.orElseThrow(() -> new CustomException("User with id " + userId + " not found", NOT_FOUND));
 
 			// Generate token to use for deactivation of other Services tied to the UserId
 			String token = this.authService.generateToken(authenticatedUserFacade.getUser());
@@ -366,15 +413,17 @@ public class UserServiceImpl implements UserService {
 						return new ApiResponseBody<>("An error has occurred", false);
 					}
 					return res;
-				}).thenAccept(p -> log.debug("Response from API Call to Delete Virtual Account is: {}, status is: {} data is {}",
+				})
+				.thenAccept(p -> log.debug(
+						"Response from API Call to Delete Virtual Account is: {}, status is: {} data is {}",
 						p.getMessage(), p.getStatus(), p.getData()));
 	}
 
 	@Override
 	public ResponseEntity<?> unDeleteUser(Long id) {
 		try {
-			Users user = usersRepository.findById(true, id).orElseThrow(
-					() -> new CustomException("User with deleted id " + id + " not found", NOT_FOUND));
+			Users user = usersRepository.findById(true, id)
+					.orElseThrow(() -> new CustomException("User with deleted id " + id + " not found", NOT_FOUND));
 
 			if (usersRepository.existsByEmail(user.getEmail())
 					|| usersRepository.existsByPhoneNumber(user.getPhoneNumber()))
@@ -485,11 +534,12 @@ public class UserServiceImpl implements UserService {
 	public Integer getUsersCount(String roleName) {
 		try {
 			List<Users> users = new ArrayList<>();
-			rolesRepo.findAll().forEach(role -> usersRepository.findAll().forEach(user -> user.getRoleList().forEach(uRole -> {
-				if (uRole.getName().equals(roleName)) {
-					users.add(user);
-				}
-			})));
+			rolesRepo.findAll()
+					.forEach(role -> usersRepository.findAll().forEach(user -> user.getRoleList().forEach(uRole -> {
+						if (uRole.getName().equals(roleName)) {
+							users.add(user);
+						}
+					})));
 			return users.size();
 		} catch (Exception e) {
 			log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
@@ -609,8 +659,8 @@ public class UserServiceImpl implements UserService {
 				tranLimit = setUp == null ? new BigDecimal("0.00") : setUp.getTransactionLimit();
 			}
 			ReferralCodeRepository referralRepo = SpringApplicationContext.getBean(ReferralCodeRepository.class);
-			ReferralCode referral = Objects.requireNonNull(referralRepo).getReferralCodeByUserId(String.valueOf(user.getId()))
-					.orElse(new ReferralCode());
+			ReferralCode referral = Objects.requireNonNull(referralRepo)
+					.getReferralCodeByUserId(String.valueOf(user.getId())).orElse(new ReferralCode());
 
 			ValidateUserPojo validateUserPojo = new ValidateUserPojo();
 			validateUserPojo.setCorporate(user.isCorporate());
@@ -642,9 +692,9 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public void saveLog(LogRequest logPojo) {
-		try{
+		try {
 			loggingProxy.saveNewLog(logPojo);
-		}catch(Exception e){
+		} catch (Exception e) {
 			log.error("Error saving Logs:: {}", e.getMessage());
 		}
 	}
@@ -656,7 +706,8 @@ public class UserServiceImpl implements UserService {
 
 		Set<String> roles = user.getRoleList().stream().map(Role::getName).collect(Collectors.toSet());
 		Set<String> permits = new HashSet<>();
-		user.getRoleList().forEach(u -> permits.addAll(u.getPrivileges().stream().map(Privilege::getName).collect(Collectors.toSet())));
+		user.getRoleList().forEach(
+				u -> permits.addAll(u.getPrivileges().stream().map(Privilege::getName).collect(Collectors.toSet())));
 		String phoneNumber = user.getPhoneNumber().contains("+") ? user.getPhoneNumber()
 				: (user.getPhoneNumber().startsWith("234") ? String.format("+%s", user.getPhoneNumber())
 						: user.getPhoneNumber());
@@ -698,8 +749,7 @@ public class UserServiceImpl implements UserService {
 		// Default isDeleted to false
 		searchCriteria.add(new SearchCriteria("isDeleted", SearchOperation.EQUALITY, "false"));
 
-		List<SearchSpecification> specList = searchCriteria.stream()
-				.map(SearchSpecification::new)
+		List<SearchSpecification> specList = searchCriteria.stream().map(SearchSpecification::new)
 				.collect(Collectors.toList());
 		Specification<Users> specs = searchService.andSpecification(specList).orElse(null);
 
@@ -729,21 +779,21 @@ public class UserServiceImpl implements UserService {
 			final String ip = utils.getClientIP(request);
 			for (CorporateUserPojo mUser : userList.getUsersList()) {
 
-				if(mUser.getPhoneNumber() != null){
+				if (mUser.getPhoneNumber() != null) {
 					boolean isPhoneValid = phoneNumPattern.matcher(mUser.getPhoneNumber()).find()
-							&& mUser.getPhoneNumber().startsWith("234")
-							&& mUser.getPhoneNumber().length() == 13;
-					if(!isPhoneValid){
-						messages.add(String.format("Phone Number is not valid for %s, " +
-								"ensure it starts with 234 and is 13 characters in length",
+							&& mUser.getPhoneNumber().startsWith("234") && mUser.getPhoneNumber().length() == 13;
+					if (!isPhoneValid) {
+						messages.add(String.format(
+								"Phone Number is not valid for %s, "
+										+ "ensure it starts with 234 and is 13 characters in length",
 								mUser.getPhoneNumber()));
 						continue;
 					}
 				}
 
-				if(mUser.getEmail() != null){
+				if (mUser.getEmail() != null) {
 					boolean isEmailValid = emailPattern.matcher(mUser.getEmail().toLowerCase()).matches();
-					if(!isEmailValid) {
+					if (!isEmailValid) {
 						messages.add(String.format("Email is not valid for: %s", mUser.getEmail()));
 						continue;
 					}
@@ -752,7 +802,7 @@ public class UserServiceImpl implements UserService {
 				// Check if email exists
 				Users user = mUser.getEmail() == null ? null
 						: usersRepository.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
-				if (user != null){
+				if (user != null) {
 					messages.add(String.format("User with Email already exists: %s", mUser.getEmail()));
 					continue;
 				}
@@ -761,12 +811,11 @@ public class UserServiceImpl implements UserService {
 				user = mUser.getPhoneNumber() == null ? null
 						: usersRepository.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
 				if (user != null) {
-					messages.add(String.format("User with Phone Number exists %s",
-							mUser.getPhoneNumber()));
+					messages.add(String.format("User with Phone Number exists %s", mUser.getPhoneNumber()));
 					continue;
 				}
 
-				if(mUser.getEmail() == null && mUser.getPhoneNumber() == null){
+				if (mUser.getEmail() == null && mUser.getPhoneNumber() == null) {
 					messages.add("Both Email and Phone Number cannot be null");
 					continue;
 				}
@@ -839,21 +888,26 @@ public class UserServiceImpl implements UserService {
 			final String ip = utils.getClientIP(request);
 			for (BaseUserPojo mUser : userList.getUsersList()) {
 
-				if(mUser.getPhoneNumber() != null){
-					boolean isPhoneValid = phoneNumPattern.matcher(mUser.getPhoneNumber()).find()
-							&& mUser.getPhoneNumber().startsWith("234")
-							&& mUser.getPhoneNumber().length() == 13;
-					if(!isPhoneValid){
-						messages.add(String.format("Phone Number is not valid for %s, " +
-										"ensure it starts with 234 and is 13 characters in length",
-								mUser.getPhoneNumber()));
-						continue;
+				if (!mUser.getGender().equals("SIM")) {
+
+					if (mUser.getPhoneNumber() != null) {
+						boolean isPhoneValid = phoneNumPattern.matcher(mUser.getPhoneNumber()).find()
+								&& mUser.getPhoneNumber().startsWith("234") && mUser.getPhoneNumber().length() == 13;
+						if (!isPhoneValid) {
+							messages.add(String.format(
+									"Phone Number is not valid for %s, "
+											+ "ensure it starts with 234 and is 13 characters in length",
+									mUser.getPhoneNumber()));
+							continue;
+						}
 					}
+				} else {
+					log.info("SIMULATED USER: {}", mUser.getEmail());
 				}
 
-				if(mUser.getEmail() != null){
+				if (mUser.getEmail() != null) {
 					boolean isEmailValid = emailPattern.matcher(mUser.getEmail().toLowerCase()).matches();
-					if(!isEmailValid) {
+					if (!isEmailValid) {
 						messages.add(String.format("Email is not valid for: %s", mUser.getEmail()));
 						continue;
 					}
@@ -862,7 +916,7 @@ public class UserServiceImpl implements UserService {
 				// Check if email exists
 				Users user = mUser.getEmail() == null ? null
 						: usersRepository.findByEmailIgnoreCase(mUser.getEmail()).orElse(null);
-				if (user != null){
+				if (user != null) {
 					messages.add(String.format("User with Email already exists: %s", mUser.getEmail()));
 					continue;
 				}
@@ -871,12 +925,11 @@ public class UserServiceImpl implements UserService {
 				user = mUser.getPhoneNumber() == null ? null
 						: usersRepository.findByPhoneNumber(mUser.getPhoneNumber()).orElse(null);
 				if (user != null) {
-					messages.add(String.format("User with Phone Number exists %s",
-							mUser.getPhoneNumber()));
+					messages.add(String.format("User with Phone Number exists %s", mUser.getPhoneNumber()));
 					continue;
 				}
 
-				if(mUser.getEmail() == null && mUser.getPhoneNumber() == null){
+				if (mUser.getEmail() == null && mUser.getPhoneNumber() == null) {
 					messages.add("Both Email and Phone Number cannot be null");
 					continue;
 				}
@@ -911,7 +964,12 @@ public class UserServiceImpl implements UserService {
 				user.setRegDevicePlatform(dev.getPlatform());
 				user.setRegDeviceType(dev.getDeviceType());
 				user.setDateOfActivation(LocalDateTime.now());
-				user.setActive(true);
+				if (!mUser.getGender().equals("SIM")) {
+					user.setActive(true);
+				} else {
+					user.setActive(false);
+					mUser.setGender("S");
+				}
 				user.setPassword(passwordEncoder.encode(mUser.getPassword()));
 				user.setRoleList(roleList);
 
@@ -934,15 +992,15 @@ public class UserServiceImpl implements UserService {
 
 	private void sendNewPassword(String randomPassword, Users user) {
 
-		if(user.getEmail() != null){
+		if (user.getEmail() != null) {
 			// Email Sending of new Password Here
 			PasswordCreateContext context = new PasswordCreateContext();
 			context.init(user);
 			context.setPassword(randomPassword);
 			this.messagingService.sendMail(context);
-		}else{
-			String message = String.format("An account has been created for you with password: %s." +
-					" Kindly login with your phone Number and change your password", randomPassword);
+		} else {
+			String message = String.format("An account has been created for you with password: %s."
+					+ " Kindly login with your phone Number and change your password", randomPassword);
 			this.messagingService.sendSMS(user.getFirstName(), message, user.getPhoneNumber());
 		}
 	}
@@ -968,7 +1026,9 @@ public class UserServiceImpl implements UserService {
 		try {
 			Optional<Users> userOpt = usersRepository.findById(pojo.getUserId());
 			if (userOpt.isEmpty()) {
-				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User with " + pojo.getUserId()),
+				return new ResponseEntity<>(
+						new ErrorResponse(
+								ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User with " + pojo.getUserId()),
 						NOT_FOUND);
 			}
 			Users user = usersRepository.getOne(pojo.getUserId());
@@ -987,5 +1047,86 @@ public class UserServiceImpl implements UserService {
 			log.error("Error in Maintaining User's Setup::{}", e.getMessage());
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
 		}
+	}
+
+	public ResponseEntity<?> GenerateUser(FakePojo pojo, HttpServletRequest request, Device device) {
+		try {
+			FakeValuesService fakeValuesService = new FakeValuesService(new Locale("en-GB"), new RandomService());
+			Faker faker1 = new Faker();
+			List<FakeUserPojo> user = new ArrayList<>();
+			Set<BaseUserPojo> sUser = new HashSet<BaseUserPojo>();
+			Set<CorporateUserPojo> cUser = new HashSet<CorporateUserPojo>();
+			for (int i = 0; i < pojo.getNumber(); i++) {
+				String email = fakeValuesService.bothify("????##@gmail.com");
+				String firstName = faker1.name().firstName();
+				String lastName = faker1.name().lastName();
+				String password = faker1.crypto().sha256();
+				LocalDate dob = faker1.date().birthday().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+				String phone = faker1.phoneNumber().cellPhone();
+				String streetName = faker1.address().streetName();
+				String number = faker1.address().buildingNumber();
+				String city = faker1.address().city();
+				String country = faker1.address().country();
+				String address = number + " " + streetName + " " + city + " " + country;
+				FakeUserPojo pojoU = new FakeUserPojo(firstName, lastName, email, phone, address, pojo.getType());
+				BaseUserPojo usePojo = new BaseUserPojo();
+				CorporateUserPojo corPojo = new CorporateUserPojo();
+				if (pojo.getType().equals("user")) {
+					usePojo.setEmail(email);
+					usePojo.setPhoneNumber(phone);
+					usePojo.setReferenceCode("SIM");
+					usePojo.setFirstName(firstName);
+					usePojo.setSurname(lastName);
+					usePojo.setPassword(password);
+					usePojo.setAdmin(false);
+					usePojo.setWayaAdmin(false);
+					usePojo.setDateOfBirth(dob);
+					usePojo.setGender("SIM");
+					sUser.add(usePojo);
+				} else {
+					String officeAddress = faker1.address().fullAddress();
+					String state = faker1.address().state();
+					String orgName = faker1.company().name();
+					String orgEmail = fakeValuesService.regexify("[a-z1-9]{10}");
+					String orgPhone = faker1.phoneNumber().phoneNumber();
+					String orgType = faker1.company().industry();
+					String businessType = faker1.company().profession();
+					
+					corPojo.setEmail(email);
+					corPojo.setPhoneNumber(phone);
+					corPojo.setReferenceCode("SIM");
+					corPojo.setFirstName(firstName);
+					corPojo.setSurname(lastName);
+					corPojo.setPassword(password);
+					corPojo.setAdmin(false);
+					corPojo.setWayaAdmin(false);
+					corPojo.setDateOfBirth(dob);
+					corPojo.setGender("SIM");
+					corPojo.setOfficeAddress(officeAddress);
+					corPojo.setState(state);
+					corPojo.setOrgName(orgName);
+					corPojo.setEmail(orgEmail);
+					corPojo.setOrgPhone(orgPhone);
+					corPojo.setOrgType(orgType);
+					corPojo.setBusinessType(businessType);
+					cUser.add(corPojo);
+				}
+				user.add(pojoU);
+			}
+			if (pojo.getType().equals("user")) {
+				BulkPrivateUserCreationDTO userList = new BulkPrivateUserCreationDTO(sUser);
+				userService.createUsers(userList, request, device);
+				return new ResponseEntity<>(new SuccessResponse(user), HttpStatus.CREATED);
+			} else if (pojo.getType().equals("corporate")) {
+				BulkCorporateUserCreationDTO userList = new BulkCorporateUserCreationDTO();
+				userService.createUsers(userList, request, device);
+				return new ResponseEntity<>(new SuccessResponse(user), HttpStatus.CREATED);
+			}
+			return new ResponseEntity<>(new ErrorResponse("Simulated Type does not exist"), BAD_REQUEST);
+		} catch (Exception e) {
+			log.error("Error in Generating User's Simulation::{}", e.getMessage());
+			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
+		}
+
 	}
 }

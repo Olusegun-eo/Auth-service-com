@@ -1,9 +1,21 @@
 package com.waya.wayaauthenticationservice.service;
 
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+
+import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mobile.device.Device;
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
 import com.waya.wayaauthenticationservice.pojo.log.LogRequest;
 import com.waya.wayaauthenticationservice.pojo.others.ContactPojoReq;
+import com.waya.wayaauthenticationservice.pojo.others.FakePojo;
 import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
 import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
@@ -12,15 +24,6 @@ import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserSetupPojo;
 import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
-import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mobile.device.Device;
-import org.springframework.security.access.prepost.PreAuthorize;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 public interface UserService {
 
@@ -88,4 +91,6 @@ public interface UserService {
 	ResponseEntity<?> getUserSetupById(Long id);
 
 	ResponseEntity<?> maintainUserSetup(UserSetupPojo pojo);
+	
+	ResponseEntity<?> GenerateUser(FakePojo pojo, HttpServletRequest request, Device device);
 }

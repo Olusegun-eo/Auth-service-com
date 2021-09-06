@@ -1,12 +1,14 @@
 package com.waya.wayaauthenticationservice.pojo.userDTO;
 
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Getter;
-import lombok.Setter;
+import java.util.Objects;
 
 import javax.validation.constraints.NotBlank;
-import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -59,5 +61,5 @@ public class CorporateUserPojo extends BaseUserPojo {
 		return Objects.equals(businessType, other.businessType) && Objects.equals(orgEmail, other.orgEmail)
 				&& Objects.equals(orgPhone, other.orgPhone);
 	}
-	
+
 }
