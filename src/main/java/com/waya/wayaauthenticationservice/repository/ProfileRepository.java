@@ -1,6 +1,8 @@
 package com.waya.wayaauthenticationservice.repository;
 
 import com.waya.wayaauthenticationservice.entity.Profile;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -62,5 +64,18 @@ public interface ProfileRepository extends JpaRepository<Profile, UUID> {
     @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM Profile u " +
             "WHERE UPPER(u.email) = UPPER(:email) AND u.deleted = false")
     boolean existsByEmail(@Param("email") String email);
+
+    @Query("select p from Profile p where p.deleted =:deleted")
+    Page<Profile> findAll(Pageable pageable, boolean deleted);
+
+    @Query("select p from Profile p where p.referral =:referralCode and p.deleted =:deleted order by p.createdAt desc")
+    Page<Profile> findAllByReferralCode(String referralCode, Pageable pageable, boolean deleted);
+
+
+
+    @Query(value = "select * from m_user_profile where (upper(email) = upper(:value) or " +
+            "phone_number LIKE CONCAT('%', :value)) and deleted = :deleted", nativeQuery = true)
+    Page<Profile> findAllByEmailOrPhoneNumber(boolean deleted, String value, Pageable pageable);
+
 }
 
