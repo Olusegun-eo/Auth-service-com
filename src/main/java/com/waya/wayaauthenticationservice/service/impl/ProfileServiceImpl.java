@@ -948,6 +948,9 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     public Map<String, Object> getUsersWithTheirReferrals(int page, int size){
+        String district = "";
+        String stateE = "";
+        String addressE = "";
         Pageable paging = PageRequest.of(page, size);
         List<Profile> profileList = new ArrayList<>();
         List<ReferralPojo> referralPojos = new ArrayList<>();
@@ -967,12 +970,24 @@ public class ProfileServiceImpl implements ProfileService {
                 //referralPojo.setEarnings();
                 referralPojo.setReferralCode(referralCode.get().getReferralCode());
                 referralPojo.setReferralEmail(profileList.get(i).getEmail());
-                referralPojo.setReferralLocation(profileList.get(i).getCity() + " " + profileList.get(i).getAddress());
+
+                if (profileList.get(i).getDistrict() == null){
+                    district = "";
+                }else if (profileList.get(i).getState() == null){
+                    stateE = "";
+                }else{
+                    stateE = profileList.get(i).getState();
+                }
+                if (profileList.get(i).getAddress() == null){
+                    addressE = "";
+                }else{
+                    addressE = profileList.get(i).getAddress();
+                }
+                referralPojo.setReferralLocation(district + " " + stateE + " " + addressE);
                 referralPojo.setReferralPhone(profileList.get(i).getPhoneNumber());
                 referralPojo.setReferralUser(profileList.get(i).getSurname() + " " + profileList.get(i).getFirstName());
-                ProfileDto profileDto = null;
+
                 if (referralCode.get().getReferralCode() !=null){
-                    List<Profile> profilePage1 = getProfileDetails(referralCode.get().getReferralCode(),paging);
 
                     referralPojo.setUsersReferred(getProfileDetails(referralCode.get().getReferralCode(),paging));
                     referralPojo.setEarnings(BigDecimal.ONE);
