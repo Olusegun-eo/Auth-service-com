@@ -973,7 +973,10 @@ public class ProfileServiceImpl implements ProfileService {
 
                 if (profileList.get(i).getDistrict() == null){
                     district = "";
-                }else if (profileList.get(i).getState() == null){
+                }else{
+                    district = profileList.get(i).getDistrict();
+                }
+                if (profileList.get(i).getState() == null){
                     stateE = "";
                 }else{
                     stateE = profileList.get(i).getState();

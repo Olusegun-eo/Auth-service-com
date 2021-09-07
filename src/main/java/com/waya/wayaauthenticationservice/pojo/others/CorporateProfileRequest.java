@@ -23,7 +23,6 @@ public class CorporateProfileRequest {
 
     @NotBlank(message = "please enter your organisation name")
     private String organisationName;
-    @NotBlank(message = "please enter your organisation type")
     private String organisationType;
     private String organisationEmail;
     private String organisationPhone;

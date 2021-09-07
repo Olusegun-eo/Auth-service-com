@@ -4,6 +4,8 @@ public class Constant {
 
     public static final String SUCCESS_MESSAGE = "Successful";
     public static final String ERROR_MESSAGE = "Error";
+    public static final String ID_IS_UNKNOWN = "Id is  unknown";
+
 
     public static final String VIRTUAL_ACCOUNT_TOPIC = "virtual-account";
     public static final String WAYAGRAM_PROFILE_TOPIC = "wayagram-profile";
@@ -11,6 +13,8 @@ public class Constant {
     public static final String CHAT_TOPIC = "wayagram-chat";
     public static final String EMAIL_TOPIC = "email";
     public static final String SMS_TOPIC = "sms";
+    public static final String ID_IS_REQUIRED = "Id is required";
+    public static final String NOTFOUND = "Not found!";
     
     public static final String WAYAPAY = "Wayapay";
     public static final String CHARACTERS = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPZMXNCBVALSKDJFHG1234509687";
@@ -24,6 +28,7 @@ public class Constant {
     public static final String OTP_SUCCESS_MESSAGE = "OTP verified successfully";
     public static final String INVALID_OTP = "Invalid OTP";
     public static final String OTP_ERROR_MESSAGE = "OTP has expired";
+    public static final String MESSAGE_200 = "Successful";
     public static final String MESSAGE_400 = "Bad Request, invalid format of the request. See response message for more information.";
     public static final String MESSAGE_422 = "Unprocessable entity, input parameters caused the processing to fail. See response message for more information.";
     public static final String MESSAGE_404 = "Request is not found";
