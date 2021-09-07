@@ -114,6 +114,9 @@ public class Users extends AuditModel implements Serializable {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
     
+    @Column(name = "is_simulated", nullable = false)
+    private boolean isSimulated = false;
+    
     @Column(name = "is_welcomed", nullable = false)
     private boolean isWelcomed = false;
 

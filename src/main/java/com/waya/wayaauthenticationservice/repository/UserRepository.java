@@ -4,6 +4,7 @@ import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -65,5 +66,8 @@ public interface UserRepository extends JpaRepository<Users, Long>, JpaSpecifica
 	
 	@Query(value = "SELECT u FROM Users u WHERE UPPER(u.email) = UPPER(:email) AND u.isDeleted = false")
 	Optional<Users> findSimulatedUser(@Param("email") String email);
+	
+	@Query(value = "SELECT u FROM Users u WHERE u.isDeleted = false AND u.isSimulated = true AND u.phoneNumber not like '234%' AND phone_number Not like '08%' ORDER BY id")
+	Page<Users> findAllSimulated(Specification<Users> spec, Pageable pageable);
 
 }

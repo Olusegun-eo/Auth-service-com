@@ -778,16 +778,18 @@ public class UserServiceImpl implements UserService {
 			DevicePojo dev = utils.GetDevice(device);
 			final String ip = utils.getClientIP(request);
 			for (CorporateUserPojo mUser : userList.getUsersList()) {
-
-				if (mUser.getPhoneNumber() != null) {
-					boolean isPhoneValid = phoneNumPattern.matcher(mUser.getPhoneNumber()).find()
-							&& mUser.getPhoneNumber().startsWith("234") && mUser.getPhoneNumber().length() == 13;
-					if (!isPhoneValid) {
-						messages.add(String.format(
-								"Phone Number is not valid for %s, "
-										+ "ensure it starts with 234 and is 13 characters in length",
-								mUser.getPhoneNumber()));
-						continue;
+				
+				if (!mUser.getGender().equals("SIM")) {
+					if (mUser.getPhoneNumber() != null) {
+						boolean isPhoneValid = phoneNumPattern.matcher(mUser.getPhoneNumber()).find()
+								&& mUser.getPhoneNumber().startsWith("234") && mUser.getPhoneNumber().length() == 13;
+						if (!isPhoneValid) {
+							messages.add(String.format(
+									"Phone Number is not valid for %s, "
+											+ "ensure it starts with 234 and is 13 characters in length",
+									mUser.getPhoneNumber()));
+							continue;
+						}
 					}
 				}
 
@@ -844,7 +846,13 @@ public class UserServiceImpl implements UserService {
 				user.setRegDeviceType(dev.getDeviceType());
 				user.setPassword(passwordEncoder.encode(mUser.getPassword()));
 				user.setDateOfActivation(LocalDateTime.now());
-				user.setActive(true);
+				if (!mUser.getGender().equals("SIM")) {
+					user.setActive(true);
+				} else {
+					user.setActive(false);
+					user.setSimulated(true);
+					mUser.setGender("S");
+				}
 				user.setAccountStatus(-1);
 				user.setRoleList(roleList);
 				user.setEmail(mUser.getEmail().trim());
@@ -968,6 +976,7 @@ public class UserServiceImpl implements UserService {
 					user.setActive(true);
 				} else {
 					user.setActive(false);
+					user.setSimulated(true);
 					mUser.setGender("S");
 				}
 				user.setPassword(passwordEncoder.encode(mUser.getPassword()));
@@ -1067,6 +1076,7 @@ public class UserServiceImpl implements UserService {
 				String number = faker1.address().buildingNumber();
 				String city = faker1.address().city();
 				String country = faker1.address().country();
+				String code = "SIM";
 				String address = number + " " + streetName + " " + city + " " + country;
 				FakeUserPojo pojoU = new FakeUserPojo(firstName, lastName, email, phone, address, pojo.getType());
 				BaseUserPojo usePojo = new BaseUserPojo();
@@ -1074,7 +1084,7 @@ public class UserServiceImpl implements UserService {
 				if (pojo.getType().equals("user")) {
 					usePojo.setEmail(email);
 					usePojo.setPhoneNumber(phone);
-					usePojo.setReferenceCode("SIM");
+					usePojo.setReferenceCode(code);
 					usePojo.setFirstName(firstName);
 					usePojo.setSurname(lastName);
 					usePojo.setPassword(password);
@@ -1087,14 +1097,14 @@ public class UserServiceImpl implements UserService {
 					String officeAddress = faker1.address().fullAddress();
 					String state = faker1.address().state();
 					String orgName = faker1.company().name();
-					String orgEmail = fakeValuesService.regexify("[a-z1-9]{10}");
+					String orgEmail = email;
 					String orgPhone = faker1.phoneNumber().phoneNumber();
 					String orgType = faker1.company().industry();
 					String businessType = faker1.company().profession();
-					
+
 					corPojo.setEmail(email);
 					corPojo.setPhoneNumber(phone);
-					corPojo.setReferenceCode("SIM");
+					corPojo.setReferenceCode(code);
 					corPojo.setFirstName(firstName);
 					corPojo.setSurname(lastName);
 					corPojo.setPassword(password);
@@ -1118,7 +1128,7 @@ public class UserServiceImpl implements UserService {
 				userService.createUsers(userList, request, device);
 				return new ResponseEntity<>(new SuccessResponse(user), HttpStatus.CREATED);
 			} else if (pojo.getType().equals("corporate")) {
-				BulkCorporateUserCreationDTO userList = new BulkCorporateUserCreationDTO();
+				BulkCorporateUserCreationDTO userList = new BulkCorporateUserCreationDTO(cUser);
 				userService.createUsers(userList, request, device);
 				return new ResponseEntity<>(new SuccessResponse(user), HttpStatus.CREATED);
 			}

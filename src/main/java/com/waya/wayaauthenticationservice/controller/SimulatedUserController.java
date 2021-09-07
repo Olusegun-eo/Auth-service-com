@@ -108,7 +108,7 @@ public class SimulatedUserController {
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "20") int size,
 			@RequestParam(value = "sort", defaultValue = "") String searchString) {
-		Page<Users> userPagedList = userService.getAllUsers(page, size, searchString);
+		Page<Users> userPagedList = simulatedService.getAllUsers(page, size, searchString);
 		PagedModel<UserProfileResponsePojo> userPagedModel = pagedResourcesAssembler.toModel(userPagedList,
 				userAssembler);
 		return new ResponseEntity<>(userPagedModel, HttpStatus.OK);
