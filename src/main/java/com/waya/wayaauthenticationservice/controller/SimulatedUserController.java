@@ -45,6 +45,7 @@ import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.response.UserProfileResponse;
 import com.waya.wayaauthenticationservice.service.AdminService;
 import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.service.SimulatedService;
 import com.waya.wayaauthenticationservice.service.UserService;
 
 import io.swagger.annotations.ApiOperation;
@@ -75,6 +76,9 @@ public class SimulatedUserController {
 
 	@Autowired
 	ProfileService profileService;
+	
+	@Autowired
+	SimulatedService simulatedService;
 
 	@ApiOperation(value = "Fetch all Users (Simulated Endpoint)", tags = { "SimulatedUser" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
@@ -86,6 +90,15 @@ public class SimulatedUserController {
 		PagedModel<UserProfileResponsePojo> userPagedModel = pagedResourcesAssembler.toModel(userPagedList,
 				userAssembler);
 		return new ResponseEntity<>(userPagedModel, HttpStatus.OK);
+	}
+	
+	@ApiOperation(value = "Fetch User By Email (Simulated Endpoint)", tags = { "SimulatedUser" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@GetMapping("/users/{email_id}")
+	public ResponseEntity<?> getUserByEmailDB(
+			@PathVariable String email_id) {
+		return simulatedService.getUserByEmail(email_id);
+		
 	}
 
 	@ApiOperation(value = "Fetch all Users (Simulated Endpoint)", tags = { "SimulatedUser" })

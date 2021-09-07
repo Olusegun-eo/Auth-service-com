@@ -62,5 +62,8 @@ public interface UserRepository extends JpaRepository<Users, Long>, JpaSpecifica
 	@Override
 	@Query(value = "SELECT u FROM Users u WHERE u.isDeleted = false ORDER BY id")
 	Page<Users> findAll(Pageable pageable);
+	
+	@Query(value = "SELECT u FROM Users u WHERE UPPER(u.email) = UPPER(:email) AND u.isDeleted = false")
+	Optional<Users> findSimulatedUser(@Param("email") String email);
 
 }
