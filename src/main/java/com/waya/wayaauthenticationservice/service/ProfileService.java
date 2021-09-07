@@ -7,6 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 
 public interface ProfileService {
 
@@ -108,6 +109,9 @@ public interface ProfileService {
 
 	UserProfileResponse getProfileByReferralCode(String referralCode);
 
+	Map<String, Object> getUsersWithTheirReferralsByPhoneNumber(String value, int page, int size);
+
+	Map<String, Object> getUsersWithTheirReferrals(int page, int size);
 	/**
 	 * 
 	 * @param userId: Corporate UserId

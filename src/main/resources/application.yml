@@ -144,6 +144,8 @@ cipher:
 
 app:
   config:
+    biller-service:
+      base-url: http://157.230.223.54:8181/billspay
     access-service:
       base-url: http://46.101.41.187:8061
     fraud-service:
