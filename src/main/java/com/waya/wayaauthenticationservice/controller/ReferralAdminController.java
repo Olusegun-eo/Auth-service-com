@@ -74,7 +74,7 @@ public class ReferralAdminController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Edit Referral Bonus Amount : This API is used to modify a bonus amount", position = 1)
+    @ApiOperation(value = "Edit Referral Bonus Amount : This API is used to modify a bonus amount", notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 200, message = MESSAGE_200),
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
@@ -89,7 +89,7 @@ public class ReferralAdminController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Edit Referral Bonus Amount : This API is used to modify a bonus amount", position = 2)
+    @ApiOperation(value = "Edit Referral Bonus Amount : This API is used to modify a bonus amount", notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 200, message = MESSAGE_200),
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
@@ -103,7 +103,7 @@ public class ReferralAdminController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Get Referral Bonus Amount : This API is used to get a bonus amount by Id", position = 3)
+    @ApiOperation(value = "Get Referral Bonus Amount : This API is used to get a bonus amount by Id", notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 200, message = MESSAGE_200),
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
@@ -117,7 +117,7 @@ public class ReferralAdminController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Toggle ReferralBonus By Id : This API is used to disable/enable or off/on ReferralBonus status by providing an Id.")
+    @ApiOperation(value = "Toggle ReferralBonus By Id : This API is used to disable/enable or off/on ReferralBonus status by providing an Id.",notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 200, message = "Successful"),
             @io.swagger.annotations.ApiResponse(code = 400, message = "Bad Request"),
@@ -131,10 +131,6 @@ public class ReferralAdminController {
         ApiResponseBody<ReferralBonus> response = new ApiResponseBody<>(referralBonus, "updated data successfully", true);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
-
-
-
 
 
 
