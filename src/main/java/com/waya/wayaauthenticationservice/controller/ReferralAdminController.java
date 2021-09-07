@@ -16,7 +16,7 @@ import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.Map;
 
-@Tag(name = "PROFILE ADMIN RESOURCE", description = "REST API for Referral Admin Service API")
+@Tag(name = "REFERRAL ADMIN RESOURCE", description = "REST API for Referral Admin Service API")
 @CrossOrigin
 @RestController
 @RequestMapping("/api/v1/referral/admin")
@@ -31,7 +31,7 @@ public class ReferralAdminController {
         this.profileService = profileService;
     }
 
-    @ApiOperation( value = "profile-with-five-transactions/user/{userId}", notes = "", tags = {"REFERRAL RESOURCE"})
+    @ApiOperation( value = "profile-with-five-transactions/user/{userId}", notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = Constant.MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = Constant.MESSAGE_422)
@@ -47,7 +47,7 @@ public class ReferralAdminController {
     }
 
 
-    @ApiOperation( value = "GET REFERRALS USERS", notes = "", tags = {"REFERRAL RESOURCE"})
+    @ApiOperation( value = "GET REFERRALS USERS", notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = Constant.MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = Constant.MESSAGE_422)
