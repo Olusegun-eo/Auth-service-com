@@ -26,7 +26,6 @@ public class OtherDetails {
     private String organizationAddress;
     private String organizationState;
 
-    @NotBlank(message = "please enter your organisation type")
     private String organisationType;
 
     @NotBlank(message = "please enter your business type")
