@@ -1,15 +1,19 @@
 package com.waya.wayaauthenticationservice.response;
 
+import com.waya.wayaauthenticationservice.pojo.others.TransactionResponsePojo;
+
 import java.util.Date;
 
-public class ResponseObj<T> {
+public class ResponseObj {
     public Date timeStamp;
     public boolean status;
     public String message;
-    public T data;
+    public TransactionResponsePojo data;
 
+    public ResponseObj() {
+    }
 
-    public ResponseObj(Date timeStamp, boolean status, String message, T data) {
+    public ResponseObj(Date timeStamp, boolean status, String message, TransactionResponsePojo data) {
         super();
         this.timeStamp = timeStamp;
         this.status = status;

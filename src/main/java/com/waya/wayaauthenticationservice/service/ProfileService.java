@@ -1,5 +1,7 @@
 package com.waya.wayaauthenticationservice.service;
 
+import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.entity.ReferralBonusEarning;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.response.*;
@@ -109,9 +111,11 @@ public interface ProfileService {
 
 	UserProfileResponse getProfileByReferralCode(String referralCode);
 
-	Map<String, Object> getUsersWithTheirReferralsByPhoneNumber(String value, int page, int size);
 
-	Map<String, Object> getUsersWithTheirReferrals(int page, int size);
+
+
+
+
 	/**
 	 * 
 	 * @param userId: Corporate UserId
