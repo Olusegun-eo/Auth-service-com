@@ -158,7 +158,12 @@ public class ProfileServiceImpl implements ProfileService {
             if (validationCheck.getStatus()) {
                 Profile newProfile = modelMapper.map(request, Profile.class);
                 // check if this referral code is already mapped to a user
-                newProfile.setReferral(request.getReferralCode());
+                if (request.getReferralCode() == null){
+                    newProfile.setReferral(null);
+                }else{
+                    newProfile.setReferral(request.getReferralCode());
+                }
+
                 newProfile.setCorporate(false);
                 newProfile.setDateOfBirth(request.getDateOfBirth().toString());
                 // save new personal profile
@@ -322,7 +327,7 @@ public class ProfileServiceImpl implements ProfileService {
      * check for the availability of the service rollback if the service is
      * unavailable
      */
-    private void saveReferralCode(Profile newProfile, String userId) {
+    public void saveReferralCode(Profile newProfile, String userId) {
         // send details to the referral Service
         referralCodeRepository.save(new ReferralCode(generateReferralCode(REFERRAL_CODE_LENGTH), newProfile, userId));
 
@@ -674,7 +679,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     }
 
-    private UserProfileResponse setProfileResponse(Profile profile) {
+    public UserProfileResponse setProfileResponse(Profile profile) {
         // initialize to empty
         Optional<OtherDetails> otherDetails = Optional.empty();
         // check if other details is present in profile
@@ -719,6 +724,7 @@ public class ProfileServiceImpl implements ProfileService {
                 .surname(profile.getSurname())
                 .middleName(profile.getMiddleName())
                 .phoneNumber(profile.getPhoneNumber())
+                .referral(profile.getReferral())
                 .referenceCode(referralCodeValue)
                 .smsAlertConfig(isSMSAlertActive)
                 .userId(profile.getUserId())
@@ -922,103 +928,7 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
 
-    public Map<String, Object> getUsersWithTheirReferralsByPhoneNumber(String value, int page, int size){
-        Pageable paging = PageRequest.of(page, size);
-        List<Profile> profileList = new ArrayList<>();
 
-        if (CommonUtils.isEmpty(value)){
-            return getUsersWithTheirReferrals(page,size);
-        }
-        try{
-
-            Page<Profile> profilePage = profileRepository.findAllByEmailOrPhoneNumber(false,value, paging);
-            profileList = profilePage.getContent();
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("users", profileList);
-            response.put("currentPage", profilePage.getNumber());
-            response.put("totalItems", profilePage.getTotalElements());
-            response.put("totalPages", profilePage.getTotalPages());
-            return response;
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
-        }
-
-
-    }
-
-    public Map<String, Object> getUsersWithTheirReferrals(int page, int size){
-        String district = "";
-        String stateE = "";
-        String addressE = "";
-        Pageable paging = PageRequest.of(page, size);
-        List<Profile> profileList = new ArrayList<>();
-        List<ReferralPojo> referralPojos = new ArrayList<>();
-        List<ProfileDto> profileDtos = new ArrayList<>();
-
-        Page<Profile> profilePage = profileRepository.findAll(paging, false);
-        // get all user with referralCode
-        profileList = profilePage.getContent();
-
-        for (int i = 0; i < profileList.size(); i++) {
-            ReferralPojo referralPojo = new ReferralPojo();
-            Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(profileList.get(i).getUserId());
-            log.info(referralCode.get().getProfile().getFirstName() + "referralCode {} " + referralCode.get().getReferralCode());
-
-            if (referralCode.isPresent()){
-                referralPojo.setDateJoined(profileList.get(i).getCreatedAt());
-                //referralPojo.setEarnings();
-                referralPojo.setReferralCode(referralCode.get().getReferralCode());
-                referralPojo.setReferralEmail(profileList.get(i).getEmail());
-
-                if (profileList.get(i).getDistrict() == null){
-                    district = "";
-                }else{
-                    district = profileList.get(i).getDistrict();
-                }
-                if (profileList.get(i).getState() == null){
-                    stateE = "";
-                }else{
-                    stateE = profileList.get(i).getState();
-                }
-                if (profileList.get(i).getAddress() == null){
-                    addressE = "";
-                }else{
-                    addressE = profileList.get(i).getAddress();
-                }
-                referralPojo.setReferralLocation(district + " " + stateE + " " + addressE);
-                referralPojo.setReferralPhone(profileList.get(i).getPhoneNumber());
-                referralPojo.setReferralUser(profileList.get(i).getSurname() + " " + profileList.get(i).getFirstName());
-
-                if (referralCode.get().getReferralCode() !=null){
-
-                    referralPojo.setUsersReferred(getProfileDetails(referralCode.get().getReferralCode(),paging));
-                    referralPojo.setEarnings(BigDecimal.ONE);
-                    referralPojos.add(referralPojo);
-                }
-
-            }
-
-        }
-
-
-        Map<String, Object> response = new HashMap<>();
-
-        response.put("users", referralPojos);
-        response.put("currentPage", profilePage.getNumber());
-        response.put("totalItems", profilePage.getTotalElements());
-        response.put("totalPages", profilePage.getTotalPages());
-
-        return response;
-    }
-
-
-
-    private List<Profile> getProfileDetails(String referralCode, Pageable paging){
-        Page<Profile> profilePage1 = profileRepository.findAllByReferralCode(referralCode,paging, false);
-
-        return profilePage1.getContent();
-    }
 
 
 

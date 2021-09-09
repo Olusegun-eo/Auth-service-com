@@ -65,7 +65,7 @@ public interface ProfileRepository extends JpaRepository<Profile, UUID> {
             "WHERE UPPER(u.email) = UPPER(:email) AND u.deleted = false")
     boolean existsByEmail(@Param("email") String email);
 
-    @Query("select p from Profile p where p.deleted =:deleted")
+    @Query("select p from Profile p where p.deleted =:deleted order by p.createdAt desc")
     Page<Profile> findAll(Pageable pageable, boolean deleted);
 
     @Query("select p from Profile p where p.referral =:referralCode and p.deleted =:deleted order by p.createdAt desc")

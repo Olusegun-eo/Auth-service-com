@@ -1,6 +1,5 @@
 package com.waya.wayaauthenticationservice.entity;
 
-import com.waya.wayaauthenticationservice.util.UserType;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -17,12 +16,9 @@ public class ReferralBonus extends AuditModel  {
 
     private BigDecimal amount = BigDecimal.valueOf(0.0);
 
-    private String description;
+    private Integer numberOfTransaction;
 
-    @Column(name = "user_type", nullable = true)
-    @Enumerated(EnumType.STRING)
-    private UserType userType;
 
-    private boolean active = true;
+    private boolean active;
 
 }
