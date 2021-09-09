@@ -1,20 +1,21 @@
 package com.waya.wayaauthenticationservice.entity;
 
 import com.waya.wayaauthenticationservice.entity.listener.ProfileListener;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import java.io.Serializable;
 import java.util.UUID;
 
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
 @Entity
 @EntityListeners(ProfileListener.class)
-@ToString
 @Table(name = "m_user_profile")
 public class Profile extends AuditModel implements Serializable {
 
@@ -58,9 +59,34 @@ public class Profile extends AuditModel implements Serializable {
 
     private String referral;
 
+
     private boolean corporate;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "otherDetails_id", referencedColumnName = "id")
     private OtherDetails otherDetails;
+
+    @Override
+    public String toString() {
+        return "Profile{" +
+                "id=" + id +
+                ", email='" + email + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", surname='" + surname + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", middleName='" + middleName + '\'' +
+                ", profileImage='" + profileImage + '\'' +
+                ", dateOfBirth='" + dateOfBirth + '\'' +
+                ", gender='" + gender + '\'' +
+                ", district='" + district + '\'' +
+                ", address='" + address + '\'' +
+                ", city='" + city + '\'' +
+                ", state='" + state + '\'' +
+                ", deleted=" + deleted +
+                ", userId='" + userId + '\'' +
+                ", referral='" + referral + '\'' +
+                ", corporate=" + corporate +
+                ", otherDetails=" + otherDetails +
+                '}';
+    }
 }

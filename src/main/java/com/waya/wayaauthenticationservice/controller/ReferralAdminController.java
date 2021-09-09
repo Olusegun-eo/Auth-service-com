@@ -1,14 +1,17 @@
 package com.waya.wayaauthenticationservice.controller;
 
+import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.ReferralBonus;
+import com.waya.wayaauthenticationservice.entity.ReferralBonusEarning;
 import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.pojo.others.AssignReferralCodePojo;
 import com.waya.wayaauthenticationservice.pojo.others.ReferralBonusRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UserReferralBonusPojo;
 import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.response.ReferralBonusResponse;
+import com.waya.wayaauthenticationservice.response.UserProfileResponse;
 import com.waya.wayaauthenticationservice.service.ManageReferralService;
 import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.service.ReferralService;
-import com.waya.wayaauthenticationservice.util.CommonUtils;
 import com.waya.wayaauthenticationservice.util.Constant;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -44,35 +47,6 @@ public class ReferralAdminController {
         this.referralService = referralService;
     }
 
-    @ApiOperation( value = "profile-with-five-transactions/user/{userId}", notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
-    @ApiResponses(value = {
-            @io.swagger.annotations.ApiResponse(code = 400, message = Constant.MESSAGE_400),
-            @io.swagger.annotations.ApiResponse(code = 422, message = Constant.MESSAGE_422)
-    })
-    @GetMapping("/filter-users/{value}")
-    public ResponseEntity<ApiResponseBody<Map<String, Object>>> getUsersWithUpToFiveTransactions(
-            @PathVariable String value,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Map<String, Object> referralCodeResponse =  profileService.getUsersWithTheirReferralsByPhoneNumber(value,page,size);
-        ApiResponseBody<Map<String, Object>> response = new ApiResponseBody<>(referralCodeResponse, "Retrieved data successfully", true);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-
-    @ApiOperation( value = "GET REFERRALS USERS", notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
-    @ApiResponses(value = {
-            @io.swagger.annotations.ApiResponse(code = 400, message = Constant.MESSAGE_400),
-            @io.swagger.annotations.ApiResponse(code = 422, message = Constant.MESSAGE_422)
-    })
-    @GetMapping("/get-referral-users")
-    public ResponseEntity<ApiResponseBody<Map<String, Object>>> getUsersWithTheirReferrals(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Map<String, Object> referralCodeResponse =  profileService.getUsersWithTheirReferrals(page,size);
-        ApiResponseBody<Map<String, Object>> response = new ApiResponseBody<>(referralCodeResponse, "Retrieved data successfully", true);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
 
     @ApiOperation(value = "Edit Referral Bonus Amount : This API is used to modify a bonus amount", notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
     @ApiResponses(value = {
@@ -126,11 +100,108 @@ public class ReferralAdminController {
     @PutMapping("/config/amount/{id}/toggle")
     ResponseEntity<ApiResponseBody<ReferralBonus>> toggleReferralAmount(@ApiParam(example = "1") @PathVariable String id) throws CustomException {
 
-
         ReferralBonus referralBonus = referralService.toggleReferralAmount(Long.parseLong(id));
         ApiResponseBody<ReferralBonus> response = new ApiResponseBody<>(referralBonus, "updated data successfully", true);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @ApiOperation( value = "profile-with-five-transactions/user/{userId}", notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
+    @ApiResponses(value = {
+            @io.swagger.annotations.ApiResponse(code = 400, message = Constant.MESSAGE_400),
+            @io.swagger.annotations.ApiResponse(code = 422, message = Constant.MESSAGE_422)
+    })
+    @GetMapping("/filter-users/{value}")
+    public ResponseEntity<ApiResponseBody<Map<String, Object>>> getUsersWithUpToFiveTransactions(
+            @PathVariable String value,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Map<String, Object> referralCodeResponse =  referralService.getUsersWithTheirReferralsByPhoneNumber(value,page,size);
+        ApiResponseBody<Map<String, Object>> response = new ApiResponseBody<>(referralCodeResponse, "Retrieved data successfully", true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+    @ApiOperation( value = "GET REFERRALS USERS", notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
+    @ApiResponses(value = {
+            @io.swagger.annotations.ApiResponse(code = 400, message = Constant.MESSAGE_400),
+            @io.swagger.annotations.ApiResponse(code = 422, message = Constant.MESSAGE_422)
+    })
+    @GetMapping("/get-referral-users")
+    public ResponseEntity<ApiResponseBody<Map<String, Object>>> getUsersWithTheirReferrals(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Map<String, Object> referralCodeResponse =  referralService.getUsersWithTheirReferrals(page,size);
+        ApiResponseBody<Map<String, Object>> response = new ApiResponseBody<>(referralCodeResponse, "Retrieved data successfully", true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @ApiOperation( value = "GET USERS THAT HAVE BEEN REFERRED", notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
+    @ApiResponses(value = {
+            @io.swagger.annotations.ApiResponse(code = 400, message = Constant.MESSAGE_400),
+            @io.swagger.annotations.ApiResponse(code = 422, message = Constant.MESSAGE_422)
+    })
+    @GetMapping("/get-users-that-have-been-referred/{referralCode}")
+    public ResponseEntity<ApiResponseBody<Map<String, Object>>> getUserThanHaveBeenReferred(
+            @PathVariable String referralCode,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Map<String, Object> referralCodeResponse =  referralService.getUserThatHaveBeenReferred(referralCode,page,size);
+        ApiResponseBody<Map<String, Object>> response = new ApiResponseBody<>(referralCodeResponse, "Retrieved data successfully", true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+
+    @ApiOperation(value = " Get All users without referralCode.",notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
+    @ApiResponses(value = {
+            @io.swagger.annotations.ApiResponse(code = 200, message = "Successful"),
+            @io.swagger.annotations.ApiResponse(code = 400, message = "Bad Request"),
+            @io.swagger.annotations.ApiResponse(code = 401, message = "Unauthorized")
+    })
+    @GetMapping("/users-with-no-referral-code")
+    ResponseEntity<ApiResponseBody<Map<String, Object>>> getUserWithoutReferralCode(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) throws CustomException {
+
+        Map<String, Object> map = referralService.getUserWithoutReferralCode(page,size);
+        ApiResponseBody<Map<String, Object>> response = new ApiResponseBody<>(map, "Data retrieved successfully", true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Assign referralcode to users.",notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
+    @ApiResponses(value = {
+            @io.swagger.annotations.ApiResponse(code = 200, message = "Successful"),
+            @io.swagger.annotations.ApiResponse(code = 400, message = "Bad Request"),
+            @io.swagger.annotations.ApiResponse(code = 401, message = "Unauthorized")
+    })
+    @PostMapping("/users/assign-referral-code")
+    ResponseEntity<ApiResponseBody<Profile>> assignReferralCode(@Valid @RequestBody
+        AssignReferralCodePojo assignReferralCodePojo) throws CustomException {
+
+        Profile referralBonus = referralService.assignReferralCode(assignReferralCodePojo);
+        ApiResponseBody<Profile> response = new ApiResponseBody<>(referralBonus, "Referral code assigned successfully", true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+    @ApiOperation(value = "Send referral bonus to users.",notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
+    @ApiResponses(value = {
+            @io.swagger.annotations.ApiResponse(code = 200, message = "Successful"),
+            @io.swagger.annotations.ApiResponse(code = 400, message = "Bad Request"),
+            @io.swagger.annotations.ApiResponse(code = 401, message = "Unauthorized")
+    })
+    @PostMapping("/users/send-referral-bonus")
+    ResponseEntity<ApiResponseBody<ReferralBonusEarning>> sendReferralBonusToUser(@Valid @RequestBody
+                                                                             UserReferralBonusPojo userReferralBonusPojo) throws CustomException {
+        ReferralBonusEarning referralBonus = referralService.sendReferralBonusToUser(userReferralBonusPojo);
+        ApiResponseBody<ReferralBonusEarning> response = new ApiResponseBody<>(referralBonus, "Referral Bonus sent successfully", true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+
+
+
 
 
 
