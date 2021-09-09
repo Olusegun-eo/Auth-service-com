@@ -288,15 +288,11 @@ public class ManageReferralServiceImpl implements ManageReferralService {
         return response;
     }
 
-
-
     private List<Profile> getProfileDetails(String referralCode, Pageable paging){
         Page<Profile> profilePage1 = profileRepository.findAllByReferralCode(referralCode,paging, false);
 
         return profilePage1.getContent();
     }
-
-
 
     private Profile getReferredDetails(String referralCode){
         Optional<Profile> profile2 = null;
