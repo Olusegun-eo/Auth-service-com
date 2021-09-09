@@ -51,6 +51,7 @@ import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
 import com.waya.wayaauthenticationservice.controller.UserController;
 import com.waya.wayaauthenticationservice.entity.Privilege;
+import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.ReferralCode;
 import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.UserSetup;
@@ -85,6 +86,7 @@ import com.waya.wayaauthenticationservice.proxy.LoggingProxy;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
+import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
@@ -141,6 +143,8 @@ public class UserServiceImpl implements UserService {
 	ObjectMapper mapper;
 	@Autowired
 	UserSetupRepository userSetupRepository;
+	@Autowired
+	ProfileRepository profileRepository;
 
 	@Autowired
 	SearchService searchService;
@@ -159,7 +163,8 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<?> getUserById(Long id) {
 		try {
 			Users user = usersRepository.findById(false, id).orElse(null);
-			UserProfileResponsePojo userDto = this.toModelDTO(user);
+			Optional<Profile> profile = profileRepository.findByUserId(false, id.toString());
+			UserProfileResponsePojo userDto = this.toModelDTO(user,profile.get());
 			if (userDto == null) {
 				return new ResponseEntity<>(new ErrorResponse("Invalid id, No User Found"),
 						HttpStatus.INTERNAL_SERVER_ERROR);
@@ -703,7 +708,7 @@ public class UserServiceImpl implements UserService {
 	public UserProfileResponsePojo toModelDTO(Users user) {
 		if (user == null)
 			return null;
-
+		
 		Set<String> roles = user.getRoleList().stream().map(Role::getName).collect(Collectors.toSet());
 		Set<String> permits = new HashSet<>();
 		user.getRoleList().forEach(
@@ -719,6 +724,37 @@ public class UserServiceImpl implements UserService {
 				.isAccountExpired(!user.isAccountNonExpired()).isCredentialsExpired(!user.isCredentialsNonExpired())
 				.isActive(user.isActive()).isAccountLocked(!user.isAccountNonLocked()).roles(roles).permits(permits)
 				.pinCreated(user.isPinCreated()).isCorporate(user.isCorporate()).build();
+		userDto.add(linkTo(methodOn(UserController.class).findUser(user.getId())).withSelfRel());
+
+		return userDto;
+	}
+	
+	@Override
+	public UserProfileResponsePojo toModelDTO(Users user, Profile profile) {
+		if (user == null)
+			return null;
+		
+		if (profile == null)
+			return null;
+
+		Set<String> roles = user.getRoleList().stream().map(Role::getName).collect(Collectors.toSet());
+		Set<String> permits = new HashSet<>();
+		user.getRoleList().forEach(
+				u -> permits.addAll(u.getPrivileges().stream().map(Privilege::getName).collect(Collectors.toSet())));
+		String phoneNumber = user.getPhoneNumber().contains("+") ? user.getPhoneNumber()
+				: (user.getPhoneNumber().startsWith("234") ? String.format("+%s", user.getPhoneNumber())
+						: user.getPhoneNumber());
+
+		UserProfileResponsePojo userDto = UserProfileResponsePojo.builder().email(user.getEmail()).id(user.getId())
+				.referenceCode(user.getReferenceCode()).isEmailVerified(user.isEmailVerified()).phoneNumber(phoneNumber)
+				.firstName(user.getFirstName()).lastName(user.getSurname()).isAdmin(user.isAdmin())
+				.isPhoneVerified(user.isPhoneVerified()).isAccountDeleted(user.isDeleted())
+				.isAccountExpired(!user.isAccountNonExpired()).isCredentialsExpired(!user.isCredentialsNonExpired())
+				.isActive(user.isActive()).isAccountLocked(!user.isAccountNonLocked()).roles(roles).permits(permits)
+				.pinCreated(user.isPinCreated()).isCorporate(user.isCorporate()).gender(profile.getGender())
+				.address(profile.getAddress()).city(profile.getCity()).dateOfBirth(profile.getDateOfBirth())
+				.district(profile.getDistrict()).middleName(profile.getMiddleName()).state(profile.getState())
+				.profileImage(profile.getProfileImage()).build();
 		userDto.add(linkTo(methodOn(UserController.class).findUser(user.getId())).withSelfRel());
 
 		return userDto;

@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
 import com.waya.wayaauthenticationservice.pojo.log.LogRequest;
@@ -63,6 +64,8 @@ public interface UserService {
     void saveLog(LogRequest logPojo);
 
     UserProfileResponsePojo toModelDTO(Users user);
+    
+    UserProfileResponsePojo toModelDTO(Users user, Profile profile);
 
 	Page<Users> getAllUsers(int page, int size);
 
