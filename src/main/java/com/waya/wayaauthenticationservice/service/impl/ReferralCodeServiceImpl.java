@@ -48,31 +48,24 @@ public class ReferralCodeServiceImpl implements ReferralService {
 
     }
 
-
-
     public List<UserProfileResponse> getUsersWithUpToFiveTransactions(String userId, String token) throws CustomException {
-
         List<UserProfileResponse> newUserProfileResponseList = new ArrayList<>();
         List<UserProfileResponse>  userProfileResponseList = profileService.findAllUserReferral(userId,"100");
         if (userProfileResponseList.size() < 0)
             throw new CustomException("User do not have any referred user", HttpStatus.EXPECTATION_FAILED);
-
         try {
             Collection col = userProfileResponseList;
             Iterator i = col.iterator();
             while (i.hasNext()) {
                 UserProfileResponse userProfileResponse = (UserProfileResponse) i.next();
-
                 long count = getTrans(userProfileResponse.getUserId(), token);
                 if (count > 5){
-//                    transactions.add((Transactions) count);
                     newUserProfileResponseList.add(userProfileResponse);
                 }
             }
         } catch (Exception ex) {
             throw new CustomException(ex.getMessage(), HttpStatus.EXPECTATION_FAILED);
         }
-
         return newUserProfileResponseList;
     }
 
@@ -82,7 +75,6 @@ public class ReferralCodeServiceImpl implements ReferralService {
             Long infoResponse = responseEntity.getBody();
 
            // long count = infoResponse.data;
-            System.out.println("getTrans infoResponse::: " + infoResponse);
 
             return infoResponse;
         } catch (Exception ex) {
