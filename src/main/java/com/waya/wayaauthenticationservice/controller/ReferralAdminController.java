@@ -7,7 +7,9 @@ import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.pojo.others.AssignReferralCodePojo;
 import com.waya.wayaauthenticationservice.pojo.others.ReferralBonusRequest;
 import com.waya.wayaauthenticationservice.pojo.others.UserReferralBonusPojo;
+import com.waya.wayaauthenticationservice.pojo.others.UserTransferToDefaultWallet;
 import com.waya.wayaauthenticationservice.response.ApiResponseBody;
+import com.waya.wayaauthenticationservice.response.NewWalletResponse;
 import com.waya.wayaauthenticationservice.response.ReferralBonusResponse;
 import com.waya.wayaauthenticationservice.response.UserProfileResponse;
 import com.waya.wayaauthenticationservice.service.ManageReferralService;
@@ -191,10 +193,10 @@ public class ReferralAdminController {
             @io.swagger.annotations.ApiResponse(code = 401, message = "Unauthorized")
     })
     @PostMapping("/users/send-referral-bonus")
-    ResponseEntity<ApiResponseBody<ReferralBonusEarning>> sendReferralBonusToUser(@Valid @RequestBody
-                                                                             UserReferralBonusPojo userReferralBonusPojo) throws CustomException {
-        ReferralBonusEarning referralBonus = referralService.sendReferralBonusToUser(userReferralBonusPojo);
-        ApiResponseBody<ReferralBonusEarning> response = new ApiResponseBody<>(referralBonus, "Referral Bonus sent successfully", true);
+    ResponseEntity<ApiResponseBody<NewWalletResponse>> sendReferralBonusToUser(@Valid @RequestBody
+                                                                                          UserTransferToDefaultWallet transfer) throws CustomException {
+        NewWalletResponse referralBonus = referralService.sendReferralBonusToUser(transfer);
+        ApiResponseBody<NewWalletResponse> response = new ApiResponseBody<>(referralBonus, "Referral Bonus sent successfully", true);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

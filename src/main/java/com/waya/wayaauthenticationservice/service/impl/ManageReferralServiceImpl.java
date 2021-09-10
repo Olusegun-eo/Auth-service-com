@@ -6,10 +6,12 @@ import com.waya.wayaauthenticationservice.entity.ReferralBonusEarning;
 import com.waya.wayaauthenticationservice.entity.ReferralCode;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.ReferralBonusEarningRepository;
 import com.waya.wayaauthenticationservice.repository.ReferralBonusRepository;
 import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
+import com.waya.wayaauthenticationservice.response.NewWalletResponse;
 import com.waya.wayaauthenticationservice.response.ReferralBonusResponse;
 import com.waya.wayaauthenticationservice.service.ManageReferralService;
 import com.waya.wayaauthenticationservice.util.BearerTokenUtil;
@@ -22,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -38,14 +41,16 @@ public class ManageReferralServiceImpl implements ManageReferralService {
     private final ProfileRepository profileRepository;
     private final ReferralBonusEarningRepository referralBonusEarningRepository;
     private final ReferralCodeRepository referralCodeRepository;
+    private final WalletProxy walletProxy;
 
     @Autowired
-    public ManageReferralServiceImpl(ReferralBonusRepository referralBonusRepository, ReferralCodeServiceImpl referralCodeService, ProfileRepository profileRepository, ReferralBonusEarningRepository referralBonusEarningRepository, ReferralCodeRepository referralCodeRepository) {
+    public ManageReferralServiceImpl(ReferralBonusRepository referralBonusRepository, ReferralCodeServiceImpl referralCodeService, ProfileRepository profileRepository, ReferralBonusEarningRepository referralBonusEarningRepository, ReferralCodeRepository referralCodeRepository, WalletProxy walletProxy) {
         this.referralBonusRepository = referralBonusRepository;
         this.referralCodeService = referralCodeService;
         this.profileRepository = profileRepository;
         this.referralBonusEarningRepository = referralBonusEarningRepository;
         this.referralCodeRepository = referralCodeRepository;
+        this.walletProxy = walletProxy;
     }
 
 
@@ -175,21 +180,24 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
     }
 
-    public ReferralBonusEarning sendReferralBonusToUser(UserReferralBonusPojo userReferralBonusPojo){
-        ReferralBonusEarning referralBonusEarning = new ReferralBonusEarning();
+    public NewWalletResponse sendReferralBonusToUser(UserTransferToDefaultWallet transfer){
+        String token = BearerTokenUtil.getBearerTokenHeader();
+
         try{
-            referralBonusEarning.setUserId(userReferralBonusPojo.getUserId());
-            referralBonusEarning.setAmount(userReferralBonusPojo.getAmount());
-            referralBonusEarning.setStatus(ReferralBonusStatus.PENDING);
-
             // make a call to credit users wallet
-           return referralBonusEarningRepository.save(referralBonusEarning);
+            ResponseEntity<WalletAccountInfo> responseEntity = walletProxy.sendMoneyToWallet(transfer,token);
+            WalletAccountInfo infoResponse = (WalletAccountInfo) responseEntity.getBody();
+            log.info("mainWalletResponse :: {} " +infoResponse.data);
+            NewWalletResponse mainWalletResponse = infoResponse.data;
+            return mainWalletResponse;
 
-        }catch (Exception exception){
-            throw new CustomException(exception.getMessage(), HttpStatus.EXPECTATION_FAILED);
+         } catch (Exception e) {
+            System.out.println("Error is here " + e.getMessage());
+            throw new CustomException(e.getMessage(), HttpStatus.EXPECTATION_FAILED);
         }
 
     }
+
     public Map<String, Object> getUsersWithTheirReferralsByPhoneNumber(String value, int page, int size){
         Pageable paging = PageRequest.of(page, size);
         List<Profile> profileList = new ArrayList<>();

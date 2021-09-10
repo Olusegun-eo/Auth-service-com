@@ -93,7 +93,7 @@ public class ProfileServiceImpl implements ProfileService {
         searchProfileResponse.setAvatar(profilePersonal.getProfileImage());
         searchProfileResponse.setSurname(profilePersonal.getSurname());
         searchProfileResponse.setPhoneNumber(profilePersonal.getPhoneNumber());
-        searchProfileResponse.setUserId(profilePersonal.getUserId().toString());
+        searchProfileResponse.setUserId(profilePersonal.getUserId());
         return searchProfileResponse;
     }
 

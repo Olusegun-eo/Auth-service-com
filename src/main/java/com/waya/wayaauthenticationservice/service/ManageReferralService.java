@@ -7,6 +7,8 @@ import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.pojo.others.AssignReferralCodePojo;
 import com.waya.wayaauthenticationservice.pojo.others.ReferralBonusRequest;
 import com.waya.wayaauthenticationservice.pojo.others.UserReferralBonusPojo;
+import com.waya.wayaauthenticationservice.pojo.others.UserTransferToDefaultWallet;
+import com.waya.wayaauthenticationservice.response.NewWalletResponse;
 import com.waya.wayaauthenticationservice.response.ReferralBonusResponse;
 import com.waya.wayaauthenticationservice.response.UserProfileResponse;
 
@@ -23,6 +25,7 @@ public interface ManageReferralService {
     Map<String, Object> getUsersWithTheirReferrals(int page, int size);
     Map<String, Object> getUserWithoutReferralCode(int page, int size);
     Profile assignReferralCode(AssignReferralCodePojo assignReferralCodePojo);
-    ReferralBonusEarning sendReferralBonusToUser(UserReferralBonusPojo userReferralBonusPojo);
+
+    NewWalletResponse sendReferralBonusToUser(UserTransferToDefaultWallet transfer);
     Map<String, Object> getUserThatHaveBeenReferred(String referralCode, int page, int size);
 }
