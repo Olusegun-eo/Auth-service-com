@@ -55,7 +55,7 @@ public class Profile extends AuditModel implements Serializable {
     private boolean deleted = false;
 
     @Column(nullable = false, unique = true)
-    private Long userId;
+    private String userId;
 
     private String referral;
 

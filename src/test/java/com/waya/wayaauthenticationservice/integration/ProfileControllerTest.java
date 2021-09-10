@@ -89,12 +89,12 @@ class ProfileControllerTest {
 
 	@BeforeEach
 	void beforeEach() {
-		Optional<Profile> profile = profileRepository.findByUserId(false, user.getId());
+		Optional<Profile> profile = profileRepository.findByUserId(false, user.getId().toString());
 		if (profile.isPresent()) {
-			System.out.println("profile :::::::: " + profile.get());
+			log.info("profile :::::::: " + profile.get());
 			profileRepository.delete(profile.get());
 		}
-		Optional<Profile> profile2 = profileRepository.findByUserId(false, user2.getId());
+		Optional<Profile> profile2 = profileRepository.findByUserId(false, user2.getId().toString());
 		if (profile2.isPresent()) {
 			System.out.println("profile 2 :::::::: " + profile2.get());
 			profileRepository.delete(profile.get());

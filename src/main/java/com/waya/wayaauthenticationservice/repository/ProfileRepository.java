@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 public interface ProfileRepository extends JpaRepository<Profile, UUID> {
 
     @Query(value = "update m_user_profile set deleted =:deleted where user_id=:userId", nativeQuery = true)
-    void deleteProfileByUserId(boolean deleted, Long userId);
+    void deleteProfileByUserId(boolean deleted, String userId);
 
     @Query(value = "select * from m_user_profile where upper(email) = upper(:email) and deleted = :deleted", nativeQuery = true)
     Optional<Profile> findByEmail(boolean deleted, String email);
@@ -30,17 +30,17 @@ public interface ProfileRepository extends JpaRepository<Profile, UUID> {
     Optional<Profile> findByEmailOrPhoneNumber(boolean deleted, String value);
 
     @Query(value = "select * from m_user_profile where user_id =:userId and deleted =:deleted", nativeQuery = true)
-    Optional<Profile> findByUserId(boolean deleted, Long userId);
+    Optional<Profile> findByUserId(boolean deleted, String userId);
 
     @Async
     @Query(value = "select * from m_user_profile where user_id =:userId and deleted =:deleted", nativeQuery = true)
-    CompletableFuture<Profile> findByUserIdAsync(boolean deleted, Long userId);
+    CompletableFuture<Profile> findByUserIdAsync(boolean deleted, String userId);
 
     @Query(value = "select * from m_user_profile where id =:profileId and deleted =:deleted", nativeQuery = true)
     Optional<Profile> findByProfileId(boolean deleted, @Param("profileId") UUID profileId);
 
     @Query(value = "select * from m_user_profile where id =:profileId and deleted =:deleted and user_id=:userId", nativeQuery = true)
-    Optional<Profile> findByProfileIdAndUserId(boolean deleted, UUID profileId, Long userId);
+    Optional<Profile> findByProfileIdAndUserId(boolean deleted, UUID profileId, String userId);
 
     @Query(value = "select * from m_user_profile pm where lower(CONCAT(pm.first_name, ' ', pm.surname)) like :userName and deleted =:deleted", nativeQuery = true)
     List<Profile> searchByName(String userName, boolean deleted);
