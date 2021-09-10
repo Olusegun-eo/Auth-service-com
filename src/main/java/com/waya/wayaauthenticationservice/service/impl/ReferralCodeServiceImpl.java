@@ -75,7 +75,6 @@ public class ReferralCodeServiceImpl implements ReferralService {
             Long infoResponse = responseEntity.getBody();
 
            // long count = infoResponse.data;
-            System.out.println("getTrans infoResponse::: " + infoResponse);
 
             return infoResponse;
         } catch (Exception ex) {
