@@ -78,8 +78,8 @@ public interface ProfileRepository extends JpaRepository<Profile, UUID> {
             "phone_number LIKE CONCAT('%', :value)) and deleted = :deleted", nativeQuery = true)
     Page<Profile> findAllByEmailOrPhoneNumber(boolean deleted, String value, Pageable pageable);
 
-    @Query("SELECT a FROM Profile a, Users b WHERE a.userId = b.id and b.isSimulated = false and a.deleted =:deleted order by a.createdAt desc ")
-    Page<Profile> getAllByUserId(Pageable pageable,boolean deleted);
+//    @Query("SELECT a FROM Profile a, Users b WHERE a.userId = b.id and b.isSimulated = false and a.deleted =:deleted order by a.createdAt desc ")
+//    Page<Profile> getAllByUserId(Pageable pageable,boolean deleted);
 //
 //    @Query(value ="SELECT * FROM profile p INNER JOIN p.user pl where p.userId = pl.id and pl.isSimulated = false and p1.deleted =:deleted order by p.createdAt desc ", nativeQuery = true)
 //    Page<Profile> getAllByUserId(Pageable pageable,boolean deleted);
