@@ -114,6 +114,13 @@ public class SimulatedUserController {
 		return new ResponseEntity<>(userPagedModel, HttpStatus.OK);
 	}
 	
+	@ApiOperation(value = "Fetch all Users (Admin Endpoint)", tags = { "SimulatedUser" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@GetMapping("/all/users")
+	public ResponseEntity<?> getAllUsersRec() {
+		return simulatedService.getAllUsersRec();
+	}
+	
 	@ApiOperation(value = "To Generate simulated User (Simulated Endpoint)", tags = { "SimulatedUser" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@PostMapping("/users/generate")

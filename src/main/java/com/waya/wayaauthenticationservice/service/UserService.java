@@ -1,5 +1,6 @@
 package com.waya.wayaauthenticationservice.service;
 
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -21,6 +22,7 @@ import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
 import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfilePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserSetupPojo;
 import com.waya.wayaauthenticationservice.response.ApiResponseBody;
@@ -88,6 +90,8 @@ public interface UserService {
 	ResponseEntity<?> validateServiceUserCall(Long userId, String key);
 
 	Page<Users> getAllUsers(int page, int size, String searchString);
+	
+	ResponseEntity<?> getAllUsersRec();
 
 	ResponseEntity<?> validateUser();
 

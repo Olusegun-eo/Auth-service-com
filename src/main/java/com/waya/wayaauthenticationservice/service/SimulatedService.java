@@ -10,5 +10,7 @@ public interface SimulatedService {
 	ResponseEntity<?> getUserByEmail(String email);
 	
 	Page<Users> getAllUsers(int page, int size, String searchString);
+	
+	ResponseEntity<?> getAllUsersRec();
 
 }

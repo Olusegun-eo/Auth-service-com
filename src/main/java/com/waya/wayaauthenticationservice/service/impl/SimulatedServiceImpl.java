@@ -20,11 +20,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.waya.wayaauthenticationservice.controller.UserController;
+import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
 import com.waya.wayaauthenticationservice.entity.Privilege;
 import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfilePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
@@ -55,6 +57,9 @@ public class SimulatedServiceImpl implements SimulatedService {
 	
 	@Autowired
 	SearchService searchService;
+	
+	@Autowired
+	ProfileServiceDAO jdbcprofileService;
 
 	@Override
 	public ResponseEntity<?> getUserByEmail(String email) {
@@ -113,6 +118,15 @@ public class SimulatedServiceImpl implements SimulatedService {
 			throw new CustomException(errorMessages, HttpStatus.UNPROCESSABLE_ENTITY);
 		}
 		return userPage;
+	}
+	
+	public ResponseEntity<?> getAllUsersRec() {
+		List<UserProfilePojo> user = jdbcprofileService.GetAllUserProfile();
+		if (user.isEmpty())
+            return new ResponseEntity<>(new ErrorResponse("UNABLE TO FETCH DATA"), HttpStatus.BAD_REQUEST);
+
+        return new ResponseEntity<>(new SuccessResponse("DATA FETCH", user), HttpStatus.OK);
+		//return user;
 	}
 
 }

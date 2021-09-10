@@ -83,6 +83,13 @@ public class AdminController {
 				userAssembler);
 		return new ResponseEntity<>(userPagedModel, HttpStatus.OK);
 	}
+	
+	@ApiOperation(value = "Fetch all Users (Admin Endpoint)", tags = { "ADMIN" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@GetMapping("/all/users")
+	public ResponseEntity<?> getAllUsersRec() {
+		return userService.getAllUsersRec();
+	}
 
 	@ApiOperation(value = "Create New Private User (Admin Endpoint)", tags = { "ADMIN" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })

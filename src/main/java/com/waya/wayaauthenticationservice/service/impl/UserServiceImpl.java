@@ -50,6 +50,7 @@ import com.github.javafaker.service.RandomService;
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
 import com.waya.wayaauthenticationservice.controller.UserController;
+import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
 import com.waya.wayaauthenticationservice.entity.Privilege;
 import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.ReferralCode;
@@ -79,6 +80,7 @@ import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreation
 import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserIDPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfilePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserSetupPojo;
 import com.waya.wayaauthenticationservice.proxy.AccessProxy;
@@ -151,6 +153,9 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	UserService userService;
+	
+	@Autowired
+	ProfileServiceDAO jdbcprofileService;
 
 	@Value("${api.server.deployed}")
 	private String urlRedirect;
@@ -803,6 +808,15 @@ public class UserServiceImpl implements UserService {
 			throw new CustomException(errorMessages, HttpStatus.UNPROCESSABLE_ENTITY);
 		}
 		return userPage;
+	}
+	
+	public ResponseEntity<?> getAllUsersRec() {
+		List<UserProfilePojo> user = jdbcprofileService.GetAllUserProfile();
+		if (user.isEmpty())
+            return new ResponseEntity<>(new ErrorResponse("UNABLE TO FETCH DATA"), HttpStatus.BAD_REQUEST);
+
+        return new ResponseEntity<>(new SuccessResponse("DATA FETCH", user), HttpStatus.OK);
+		//return user;
 	}
 
 	@Override
