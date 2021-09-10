@@ -61,11 +61,10 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
             referralBonus.setAmount(referralBonusRequest.getAmount());
             referralBonus.setNumberOfTransaction(referralBonusRequest.getNumberOfTransaction());
-            ReferralBonus referralBonus1 = referralBonusRepository.save(referralBonus);
 
             // notify inApp
 
-            return referralBonus1;
+            return referralBonusRepository.save(referralBonus);
         } catch (Exception exception) {
             log.error("Unable to update referral bonus fee", exception);
             throw new CustomException(exception.getMessage(), HttpStatus.EXPECTATION_FAILED);
@@ -162,7 +161,7 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
     public Profile assignReferralCode(AssignReferralCodePojo assignReferralCodePojo){
         try{
-            Optional<Profile> profilePage = profileRepository.findByUserId(false,assignReferralCodePojo.getUserId());
+            Optional<Profile> profilePage = profileRepository.findByUserId(false,Long.parseLong(assignReferralCodePojo.getUserId()));
             if (!profilePage.isPresent()){
                 throw new CustomException(Constant.ID_IS_INVALID, HttpStatus.NOT_FOUND);
             }else{
@@ -218,20 +217,27 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
 
     public Map<String, Object> getUsersWithTheirReferrals(int page, int size){
+
+
         String district = "";
         String stateE = "";
         String addressE = "";
         Pageable paging = PageRequest.of(page, size);
         List<Profile> profileList = new ArrayList<>();
+        List<Profile> profileList2 = new ArrayList<>();
         List<ReferralPojo> referralPojos = new ArrayList<>();
 
-        Page<Profile> profilePage = profileRepository.findAll(paging, false);
+//        Page<Profile> profilePage = profileRepository.findAll(paging, false);
+        Page<Profile> profilePage = profileRepository.getAllByUserId(paging, false);
+        profileList2 = profilePage.getContent();
+
+        log.info("profileList2 :::: " +profileList2);
         // get all user with referralCode
         profileList = profilePage.getContent();
 
         for (int i = 0; i < profileList.size(); i++) {
             ReferralPojo referralPojo = new ReferralPojo();
-            Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(profileList.get(i).getUserId());
+            Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(profileList.get(i).getUserId().toString());
 
             if (referralCode.isPresent()){
                 if(profileList.get(i).getReferral() !=null){
@@ -298,7 +304,7 @@ public class ManageReferralServiceImpl implements ManageReferralService {
         Optional<Profile> profile2 = null;
         Optional<ReferralCode> referralCode2 = referralCodeRepository.getReferralCodeByCode(referralCode);
         if (referralCode2.isPresent()){
-            profile2 = profileRepository.findByUserId(false,referralCode2.get().getUserId());
+            profile2 = profileRepository.findByUserId(false,Long.parseLong(referralCode2.get().getUserId()));
         }
 
         return profile2.get();
@@ -318,7 +324,7 @@ public class ManageReferralServiceImpl implements ManageReferralService {
         profileList = profilePage.getContent();
 
         for (int i = 0; i < profileList.size(); i++) {
-            long count = referralCodeService.getTrans(profileList.get(i).getUserId(),token);
+            long count = referralCodeService.getTrans(profileList.get(i).getUserId().toString(),token);
 
             ReferredUsesPojo referredUsesPojo = new ReferredUsesPojo();
             if (profileList.get(i).getSurname() !=null){

@@ -55,16 +55,16 @@ public class Profile extends AuditModel implements Serializable {
     private boolean deleted = false;
 
     @Column(nullable = false, unique = true)
-    private String userId;
+    private Long userId;
 
     private String referral;
-
 
     private boolean corporate;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "otherDetails_id", referencedColumnName = "id")
     private OtherDetails otherDetails;
+
 
     @Override
     public String toString() {
