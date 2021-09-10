@@ -227,11 +227,11 @@ public class ManageReferralServiceImpl implements ManageReferralService {
         List<Profile> profileList2 = new ArrayList<>();
         List<ReferralPojo> referralPojos = new ArrayList<>();
 
-//        Page<Profile> profilePage = profileRepository.findAll(paging, false);
-        Page<Profile> profilePage = profileRepository.getAllByUserId(paging, false);
-        profileList2 = profilePage.getContent();
+        Page<Profile> profilePage = profileRepository.findAll(paging, false);
+//        Page<Profile> profilePage = profileRepository.getAllByUserId(paging, false);
+//        profileList2 = profilePage.getContent();
 
-        log.info("profileList2 :::: " +profileList2);
+//        log.info("profileList2 :::: " +profileList2);
         // get all user with referralCode
         profileList = profilePage.getContent();
 
