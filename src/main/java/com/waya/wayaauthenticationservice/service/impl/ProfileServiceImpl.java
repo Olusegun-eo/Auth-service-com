@@ -142,7 +142,7 @@ public class ProfileServiceImpl implements ProfileService {
             if (user == null)
                 throw new CustomException("Base User with Provided ID not Found", HttpStatus.BAD_REQUEST);
 
-            Optional<Profile> profileWithUserId = profileRepository.findByUserId(false, Long.parseLong(request.getUserId()));
+            Optional<Profile> profileWithUserId = profileRepository.findByUserId(false, request.getUserId());
             if (profileWithUserId.isPresent())
                 throw new CustomException("Profile with Provided User ID already Exists", HttpStatus.BAD_REQUEST);
 
@@ -215,7 +215,7 @@ public class ProfileServiceImpl implements ProfileService {
             if (user == null)
                 throw new CustomException("Base User with Provided ID not Found", HttpStatus.BAD_REQUEST);
 
-            Optional<Profile> profileWithUserId = profileRepository.findByUserId(false, Long.parseLong(profileRequest.getUserId()));
+            Optional<Profile> profileWithUserId = profileRepository.findByUserId(false, profileRequest.getUserId());
 
             if (profileWithUserId.isPresent())
                 throw new CustomException("Profile with Provided User ID already Exists", HttpStatus.BAD_REQUEST);
@@ -293,7 +293,7 @@ public class ProfileServiceImpl implements ProfileService {
         profile.setFirstName(profileRequest.getFirstName());
         profile.setSurname(profileRequest.getSurname());
         profile.setPhoneNumber(profileRequest.getPhoneNumber());
-        profile.setUserId(Long.parseLong(profileRequest.getUserId()));
+        profile.setUserId(profileRequest.getUserId());
         profile.setReferral(profileRequest.getReferralCode());
         profile.setOtherDetails(otherDetails);
 
@@ -346,7 +346,7 @@ public class ProfileServiceImpl implements ProfileService {
     // @Cacheable(cacheNames = "PersonalProfile", key = "#userId")
     public UserProfileResponse getUserProfile(String userId, HttpServletRequest request) {
         try {
-            Optional<Profile> profile = profileRepository.findByUserId(false, Long.parseLong(userId));
+            Optional<Profile> profile = profileRepository.findByUserId(false, userId);
             if (profile.isEmpty())
                 throw new CustomException("profile with that user id is not found", HttpStatus.NOT_FOUND);
 
@@ -371,7 +371,7 @@ public class ProfileServiceImpl implements ProfileService {
         try {
             Optional<Users> user = userRepository.findById(false, Long.parseLong(userId));
             if (user.isPresent()) {
-                Optional<Profile> profileOp = profileRepository.findByUserId(false, Long.parseLong(userId));
+                Optional<Profile> profileOp = profileRepository.findByUserId(false, userId);
 
                 if (profileOp.isPresent()) {
                     // Throw Error if any Validation error on Auth
@@ -449,7 +449,7 @@ public class ProfileServiceImpl implements ProfileService {
         try {
             Optional<Users> user = userRepository.findById(false, Long.parseLong(userId));
             if (user.isPresent() && user.get().isCorporate()) {
-                Optional<Profile> profile = profileRepository.findByUserId(false, Long.parseLong(userId));
+                Optional<Profile> profile = profileRepository.findByUserId(false, userId);
                 if (profile.isPresent() && profile.get().isCorporate()) {
                     // Update Base User, throw Validation error if any issue
                     updateUserAccount(user.get(), corp);
@@ -519,7 +519,7 @@ public class ProfileServiceImpl implements ProfileService {
             String mimeType = Magic.getMagicMatch(file.getBytes(), false).getMimeType();
             if (mimeType.startsWith("image/")) {
                 // It's an image.
-                Optional<Profile> profile = profileRepository.findByUserId(false, userId);
+                Optional<Profile> profile = profileRepository.findByUserId(false, String.valueOf(userId));
                 if (profile.isPresent()) {
                     Profile item = profile.get();
                     ApiResponseBody<ImageUrlResponse> response = uploadImage(fileResourceServiceFeignClient, file, String.valueOf(userId),
@@ -563,7 +563,7 @@ public class ProfileServiceImpl implements ProfileService {
             String mimeType = Magic.getMagicMatch(file.getBytes(), false).getMimeType();
             if (mimeType.startsWith("image/")) {
                 // It's an image.
-                Optional<Profile> profile = profileRepository.findByUserId(false, userId);
+                Optional<Profile> profile = profileRepository.findByUserId(false, String.valueOf(userId));
                 if (profile.isPresent()) {
                     Profile item = profile.get();
                     if (item.isCorporate()) {
@@ -820,7 +820,7 @@ public class ProfileServiceImpl implements ProfileService {
         DeleteResponse deleteResponse = new DeleteResponse();
         try {
             if (deleteRequest.getDeleteType().equals(DeleteType.DELETE)) {
-                Optional<Profile> optionalProfile = profileRepository.findByUserId(false, deleteRequest.getUserId());
+                Optional<Profile> optionalProfile = profileRepository.findByUserId(false, deleteRequest.getUserId().toString());
                 if (optionalProfile.isPresent()) {
                     Profile profile = optionalProfile.get();
                     log.info("profile found :: {}", profile);
@@ -833,7 +833,7 @@ public class ProfileServiceImpl implements ProfileService {
                     deleteResponse.setError("Profile with userId do not exist or already deleted");
                 }
             } else if (deleteRequest.getDeleteType().equals(DeleteType.RESTORE)) {
-                Optional<Profile> optionalProfile = profileRepository.findByUserId(true, deleteRequest.getUserId());
+                Optional<Profile> optionalProfile = profileRepository.findByUserId(true, deleteRequest.getUserId().toString());
                 if (optionalProfile.isPresent()) {
                     Profile profile = optionalProfile.get();
                     profile.setDeleted(false);

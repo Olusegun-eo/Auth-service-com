@@ -161,7 +161,7 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
     public Profile assignReferralCode(AssignReferralCodePojo assignReferralCodePojo){
         try{
-            Optional<Profile> profilePage = profileRepository.findByUserId(false,Long.parseLong(assignReferralCodePojo.getUserId()));
+            Optional<Profile> profilePage = profileRepository.findByUserId(false,assignReferralCodePojo.getUserId());
             if (!profilePage.isPresent()){
                 throw new CustomException(Constant.ID_IS_INVALID, HttpStatus.NOT_FOUND);
             }else{
@@ -304,7 +304,7 @@ public class ManageReferralServiceImpl implements ManageReferralService {
         Optional<Profile> profile2 = null;
         Optional<ReferralCode> referralCode2 = referralCodeRepository.getReferralCodeByCode(referralCode);
         if (referralCode2.isPresent()){
-            profile2 = profileRepository.findByUserId(false,Long.parseLong(referralCode2.get().getUserId()));
+            profile2 = profileRepository.findByUserId(false,referralCode2.get().getUserId());
         }
 
         return profile2.get();
