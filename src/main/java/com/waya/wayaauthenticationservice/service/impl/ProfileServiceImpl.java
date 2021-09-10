@@ -93,7 +93,7 @@ public class ProfileServiceImpl implements ProfileService {
         searchProfileResponse.setAvatar(profilePersonal.getProfileImage());
         searchProfileResponse.setSurname(profilePersonal.getSurname());
         searchProfileResponse.setPhoneNumber(profilePersonal.getPhoneNumber());
-        searchProfileResponse.setUserId(profilePersonal.getUserId());
+        searchProfileResponse.setUserId(profilePersonal.getUserId().toString());
         return searchProfileResponse;
     }
 
@@ -142,7 +142,7 @@ public class ProfileServiceImpl implements ProfileService {
             if (user == null)
                 throw new CustomException("Base User with Provided ID not Found", HttpStatus.BAD_REQUEST);
 
-            Optional<Profile> profileWithUserId = profileRepository.findByUserId(false, request.getUserId());
+            Optional<Profile> profileWithUserId = profileRepository.findByUserId(false, Long.parseLong(request.getUserId()));
             if (profileWithUserId.isPresent())
                 throw new CustomException("Profile with Provided User ID already Exists", HttpStatus.BAD_REQUEST);
 
@@ -151,7 +151,7 @@ public class ProfileServiceImpl implements ProfileService {
                     profileRepository.findByEmail(false, request.getEmail());
 
             // check if the user exist in the referral table
-            Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(request.getUserId());
+            Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(request.getUserId().toString());
 
             // validation check
             ApiResponseBody<String> validationCheck = validationCheckOnProfile(profile, referralCode);
@@ -170,7 +170,7 @@ public class ProfileServiceImpl implements ProfileService {
                 Profile savedProfile = profileRepository.save(newProfile);
                 log.info("saving new personal profile ::: {}", newProfile);
                 // save referral code
-                saveReferralCode(savedProfile, request.getUserId());
+                saveReferralCode(savedProfile, request.getUserId().toString());
 
                 String fullName = String.format("%s %s", savedProfile.getFirstName(), savedProfile.getSurname());
 
@@ -180,7 +180,7 @@ public class ProfileServiceImpl implements ProfileService {
 
                 // create waya gram profile
                 CompletableFuture.runAsync(
-                        () -> createWayagramProfile(savedProfile.getUserId(), savedProfile.getSurname(), fullName))
+                        () -> createWayagramProfile(savedProfile.getUserId().toString(), savedProfile.getSurname(), fullName))
                         .orTimeout(5, TimeUnit.MINUTES).handle((res, ex) -> {
                     if (ex != null) {
                         log.error("Error With Setting up Wayagram Profile:: {}", ex.getMessage());
@@ -215,7 +215,8 @@ public class ProfileServiceImpl implements ProfileService {
             if (user == null)
                 throw new CustomException("Base User with Provided ID not Found", HttpStatus.BAD_REQUEST);
 
-            Optional<Profile> profileWithUserId = profileRepository.findByUserId(false, profileRequest.getUserId());
+            Optional<Profile> profileWithUserId = profileRepository.findByUserId(false, Long.parseLong(profileRequest.getUserId()));
+
             if (profileWithUserId.isPresent())
                 throw new CustomException("Profile with Provided User ID already Exists", HttpStatus.BAD_REQUEST);
 
@@ -248,7 +249,7 @@ public class ProfileServiceImpl implements ProfileService {
 
                 // create waya gram profile
                 CompletableFuture.runAsync(
-                        () -> createWayagramProfile(savedProfile.getUserId(), savedProfile.getSurname(), fullName))
+                        () -> createWayagramProfile(savedProfile.getUserId().toString(), savedProfile.getSurname(), fullName))
                         .orTimeout(5, TimeUnit.MINUTES).handle((res, ex) -> {
                     if (ex != null) {
                         log.error("Error With Setting up Wayagram Profile:: {}", ex.getMessage());
@@ -292,7 +293,7 @@ public class ProfileServiceImpl implements ProfileService {
         profile.setFirstName(profileRequest.getFirstName());
         profile.setSurname(profileRequest.getSurname());
         profile.setPhoneNumber(profileRequest.getPhoneNumber());
-        profile.setUserId(profileRequest.getUserId());
+        profile.setUserId(Long.parseLong(profileRequest.getUserId()));
         profile.setReferral(profileRequest.getReferralCode());
         profile.setOtherDetails(otherDetails);
 
@@ -345,7 +346,7 @@ public class ProfileServiceImpl implements ProfileService {
     // @Cacheable(cacheNames = "PersonalProfile", key = "#userId")
     public UserProfileResponse getUserProfile(String userId, HttpServletRequest request) {
         try {
-            Optional<Profile> profile = profileRepository.findByUserId(false, userId);
+            Optional<Profile> profile = profileRepository.findByUserId(false, Long.parseLong(userId));
             if (profile.isEmpty())
                 throw new CustomException("profile with that user id is not found", HttpStatus.NOT_FOUND);
 
@@ -370,7 +371,7 @@ public class ProfileServiceImpl implements ProfileService {
         try {
             Optional<Users> user = userRepository.findById(false, Long.parseLong(userId));
             if (user.isPresent()) {
-                Optional<Profile> profileOp = profileRepository.findByUserId(false, userId);
+                Optional<Profile> profileOp = profileRepository.findByUserId(false, Long.parseLong(userId));
 
                 if (profileOp.isPresent()) {
                     // Throw Error if any Validation error on Auth
@@ -448,7 +449,7 @@ public class ProfileServiceImpl implements ProfileService {
         try {
             Optional<Users> user = userRepository.findById(false, Long.parseLong(userId));
             if (user.isPresent() && user.get().isCorporate()) {
-                Optional<Profile> profile = profileRepository.findByUserId(false, userId);
+                Optional<Profile> profile = profileRepository.findByUserId(false, Long.parseLong(userId));
                 if (profile.isPresent() && profile.get().isCorporate()) {
                     // Update Base User, throw Validation error if any issue
                     updateUserAccount(user.get(), corp);
@@ -518,7 +519,7 @@ public class ProfileServiceImpl implements ProfileService {
             String mimeType = Magic.getMagicMatch(file.getBytes(), false).getMimeType();
             if (mimeType.startsWith("image/")) {
                 // It's an image.
-                Optional<Profile> profile = profileRepository.findByUserId(false, String.valueOf(userId));
+                Optional<Profile> profile = profileRepository.findByUserId(false, userId);
                 if (profile.isPresent()) {
                     Profile item = profile.get();
                     ApiResponseBody<ImageUrlResponse> response = uploadImage(fileResourceServiceFeignClient, file, String.valueOf(userId),
@@ -562,7 +563,7 @@ public class ProfileServiceImpl implements ProfileService {
             String mimeType = Magic.getMagicMatch(file.getBytes(), false).getMimeType();
             if (mimeType.startsWith("image/")) {
                 // It's an image.
-                Optional<Profile> profile = profileRepository.findByUserId(false, String.valueOf(userId));
+                Optional<Profile> profile = profileRepository.findByUserId(false, userId);
                 if (profile.isPresent()) {
                     Profile item = profile.get();
                     if (item.isCorporate()) {
@@ -691,7 +692,7 @@ public class ProfileServiceImpl implements ProfileService {
         Optional<ReferralCode> referralCode;
         String referralCodeValue = null;
         if (profile.getUserId() != null) {
-            referralCode = referralCodeRepository.findByUserId(profile.getUserId());
+            referralCode = referralCodeRepository.findByUserId(profile.getUserId().toString());
             if (referralCode.isPresent()) {
                 referralCodeValue = referralCode.get().getReferralCode();
             }
@@ -727,7 +728,7 @@ public class ProfileServiceImpl implements ProfileService {
                 .referral(profile.getReferral())
                 .referenceCode(referralCodeValue)
                 .smsAlertConfig(isSMSAlertActive)
-                .userId(profile.getUserId())
+                .userId(profile.getUserId().toString())
                 .city(profile.getCity())
                 .corporate(profile.isCorporate())
                 .otherDetails(otherdetailsResponse).build();
@@ -819,7 +820,7 @@ public class ProfileServiceImpl implements ProfileService {
         DeleteResponse deleteResponse = new DeleteResponse();
         try {
             if (deleteRequest.getDeleteType().equals(DeleteType.DELETE)) {
-                Optional<Profile> optionalProfile = profileRepository.findByUserId(false, String.valueOf(deleteRequest.getUserId()));
+                Optional<Profile> optionalProfile = profileRepository.findByUserId(false, deleteRequest.getUserId());
                 if (optionalProfile.isPresent()) {
                     Profile profile = optionalProfile.get();
                     log.info("profile found :: {}", profile);
@@ -832,7 +833,7 @@ public class ProfileServiceImpl implements ProfileService {
                     deleteResponse.setError("Profile with userId do not exist or already deleted");
                 }
             } else if (deleteRequest.getDeleteType().equals(DeleteType.RESTORE)) {
-                Optional<Profile> optionalProfile = profileRepository.findByUserId(true, String.valueOf(deleteRequest.getUserId()));
+                Optional<Profile> optionalProfile = profileRepository.findByUserId(true, deleteRequest.getUserId());
                 if (optionalProfile.isPresent()) {
                     Profile profile = optionalProfile.get();
                     profile.setDeleted(false);

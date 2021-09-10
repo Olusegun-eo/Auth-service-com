@@ -1,6 +1,7 @@
 package com.waya.wayaauthenticationservice.repository;
 
 import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.entity.UserSetup;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 public interface ProfileRepository extends JpaRepository<Profile, UUID> {
 
     @Query(value = "update m_user_profile set deleted =:deleted where user_id=:userId", nativeQuery = true)
-    void deleteProfileByUserId(boolean deleted, String userId);
+    void deleteProfileByUserId(boolean deleted, Long userId);
 
     @Query(value = "select * from m_user_profile where upper(email) = upper(:email) and deleted = :deleted", nativeQuery = true)
     Optional<Profile> findByEmail(boolean deleted, String email);
@@ -29,17 +30,17 @@ public interface ProfileRepository extends JpaRepository<Profile, UUID> {
     Optional<Profile> findByEmailOrPhoneNumber(boolean deleted, String value);
 
     @Query(value = "select * from m_user_profile where user_id =:userId and deleted =:deleted", nativeQuery = true)
-    Optional<Profile> findByUserId(boolean deleted, String userId);
+    Optional<Profile> findByUserId(boolean deleted, Long userId);
 
     @Async
     @Query(value = "select * from m_user_profile where user_id =:userId and deleted =:deleted", nativeQuery = true)
-    CompletableFuture<Profile> findByUserIdAsync(boolean deleted, String userId);
+    CompletableFuture<Profile> findByUserIdAsync(boolean deleted, Long userId);
 
     @Query(value = "select * from m_user_profile where id =:profileId and deleted =:deleted", nativeQuery = true)
     Optional<Profile> findByProfileId(boolean deleted, @Param("profileId") UUID profileId);
 
     @Query(value = "select * from m_user_profile where id =:profileId and deleted =:deleted and user_id=:userId", nativeQuery = true)
-    Optional<Profile> findByProfileIdAndUserId(boolean deleted, UUID profileId, String userId);
+    Optional<Profile> findByProfileIdAndUserId(boolean deleted, UUID profileId, Long userId);
 
     @Query(value = "select * from m_user_profile pm where lower(CONCAT(pm.first_name, ' ', pm.surname)) like :userName and deleted =:deleted", nativeQuery = true)
     List<Profile> searchByName(String userName, boolean deleted);
@@ -76,6 +77,13 @@ public interface ProfileRepository extends JpaRepository<Profile, UUID> {
     @Query(value = "select * from m_user_profile where (upper(email) = upper(:value) or " +
             "phone_number LIKE CONCAT('%', :value)) and deleted = :deleted", nativeQuery = true)
     Page<Profile> findAllByEmailOrPhoneNumber(boolean deleted, String value, Pageable pageable);
+
+    @Query("SELECT a FROM Profile a, Users b WHERE a.userId = b.id and b.isSimulated = false and a.deleted =:deleted order by a.createdAt desc ")
+    Page<Profile> getAllByUserId(Pageable pageable,boolean deleted);
+//
+//    @Query(value ="SELECT * FROM profile p INNER JOIN p.user pl where p.userId = pl.id and pl.isSimulated = false and p1.deleted =:deleted order by p.createdAt desc ", nativeQuery = true)
+//    Page<Profile> getAllByUserId(Pageable pageable,boolean deleted);
+
 
 }
 

@@ -75,7 +75,7 @@ class ReferralCodeControllerTest {
         profile.setSurname("surname");
         profile.setFirstName("firstname");
         profile.setDeleted(false);
-        profile.setUserId("124");
+        profile.setUserId(Long.parseLong("124"));
         Optional<Profile> profile1 = null;
         if (!profileRepository.existsByEmail(profile.getEmail())){
             profile = profileRepository.save(profile);

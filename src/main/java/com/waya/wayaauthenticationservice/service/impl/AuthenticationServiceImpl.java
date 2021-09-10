@@ -267,7 +267,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	public void createCorporateUser(CorporateUserPojo mUser, Long userId, String token, String baseUrl) {
 
-		String Id = String.valueOf(userId);
+		 String Id = String.valueOf(userId);
+
 		// Implementation for internal calls begin here
 		CorporateProfileRequest profileRequest = new CorporateProfileRequest();
 		profileRequest.setBusinessType(mUser.getBusinessType());

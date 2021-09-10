@@ -128,7 +128,7 @@ class SearchControllerTest {
         profile.setSurname("appp");
         profile.setState("state");
         profile.setCorporate(false);
-        profile.setUserId(String.valueOf(user.getId()));
+        profile.setUserId(user.getId());
         profile.setDeleted(false);
 
         if (!profileRepository.existsByEmail(profile.getEmail()))
@@ -143,7 +143,7 @@ class SearchControllerTest {
         Profile corporate = new Profile();
         corporate.setCity("city");
         corporate.setReferral("");
-        corporate.setUserId("42114");
+        corporate.setUserId(Long.parseLong("42114"));
         corporate.setCorporate(true);
         corporate.setDeleted(false);
         corporate.setSurname("surname");
