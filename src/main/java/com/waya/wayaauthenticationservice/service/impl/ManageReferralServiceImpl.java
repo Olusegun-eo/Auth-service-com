@@ -1,11 +1,12 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
 import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.ReferralBonus;
-import com.waya.wayaauthenticationservice.entity.ReferralBonusEarning;
 import com.waya.wayaauthenticationservice.entity.ReferralCode;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfilePojo;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.ReferralBonusEarningRepository;
@@ -17,7 +18,6 @@ import com.waya.wayaauthenticationservice.service.ManageReferralService;
 import com.waya.wayaauthenticationservice.util.BearerTokenUtil;
 import com.waya.wayaauthenticationservice.util.CommonUtils;
 import com.waya.wayaauthenticationservice.util.Constant;
-import com.waya.wayaauthenticationservice.util.ReferralBonusStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -42,15 +42,17 @@ public class ManageReferralServiceImpl implements ManageReferralService {
     private final ReferralBonusEarningRepository referralBonusEarningRepository;
     private final ReferralCodeRepository referralCodeRepository;
     private final WalletProxy walletProxy;
+    private final ProfileServiceDAO jdbcprofileService;
 
     @Autowired
-    public ManageReferralServiceImpl(ReferralBonusRepository referralBonusRepository, ReferralCodeServiceImpl referralCodeService, ProfileRepository profileRepository, ReferralBonusEarningRepository referralBonusEarningRepository, ReferralCodeRepository referralCodeRepository, WalletProxy walletProxy) {
+    public ManageReferralServiceImpl(ReferralBonusRepository referralBonusRepository, ReferralCodeServiceImpl referralCodeService, ProfileRepository profileRepository, ReferralBonusEarningRepository referralBonusEarningRepository, ReferralCodeRepository referralCodeRepository, WalletProxy walletProxy, ProfileServiceDAO jdbcprofileService) {
         this.referralBonusRepository = referralBonusRepository;
         this.referralCodeService = referralCodeService;
         this.profileRepository = profileRepository;
         this.referralBonusEarningRepository = referralBonusEarningRepository;
         this.referralCodeRepository = referralCodeRepository;
         this.walletProxy = walletProxy;
+        this.jdbcprofileService = jdbcprofileService;
     }
 
 
@@ -232,24 +234,24 @@ public class ManageReferralServiceImpl implements ManageReferralService {
         String addressE = "";
         Pageable paging = PageRequest.of(page, size);
         List<Profile> profileList = new ArrayList<>();
-        List<Profile> profileList2 = new ArrayList<>();
         List<ReferralPojo> referralPojos = new ArrayList<>();
 
-        Page<Profile> profilePage = profileRepository.findAll(paging, false);
-//        Page<Profile> profilePage = profileRepository.getAllByUserId(paging, false);
-//        profileList2 = profilePage.getContent();
 
-//        log.info("profileList2 :::: " +profileList2);
+        List<UserProfilePojo> user = jdbcprofileService.GetAllUserProfile();
+        System.out.println("user" + user);
+        //Page<Profile> profilePage = profileRepository.findAll(paging, false);
+
         // get all user with referralCode
-        profileList = profilePage.getContent();
+        //profileList = profilePage.getContent();
 
-        for (int i = 0; i < profileList.size(); i++) {
+
+        for (int i = 0; i < user.size(); i++) {
             ReferralPojo referralPojo = new ReferralPojo();
-            Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(profileList.get(i).getUserId().toString());
+            Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(user.get(i).getId().toString());
 
             if (referralCode.isPresent()){
-                if(profileList.get(i).getReferral() !=null){
-                    Profile referU = getReferredDetails(profileList.get(i).getReferral());
+                if(user.get(i).getReferral() !=null){
+                    Profile referU = getReferredDetails(user.get(i).getReferral());
                     if (referU.getDistrict() == null){
                         district = "";
                     }else{
@@ -275,8 +277,8 @@ public class ManageReferralServiceImpl implements ManageReferralService {
                     referralPojo.setReferralLocation("");
                     referralPojo.setReferralPhone("");
                 }
-                referralPojo.setDateJoined(profileList.get(i).getCreatedAt());
-                referralPojo.setReferralUser(profileList.get(i).getSurname() + " " + profileList.get(i).getFirstName());
+                referralPojo.setDateJoined(user.get(i).getCreatedAt());
+                referralPojo.setReferralUser(user.get(i).getLastName() + " " + user.get(i).getFirstName());
                 referralPojo.setReferralCode(referralCode.get().getReferralCode());
 
                 if (referralCode.get().getReferralCode() !=null){
@@ -295,9 +297,9 @@ public class ManageReferralServiceImpl implements ManageReferralService {
         Map<String, Object> response = new HashMap<>();
 
         response.put("users", referralPojos);
-        response.put("currentPage", profilePage.getNumber());
-        response.put("totalItems", profilePage.getTotalElements());
-        response.put("totalPages", profilePage.getTotalPages());
+//        response.put("currentPage", profilePage.getNumber());
+//        response.put("totalItems", profilePage.getTotalElements());
+//        response.put("totalPages", profilePage.getTotalPages());
 
         return response;
     }
