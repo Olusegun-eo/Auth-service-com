@@ -810,6 +810,24 @@ public class UserServiceImpl implements UserService {
 		return userPage;
 	}
 	
+	public ResponseEntity<?> GetAllUserProfile(Sort sort) {
+		List<UserProfilePojo> user = jdbcprofileService.GetAllUserProfile(sort);
+		if (user.isEmpty())
+            return new ResponseEntity<>(new ErrorResponse("UNABLE TO FETCH DATA"), HttpStatus.BAD_REQUEST);
+
+        return new ResponseEntity<>(new SuccessResponse("DATA FETCH", user), HttpStatus.OK);
+		//return user;
+	}
+	
+	public ResponseEntity<?> GetAllUserProfile(Pageable page) {
+		Page<UserProfilePojo> user = jdbcprofileService.GetAllUserProfile(page);
+		if (user.isEmpty())
+            return new ResponseEntity<>(new ErrorResponse("UNABLE TO FETCH DATA"), HttpStatus.BAD_REQUEST);
+
+        return new ResponseEntity<>(new SuccessResponse("DATA FETCH", user), HttpStatus.OK);
+		//return user;
+	}
+	
 	public ResponseEntity<?> getAllUsersRec() {
 		List<UserProfilePojo> user = jdbcprofileService.GetAllUserProfile();
 		if (user.isEmpty())

@@ -1,6 +1,5 @@
 package com.waya.wayaauthenticationservice.service;
 
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -8,6 +7,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,7 +23,6 @@ import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
 import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
-import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfilePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserSetupPojo;
 import com.waya.wayaauthenticationservice.response.ApiResponseBody;
@@ -92,6 +92,10 @@ public interface UserService {
 	Page<Users> getAllUsers(int page, int size, String searchString);
 	
 	ResponseEntity<?> getAllUsersRec();
+	
+	ResponseEntity<?> GetAllUserProfile(Sort sort);
+	
+	ResponseEntity<?> GetAllUserProfile(Pageable page);
 
 	ResponseEntity<?> validateUser();
 

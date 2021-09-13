@@ -5,6 +5,11 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -48,7 +53,7 @@ public class ProfileServiceDAOImpl implements ProfileServiceDAO {
 	
 	public List<UserProfilePojo> GetAllUserProfile() {
 		StringBuilder query = new StringBuilder();
-		List<UserProfilePojo> userList = new ArrayList<>();
+		List<UserProfilePojo> userList = new ArrayList<>();		
 		query.append("SELECT user_id,p.created_at,p.updated_at,address,age,city,date_of_birth,district,");
 		query.append("p.first_name,gender,middle_name,p.surname,organisation_name,referral,profile_image,");
 		query.append("state,qr_code,p.created_by,p.modified_by,is_admin,is_active,email_verified,phone_verified,");
@@ -62,6 +67,57 @@ public class ProfileServiceDAOImpl implements ProfileServiceDAO {
 			UserProfilePojoMapper rowMapper = new UserProfilePojoMapper(userRepository);
 			userList = jdbcTemplate.query(sql, rowMapper);
 			return userList;
+		} catch (Exception ex) {
+			log.error("An error Occured: Cause: {} \r\n Message: {}", ex.getCause(), ex.getMessage());
+			return null;
+		}
+	}
+	
+	public List<UserProfilePojo> GetAllUserProfile(Sort sort) {
+		StringBuilder query = new StringBuilder();
+		List<UserProfilePojo> userList = new ArrayList<>();
+		Order order = sort.toList().get(0);
+		
+		query.append("SELECT user_id,p.created_at,p.updated_at,address,age,city,date_of_birth,district,");
+		query.append("p.first_name,gender,middle_name,p.surname,organisation_name,referral,profile_image,");
+		query.append("state,qr_code,p.created_by,p.modified_by,is_admin,is_active,email_verified,phone_verified,");
+		query.append("account_non_locked,account_non_expired,account_credentials_non_expired,pin_created,");
+		query.append("is_simulated,is_corporate,is_deleted,reference_code,pl.email,pl.phone_number  ");
+		query.append("FROM m_user_profile p JOIN m_users pl ON p.user_id = cast(pl.id AS VARCHAR) ");
+		query.append("AND pl.is_simulated = false AND pl.is_deleted =false AND p.deleted =false  ");
+		//query.append("Order by p.created_at desc");
+		query.append("ORDER BY " + order.getProperty() + " " + order.getDirection().name());
+		String sql = query.toString();
+		try {
+			UserProfilePojoMapper rowMapper = new UserProfilePojoMapper(userRepository);
+			userList = jdbcTemplate.query(sql, rowMapper);
+			return userList;
+		} catch (Exception ex) {
+			log.error("An error Occured: Cause: {} \r\n Message: {}", ex.getCause(), ex.getMessage());
+			return null;
+		}
+	}
+	
+	public Page<UserProfilePojo> GetAllUserProfile(Pageable page) {
+		StringBuilder query = new StringBuilder();
+		List<UserProfilePojo> userList = new ArrayList<>();
+		Order order = !page.getSort().isEmpty() ? page.getSort().toList().get(0) : Order.by("USER_ID");
+		
+		query.append("SELECT user_id,p.created_at,p.updated_at,address,age,city,date_of_birth,district,");
+		query.append("p.first_name,gender,middle_name,p.surname,organisation_name,referral,profile_image,");
+		query.append("state,qr_code,p.created_by,p.modified_by,is_admin,is_active,email_verified,phone_verified,");
+		query.append("account_non_locked,account_non_expired,account_credentials_non_expired,pin_created,");
+		query.append("is_simulated,is_corporate,is_deleted,reference_code,pl.email,pl.phone_number  ");
+		query.append("FROM m_user_profile p JOIN m_users pl ON p.user_id = cast(pl.id AS VARCHAR) ");
+		query.append("AND pl.is_simulated = false AND pl.is_deleted =false AND p.deleted =false  ");
+		//query.append("Order by p.created_at desc");
+		query.append("ORDER BY " + order.getProperty() + " " + order.getDirection().name() + " LIMIT " + page.getPageSize() + " OFFSET " + page.getOffset());
+		String sql = query.toString();
+		try {
+			UserProfilePojoMapper rowMapper = new UserProfilePojoMapper(userRepository);
+			userList = jdbcTemplate.query(sql, rowMapper);
+			//return userList;
+			return new PageImpl<UserProfilePojo>(userList, page, count());
 		} catch (Exception ex) {
 			log.error("An error Occured: Cause: {} \r\n Message: {}", ex.getCause(), ex.getMessage());
 			return null;
@@ -113,6 +169,57 @@ public class ProfileServiceDAOImpl implements ProfileServiceDAO {
 		}
 	}
 	
+	public List<UserProfilePojo> GetAllSimulatedUserProfile(Sort sort) {
+		StringBuilder query = new StringBuilder();
+		List<UserProfilePojo> userList = new ArrayList<>();
+		Order order = sort.toList().get(0);
+		
+		query.append("SELECT user_id,p.created_at,p.updated_at,address,age,city,date_of_birth,district,");
+		query.append("p.first_name,gender,middle_name,p.surname,organisation_name,referral,profile_image,");
+		query.append("state,qr_code,p.created_by,p.modified_by,is_admin,is_active,email_verified,phone_verified,");
+		query.append("account_non_locked,account_non_expired,account_credentials_non_expired,pin_created,");
+		query.append("is_simulated,is_corporate,is_deleted,reference_code,pl.email,pl.phone_number  ");
+		query.append("FROM m_user_profile p JOIN m_users pl ON p.user_id = cast(pl.id AS VARCHAR) ");
+		query.append("AND pl.is_simulated = true AND pl.is_deleted =false AND p.deleted =false  ");
+		//query.append("Order by p.created_at desc");
+		query.append("ORDER BY " + order.getProperty() + " " + order.getDirection().name());
+		String sql = query.toString();
+		try {
+			UserProfilePojoMapper rowMapper = new UserProfilePojoMapper(userRepository);
+			userList = jdbcTemplate.query(sql, rowMapper);
+			return userList;
+		} catch (Exception ex) {
+			log.error("An error Occured: Cause: {} \r\n Message: {}", ex.getCause(), ex.getMessage());
+			return null;
+		}
+	}
+	
+	public Page<UserProfilePojo> GetAllSimulatedUserProfile(Pageable page) {
+		StringBuilder query = new StringBuilder();
+		List<UserProfilePojo> userList = new ArrayList<>();
+		Order order = !page.getSort().isEmpty() ? page.getSort().toList().get(0) : Order.by("USER_ID");
+		
+		query.append("SELECT user_id,p.created_at,p.updated_at,address,age,city,date_of_birth,district,");
+		query.append("p.first_name,gender,middle_name,p.surname,organisation_name,referral,profile_image,");
+		query.append("state,qr_code,p.created_by,p.modified_by,is_admin,is_active,email_verified,phone_verified,");
+		query.append("account_non_locked,account_non_expired,account_credentials_non_expired,pin_created,");
+		query.append("is_simulated,is_corporate,is_deleted,reference_code,pl.email,pl.phone_number  ");
+		query.append("FROM m_user_profile p JOIN m_users pl ON p.user_id = cast(pl.id AS VARCHAR) ");
+		query.append("AND pl.is_simulated = true AND pl.is_deleted =false AND p.deleted =false  ");
+		//query.append("Order by p.created_at desc");
+		query.append("ORDER BY " + order.getProperty() + " " + order.getDirection().name() + " LIMIT " + page.getPageSize() + " OFFSET " + page.getOffset());
+		String sql = query.toString();
+		try {
+			UserProfilePojoMapper rowMapper = new UserProfilePojoMapper(userRepository);
+			userList = jdbcTemplate.query(sql, rowMapper);
+			//return userList;
+			return new PageImpl<UserProfilePojo>(userList, page, count());
+		} catch (Exception ex) {
+			log.error("An error Occured: Cause: {} \r\n Message: {}", ex.getCause(), ex.getMessage());
+			return null;
+		}
+	}
+	
 	public UserProfilePojo GetSimulatedUserProfile(Long user_id) {
 		String userId = user_id.toString();
 		UserProfilePojo user = new UserProfilePojo();
@@ -134,6 +241,24 @@ public class ProfileServiceDAOImpl implements ProfileServiceDAO {
 			log.error(ex.getMessage());
 		}
 		return user;
+	}
+	
+	public int count() {
+		StringBuilder query = new StringBuilder();
+		query.append("SELECT count(*)  ");
+		query.append("FROM m_user_profile p JOIN m_users pl ON p.user_id = cast(pl.id AS VARCHAR) ");
+		query.append("AND pl.is_simulated = false AND pl.is_deleted =false AND p.deleted =false  ");
+		String sql = query.toString();
+		return jdbcTemplate.queryForObject(sql, Integer.class);
+	}
+	
+	public int count2() {
+		StringBuilder query = new StringBuilder();
+		query.append("SELECT count(*)  ");
+		query.append("FROM m_user_profile p JOIN m_users pl ON p.user_id = cast(pl.id AS VARCHAR) ");
+		query.append("AND pl.is_simulated = true AND pl.is_deleted =false AND p.deleted =false  ");
+		String sql = query.toString();
+		return jdbcTemplate.queryForObject(sql, Integer.class);
 	}
 
 }

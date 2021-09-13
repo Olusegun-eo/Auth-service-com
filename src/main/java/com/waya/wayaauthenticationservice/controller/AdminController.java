@@ -1,24 +1,18 @@
 package com.waya.wayaauthenticationservice.controller;
 
-import com.waya.wayaauthenticationservice.assembler.UserAssembler;
-import com.waya.wayaauthenticationservice.entity.Role;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
-import com.waya.wayaauthenticationservice.pojo.userDTO.*;
-import com.waya.wayaauthenticationservice.response.UserProfileResponse;
-import com.waya.wayaauthenticationservice.service.AdminService;
-import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.service.UserService;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpHeaders;
@@ -28,12 +22,37 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-import java.util.List;
+import com.waya.wayaauthenticationservice.assembler.UserAssembler;
+import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
+import com.waya.wayaauthenticationservice.response.UserProfileResponse;
+import com.waya.wayaauthenticationservice.service.AdminService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.service.UserService;
+
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @CrossOrigin
 @RestController
@@ -89,6 +108,42 @@ public class AdminController {
 	@GetMapping("/all/users")
 	public ResponseEntity<?> getAllUsersRec() {
 		return userService.getAllUsersRec();
+	}
+	
+	@ApiOperation(value = "Fetch all Users (Admin Endpoint)", tags = { "ADMIN" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@GetMapping(value = "/all/users/sort-page", params = { "page", "size", "sortBy" })
+	public ResponseEntity<?> findAllBySortAndPage(@RequestParam("page") final int page, @RequestParam("size") final int size,
+			@RequestParam("sortBy") final String sortBy, @RequestParam("sortOrder") final String sortOrder) {
+
+		PageRequest pageable = PageRequest.of(page, size, Direction.fromString(sortOrder), sortBy);
+
+		//Page<UserProfilePojo> result = userRepository.findAll(pageable);
+		return userService.GetAllUserProfile(pageable);
+
+	}
+	
+	@ApiOperation(value = "Fetch all Users (Admin Endpoint)", tags = { "ADMIN" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@GetMapping(value = "/all/users/page", params = { "page", "size" })
+	public ResponseEntity<?> findAllByPage(@RequestParam("page") final int page, @RequestParam("size") final int size) {
+
+		PageRequest pageable = PageRequest.of(page, size);
+
+		//Page<UserProfilePojo> result = userRepository.findAll(pageable);
+		return userService.GetAllUserProfile(pageable);
+	}
+	
+	@ApiOperation(value = "Fetch all Users (Admin Endpoint)", tags = { "ADMIN" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@GetMapping(value = "/all/users/sort", params = { "sortBy" })
+	public ResponseEntity<?> findAllBySort(@RequestParam("sortBy") final String sortBy,
+			@RequestParam("sortOrder") final String sortOrder) {
+
+		Sort sort = Sort.by(Direction.fromString(sortOrder), sortBy);
+
+		return userService.GetAllUserProfile(sort);
+
 	}
 
 	@ApiOperation(value = "Create New Private User (Admin Endpoint)", tags = { "ADMIN" })
