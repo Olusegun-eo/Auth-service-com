@@ -233,25 +233,26 @@ public class ManageReferralServiceImpl implements ManageReferralService {
         String stateE = "";
         String addressE = "";
         Pageable paging = PageRequest.of(page, size);
-        List<Profile> profileList = new ArrayList<>();
+        List<UserProfilePojo> profileList = new ArrayList<>();
         List<ReferralPojo> referralPojos = new ArrayList<>();
 
 
-        List<UserProfilePojo> user = jdbcprofileService.GetAllUserProfile();
+       // List<UserProfilePojo> user = jdbcprofileService.GetAllUserProfile();
+        Page<UserProfilePojo> user = jdbcprofileService.GetAllUserProfile(paging);
         System.out.println("user" + user);
         //Page<Profile> profilePage = profileRepository.findAll(paging, false);
 
         // get all user with referralCode
-        //profileList = profilePage.getContent();
+         profileList = user.getContent();
 
 
-        for (int i = 0; i < user.size(); i++) {
+        for (int i = 0; i < profileList.size(); i++) {
             ReferralPojo referralPojo = new ReferralPojo();
-            Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(user.get(i).getId().toString());
+            Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(profileList.get(i).getId().toString());
 
             if (referralCode.isPresent()){
-                if(user.get(i).getReferral() !=null){
-                    Profile referU = getReferredDetails(user.get(i).getReferral());
+                if(profileList.get(i).getReferral() !=null){
+                    Profile referU = getReferredDetails(profileList.get(i).getReferral());
                     if (referU.getDistrict() == null){
                         district = "";
                     }else{
@@ -277,8 +278,8 @@ public class ManageReferralServiceImpl implements ManageReferralService {
                     referralPojo.setReferralLocation("");
                     referralPojo.setReferralPhone("");
                 }
-                referralPojo.setDateJoined(user.get(i).getCreatedAt());
-                referralPojo.setReferralUser(user.get(i).getLastName() + " " + user.get(i).getFirstName());
+                referralPojo.setDateJoined(profileList.get(i).getCreatedAt());
+                referralPojo.setReferralUser(profileList.get(i).getLastName() + " " + profileList.get(i).getFirstName());
                 referralPojo.setReferralCode(referralCode.get().getReferralCode());
 
                 if (referralCode.get().getReferralCode() !=null){
@@ -297,9 +298,9 @@ public class ManageReferralServiceImpl implements ManageReferralService {
         Map<String, Object> response = new HashMap<>();
 
         response.put("users", referralPojos);
-//        response.put("currentPage", profilePage.getNumber());
-//        response.put("totalItems", profilePage.getTotalElements());
-//        response.put("totalPages", profilePage.getTotalPages());
+        response.put("currentPage", user.getNumber());
+        response.put("totalItems", user.getTotalElements());
+        response.put("totalPages", user.getTotalPages());
 
         return response;
     }
