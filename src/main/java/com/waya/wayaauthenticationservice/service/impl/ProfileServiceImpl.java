@@ -137,6 +137,7 @@ public class ProfileServiceImpl implements ProfileService {
      */
     @Override
     public ApiResponseBody<String> createProfile(PersonalProfileRequest request, String baseUrl) {
+
         try {
             Users user = this.userRepository.findById(false, Long.valueOf(request.getUserId())).orElse(null);
             if (user == null)
@@ -157,6 +158,7 @@ public class ProfileServiceImpl implements ProfileService {
             ApiResponseBody<String> validationCheck = validationCheckOnProfile(profile, referralCode);
             if (validationCheck.getStatus()) {
                 Profile newProfile = modelMapper.map(request, Profile.class);
+
                 // check if this referral code is already mapped to a user
 //                if (request.getReferralCode() == null){
 //                    newProfile.setReferral(null);
@@ -168,7 +170,6 @@ public class ProfileServiceImpl implements ProfileService {
                 newProfile.setDateOfBirth(request.getDateOfBirth().toString());
                 // save new personal profile
                 Profile savedProfile = profileRepository.save(newProfile);
-                log.info("saving new personal profile ::: {}", newProfile);
                 // save referral code
                 saveReferralCode(savedProfile, request.getUserId());
 
