@@ -8,12 +8,15 @@ import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserIDPojo;
 import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
+import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.repository.*;
 import com.waya.wayaauthenticationservice.response.*;
 import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.util.BearerTokenUtil;
 import com.waya.wayaauthenticationservice.util.CommonUtils;
 import com.waya.wayaauthenticationservice.util.Constant;
+import com.waya.wayaauthenticationservice.util.EventCharges;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jmimemagic.Magic;
 import net.sf.jmimemagic.MagicException;
@@ -24,9 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +35,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -64,6 +63,8 @@ public class ProfileServiceImpl implements ProfileService {
     private final RestTemplate restClient;
     @Value("${app.config.wayagram-profile.base-url}")
     private String wayagramUrl;
+    private final WalletProxy walletProxy;
+    private final ReferralBonusRepository referralBonusRepository;
 
     @Autowired
     public ProfileServiceImpl(ModelMapper modelMapper, ProfileRepository profileRepository,
@@ -72,7 +73,7 @@ public class ProfileServiceImpl implements ProfileService {
                               @Qualifier("restClient") RestTemplate restClient,
                               OtherDetailsRepository otherDetailsRepository,
                               SMSAlertConfigRepository smsAlertConfigRepository, MessagingService messagingService,
-                              ReferralCodeRepository referralCodeRepository) {
+                              ReferralCodeRepository referralCodeRepository, WalletProxy walletProxy, ReferralBonusRepository referralBonusRepository) {
         this.modelMapper = modelMapper;
         this.profileRepository = profileRepository;
         this.otpTokenService = otpTokenService;
@@ -83,6 +84,8 @@ public class ProfileServiceImpl implements ProfileService {
         this.referralCodeRepository = referralCodeRepository;
         this.userRepository = userRepository;
         this.restClient = restClient;
+        this.walletProxy = walletProxy;
+        this.referralBonusRepository = referralBonusRepository;
     }
 
     private static SearchProfileResponse apply(Profile profilePersonal) {
@@ -188,6 +191,12 @@ public class ProfileServiceImpl implements ProfileService {
                     }
                     return res;
                 });
+
+                if (request.getReferralCode() !=null){
+                    CompletableFuture.runAsync(
+                            () -> sendSignUpBonusToUser(savedProfile.getUserId()));
+                }
+
                 return new ApiResponseBody<>(null, CREATE_PROFILE_SUCCESS_MSG, true);
             } else {
                 // return the error
@@ -257,6 +266,10 @@ public class ProfileServiceImpl implements ProfileService {
                     }
                     return res;
                 });
+
+                if (profileRequest.getReferralCode() !=null){
+                    CompletableFuture.runAsync(() -> sendSignUpBonusToUser(savedProfile.getUserId()));
+                }
 
                 return new ApiResponseBody<>(null, CREATE_PROFILE_SUCCESS_MSG, true);
             } else {
@@ -925,6 +938,44 @@ public class ProfileServiceImpl implements ProfileService {
             return setProfileResponse(referral.getProfile());
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
+        }
+
+    }
+
+    public List<WalletTransactionPojo> sendSignUpBonusToUser(String userId){
+        BonusTransferPojo transfer = new BonusTransferPojo();
+        String token = BearerTokenUtil.getBearerTokenHeader();
+
+        // get users wallet
+        ResponseEntity<ApiResponseBody<NewWalletResponse>> responseEntity1 = walletProxy.getDefaultWallet(userId, token);
+        ApiResponseBody<NewWalletResponse> infoResponse2 = (ApiResponseBody<NewWalletResponse>) responseEntity1.getBody();
+        NewWalletResponse mainWalletResponse2 = infoResponse2.getData();
+
+        // get the referral Amount
+
+        ReferralBonus referralBonus = referralBonusRepository.findByActive(true);
+
+        // build the request body
+        transfer.setAmount(referralBonus.getAmount());
+        transfer.setCustomerAccountNumber(mainWalletResponse2.getAccountNo());
+        transfer.setEventId(EventCharges.COMPAYM.name());
+        transfer.setPaymentReference(CommonUtils.generatePaymentTransactionId());
+        transfer.setTranCrncy("NGN");
+        transfer.setTranNarration("REFERRAL-BONUS-PAYMENT");
+
+
+        try{
+            // make a call to credit users wallet
+            ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> responseEntity = walletProxy.sendSignUpBonusToWallet(transfer,token);
+            ApiResponseBody<List<WalletTransactionPojo>> infoResponse = (ApiResponseBody<List<WalletTransactionPojo>>) responseEntity.getBody();
+
+            List<WalletTransactionPojo> mainWalletResponse = infoResponse.getData();
+            log.info("mainWalletResponse :: {} " +mainWalletResponse);
+            return mainWalletResponse;
+
+        } catch (Exception e) {
+            System.out.println("Error is here " + e.getMessage());
+            throw new CustomException(e.getMessage(), HttpStatus.EXPECTATION_FAILED);
         }
 
     }
