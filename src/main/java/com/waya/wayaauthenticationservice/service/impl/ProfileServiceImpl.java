@@ -158,19 +158,19 @@ public class ProfileServiceImpl implements ProfileService {
             if (validationCheck.getStatus()) {
                 Profile newProfile = modelMapper.map(request, Profile.class);
                 // check if this referral code is already mapped to a user
-                if (request.getReferralCode() == null){
-                    newProfile.setReferral(null);
-                }else{
-                    newProfile.setReferral(request.getReferralCode());
-                }
+//                if (request.getReferralCode() == null){
+//                    newProfile.setReferral(null);
+//                }else{
 
+//                }
+                newProfile.setReferral(request.getReferralCode());
                 newProfile.setCorporate(false);
                 newProfile.setDateOfBirth(request.getDateOfBirth().toString());
                 // save new personal profile
                 Profile savedProfile = profileRepository.save(newProfile);
                 log.info("saving new personal profile ::: {}", newProfile);
                 // save referral code
-                saveReferralCode(savedProfile, request.getUserId().toString());
+                saveReferralCode(savedProfile, request.getUserId());
 
                 String fullName = String.format("%s %s", savedProfile.getFirstName(), savedProfile.getSurname());
 
@@ -220,12 +220,12 @@ public class ProfileServiceImpl implements ProfileService {
             if (profileWithUserId.isPresent())
                 throw new CustomException("Profile with Provided User ID already Exists", HttpStatus.BAD_REQUEST);
 
-            if (profileRequest.getReferralCode() != null && !profileRequest.getReferralCode().isBlank()) {
-                ReferralCode referralCode1 = referralCodeRepository
-                        .getReferralCodeByCode(profileRequest.getReferralCode()).orElse(null);
-                if (referralCode1 == null)
-                    profileRequest.setReferralCode(null);
-            }
+//            if (profileRequest.getReferralCode() != null && !profileRequest.getReferralCode().isBlank()) {
+//                ReferralCode referralCode1 = referralCodeRepository
+//                        .getReferralCodeByCode(profileRequest.getReferralCode()).orElse(null);
+//                if (referralCode1 == null)
+//                    profileRequest.setReferralCode(null);
+//            }
             // check if the user exist in the profile table
             Optional<Profile> profile = profileRequest.getEmail() == null ? Optional.empty() :
                     profileRepository.findByEmail(false, profileRequest.getEmail());

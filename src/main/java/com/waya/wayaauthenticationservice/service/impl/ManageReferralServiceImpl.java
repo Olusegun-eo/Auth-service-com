@@ -239,20 +239,23 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
        // List<UserProfilePojo> user = jdbcprofileService.GetAllUserProfile();
         Page<UserProfilePojo> user = jdbcprofileService.GetAllUserProfile(paging);
-        System.out.println("user" + user);
+
         //Page<Profile> profilePage = profileRepository.findAll(paging, false);
 
         // get all user with referralCode
          profileList = user.getContent();
 
-
+        System.out.println("profileList" + profileList);
         for (int i = 0; i < profileList.size(); i++) {
+            System.out.println(profileList.get(i).getReferral() + " == referral Code from another user == " + profileList.get(i));
             ReferralPojo referralPojo = new ReferralPojo();
             Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(profileList.get(i).getId().toString());
-
+            System.out.println(profileList.get(i).getId() + " == referralCode == " + referralCode.get());
             if (referralCode.isPresent()){
                 if(profileList.get(i).getReferral() !=null){
+                    log.info("profileList.get(i).getReferenceCode() " + profileList.get(i).getReferral());
                     Profile referU = getReferredDetails(profileList.get(i).getReferral());
+                    log.info("referU :::::::  " + referU);
                     if (referU.getDistrict() == null){
                         district = "";
                     }else{
@@ -312,10 +315,14 @@ public class ManageReferralServiceImpl implements ManageReferralService {
     }
 
     private Profile getReferredDetails(String referralCode){
+
         Optional<Profile> profile2 = null;
         Optional<ReferralCode> referralCode2 = referralCodeRepository.getReferralCodeByCode(referralCode);
         if (referralCode2.isPresent()){
+            log.info("HERE" +referralCode2.get());
             profile2 = profileRepository.findByUserId(false,referralCode2.get().getUserId());
+        }else{
+            log.info("HERE 000 null" +referralCode2.get() );
         }
 
         return profile2.get();
