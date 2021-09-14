@@ -4,10 +4,7 @@ import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.ReferralBonus;
 import com.waya.wayaauthenticationservice.entity.ReferralBonusEarning;
 import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.pojo.others.AssignReferralCodePojo;
-import com.waya.wayaauthenticationservice.pojo.others.ReferralBonusRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UserReferralBonusPojo;
-import com.waya.wayaauthenticationservice.pojo.others.UserTransferToDefaultWallet;
+import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.response.NewWalletResponse;
 import com.waya.wayaauthenticationservice.response.ReferralBonusResponse;
@@ -28,6 +25,7 @@ import springfox.documentation.annotations.ApiIgnore;
 
 import javax.validation.Valid;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
 
 import static com.waya.wayaauthenticationservice.util.Constant.*;
@@ -199,6 +197,25 @@ public class ReferralAdminController {
         ApiResponseBody<NewWalletResponse> response = new ApiResponseBody<>(referralBonus, "Referral Bonus sent successfully", true);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+
+
+    @ApiOperation(value = "Auto send referral bonus to users.",notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
+    @ApiResponses(value = {
+            @io.swagger.annotations.ApiResponse(code = 200, message = "Successful"),
+            @io.swagger.annotations.ApiResponse(code = 400, message = "Bad Request"),
+            @io.swagger.annotations.ApiResponse(code = 401, message = "Unauthorized")
+    })
+    @PostMapping("/users/auto-send-referral-bonus/{userId}")
+    ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> sendSignUpBonusToUser(@PathVariable String userId) throws CustomException {
+        List<WalletTransactionPojo> referralBonus = profileService.sendSignUpBonusToUser(userId);
+        ApiResponseBody<List<WalletTransactionPojo>> response = new ApiResponseBody<>(referralBonus, "Referral Bonus sent successfully", true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+
+
 
 
 

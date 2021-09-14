@@ -3,6 +3,7 @@ package com.waya.wayaauthenticationservice.proxy;
 import java.util.List;
 
 import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.response.NewWalletResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,5 +32,13 @@ public interface WalletProxy {
 
 	@PostMapping("/admin/sendmoney")
 	ResponseEntity<WalletAccountInfo> sendMoneyToWallet(UserTransferToDefaultWallet transfer, @RequestHeader("Authorization") String token);
+
+
+	@PostMapping("/event/charge/payment")
+	ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> sendSignUpBonusToWallet(BonusTransferPojo transfer, @RequestHeader("Authorization") String token);
+
+	@GetMapping("/default/{userId}") //  ===> returns single
+	ResponseEntity<ApiResponseBody<NewWalletResponse>> getDefaultWallet(@PathVariable("userId") String userId, @RequestHeader("Authorization") String token);
+
 
 }

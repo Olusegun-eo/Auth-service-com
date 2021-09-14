@@ -186,6 +186,7 @@ public class ManageReferralServiceImpl implements ManageReferralService {
         String token = BearerTokenUtil.getBearerTokenHeader();
 
         try{
+            transfer.setPaymentReference(CommonUtils.generatePaymentTransactionId());
             // make a call to credit users wallet
             ResponseEntity<WalletAccountInfo> responseEntity = walletProxy.sendMoneyToWallet(transfer,token);
             WalletAccountInfo infoResponse = (WalletAccountInfo) responseEntity.getBody();

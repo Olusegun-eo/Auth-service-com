@@ -124,4 +124,7 @@ public interface ProfileService {
 	 * @return
 	 */
 	ApiResponseBody<String> uploadOtherImage(Long userId, MultipartFile file, String type);
+
+
+	List<WalletTransactionPojo> sendSignUpBonusToUser(String userId);
 }
