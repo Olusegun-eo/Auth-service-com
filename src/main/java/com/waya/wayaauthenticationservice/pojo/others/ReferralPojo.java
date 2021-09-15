@@ -20,5 +20,6 @@ public class ReferralPojo {
     private List<Profile> usersReferred;
     private String referralCode;
     private BigDecimal earnings;
+    private String userId;
 
 }

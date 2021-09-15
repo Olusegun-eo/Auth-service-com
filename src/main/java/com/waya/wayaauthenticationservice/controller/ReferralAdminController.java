@@ -5,6 +5,7 @@ import com.waya.wayaauthenticationservice.entity.ReferralBonus;
 import com.waya.wayaauthenticationservice.entity.ReferralBonusEarning;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
 import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.response.NewWalletResponse;
 import com.waya.wayaauthenticationservice.response.ReferralBonusResponse;
@@ -14,15 +15,20 @@ import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.util.Constant;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mobile.device.Device;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import springfox.documentation.annotations.ApiIgnore;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -191,10 +197,26 @@ public class ReferralAdminController {
             @io.swagger.annotations.ApiResponse(code = 401, message = "Unauthorized")
     })
     @PostMapping("/users/send-referral-bonus")
-    ResponseEntity<ApiResponseBody<NewWalletResponse>> sendReferralBonusToUser(@Valid @RequestBody
+    ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> sendReferralBonusToUser(@Valid @RequestBody
                                                                                           UserTransferToDefaultWallet transfer) throws CustomException {
-        NewWalletResponse referralBonus = referralService.sendReferralBonusToUser(transfer);
-        ApiResponseBody<NewWalletResponse> response = new ApiResponseBody<>(referralBonus, "Referral Bonus sent successfully", true);
+        List<WalletTransactionPojo> referralBonus = referralService.sendReferralBonusToUser(transfer);
+        ApiResponseBody<List<WalletTransactionPojo>> response = new ApiResponseBody<>(referralBonus, "Referral Bonus sent successfully", true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+
+    @ApiOperation(value = "Send referral bonus to multiple users.",notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
+    @ApiResponses(value = {
+            @io.swagger.annotations.ApiResponse(code = 200, message = "Successful"),
+            @io.swagger.annotations.ApiResponse(code = 400, message = "Bad Request"),
+            @io.swagger.annotations.ApiResponse(code = 401, message = "Unauthorized")
+    })
+    @PostMapping("/users/send-referral-bonus-to-multiple-users")
+    ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> sendReferralBonusToMultipleUsers(@Valid @RequestBody
+                                                                                                List<UserTransferToDefaultWallet> transfer) throws CustomException {
+        List<WalletTransactionPojo> referralBonus = referralService.sendReferralBonusToMultipleUsers(transfer);
+        ApiResponseBody<List<WalletTransactionPojo>> response = new ApiResponseBody<>(referralBonus, "Referral Bonus sent successfully", true);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -211,6 +233,13 @@ public class ReferralAdminController {
         List<WalletTransactionPojo> referralBonus = profileService.sendSignUpBonusToUser(userId);
         ApiResponseBody<List<WalletTransactionPojo>> response = new ApiResponseBody<>(referralBonus, "Referral Bonus sent successfully", true);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Bulk Referral Bonus Payment", tags = { "REFERRAL ADMIN RESOURCE" })
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+    @PostMapping(path = "/users/bulk-referral-bonus-excel", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> sendBulkReferralBonusTo(@RequestPart("file") MultipartFile file, HttpServletRequest request, Device device) {
+        return referralService.sendBulkReferralBonusTo(file, request, device);
     }
 
 
