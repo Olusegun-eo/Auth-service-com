@@ -31,7 +31,7 @@ public interface WalletProxy {
 	ApiResponseBody<WalletAccount> modifyUserWallet(@RequestBody WalletAccessPojo pojo, @RequestHeader("Authorization") String token);
 
 	@PostMapping("/admin/sendmoney")
-	ResponseEntity<WalletAccountInfo> sendMoneyToWallet(UserTransferToDefaultWallet transfer, @RequestHeader("Authorization") String token);
+	ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> sendMoneyToWallet(UserTransferToDefaultWallet transfer, @RequestHeader("Authorization") String token);
 
 
 	@PostMapping("/event/charge/payment")
