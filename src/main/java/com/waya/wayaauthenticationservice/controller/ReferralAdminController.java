@@ -174,6 +174,20 @@ public class ReferralAdminController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @ApiOperation(value = " Get All users without referralCode.",notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
+    @ApiResponses(value = {
+            @io.swagger.annotations.ApiResponse(code = 200, message = "Successful"),
+            @io.swagger.annotations.ApiResponse(code = 400, message = "Bad Request"),
+            @io.swagger.annotations.ApiResponse(code = 401, message = "Unauthorized")
+    })
+    @GetMapping("/users-with-no-referral-code/list")
+    ResponseEntity<ApiResponseBody<List<Profile>>> getUserWithoutReferralCode() throws CustomException {
+        List<Profile> map = referralService.getUserWithoutReferralCode();
+        ApiResponseBody<List<Profile>> response = new ApiResponseBody<>(map, "Data retrieved successfully", true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
     @ApiOperation(value = "Assign referralcode to users.",notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 200, message = "Successful"),
@@ -198,7 +212,7 @@ public class ReferralAdminController {
     })
     @PostMapping("/users/send-referral-bonus")
     ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> sendReferralBonusToUser(@Valid @RequestBody
-                                                                                          UserTransferToDefaultWallet transfer) throws CustomException {
+                                                                                                 BonusTransferPojo transfer) throws CustomException {
         List<WalletTransactionPojo> referralBonus = referralService.sendReferralBonusToUser(transfer);
         ApiResponseBody<List<WalletTransactionPojo>> response = new ApiResponseBody<>(referralBonus, "Referral Bonus sent successfully", true);
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -214,7 +228,7 @@ public class ReferralAdminController {
     })
     @PostMapping("/users/send-referral-bonus-to-multiple-users")
     ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> sendReferralBonusToMultipleUsers(@Valid @RequestBody
-                                                                                                List<UserTransferToDefaultWallet> transfer) throws CustomException {
+                                                                                                List<BonusTransferPojo> transfer) throws CustomException {
         List<WalletTransactionPojo> referralBonus = referralService.sendReferralBonusToMultipleUsers(transfer);
         ApiResponseBody<List<WalletTransactionPojo>> response = new ApiResponseBody<>(referralBonus, "Referral Bonus sent successfully", true);
         return new ResponseEntity<>(response, HttpStatus.OK);

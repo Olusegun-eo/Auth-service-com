@@ -26,10 +26,11 @@ public interface ManageReferralService {
     Map<String, Object> getUsersWithTheirReferralsByPhoneNumber(String value, int page, int size);
     Map<String, Object> getUsersWithTheirReferrals(int page, int size);
     Map<String, Object> getUserWithoutReferralCode(int page, int size);
+    List<Profile> getUserWithoutReferralCode();
     Profile assignReferralCode(AssignReferralCodePojo assignReferralCodePojo);
 
-    List<WalletTransactionPojo> sendReferralBonusToUser(UserTransferToDefaultWallet transfer);
-    List<WalletTransactionPojo> sendReferralBonusToMultipleUsers(List<UserTransferToDefaultWallet> transfer);
+    List<WalletTransactionPojo> sendReferralBonusToUser(BonusTransferPojo transfer);
+    List<WalletTransactionPojo> sendReferralBonusToMultipleUsers(List<BonusTransferPojo> transfer);
     ResponseEntity<?> sendBulkReferralBonusTo(MultipartFile file, HttpServletRequest request, Device device);
     Map<String, Object> getUserThatHaveBeenReferred(String referralCode, int page, int size);
 }

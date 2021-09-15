@@ -14,9 +14,9 @@ public class BonusTransferPojo {
     @NotNull(message = "amount is required")
     @DecimalMin(value = "0.01", message = "minimum amount required is 0.01")
     private BigDecimal amount;
-    @NotBlank(message = "please enter your organisation City")
+    @NotBlank(message = "please enter your customerAccountNumber")
     private String customerAccountNumber;
-    @NotBlank(message = "please enter your organisation City")
+    @NotBlank(message = "please enter your eventId")
     private String eventId;
     private String paymentReference;
     private String tranCrncy;
