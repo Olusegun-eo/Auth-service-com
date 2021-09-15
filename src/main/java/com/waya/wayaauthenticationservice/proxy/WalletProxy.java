@@ -30,8 +30,8 @@ public interface WalletProxy {
 	@HandleFeignError(ApiClientExceptionHandler.class)
 	ApiResponseBody<WalletAccount> modifyUserWallet(@RequestBody WalletAccessPojo pojo, @RequestHeader("Authorization") String token);
 
-	@PostMapping("/admin/sendmoney")
-	ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> sendMoneyToWallet(UserTransferToDefaultWallet transfer, @RequestHeader("Authorization") String token);
+	@PostMapping("/admin/commission/payment")
+	ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> sendMoneyToWallet(BonusTransferPojo transfer, @RequestHeader("Authorization") String token);
 
 
 	@PostMapping("/event/charge/payment")

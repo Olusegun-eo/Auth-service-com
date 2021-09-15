@@ -180,6 +180,19 @@ public class ManageReferralServiceImpl implements ManageReferralService {
         return response;
     }
 
+    @Override
+    public List<Profile> getUserWithoutReferralCode() {
+        List<Profile> profileList2 = new ArrayList<>();
+        List<Profile> profileList = profileRepository.findAll(false);
+        for (int i = 0; i < profileList.size(); i++) {
+            if (profileList.get(i).getReferral() == null){
+                Profile profile = profileList.get(i);
+                profileList2.add(profile);
+            }
+        }
+        return profileList2;
+    }
+
 
     public Profile assignReferralCode(AssignReferralCodePojo assignReferralCodePojo){
         try{
@@ -197,7 +210,7 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
     }
 
-    public List<WalletTransactionPojo> sendReferralBonusToUser(UserTransferToDefaultWallet transfer){
+    public List<WalletTransactionPojo> sendReferralBonusToUser(BonusTransferPojo transfer){
         String token = BearerTokenUtil.getBearerTokenHeader();
 
         try{
@@ -218,7 +231,7 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
     }
 
-    public List<WalletTransactionPojo> sendReferralBonusToMultipleUsers(List<UserTransferToDefaultWallet> transfer){
+    public List<WalletTransactionPojo> sendReferralBonusToMultipleUsers(List<BonusTransferPojo> transfer){
         String token = BearerTokenUtil.getBearerTokenHeader();
         List<WalletTransactionPojo> walletTransactionPojoList = new ArrayList<>();
 
@@ -227,10 +240,10 @@ public class ManageReferralServiceImpl implements ManageReferralService {
                     transfer.get(i).setPaymentReference(CommonUtils.generatePaymentTransactionId());
                     // make a call to credit users wallet
                     ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> responseEntity = walletProxy.sendMoneyToWallet(transfer.get(i), token);
-                    ApiResponseBody<List<WalletTransactionPojo>> infoResponse = (ApiResponseBody<List<WalletTransactionPojo>>) responseEntity.getBody();
-                    log.info("mainWalletResponse :: {} " + infoResponse.getData());
+                    ApiResponseBody<List<WalletTransactionPojo>> infoResponse2 = (ApiResponseBody<List<WalletTransactionPojo>>) responseEntity.getBody();
+                    log.info("mainWalletResponse :: {} " + infoResponse2.getData());
 
-                    List<WalletTransactionPojo> mainWalletResponseList = infoResponse.getData();
+                    List<WalletTransactionPojo> mainWalletResponseList = infoResponse2.getData();
                     log.info("responseList " + mainWalletResponseList);
 
                     walletTransactionPojoList.addAll(mainWalletResponseList);
@@ -263,13 +276,13 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
     ResponseEntity<?> payBulkReferrals(@Valid BulkBonusTransferDTO bonusList, HttpServletRequest request, Device device){
 
-        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = (UsernamePasswordAuthenticationToken) request.getUserPrincipal();
-        Users user = null;
-        Object obj = usernamePasswordAuthenticationToken.getPrincipal();
-        if(obj!= null && obj instanceof UserPrincipal){
-            UserPrincipal principal =  (UserPrincipal) obj;
-            user = principal.getUser().orElse(null);
-        }
+//        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = (UsernamePasswordAuthenticationToken) request.getUserPrincipal();
+//        Users user = null;
+//        Object obj = usernamePasswordAuthenticationToken.getPrincipal();
+//        if(obj!= null && obj instanceof UserPrincipal){
+//            UserPrincipal principal =  (UserPrincipal) obj;
+//            user = principal.getUser().orElse(null);
+//        }
         List<WalletTransactionPojo> walletTransactionPojoList = new ArrayList<>();
         String token = BearerTokenUtil.getBearerTokenHeader();
         List<String> messages = new ArrayList<>();
@@ -277,16 +290,13 @@ public class ManageReferralServiceImpl implements ManageReferralService {
             return new ResponseEntity<>(new ErrorResponse("User List cannot be null or Empty"), BAD_REQUEST);
 
             for (BonusTransferExcelPojo mTransfer : bonusList.getBonusList()) {
-                UserTransferToDefaultWallet transfer = new UserTransferToDefaultWallet();
+                BonusTransferPojo transfer = new BonusTransferPojo();
                 transfer.setPaymentReference(CommonUtils.generatePaymentTransactionId());
-                transfer.setDebitAccountNumber(mTransfer.getDebitAccountNumber());
-                transfer.setBenefAccountNumber(mTransfer.getBenefAccountNumber());
+                transfer.setCustomerAccountNumber(mTransfer.getCustomerAccountNumber());
                 transfer.setTranNarration(mTransfer.getTranNarration());
                 transfer.setTranCrncy(mTransfer.getTranCrncy());
-                transfer.setTranType("CARD");
                 transfer.setAmount(BigDecimal.valueOf(mTransfer.getAmount()));
               //  String username = request.getAttribute("username").toString();
-                transfer.setUserId(user.getId());
                 // make a call to credit users wallet
                 ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> responseEntity = walletProxy.sendMoneyToWallet(transfer, token);
                 ApiResponseBody<List<WalletTransactionPojo>> infoResponse = (ApiResponseBody<List<WalletTransactionPojo>>) responseEntity.getBody();
@@ -296,8 +306,6 @@ public class ManageReferralServiceImpl implements ManageReferralService {
                 log.info("responseList " + mainWalletResponseList);
                 walletTransactionPojoList.addAll(mainWalletResponseList);
             }
-
-               // walletTransactionPojoList.addAll(mainWalletResponseList);
 
         return new ResponseEntity<>(new SuccessResponse(walletTransactionPojoList), HttpStatus.OK);
     }
