@@ -2,22 +2,22 @@ package com.waya.wayaauthenticationservice.service.impl;
 
 import com.waya.wayaauthenticationservice.entity.OTPBase;
 import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.SMSAlertConfig;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.mail.context.AdminCheckContext;
+import com.waya.wayaauthenticationservice.pojo.others.SMSRequest;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
+import com.waya.wayaauthenticationservice.response.SMSResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
-import com.waya.wayaauthenticationservice.service.AdminService;
-import com.waya.wayaauthenticationservice.service.AuthenticationService;
-import com.waya.wayaauthenticationservice.service.OTPTokenService;
-import com.waya.wayaauthenticationservice.service.UserService;
+import com.waya.wayaauthenticationservice.service.*;
 import com.waya.wayaauthenticationservice.util.ExcelHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,6 +71,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Autowired
     AuthenticatedUserFacade authenticatedUserFacade;
+
+    @Autowired
+    ProfileService profileService;
 
     @Override
     public Page<Users> getCorporateUsers(boolean isCorporate, int page, int size) {
@@ -267,6 +270,12 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public ResponseEntity<?> toggleLock(Long id) {
         return this.userService.toggleLock(id);
+    }
+
+    @Override
+    public SMSResponse adminToggleSMSAlert(SMSRequest smsRequest) {
+        SMSResponse smsResponse = profileService.toggleSMSAlert(smsRequest);
+        return smsResponse;
     }
 
 }

@@ -276,13 +276,13 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
     ResponseEntity<?> payBulkReferrals(@Valid BulkBonusTransferDTO bonusList, HttpServletRequest request, Device device){
 
-//        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = (UsernamePasswordAuthenticationToken) request.getUserPrincipal();
-//        Users user = null;
-//        Object obj = usernamePasswordAuthenticationToken.getPrincipal();
-//        if(obj!= null && obj instanceof UserPrincipal){
-//            UserPrincipal principal =  (UserPrincipal) obj;
-//            user = principal.getUser().orElse(null);
-//        }
+        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = (UsernamePasswordAuthenticationToken) request.getUserPrincipal();
+        Users user = null;
+        Object obj = usernamePasswordAuthenticationToken.getPrincipal();
+        if(obj!= null && obj instanceof UserPrincipal){
+            UserPrincipal principal =  (UserPrincipal) obj;
+            user = principal.getUser().orElse(null);
+        }
         List<WalletTransactionPojo> walletTransactionPojoList = new ArrayList<>();
         String token = BearerTokenUtil.getBearerTokenHeader();
         List<String> messages = new ArrayList<>();
@@ -309,10 +309,6 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
         return new ResponseEntity<>(new SuccessResponse(walletTransactionPojoList), HttpStatus.OK);
     }
-
-
-
-
 
 
     public Map<String, Object> getUsersWithTheirReferralsByPhoneNumber(String value, int page, int size){
