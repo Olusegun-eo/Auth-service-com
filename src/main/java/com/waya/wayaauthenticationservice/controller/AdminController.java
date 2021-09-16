@@ -5,6 +5,9 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
+import com.waya.wayaauthenticationservice.pojo.others.SMSRequest;
+import com.waya.wayaauthenticationservice.response.ApiResponseBody;
+import com.waya.wayaauthenticationservice.response.SMSResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.core.io.InputStreamResource;
@@ -335,5 +338,19 @@ public class AdminController {
 
 		return adminService.manageUserRole(userId, add, roleName);
 	}
+
+
+	@ApiOperation(value = "SMS Alert Subscription on behalf of the user", notes = "", tags = { "ADMIN" })
+	@PostMapping("/users/subscribe-sms-alert")
+	@PreAuthorize(value = "@userSecurity.useHierarchyForRoles(#roleName, authentication)")
+	public ResponseEntity<ApiResponseBody<SMSResponse>> adminToggleSMSAlert(@RequestBody SMSRequest smsRequest) {
+		SMSResponse SMSResponse = adminService.adminToggleSMSAlert(smsRequest);
+		ApiResponseBody<SMSResponse> response = new ApiResponseBody<>(SMSResponse, "Done successfully",
+				true);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+
+
 
 }
