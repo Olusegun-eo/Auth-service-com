@@ -61,6 +61,8 @@ public class Profile extends AuditModel implements Serializable {
 
     private boolean corporate;
 
+    private String deviceToken;
+
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "otherDetails_id", referencedColumnName = "id")
     private OtherDetails otherDetails;

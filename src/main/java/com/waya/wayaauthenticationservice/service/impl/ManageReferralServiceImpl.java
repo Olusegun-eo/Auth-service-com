@@ -1,22 +1,13 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
 import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
-import com.waya.wayaauthenticationservice.entity.Profile;
-import com.waya.wayaauthenticationservice.entity.ReferralBonus;
-import com.waya.wayaauthenticationservice.entity.ReferralCode;
-import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.entity.*;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.pojo.others.*;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfilePojo;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
-import com.waya.wayaauthenticationservice.repository.ProfileRepository;
-import com.waya.wayaauthenticationservice.repository.ReferralBonusEarningRepository;
-import com.waya.wayaauthenticationservice.repository.ReferralBonusRepository;
-import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
+import com.waya.wayaauthenticationservice.repository.*;
 import com.waya.wayaauthenticationservice.response.*;
-import com.waya.wayaauthenticationservice.security.UserPrincipal;
 import com.waya.wayaauthenticationservice.service.ManageReferralService;
 import com.waya.wayaauthenticationservice.util.BearerTokenUtil;
 import com.waya.wayaauthenticationservice.util.CommonUtils;
@@ -30,11 +21,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -58,9 +44,10 @@ public class ManageReferralServiceImpl implements ManageReferralService {
     private final ReferralCodeRepository referralCodeRepository;
     private final WalletProxy walletProxy;
     private final ProfileServiceDAO jdbcprofileService;
+    private final SMSAlertConfigRepository smsAlertConfigRepository;
 
     @Autowired
-    public ManageReferralServiceImpl(ReferralBonusRepository referralBonusRepository, ReferralCodeServiceImpl referralCodeService, ProfileRepository profileRepository, ReferralBonusEarningRepository referralBonusEarningRepository, ReferralCodeRepository referralCodeRepository, WalletProxy walletProxy, ProfileServiceDAO jdbcprofileService) {
+    public ManageReferralServiceImpl(ReferralBonusRepository referralBonusRepository, ReferralCodeServiceImpl referralCodeService, ProfileRepository profileRepository, ReferralBonusEarningRepository referralBonusEarningRepository, ReferralCodeRepository referralCodeRepository, WalletProxy walletProxy, ProfileServiceDAO jdbcprofileService, SMSAlertConfigRepository smsAlertConfigRepository) {
         this.referralBonusRepository = referralBonusRepository;
         this.referralCodeService = referralCodeService;
         this.profileRepository = profileRepository;
@@ -68,6 +55,7 @@ public class ManageReferralServiceImpl implements ManageReferralService {
         this.referralCodeRepository = referralCodeRepository;
         this.walletProxy = walletProxy;
         this.jdbcprofileService = jdbcprofileService;
+        this.smsAlertConfigRepository = smsAlertConfigRepository;
     }
 
 
@@ -276,13 +264,13 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
     ResponseEntity<?> payBulkReferrals(@Valid BulkBonusTransferDTO bonusList, HttpServletRequest request, Device device){
 
-        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = (UsernamePasswordAuthenticationToken) request.getUserPrincipal();
-        Users user = null;
-        Object obj = usernamePasswordAuthenticationToken.getPrincipal();
-        if(obj!= null && obj instanceof UserPrincipal){
-            UserPrincipal principal =  (UserPrincipal) obj;
-            user = principal.getUser().orElse(null);
-        }
+//        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = (UsernamePasswordAuthenticationToken) request.getUserPrincipal();
+//        Users user = null;
+//        Object obj = usernamePasswordAuthenticationToken.getPrincipal();
+//        if(obj!= null && obj instanceof UserPrincipal){
+//            UserPrincipal principal =  (UserPrincipal) obj;
+//            user = principal.getUser().orElse(null);
+//        }
         List<WalletTransactionPojo> walletTransactionPojoList = new ArrayList<>();
         String token = BearerTokenUtil.getBearerTokenHeader();
         List<String> messages = new ArrayList<>();
@@ -480,6 +468,36 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
         return response;
     }
+
+
+    public Map<String, Object> getUsersSMSAlertStatus(int page, int size){
+       // UserProfileResponse userProfileResponse = new UserProfileResponse();
+        Pageable paging = PageRequest.of(page, size);
+        List<UserProfilePojo> profileList = new ArrayList<>();
+        Page<UserProfilePojo> user = jdbcprofileService.GetAllUserProfile(paging);
+        profileList = user.getContent();
+
+        for (int i = 0; i < profileList.size(); i++) {
+            boolean isSMSAlertActive = false;
+            Optional<SMSAlertConfig> smsAlertConfig = smsAlertConfigRepository.findByPhoneNumber(profileList.get(i).getPhoneNo());
+                if (smsAlertConfig.isPresent()) {
+                    if (smsAlertConfig.get().isActive()) {
+                        profileList.get(i).setSMSAlert(true);
+                    } else {
+                        profileList.get(i).setSMSAlert(false);
+                    }
+                }
+        }
+        
+        Map<String, Object> response = new HashMap<>();
+
+        response.put("referredUsers", profileList);
+        response.put("currentPage", user.getNumber());
+        response.put("totalItems", user.getTotalElements());
+        response.put("totalPages", user.getTotalPages());
+        return response;
+    }
+
 
 
 

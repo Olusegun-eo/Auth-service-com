@@ -33,4 +33,6 @@ public interface ManageReferralService {
     List<WalletTransactionPojo> sendReferralBonusToMultipleUsers(List<BonusTransferPojo> transfer);
     ResponseEntity<?> sendBulkReferralBonusTo(MultipartFile file, HttpServletRequest request, Device device);
     Map<String, Object> getUserThatHaveBeenReferred(String referralCode, int page, int size);
+
+    Map<String, Object> getUsersSMSAlertStatus(int page, int size);
 }
