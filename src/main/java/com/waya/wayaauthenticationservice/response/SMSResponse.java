@@ -12,6 +12,7 @@ import java.util.UUID;
 public class SMSResponse {
 
     private UUID id;
+    private String fullName;
     private String phoneNumber;
     private boolean active = true;
 }

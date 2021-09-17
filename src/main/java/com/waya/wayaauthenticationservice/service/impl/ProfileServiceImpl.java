@@ -745,6 +745,7 @@ public class ProfileServiceImpl implements ProfileService {
                 .userId(profile.getUserId().toString())
                 .city(profile.getCity())
                 .corporate(profile.isCorporate())
+                .deviceToken(profile.getDeviceToken())
                 .otherDetails(otherdetailsResponse).build();
     }
 
@@ -887,7 +888,7 @@ public class ProfileServiceImpl implements ProfileService {
         if (smsCharges.isPresent()) {
             smsCharges.get().setActive(!smsCharges.get().isActive());
             smsAlertConfigRepository.save(smsCharges.get());
-            SMSResponse = new SMSResponse(smsCharges.get().getId(),
+            SMSResponse = new SMSResponse(smsCharges.get().getId(),"",
                     smsCharges.get().getPhoneNumber(),
                     smsCharges.get().isActive());
         } else {
@@ -896,7 +897,7 @@ public class ProfileServiceImpl implements ProfileService {
             smsCharges1.setPhoneNumber(smsRequest.getPhoneNumber());
             smsCharges1.setUserId(user.getId());
             smsCharges1 = smsAlertConfigRepository.save(smsCharges1);
-            SMSResponse = new SMSResponse(smsCharges1.getId(), smsCharges1.getPhoneNumber(),
+            SMSResponse = new SMSResponse(smsCharges1.getId(), "",smsCharges1.getPhoneNumber(),
                     smsCharges1.isActive());
         }
         return SMSResponse;
@@ -910,7 +911,7 @@ public class ProfileServiceImpl implements ProfileService {
         Optional<SMSAlertConfig> smsCharges = smsAlertConfigRepository.findByPhoneNumber(phoneNumber);
 
         if (smsCharges.isPresent()) {
-            SMSResponse = new SMSResponse(smsCharges.get().getId(), smsCharges.get().getPhoneNumber(),
+            SMSResponse = new SMSResponse(smsCharges.get().getId(), "",smsCharges.get().getPhoneNumber(),
                     smsCharges.get().isActive());
         }
         return SMSResponse;
@@ -977,6 +978,21 @@ public class ProfileServiceImpl implements ProfileService {
             System.out.println("Error is here " + e.getMessage());
             throw new CustomException(e.getMessage(), HttpStatus.EXPECTATION_FAILED);
         }
+
+    }
+
+
+
+    public UserProfileResponse saveDeviceToken(DeviceTokenRequest deviceTokenRequest){
+
+        Optional<Profile> profile = profileRepository.findByUserId(false, deviceTokenRequest.getUserId().toString());
+
+        if (!profile.isPresent())
+            throw new CustomException("ID not found", HttpStatus.NOT_FOUND);
+
+        profile.get().setDeviceToken(deviceTokenRequest.getToken());
+
+        return setProfileResponse(profileRepository.save(profile.get()));
 
     }
 

@@ -111,6 +111,8 @@ public interface ProfileService {
 
 	UserProfileResponse getProfileByReferralCode(String referralCode);
 
+	UserProfileResponse saveDeviceToken(DeviceTokenRequest deviceTokenRequest);
+
 
 
 

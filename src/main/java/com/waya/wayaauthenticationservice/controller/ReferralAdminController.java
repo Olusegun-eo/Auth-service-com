@@ -82,6 +82,20 @@ public class ReferralAdminController {
         ApiResponseBody<ReferralBonus> response = new ApiResponseBody<>(userProfileResponse, "updated data successfully", true);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+//
+//    @ApiOperation(value = "Edit Referral Bonus Amount : This API is used to modify a bonus amount", notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
+//    @ApiResponses(value = {
+//            @io.swagger.annotations.ApiResponse(code = 200, message = MESSAGE_200),
+//            @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
+//            @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
+//    })
+//    @GetMapping("/config/amount")
+//    ResponseEntity<ApiResponseBody<ReferralBonus>> updateReferralAmount(@Valid @RequestBody ReferralBonusRequest referralBonusRequest, @ApiIgnore @RequestAttribute(Constant.USERNAME) String username, @RequestHeader("Authorization") String token) throws URISyntaxException, CustomException {
+//
+//        ReferralBonus userProfileResponse = referralService.editReferralAmount(referralBonusRequest);
+//        ApiResponseBody<ReferralBonus> response = new ApiResponseBody<>(userProfileResponse, "updated data successfully", true);
+//        return new ResponseEntity<>(response, HttpStatus.OK);
+//    }
 
     @ApiOperation(value = "Get Referral Bonus Amount : This API is used to get a bonus amount by Id", notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
     @ApiResponses(value = {
@@ -111,13 +125,13 @@ public class ReferralAdminController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @ApiOperation( value = "profile-with-five-transactions/user/{userId}", notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
+    @ApiOperation( value = "/filter-users/{value}", notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = Constant.MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = Constant.MESSAGE_422)
     })
     @GetMapping("/filter-users/{value}")
-    public ResponseEntity<ApiResponseBody<Map<String, Object>>> getUsersWithUpToFiveTransactions(
+    public ResponseEntity<ApiResponseBody<Map<String, Object>>> getUsersWithTheirReferralsByPhoneNumber(
             @PathVariable String value,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -255,6 +269,24 @@ public class ReferralAdminController {
     public ResponseEntity<?> sendBulkReferralBonusTo(@RequestPart("file") MultipartFile file, HttpServletRequest request, Device device) {
         return referralService.sendBulkReferralBonusTo(file, request, device);
     }
+
+
+
+    @ApiOperation(value = " Get All users SMS alert status.",notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
+    @ApiResponses(value = {
+            @io.swagger.annotations.ApiResponse(code = 200, message = "Successful"),
+            @io.swagger.annotations.ApiResponse(code = 400, message = "Bad Request"),
+            @io.swagger.annotations.ApiResponse(code = 401, message = "Unauthorized")
+    })
+    @GetMapping("/get-all-users-sms-alert-status")
+    ResponseEntity<ApiResponseBody<Map<String, Object>>> getUsersSMSAlertStatus(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) throws CustomException {
+        Map<String, Object> map = referralService.getUsersSMSAlertStatus(page,size);
+        ApiResponseBody<Map<String, Object>> response = new ApiResponseBody<>(map, "Data retrieved successfully", true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 
 
 

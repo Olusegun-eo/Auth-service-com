@@ -24,6 +24,7 @@ public class UserProfileResponse {
     private boolean smsAlertConfig;
     private String city;
     private boolean corporate;
+    private String deviceToken;
 
     private OtherDetailsResponse otherDetails;
 

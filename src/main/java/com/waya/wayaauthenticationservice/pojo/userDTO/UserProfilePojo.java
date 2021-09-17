@@ -58,6 +58,7 @@ public class UserProfilePojo {
 	private boolean pinCreated;
 	private boolean isSimulated;
 	private String referenceCode;
+	private boolean isSMSAlert;
     
 	@Builder.Default
 	private Set<String> roles = new HashSet<>();
