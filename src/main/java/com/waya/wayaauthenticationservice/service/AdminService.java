@@ -53,5 +53,7 @@ public interface AdminService {
 
     SMSResponse adminToggleSMSAlert(SMSRequest smsRequest);
 
+    SMSResponse adminCheckSMSAlert(String phoneNumber);
+
     //ResponseEntity<?> createWayaUser(BaseUserPojo userPojo, HttpServletRequest request, Device device);
 }

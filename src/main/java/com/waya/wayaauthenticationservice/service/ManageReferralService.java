@@ -29,8 +29,8 @@ public interface ManageReferralService {
     List<Profile> getUserWithoutReferralCode();
     Profile assignReferralCode(AssignReferralCodePojo assignReferralCodePojo);
 
-    List<WalletTransactionPojo> sendReferralBonusToUser(BonusTransferPojo transfer);
-    List<WalletTransactionPojo> sendReferralBonusToMultipleUsers(List<BonusTransferPojo> transfer);
+    List<WalletTransactionPojo> sendReferralBonusToUser(BonusTransferRequest transfer);
+    List<WalletTransactionPojo> sendReferralBonusToMultipleUsers(List<BonusTransferRequest> transfer);
     ResponseEntity<?> sendBulkReferralBonusTo(MultipartFile file, HttpServletRequest request, Device device);
     Map<String, Object> getUserThatHaveBeenReferred(String referralCode, int page, int size);
 

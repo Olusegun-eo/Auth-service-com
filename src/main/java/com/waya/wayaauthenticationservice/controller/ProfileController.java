@@ -250,7 +250,7 @@ public class ProfileController {
 	}
 
 
-	@ApiOperation(value = "Get Profile By Referral Code", tags = {
+	@ApiOperation(value = "Save User Device Token", tags = {
 			"PROFILE RESOURCE" }, notes ="")
 	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })

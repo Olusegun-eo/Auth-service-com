@@ -20,9 +20,13 @@ public class BonusTransferExcelPojo {
     private Double amount;
     @NotBlank(message = "please enter your customerAccountNumber")
     private String customerAccountNumber;
-    private String eventId;
+    @NotBlank(message = "please enter your officeDebitAccount")
+    private String officeDebitAccount;
+    private String tranType;
+    private String paymentReference;
     private String tranCrncy;
     private String tranNarration;
+
 
 }
 

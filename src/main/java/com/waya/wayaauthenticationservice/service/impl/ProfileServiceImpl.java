@@ -66,6 +66,9 @@ public class ProfileServiceImpl implements ProfileService {
     private final WalletProxy walletProxy;
     private final ReferralBonusRepository referralBonusRepository;
 
+    @Value("${referral.account}")
+    public String referralAccount;
+
     @Autowired
     public ProfileServiceImpl(ModelMapper modelMapper, ProfileRepository profileRepository,
                               UserRepository userRepository, OTPTokenService otpTokenService,
@@ -944,7 +947,8 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     public List<WalletTransactionPojo> sendSignUpBonusToUser(String userId){
-        BonusTransferPojo transfer = new BonusTransferPojo();
+        BonusTransferRequest transfer = new BonusTransferRequest();
+
         String token = BearerTokenUtil.getBearerTokenHeader();
 
         // get users wallet
@@ -959,9 +963,10 @@ public class ProfileServiceImpl implements ProfileService {
         // build the request body
         transfer.setAmount(referralBonus.getAmount());
         transfer.setCustomerAccountNumber(mainWalletResponse2.getAccountNo());
-        transfer.setEventId(EventCharges.COMPAYM.name());
+        transfer.setOfficeDebitAccount(referralAccount);
         transfer.setPaymentReference(CommonUtils.generatePaymentTransactionId());
         transfer.setTranCrncy("NGN");
+        transfer.setTranType("LOCAL");
         transfer.setTranNarration("REFERRAL-BONUS-PAYMENT");
 
 

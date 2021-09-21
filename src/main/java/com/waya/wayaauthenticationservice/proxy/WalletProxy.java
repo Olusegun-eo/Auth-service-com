@@ -30,15 +30,18 @@ public interface WalletProxy {
 	@HandleFeignError(ApiClientExceptionHandler.class)
 	ApiResponseBody<WalletAccount> modifyUserWallet(@RequestBody WalletAccessPojo pojo, @RequestHeader("Authorization") String token);
 
-	@PostMapping("/admin/commission/payment")
-	ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> sendMoneyToWallet(BonusTransferPojo transfer, @RequestHeader("Authorization") String token);
+	@PostMapping("/official/user/transfer")   ///api/v1/wallet/official/user/transfer admin/commission/payment
+	ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> sendMoneyToWallet(BonusTransferRequest transfer, @RequestHeader("Authorization") String token);
 
-
-	@PostMapping("/event/charge/payment")
-	ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> sendSignUpBonusToWallet(BonusTransferPojo transfer, @RequestHeader("Authorization") String token);
+	@PostMapping("/official/user/transfer")  //  event/charge/payment
+	ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> sendSignUpBonusToWallet(BonusTransferRequest transfer, @RequestHeader("Authorization") String token);
 
 	@GetMapping("/default/{userId}") //  ===> returns single
 	ResponseEntity<ApiResponseBody<NewWalletResponse>> getDefaultWallet(@PathVariable("userId") String userId, @RequestHeader("Authorization") String token);
+
+	///api/v1/wallet/waya/official/account
+	@GetMapping("/waya/official/account") //
+	ResponseEntity<ApiResponseBody<List<NewWalletResponse>>> getWayaOfficialWallet(@RequestHeader("Authorization") String token);
 
 
 }
