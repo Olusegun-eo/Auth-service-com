@@ -143,7 +143,7 @@ cipher:
     value: ${CIPHER_KEY:WALMIFOS}
 
 referral:
-  account: ${REFERRAL_ACCOUNT}
+  account: ${REFERRAL_ACCOUNT:NGN008019345880}
 
 app:
   config:
