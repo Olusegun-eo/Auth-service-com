@@ -36,7 +36,7 @@ public class ExcelHelper {
             "OFFICE_ADDRESS", "CITY", "STATE", "ORG_NAME", "ORG_EMAIL",
             "ORG_PHONE", "ORG_TYPE", "BUSINESS_TYPE", "REFERENCE_CODE");
     public static List<String> ACTIVATION_LIST = Arrays.asList("FIRSTNAME", "SURNAME", "PHONE_NUMBER OR EMAIL");
-    public static List<String> USER_BONUS_HEADERS = Arrays.asList("AMOUNT", "OFFICE_DEBIT_ACCOUNT", "CUSTOMER_ACCOUNT_NUMBER", "TRAN_TYPE", "TRAN_C_RNCY", "TRAN_NARRATION" );
+    public static List<String> USER_BONUS_HEADERS = Arrays.asList("AMOUNT", "OFFICE_DEBIT_ACCOUNT", "CUSTOMER_CREDIT_NUMBER", "TRAN_TYPE", "TRAN_C_RNCY", "TRAN_NARRATION" );
     static String SHEET = "Users";
     static String BONUS_SHEET = "UserBonus";
 
@@ -360,7 +360,7 @@ public class ExcelHelper {
                             pojo.setOfficeDebitAccount(defaultStringCell(cell));
                             break;
                         case "C":
-                            pojo.setCustomerAccountNumber(defaultStringCell(cell));
+                            pojo.setCustomerCreditNumber(defaultStringCell(cell));
                             break;
                         case "D":
                             pojo.setTranType(defaultStringCell(cell));

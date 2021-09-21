@@ -203,6 +203,7 @@ public class ManageReferralServiceImpl implements ManageReferralService {
     public List<WalletTransactionPojo> sendReferralBonusToUser(BonusTransferRequest transfer){
 
         String token = BearerTokenUtil.getBearerTokenHeader();
+        log.info("BonusTransferRequest ::: " + transfer);
 
         try{
             transfer.setPaymentReference(CommonUtils.generatePaymentTransactionId());
@@ -300,7 +301,7 @@ public class ManageReferralServiceImpl implements ManageReferralService {
             for (BonusTransferExcelPojo mTransfer : bonusList.getBonusList()) {
                 BonusTransferRequest transfer = new BonusTransferRequest();
                 transfer.setPaymentReference(CommonUtils.generatePaymentTransactionId());
-                transfer.setCustomerAccountNumber(mTransfer.getCustomerAccountNumber());
+                transfer.setCustomerCreditAccount(mTransfer.getCustomerCreditNumber());
                 transfer.setOfficeDebitAccount(mTransfer.getOfficeDebitAccount());
                 transfer.setTranNarration(mTransfer.getTranNarration());
                 transfer.setTranType("LOCAL");

@@ -962,7 +962,7 @@ public class ProfileServiceImpl implements ProfileService {
 
         // build the request body
         transfer.setAmount(referralBonus.getAmount());
-        transfer.setCustomerAccountNumber(mainWalletResponse2.getAccountNo());
+        transfer.setCustomerCreditAccount(mainWalletResponse2.getAccountNo());
         transfer.setOfficeDebitAccount(referralAccount);
         transfer.setPaymentReference(CommonUtils.generatePaymentTransactionId());
         transfer.setTranCrncy("NGN");

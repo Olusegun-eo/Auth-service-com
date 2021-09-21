@@ -15,7 +15,7 @@ public class BonusTransferRequest {
     @DecimalMin(value = "0.01", message = "minimum amount required is 0.01")
     private BigDecimal amount;
     @NotBlank(message = "please enter your customerAccountNumber")
-    private String customerAccountNumber;
+    private String customerCreditAccount;
     @NotBlank(message = "please enter your officeDebitAccount")
     private String officeDebitAccount;
     private String paymentReference;
