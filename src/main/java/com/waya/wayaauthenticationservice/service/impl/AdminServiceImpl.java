@@ -278,4 +278,10 @@ public class AdminServiceImpl implements AdminService {
         return smsResponse;
     }
 
+    @Override
+    public SMSResponse adminCheckSMSAlert(String phoneNumber) {
+        SMSResponse smsResponse = profileService.getSMSAlertStatus(phoneNumber);
+        return smsResponse;
+    }
+
 }

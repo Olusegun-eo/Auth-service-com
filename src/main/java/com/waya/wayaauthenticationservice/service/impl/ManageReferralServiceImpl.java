@@ -15,6 +15,7 @@ import com.waya.wayaauthenticationservice.util.Constant;
 import com.waya.wayaauthenticationservice.util.ExcelHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -45,6 +46,7 @@ public class ManageReferralServiceImpl implements ManageReferralService {
     private final WalletProxy walletProxy;
     private final ProfileServiceDAO jdbcprofileService;
     private final SMSAlertConfigRepository smsAlertConfigRepository;
+
 
     @Autowired
     public ManageReferralServiceImpl(ReferralBonusRepository referralBonusRepository, ReferralCodeServiceImpl referralCodeService, ProfileRepository profileRepository, ReferralBonusEarningRepository referralBonusEarningRepository, ReferralCodeRepository referralCodeRepository, WalletProxy walletProxy, ProfileServiceDAO jdbcprofileService, SMSAlertConfigRepository smsAlertConfigRepository) {
@@ -198,8 +200,10 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
     }
 
-    public List<WalletTransactionPojo> sendReferralBonusToUser(BonusTransferPojo transfer){
+    public List<WalletTransactionPojo> sendReferralBonusToUser(BonusTransferRequest transfer){
+
         String token = BearerTokenUtil.getBearerTokenHeader();
+        log.info("BonusTransferRequest ::: " + transfer);
 
         try{
             transfer.setPaymentReference(CommonUtils.generatePaymentTransactionId());
@@ -219,11 +223,28 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
     }
 
-    public List<WalletTransactionPojo> sendReferralBonusToMultipleUsers(List<BonusTransferPojo> transfer){
+//    private List<NewWalletResponse> getWayaOfficial(String token){
+//        NewWalletResponse newWalletResponse;
+//        ResponseEntity<ApiResponseBody<List<NewWalletResponse>>> responseEntity2 = walletProxy.getWayaOfficialWallet(token);
+//        ApiResponseBody<List<NewWalletResponse>> infoResponse = (ApiResponseBody<List<NewWalletResponse>>) responseEntity2.getBody();
+//
+//        List<NewWalletResponse> dataList = getWayaOfficial(token);
+//        for (int i = 0; i < dataList.size(); i++) {
+//                newWalletResponse = new NewWalletResponse();
+//                newWalletResponse = dataList.get(i);
+//                log.info("newH ::: {} " +newWalletResponse);
+//
+//        }
+//
+//        return dataList;
+//    }
+
+    public List<WalletTransactionPojo> sendReferralBonusToMultipleUsers(List<BonusTransferRequest> transfer){
+
         String token = BearerTokenUtil.getBearerTokenHeader();
         List<WalletTransactionPojo> walletTransactionPojoList = new ArrayList<>();
 
-            try {
+        try {
                 for (int i = 0; i < transfer.size(); i++) {
                     transfer.get(i).setPaymentReference(CommonUtils.generatePaymentTransactionId());
                     // make a call to credit users wallet
@@ -278,13 +299,14 @@ public class ManageReferralServiceImpl implements ManageReferralService {
             return new ResponseEntity<>(new ErrorResponse("User List cannot be null or Empty"), BAD_REQUEST);
 
             for (BonusTransferExcelPojo mTransfer : bonusList.getBonusList()) {
-                BonusTransferPojo transfer = new BonusTransferPojo();
+                BonusTransferRequest transfer = new BonusTransferRequest();
                 transfer.setPaymentReference(CommonUtils.generatePaymentTransactionId());
-                transfer.setCustomerAccountNumber(mTransfer.getCustomerAccountNumber());
+                transfer.setCustomerCreditAccount(mTransfer.getCustomerCreditNumber());
+                transfer.setOfficeDebitAccount(mTransfer.getOfficeDebitAccount());
                 transfer.setTranNarration(mTransfer.getTranNarration());
+                transfer.setTranType("LOCAL");
                 transfer.setTranCrncy(mTransfer.getTranCrncy());
                 transfer.setAmount(BigDecimal.valueOf(mTransfer.getAmount()));
-              //  String username = request.getAttribute("username").toString();
                 // make a call to credit users wallet
                 ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> responseEntity = walletProxy.sendMoneyToWallet(transfer, token);
                 ApiResponseBody<List<WalletTransactionPojo>> infoResponse = (ApiResponseBody<List<WalletTransactionPojo>>) responseEntity.getBody();

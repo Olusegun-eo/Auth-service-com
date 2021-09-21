@@ -22,4 +22,6 @@ public class BonusTransferPojo {
     private String tranCrncy;
     private String tranNarration;
 
+
+
 }

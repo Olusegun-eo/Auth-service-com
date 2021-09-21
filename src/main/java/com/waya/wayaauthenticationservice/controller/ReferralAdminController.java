@@ -54,7 +54,7 @@ public class ReferralAdminController {
     }
 
 
-    @ApiOperation(value = "Edit Referral Bonus Amount : This API is used to modify a bonus amount", notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
+    @ApiOperation(value = "Save Referral Bonus Amount : This API is used to modify a bonus amount", notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 200, message = MESSAGE_200),
             @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
@@ -226,7 +226,7 @@ public class ReferralAdminController {
     })
     @PostMapping("/users/send-referral-bonus")
     ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> sendReferralBonusToUser(@Valid @RequestBody
-                                                                                                 BonusTransferPojo transfer) throws CustomException {
+                                                                                                 BonusTransferRequest transfer) throws CustomException {
         List<WalletTransactionPojo> referralBonus = referralService.sendReferralBonusToUser(transfer);
         ApiResponseBody<List<WalletTransactionPojo>> response = new ApiResponseBody<>(referralBonus, "Referral Bonus sent successfully", true);
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -242,7 +242,7 @@ public class ReferralAdminController {
     })
     @PostMapping("/users/send-referral-bonus-to-multiple-users")
     ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> sendReferralBonusToMultipleUsers(@Valid @RequestBody
-                                                                                                List<BonusTransferPojo> transfer) throws CustomException {
+                                                                                                List<BonusTransferRequest> transfer) throws CustomException {
         List<WalletTransactionPojo> referralBonus = referralService.sendReferralBonusToMultipleUsers(transfer);
         ApiResponseBody<List<WalletTransactionPojo>> response = new ApiResponseBody<>(referralBonus, "Referral Bonus sent successfully", true);
         return new ResponseEntity<>(response, HttpStatus.OK);
