@@ -2,8 +2,10 @@ package com.waya.wayaauthenticationservice.service;
 
 import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.others.SMSRequest;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
+import com.waya.wayaauthenticationservice.response.SMSResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
@@ -48,6 +50,10 @@ public interface AdminService {
     ResponseEntity<?> toggleActivation(Long userId);
 
     ResponseEntity<?> toggleLock(Long userId);
+
+    SMSResponse adminToggleSMSAlert(SMSRequest smsRequest);
+
+    SMSResponse adminCheckSMSAlert(String phoneNumber);
 
     //ResponseEntity<?> createWayaUser(BaseUserPojo userPojo, HttpServletRequest request, Device device);
 }

@@ -1,10 +1,18 @@
 package com.waya.wayaauthenticationservice.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
+import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.pojo.others.SMSRequest;
+import com.waya.wayaauthenticationservice.response.ApiResponseBody;
+import com.waya.wayaauthenticationservice.response.SMSResponse;
+import com.waya.wayaauthenticationservice.service.ManageReferralService;
+import com.waya.wayaauthenticationservice.util.ValidPhone;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.core.io.InputStreamResource;
@@ -77,6 +85,9 @@ public class AdminController {
 
 	@Autowired
 	ProfileService profileService;
+
+	@Autowired
+	ManageReferralService manageReferralService;
 
 	@ApiOperation(value = "Fetch all Users (Admin Endpoint)", tags = { "ADMIN" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
@@ -335,5 +346,44 @@ public class AdminController {
 
 		return adminService.manageUserRole(userId, add, roleName);
 	}
+
+
+	@ApiOperation(value = "SMS Alert Subscription on behalf of the user", notes = "", tags = { "ADMIN" })
+	@PostMapping("/users/subscribe-sms-alert")
+	@PreAuthorize(value = "@userSecurity.useHierarchyForRoles(#roleName, authentication)")
+	public ResponseEntity<ApiResponseBody<SMSResponse>> adminToggleSMSAlert(@RequestBody SMSRequest smsRequest) {
+		SMSResponse SMSResponse = adminService.adminToggleSMSAlert(smsRequest);
+		ApiResponseBody<SMSResponse> response = new ApiResponseBody<>(SMSResponse, "Done successfully",
+				true);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@ApiOperation(value = "SMS Alert Status on behalf of the user", notes = "", tags = { "ADMIN" })
+	@GetMapping("/users/check-sms-alert-status/{phoneNumber}")
+	@PreAuthorize(value = "@userSecurity.useHierarchyForRoles(#roleName, authentication)")
+	public ResponseEntity<ApiResponseBody<SMSResponse>> adminCheckSMSAlert(@Valid @ApiParam(example = "2348054354344") @PathVariable @ValidPhone String phoneNumber) {
+		SMSResponse SMSResponse = adminService.adminCheckSMSAlert(phoneNumber);
+		ApiResponseBody<SMSResponse> response = new ApiResponseBody<>(SMSResponse, "Done successfully",
+				true);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+
+
+	@ApiOperation(value = " Get All users SMS alert status.",notes = "", tags = {"ADMIN"})
+	@ApiResponses(value = {
+			@io.swagger.annotations.ApiResponse(code = 200, message = "Successful"),
+			@io.swagger.annotations.ApiResponse(code = 400, message = "Bad Request"),
+			@io.swagger.annotations.ApiResponse(code = 401, message = "Unauthorized")
+	})
+	@GetMapping("/users/get-all-users-sms-alert-status")
+	ResponseEntity<ApiResponseBody<Map<String, Object>>> getUsersSMSAlertStatus(
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size) throws CustomException {
+		Map<String, Object> map = manageReferralService.getUsersSMSAlertStatus(page,size);
+		ApiResponseBody<Map<String, Object>> response = new ApiResponseBody<>(map, "Data retrieved successfully", true);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 
 }

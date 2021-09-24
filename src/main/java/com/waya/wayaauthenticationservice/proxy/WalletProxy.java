@@ -3,6 +3,7 @@ package com.waya.wayaauthenticationservice.proxy;
 import java.util.List;
 
 import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.response.NewWalletResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +30,18 @@ public interface WalletProxy {
 	@HandleFeignError(ApiClientExceptionHandler.class)
 	ApiResponseBody<WalletAccount> modifyUserWallet(@RequestBody WalletAccessPojo pojo, @RequestHeader("Authorization") String token);
 
-	@PostMapping("/admin/sendmoney")
-	ResponseEntity<WalletAccountInfo> sendMoneyToWallet(UserTransferToDefaultWallet transfer, @RequestHeader("Authorization") String token);
+	@PostMapping("/official/user/transfer")   ///api/v1/wallet/official/user/transfer admin/commission/payment
+	ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> sendMoneyToWallet(BonusTransferRequest transfer, @RequestHeader("Authorization") String token);
+
+	@PostMapping("/official/user/transfer")  //  event/charge/payment
+	ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> sendSignUpBonusToWallet(BonusTransferRequest transfer, @RequestHeader("Authorization") String token);
+
+	@GetMapping("/default/{userId}") //  ===> returns single
+	ResponseEntity<ApiResponseBody<NewWalletResponse>> getDefaultWallet(@PathVariable("userId") String userId, @RequestHeader("Authorization") String token);
+
+	///api/v1/wallet/waya/official/account
+	@GetMapping("/waya/official/account") //
+	ResponseEntity<ApiResponseBody<List<NewWalletResponse>>> getWayaOfficialWallet(@RequestHeader("Authorization") String token);
+
 
 }

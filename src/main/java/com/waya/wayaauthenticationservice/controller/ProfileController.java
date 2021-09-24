@@ -249,6 +249,21 @@ public class ProfileController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+
+	@ApiOperation(value = "Save User Device Token", tags = {
+			"PROFILE RESOURCE" }, notes ="")
+	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
+			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
+	@ResponseStatus(HttpStatus.OK)
+	@PostMapping("/save-device-token")
+	ResponseEntity<ApiResponseBody<UserProfileResponse>> saveDeviceToken(@Valid @RequestBody DeviceTokenRequest deviceTokenRequest) {
+		UserProfileResponse userProfileResponse = profileService.saveDeviceToken(deviceTokenRequest);
+		ApiResponseBody<UserProfileResponse> response = new ApiResponseBody<>(userProfileResponse, "Data created successfully",
+				true);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+
 	private String getBaseUrl(HttpServletRequest request) {
 		return "http://" + urlRedirect + ":" + request.getServerPort() + request.getContextPath();
 	}

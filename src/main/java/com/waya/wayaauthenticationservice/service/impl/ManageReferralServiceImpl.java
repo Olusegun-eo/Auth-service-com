@@ -1,34 +1,36 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
 import com.waya.wayaauthenticationservice.dao.ProfileServiceDAO;
-import com.waya.wayaauthenticationservice.entity.Profile;
-import com.waya.wayaauthenticationservice.entity.ReferralBonus;
-import com.waya.wayaauthenticationservice.entity.ReferralCode;
+import com.waya.wayaauthenticationservice.entity.*;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfilePojo;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
-import com.waya.wayaauthenticationservice.repository.ProfileRepository;
-import com.waya.wayaauthenticationservice.repository.ReferralBonusEarningRepository;
-import com.waya.wayaauthenticationservice.repository.ReferralBonusRepository;
-import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
-import com.waya.wayaauthenticationservice.response.NewWalletResponse;
-import com.waya.wayaauthenticationservice.response.ReferralBonusResponse;
+import com.waya.wayaauthenticationservice.repository.*;
+import com.waya.wayaauthenticationservice.response.*;
 import com.waya.wayaauthenticationservice.service.ManageReferralService;
 import com.waya.wayaauthenticationservice.util.BearerTokenUtil;
 import com.waya.wayaauthenticationservice.util.CommonUtils;
 import com.waya.wayaauthenticationservice.util.Constant;
+import com.waya.wayaauthenticationservice.util.ExcelHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mobile.device.Device;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.util.*;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 
 @Slf4j
@@ -43,9 +45,11 @@ public class ManageReferralServiceImpl implements ManageReferralService {
     private final ReferralCodeRepository referralCodeRepository;
     private final WalletProxy walletProxy;
     private final ProfileServiceDAO jdbcprofileService;
+    private final SMSAlertConfigRepository smsAlertConfigRepository;
+
 
     @Autowired
-    public ManageReferralServiceImpl(ReferralBonusRepository referralBonusRepository, ReferralCodeServiceImpl referralCodeService, ProfileRepository profileRepository, ReferralBonusEarningRepository referralBonusEarningRepository, ReferralCodeRepository referralCodeRepository, WalletProxy walletProxy, ProfileServiceDAO jdbcprofileService) {
+    public ManageReferralServiceImpl(ReferralBonusRepository referralBonusRepository, ReferralCodeServiceImpl referralCodeService, ProfileRepository profileRepository, ReferralBonusEarningRepository referralBonusEarningRepository, ReferralCodeRepository referralCodeRepository, WalletProxy walletProxy, ProfileServiceDAO jdbcprofileService, SMSAlertConfigRepository smsAlertConfigRepository) {
         this.referralBonusRepository = referralBonusRepository;
         this.referralCodeService = referralCodeService;
         this.profileRepository = profileRepository;
@@ -53,6 +57,7 @@ public class ManageReferralServiceImpl implements ManageReferralService {
         this.referralCodeRepository = referralCodeRepository;
         this.walletProxy = walletProxy;
         this.jdbcprofileService = jdbcprofileService;
+        this.smsAlertConfigRepository = smsAlertConfigRepository;
     }
 
 
@@ -165,6 +170,19 @@ public class ManageReferralServiceImpl implements ManageReferralService {
         return response;
     }
 
+    @Override
+    public List<Profile> getUserWithoutReferralCode() {
+        List<Profile> profileList2 = new ArrayList<>();
+        List<Profile> profileList = profileRepository.findAll(false);
+        for (int i = 0; i < profileList.size(); i++) {
+            if (profileList.get(i).getReferral() == null){
+                Profile profile = profileList.get(i);
+                profileList2.add(profile);
+            }
+        }
+        return profileList2;
+    }
+
 
     public Profile assignReferralCode(AssignReferralCodePojo assignReferralCodePojo){
         try{
@@ -182,16 +200,21 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
     }
 
-    public NewWalletResponse sendReferralBonusToUser(UserTransferToDefaultWallet transfer){
+    public List<WalletTransactionPojo> sendReferralBonusToUser(BonusTransferRequest transfer){
+
         String token = BearerTokenUtil.getBearerTokenHeader();
+        log.info("BonusTransferRequest ::: " + transfer);
 
         try{
+            transfer.setPaymentReference(CommonUtils.generatePaymentTransactionId());
             // make a call to credit users wallet
-            ResponseEntity<WalletAccountInfo> responseEntity = walletProxy.sendMoneyToWallet(transfer,token);
-            WalletAccountInfo infoResponse = (WalletAccountInfo) responseEntity.getBody();
-            log.info("mainWalletResponse :: {} " +infoResponse.data);
-            NewWalletResponse mainWalletResponse = infoResponse.data;
-            return mainWalletResponse;
+            ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> responseEntity = walletProxy.sendMoneyToWallet(transfer,token);
+            ApiResponseBody<List<WalletTransactionPojo>> infoResponse = (ApiResponseBody<List<WalletTransactionPojo>>) responseEntity.getBody();
+            log.info("mainWalletResponse :: {} " +infoResponse.getData());
+            List<WalletTransactionPojo> mainWalletResponseList = infoResponse.getData();
+            log.info("responseList " + mainWalletResponseList);
+
+            return mainWalletResponseList;
 
          } catch (Exception e) {
             System.out.println("Error is here " + e.getMessage());
@@ -199,6 +222,104 @@ public class ManageReferralServiceImpl implements ManageReferralService {
         }
 
     }
+
+//    private List<NewWalletResponse> getWayaOfficial(String token){
+//        NewWalletResponse newWalletResponse;
+//        ResponseEntity<ApiResponseBody<List<NewWalletResponse>>> responseEntity2 = walletProxy.getWayaOfficialWallet(token);
+//        ApiResponseBody<List<NewWalletResponse>> infoResponse = (ApiResponseBody<List<NewWalletResponse>>) responseEntity2.getBody();
+//
+//        List<NewWalletResponse> dataList = getWayaOfficial(token);
+//        for (int i = 0; i < dataList.size(); i++) {
+//                newWalletResponse = new NewWalletResponse();
+//                newWalletResponse = dataList.get(i);
+//                log.info("newH ::: {} " +newWalletResponse);
+//
+//        }
+//
+//        return dataList;
+//    }
+
+    public List<WalletTransactionPojo> sendReferralBonusToMultipleUsers(List<BonusTransferRequest> transfer){
+
+        String token = BearerTokenUtil.getBearerTokenHeader();
+        List<WalletTransactionPojo> walletTransactionPojoList = new ArrayList<>();
+
+        try {
+                for (int i = 0; i < transfer.size(); i++) {
+                    transfer.get(i).setPaymentReference(CommonUtils.generatePaymentTransactionId());
+                    // make a call to credit users wallet
+                    ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> responseEntity = walletProxy.sendMoneyToWallet(transfer.get(i), token);
+                    ApiResponseBody<List<WalletTransactionPojo>> infoResponse2 = (ApiResponseBody<List<WalletTransactionPojo>>) responseEntity.getBody();
+                    log.info("mainWalletResponse :: {} " + infoResponse2.getData());
+
+                    List<WalletTransactionPojo> mainWalletResponseList = infoResponse2.getData();
+                    log.info("responseList " + mainWalletResponseList);
+
+                    walletTransactionPojoList.addAll(mainWalletResponseList);
+                }
+
+            } catch (Exception e) {
+                System.out.println("Error is here " + e.getMessage());
+                throw new CustomException(e.getMessage(), HttpStatus.EXPECTATION_FAILED);
+            }
+        return walletTransactionPojoList;
+        }
+
+
+    public ResponseEntity<?> sendBulkReferralBonusTo(MultipartFile file,
+                                                     HttpServletRequest request, Device device) {
+        String message;
+        if (ExcelHelper.hasExcelFormat(file)) {
+            ResponseEntity<?> responseEntity;
+            try {
+                    responseEntity = payBulkReferrals(ExcelHelper.excelToBonusTransferPojo(file.getInputStream(),
+                            file.getOriginalFilename()), request, device);
+                return responseEntity;
+            } catch (Exception e) {
+                throw new CustomException("failed to Parse excel data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+            }
+        }
+        message = "Please upload an excel file!";
+        return new ResponseEntity<>(new ErrorResponse(message), HttpStatus.BAD_REQUEST);
+    }
+
+    ResponseEntity<?> payBulkReferrals(@Valid BulkBonusTransferDTO bonusList, HttpServletRequest request, Device device){
+
+//        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = (UsernamePasswordAuthenticationToken) request.getUserPrincipal();
+//        Users user = null;
+//        Object obj = usernamePasswordAuthenticationToken.getPrincipal();
+//        if(obj!= null && obj instanceof UserPrincipal){
+//            UserPrincipal principal =  (UserPrincipal) obj;
+//            user = principal.getUser().orElse(null);
+//        }
+        List<WalletTransactionPojo> walletTransactionPojoList = new ArrayList<>();
+        String token = BearerTokenUtil.getBearerTokenHeader();
+        List<String> messages = new ArrayList<>();
+        if (bonusList == null || bonusList.getBonusList().isEmpty())
+            return new ResponseEntity<>(new ErrorResponse("User List cannot be null or Empty"), BAD_REQUEST);
+
+            for (BonusTransferExcelPojo mTransfer : bonusList.getBonusList()) {
+                BonusTransferRequest transfer = new BonusTransferRequest();
+                transfer.setPaymentReference(CommonUtils.generatePaymentTransactionId());
+                transfer.setCustomerCreditAccount(mTransfer.getCustomerCreditNumber());
+                transfer.setOfficeDebitAccount(mTransfer.getOfficeDebitAccount());
+                transfer.setTranNarration(mTransfer.getTranNarration());
+                transfer.setTranType("LOCAL");
+                transfer.setTranCrncy(mTransfer.getTranCrncy());
+                transfer.setAmount(BigDecimal.valueOf(mTransfer.getAmount()));
+                // make a call to credit users wallet
+                ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> responseEntity = walletProxy.sendMoneyToWallet(transfer, token);
+                ApiResponseBody<List<WalletTransactionPojo>> infoResponse = (ApiResponseBody<List<WalletTransactionPojo>>) responseEntity.getBody();
+                log.info("mainWalletResponse :: {} " + infoResponse.getData());
+
+                List<WalletTransactionPojo> mainWalletResponseList = infoResponse.getData();
+                log.info("responseList " + mainWalletResponseList);
+                walletTransactionPojoList.addAll(mainWalletResponseList);
+            }
+
+        return new ResponseEntity<>(new SuccessResponse(walletTransactionPojoList), HttpStatus.OK);
+    }
+
 
     public Map<String, Object> getUsersWithTheirReferralsByPhoneNumber(String value, int page, int size){
         Pageable paging = PageRequest.of(page, size);
@@ -228,30 +349,27 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
     public Map<String, Object> getUsersWithTheirReferrals(int page, int size){
 
-
         String district = "";
         String stateE = "";
         String addressE = "";
         Pageable paging = PageRequest.of(page, size);
-        List<Profile> profileList = new ArrayList<>();
+        List<UserProfilePojo> profileList = new ArrayList<>();
         List<ReferralPojo> referralPojos = new ArrayList<>();
 
-
-        List<UserProfilePojo> user = jdbcprofileService.GetAllUserProfile();
-        System.out.println("user" + user);
+       // List<UserProfilePojo> user = jdbcprofileService.GetAllUserProfile();
+        Page<UserProfilePojo> user = jdbcprofileService.GetAllUserProfile(paging);
         //Page<Profile> profilePage = profileRepository.findAll(paging, false);
-
         // get all user with referralCode
-        //profileList = profilePage.getContent();
-
-
-        for (int i = 0; i < user.size(); i++) {
+         profileList = user.getContent();
+        for (int i = 0; i < profileList.size(); i++) {
             ReferralPojo referralPojo = new ReferralPojo();
-            Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(user.get(i).getId().toString());
+            Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(profileList.get(i).getId().toString());
 
             if (referralCode.isPresent()){
-                if(user.get(i).getReferral() !=null){
-                    Profile referU = getReferredDetails(user.get(i).getReferral());
+                if(profileList.get(i).getReferral() !=null){
+
+                    Profile referU = getReferredDetails(profileList.get(i).getReferral());
+
                     if (referU.getDistrict() == null){
                         district = "";
                     }else{
@@ -277,13 +395,12 @@ public class ManageReferralServiceImpl implements ManageReferralService {
                     referralPojo.setReferralLocation("");
                     referralPojo.setReferralPhone("");
                 }
-                referralPojo.setDateJoined(user.get(i).getCreatedAt());
-                referralPojo.setReferralUser(user.get(i).getLastName() + " " + user.get(i).getFirstName());
+                referralPojo.setDateJoined(profileList.get(i).getCreatedAt());
+                referralPojo.setReferralUser(profileList.get(i).getLastName() + " " + profileList.get(i).getFirstName());
                 referralPojo.setReferralCode(referralCode.get().getReferralCode());
+                referralPojo.setUserId(profileList.get(i).getId().toString());
 
                 if (referralCode.get().getReferralCode() !=null){
-                    log.info("referralCode.get().getReferralCode() " + referralCode.get().getReferralCode());
-
                     referralPojo.setUsersReferred(getProfileDetails(referralCode.get().getReferralCode(),paging));
                     referralPojo.setEarnings(BigDecimal.ONE);
                     referralPojos.add(referralPojo);
@@ -293,13 +410,11 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
         }
 
-
         Map<String, Object> response = new HashMap<>();
-
         response.put("users", referralPojos);
-//        response.put("currentPage", profilePage.getNumber());
-//        response.put("totalItems", profilePage.getTotalElements());
-//        response.put("totalPages", profilePage.getTotalPages());
+        response.put("currentPage", user.getNumber());
+        response.put("totalItems", user.getTotalElements());
+        response.put("totalPages", user.getTotalPages());
 
         return response;
     }
@@ -311,10 +426,14 @@ public class ManageReferralServiceImpl implements ManageReferralService {
     }
 
     private Profile getReferredDetails(String referralCode){
+
         Optional<Profile> profile2 = null;
         Optional<ReferralCode> referralCode2 = referralCodeRepository.getReferralCodeByCode(referralCode);
         if (referralCode2.isPresent()){
+            log.info("HERE" +referralCode2.get());
             profile2 = profileRepository.findByUserId(false,referralCode2.get().getUserId());
+        }else{
+            log.info("HERE 000 null" +referralCode2.get() );
         }
 
         return profile2.get();
@@ -371,6 +490,36 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
         return response;
     }
+
+
+    public Map<String, Object> getUsersSMSAlertStatus(int page, int size){
+       // UserProfileResponse userProfileResponse = new UserProfileResponse();
+        Pageable paging = PageRequest.of(page, size);
+        List<UserProfilePojo> profileList = new ArrayList<>();
+        Page<UserProfilePojo> user = jdbcprofileService.GetAllUserProfile(paging);
+        profileList = user.getContent();
+
+        for (int i = 0; i < profileList.size(); i++) {
+            boolean isSMSAlertActive = false;
+            Optional<SMSAlertConfig> smsAlertConfig = smsAlertConfigRepository.findByPhoneNumber(profileList.get(i).getPhoneNo());
+                if (smsAlertConfig.isPresent()) {
+                    if (smsAlertConfig.get().isActive()) {
+                        profileList.get(i).setSMSAlert(true);
+                    } else {
+                        profileList.get(i).setSMSAlert(false);
+                    }
+                }
+        }
+        
+        Map<String, Object> response = new HashMap<>();
+
+        response.put("referredUsers", profileList);
+        response.put("currentPage", user.getNumber());
+        response.put("totalItems", user.getTotalElements());
+        response.put("totalPages", user.getTotalPages());
+        return response;
+    }
+
 
 
 

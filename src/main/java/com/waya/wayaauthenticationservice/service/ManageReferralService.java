@@ -4,14 +4,16 @@ import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.ReferralBonus;
 import com.waya.wayaauthenticationservice.entity.ReferralBonusEarning;
 import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.pojo.others.AssignReferralCodePojo;
-import com.waya.wayaauthenticationservice.pojo.others.ReferralBonusRequest;
-import com.waya.wayaauthenticationservice.pojo.others.UserReferralBonusPojo;
-import com.waya.wayaauthenticationservice.pojo.others.UserTransferToDefaultWallet;
+import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.response.NewWalletResponse;
 import com.waya.wayaauthenticationservice.response.ReferralBonusResponse;
 import com.waya.wayaauthenticationservice.response.UserProfileResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mobile.device.Device;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 import java.util.Map;
 
 public interface ManageReferralService {
@@ -24,8 +26,13 @@ public interface ManageReferralService {
     Map<String, Object> getUsersWithTheirReferralsByPhoneNumber(String value, int page, int size);
     Map<String, Object> getUsersWithTheirReferrals(int page, int size);
     Map<String, Object> getUserWithoutReferralCode(int page, int size);
+    List<Profile> getUserWithoutReferralCode();
     Profile assignReferralCode(AssignReferralCodePojo assignReferralCodePojo);
 
-    NewWalletResponse sendReferralBonusToUser(UserTransferToDefaultWallet transfer);
+    List<WalletTransactionPojo> sendReferralBonusToUser(BonusTransferRequest transfer);
+    List<WalletTransactionPojo> sendReferralBonusToMultipleUsers(List<BonusTransferRequest> transfer);
+    ResponseEntity<?> sendBulkReferralBonusTo(MultipartFile file, HttpServletRequest request, Device device);
     Map<String, Object> getUserThatHaveBeenReferred(String referralCode, int page, int size);
+
+    Map<String, Object> getUsersSMSAlertStatus(int page, int size);
 }

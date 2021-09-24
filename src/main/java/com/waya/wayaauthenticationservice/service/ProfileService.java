@@ -111,6 +111,8 @@ public interface ProfileService {
 
 	UserProfileResponse getProfileByReferralCode(String referralCode);
 
+	UserProfileResponse saveDeviceToken(DeviceTokenRequest deviceTokenRequest);
+
 
 
 
@@ -124,4 +126,7 @@ public interface ProfileService {
 	 * @return
 	 */
 	ApiResponseBody<String> uploadOtherImage(Long userId, MultipartFile file, String type);
+
+
+	List<WalletTransactionPojo> sendSignUpBonusToUser(String userId);
 }

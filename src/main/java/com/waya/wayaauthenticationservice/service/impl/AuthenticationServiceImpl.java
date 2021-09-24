@@ -335,6 +335,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		personalProfileRequest.setSurname(user.getSurname());
 		personalProfileRequest.setUserId(id);
 		personalProfileRequest.setGender(user.getGender());
+		personalProfileRequest.setReferralCode(user.getReferenceCode());
 		LocalDate dateOfBirth = user.getDateOfBirth() == null ? LocalDate.now() : user.getDateOfBirth();
 		personalProfileRequest.setDateOfBirth(dateOfBirth);
 

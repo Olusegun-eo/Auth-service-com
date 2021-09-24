@@ -143,6 +143,9 @@ cipher:
   utils:
     value: ${CIPHER_KEY:WALMIFOS}
 
+referral:
+  account: ${REFERRAL_ACCOUNT:NGN008019345880}
+
 app:
   config:
     biller-service:
