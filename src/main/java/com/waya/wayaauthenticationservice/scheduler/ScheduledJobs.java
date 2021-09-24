@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.waya.wayaauthenticationservice.entity.UserSetup;
+import com.waya.wayaauthenticationservice.pojo.kyc.KycAuthUpdate;
 import com.waya.wayaauthenticationservice.pojo.kyc.KycStatus;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserSetupPojo;
 import com.waya.wayaauthenticationservice.proxy.KycProxy;
@@ -50,9 +51,10 @@ public class ScheduledJobs {
 	@Scheduled(cron = "${job.cron.kyc}")
 	public void updateKyc() {
 		log.info("Update KYC");
-		ApiResponseBody<List<KycStatus>> listUser = kycProxy.GetUserKyc();
+		String key = "WAYA219766005KYC";
+		ApiResponseBody<List<KycStatus>> listUser = kycProxy.GetUserKyc(key);
 		List<KycStatus> listKyc = listUser.getData();
-		if(listKyc != null) {
+		if(listKyc != null && !listKyc.isEmpty()) {
 			for(KycStatus mkyc : listKyc) {
 				UserSetup user = userSetupRepository.GetByUserId(mkyc.getUserId());
 				if(user == null) {
@@ -61,11 +63,22 @@ public class ScheduledJobs {
 					pojo.setUserId(mkyc.getUserId());
 					pojo.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
 					userService.maintainUserSetup(pojo);
+					user = userSetupRepository.GetByUserId(mkyc.getUserId());
 				}
-				if(!user.isUpdated()) {
+				if(user != null && !user.isUpdated()) {
 					user.setUpdated(true);
 					userSetupRepository.save(user);
+					KycAuthUpdate uKyc = new KycAuthUpdate();
+					uKyc.setUserId(mkyc.getUserId());
+					uKyc.setKcyupdate(true);
+					kycProxy.PostKycUpdate(key, uKyc);
 				}
+				
+				if(user != null && user.isUpdated() && !mkyc.isProcessFlg()) {
+					user.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
+					userSetupRepository.save(user);
+				}
+				
 			}
 		}
 	}

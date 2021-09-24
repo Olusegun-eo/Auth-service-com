@@ -16,7 +16,7 @@ public interface UserSetupRepository extends JpaRepository<UserSetup, Long> {
 	 
 	
 	 @Query("select w from UserSetup w join fetch w.user u where u.id = :id" +
-	            " and u.isDeleted = false and isUpdated = false")
+	            " and u.isDeleted = false and w.isUpdated = false")
  UserSetup GetByUserId(@Param("id") long id);
 
 }

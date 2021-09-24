@@ -137,13 +137,11 @@ job:
   cron:
     5amED: 0 0 5 * * ? #5am every day
     5min1318: 0 0-5 13-18 * * ? #Every minute starting at 1pm and 6pm and ending after 5 minutes, and every day
-
+    kyc: 0/5 * * * * ? #5am every day
+    
 cipher:
   utils:
     value: ${CIPHER_KEY:WALMIFOS}
-
-referral:
-  account: ${REFERRAL_ACCOUNT:NGN008019345880}
 
 app:
   config:
@@ -165,7 +163,9 @@ app:
       base-url: http://157.230.223.54:9009/api/v1/wallet
     notification-service:
       base-url: ${NOTIFICATION_SERVICE_BASE_URL:http://68.183.60.114:8085/notification-service}
-
+    kyc-service:
+      base-url: http://46.101.41.187:8070/kyc-service/kyc
+      
   auth:
     tokenSecret: ${AUTH_TOKEN_SECRET}
     tokenExpirationMsec: ${TOKEN_EXPIRATION_TIME}
@@ -242,6 +242,7 @@ api:
         This endpoint is used to reset PIN request
         # Error Response
         Returns with a detailed response about the error.
+
     change-pin-by-phone:
       description: Send OTP to phone, this is for Change PIN POST Request
       notes: |
@@ -263,6 +264,7 @@ api:
         This endpoint is used to Change Users PIN, OTP is needed from `/change-pin/byPhone` or `/change-pin/byEmail` GET methods
         # Error Response
         Returns with a detailed response about the error.
+
   auth:
     create:
       description: Create a new Private User/ Can also be used to create In-App Admin and Super Admin Users
@@ -272,6 +274,7 @@ api:
         on both phoneNumber and Email
         # Error Response
         returns with a detailed response about the error.
+
     create-corporate:
       description: Create a new Corporate User. Can also be used to create Corporate Admin Users
       notes: |
@@ -280,6 +283,7 @@ api:
           on both phoneNumber and Email
           # Error Response
           returns with a detailed response about the error.
+
     verify-otp:
       description: Verifies User Creation and Enables the User to Login Successfully
       notes: |
@@ -287,6 +291,7 @@ api:
         if the request passes all validation, it will verify the newly created Users account and Send a welcome Mail
         # Error Response
         returns with a detailed response about the error.
+
     verify-phone:
       description: Verifies User Phone Numer after OTP has been Generated for it
       notes: |
@@ -295,6 +300,7 @@ api:
         If Successful, good response is given
         # Error Response
         returns with a detailed response about the error.
+
     verify-email:
       description: Verifies User Email after OTP has been Generated for it
       notes: |
@@ -303,6 +309,7 @@ api:
         If Successful, good response is given
         # Error Response
         returns with a detailed response about the error.
+
     login:
       description: Endpoint to Login to the system With
       notes: |
@@ -310,6 +317,7 @@ api:
         If User is Enabled and Active, response containing the User's profile is returned, together with the JWT Token to use for Authenticated Requests
         # Error Response
         returns with a detailed response about the error.
+
     social:
       description: Abstraction to allow Login from any of our Social Integrations
       notes: |
@@ -317,6 +325,7 @@ api:
         If Successful, good response is given
         # Error Response
         returns with a detailed response about the error.
+
   corporate-profile:
     create-corporate-profile:
       description: Create a new Corporate Profile (Backend Service to Service use only).
@@ -325,6 +334,7 @@ api:
         if the request passes all validation, it will create the profile successfully, as well as send an OTP to the user
         # Error Response
         returns with a detailed response about the error.
+
     update-corporate-profile:
       description: Update a Corporate Profile
       notes: |
@@ -332,6 +342,7 @@ api:
         if the request passes all validation, it will update the profile successfully.
         # Error Response
         returns with a detailed response about the error.
+
     update-profile-pic:
       description: Update a Corporate Profile Picture
       notes: |
@@ -339,6 +350,7 @@ api:
         if the request passes all validation, it will update the profile successfully.
         # Error Response
         returns with a detailed response about the error.
+
     get-corporate-profile:
       description: Get a Corporate Profile
       notes: |
@@ -346,6 +358,7 @@ api:
         if the request passes all validation, it will update the profile successfully.
         # Error Response
         returns with a detailed response about the error.
+
   profile:
     referals:
       description: get all users referrals
@@ -354,6 +367,7 @@ api:
         if the request passes all validation, it will get the referals successfully, as well as send an OTP to the user
         # Error Response
         returns with a detailed response about the error.
+
     create-personal-profile:
       description: Create a new Personal Profile (Backend Service to Service use only).
       notes: |
@@ -361,6 +375,7 @@ api:
         if the request passes all validation, it will create the profile successfully, as well as send an OTP to the user
         # Error Response
         returns with a detailed response about the error.
+
     get-user-profile:
       description: Get a users profile
       notes: |
@@ -375,6 +390,7 @@ api:
         if the request passes all validation, it will update a users profile successfully,
         # Error Response
         returns with a detailed response about the error.
+
     update-user-profile-image:
       description: updates a users profile image
       notes: |
@@ -398,6 +414,7 @@ api:
         if the request passes all validation, it will return various search result for a user,
         # Error Response
         returns with a detailed response about the error.
+
     search-phone:
       description: search for a user by phone number
       notes: |
@@ -405,6 +422,7 @@ api:
         if the request passes all validation, it will return various search result for a user,
         # Error Response
         returns with a detailed response about the error.
+
     search-email:
       description: search for a user by email
       notes: |
@@ -412,6 +430,7 @@ api:
         if the request passes all validation, it will return various search result for a user,
         # Error Response
         returns with a detailed response about the error.
+
     search-organization:
       description: search for a user by organisation name
       notes: |
@@ -419,3 +438,4 @@ api:
         if the request passes all validation, it will return various search result for a user,
         # Error Response
         returns with a detailed response about the error.
+
