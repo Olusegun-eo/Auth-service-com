@@ -76,7 +76,6 @@ pipeline {
        
    		stage('Remove Unused docker image') {
       			steps{
-				cleanWs()
          			/* sh "docker rmi $registry:$BUILD_NUMBER" */
 	   			sh "docker rmi $registry"
       			}
@@ -88,7 +87,13 @@ pipeline {
 				parameters: [[$class: 'StringParameterValue', name: 'FROM_BUILD', value: "${BUILD_NUMBER}"]
 	        			    ]
 	    		}	    
-    		}	 
+    		}
+		
+		post {
+			always{
+				cleanWs()
+			}
+		}
     	}
 
 }
