@@ -148,23 +148,23 @@ referral:
 app:
   config:
     biller-service:
-      base-url: http://157.230.223.54:8181/billspay
+      base-url: ${BILLER_SERVICE:http://157.230.223.54:8181/billspay}
     access-service:
-      base-url: http://46.101.41.187:8061
+      base-url: ${ROLE_SERVICE:http://46.101.41.187:8061}
     fraud-service:
-      base-url: http://157.230.223.54:8084
+      base-url: ${FRAUD_SERVICE:http://157.230.223.54:8084}
     logging-service:
-      base-url: http://46.101.41.187:8083
+      base-url: ${LOGGIN_SERVICE:http://46.101.41.187:8083}
     wayagram-profile:
-      base-url: http://157.245.84.14:1000
+      base-url: ${WAYAGRAM_PROFILE:http://157.245.84.14:1000}
     file-resource:
-      base-url: http://46.101.41.187:9098/file-resource/api
+      base-url: ${FILE_RESOURCE:http://46.101.41.187:9098/file-resource/api}
     virtual-account:
-      base-url: http://46.101.41.187:7090/account-creation-service/api
+      base-url: ${VIRTUAL_ACCOUNT:http://46.101.41.187:7090/account-creation-service/api}
     wallet-service:
-      base-url: http://157.230.223.54:9009/api/v1/wallet
+      base-url: ${WALLET_SERVICE:http://157.230.223.54:9009/api/v1/wallet}
     notification-service:
-      base-url: ${NOTIFICATION_SERVICE_BASE_URL:http://68.183.60.114:8085/notification-service}
+      base-url: ${NOTIFICATION_SERVICE:http://68.183.60.114:8085/notification-service}
 
   auth:
     tokenSecret: ${AUTH_TOKEN_SECRET}
