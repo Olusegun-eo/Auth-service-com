@@ -15,16 +15,22 @@ public class PasswordPojo {
     @CustomValidator(message = "OTP Has to contain Numeric characters only", type = Type.NUMERIC_STRING)
     private String otp;
 
-    @NotBlank(message = "NewPassword cannot be blank")
-    private String newPassword;
-
     @NotBlank(message = "phoneOrEmail Field cannot be blank or Null")
     @CustomValidator(message = "phoneOrEmail field has to be either a Phone or an Email", type = Type.EMAIL_OR_PHONE)
     private String phoneOrEmail;
 
     @NotBlank(message = "OldPassword cannot be blank")
     private String oldPassword;
+    
+    @NotBlank(message = "NewPassword cannot be blank")
+    private String newPassword;
 
+    public void setPhoneOrEmail(String value) {
+    	if(value.startsWith("+"))
+    		value = value.substring(1);
+		this.phoneOrEmail = value.replaceAll("\\s+", "").trim();
+    }
+    
     public PasswordPojo(){}
 
 }

@@ -1,6 +1,8 @@
 package com.waya.wayaauthenticationservice.util;
 
 import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.pojo.others.BonusTransferExcelPojo;
+import com.waya.wayaauthenticationservice.pojo.others.BulkBonusTransferDTO;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
@@ -21,6 +23,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.waya.wayaauthenticationservice.util.HelperUtils.isEmailOrPhoneNumber;
+
 @Slf4j
 public class ExcelHelper {
 
@@ -31,13 +35,17 @@ public class ExcelHelper {
     public static List<String> CORPORATE_USER_HEADERS = Arrays.asList("FIRSTNAME", "SURNAME", "PHONE_NUMBER", "EMAIL",
             "OFFICE_ADDRESS", "CITY", "STATE", "ORG_NAME", "ORG_EMAIL",
             "ORG_PHONE", "ORG_TYPE", "BUSINESS_TYPE", "REFERENCE_CODE");
-    //public static List<String> DEACTIVATE_USER_HEADERS = Arrays.asList("FIRSTNAME", "SURNAME", "PHONE_NUMBER", "EMAIL");
-
+    public static List<String> ACTIVATION_LIST = Arrays.asList("FIRSTNAME", "SURNAME", "PHONE_NUMBER OR EMAIL");
+    public static List<String> USER_BONUS_HEADERS = Arrays.asList("AMOUNT", "OFFICE_DEBIT_ACCOUNT", "CUSTOMER_CREDIT_NUMBER", "TRAN_TYPE", "TRAN_C_RNCY", "TRAN_NARRATION" );
     static String SHEET = "Users";
-    static Pattern alphabetsPattern = Pattern.compile("^[a-zA-Z]*$");
+    static String BONUS_SHEET = "UserBonus";
+
+    static Pattern alphabetsPattern = Pattern.compile("^([^0-9]*)$");
     static Pattern numericPattern = Pattern.compile("^[0-9]*$");
     static Pattern emailPattern = Pattern.compile("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\." + "[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@"
             + "(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?");
+
+    static Pattern formatter = Pattern.compile("\\d+\\.\\d+");
 
     public static boolean hasExcelFormat(MultipartFile file) {
         if (!Arrays.asList(TYPE).contains(file.getContentType())) {
@@ -53,7 +61,7 @@ public class ExcelHelper {
                 throw new CustomException("Invalid Excel File Check Extension", HttpStatus.BAD_REQUEST);
             }
             Set<BaseUserPojo> models = new HashSet<>();
-
+            
             Sheet sheet = workbook.getSheet(SHEET);
             if(sheet == null) throw new CustomException("Invalid Excel File Format Passed, Check Sheet Name", HttpStatus.BAD_REQUEST);
             Iterator<Row> rows = sheet.iterator();
@@ -125,6 +133,73 @@ public class ExcelHelper {
         }
     }
 
+    public static Set<String> excelActivation(InputStream is, String fileName){
+
+        try(Workbook workbook = getWorkBook(is, fileName)) {
+            if(workbook == null){
+                throw new CustomException("Invalid Excel File Check Extension", HttpStatus.BAD_REQUEST);
+            }
+            Set<String> userList = new HashSet<>();
+
+            Sheet sheet = workbook.getSheet(SHEET);
+            if(sheet == null) throw new CustomException("Invalid Excel File Format Passed, Check Sheet Name", HttpStatus.BAD_REQUEST);
+            Iterator<Row> rows = sheet.iterator();
+
+            int rowNumber = 0;
+            while (rows.hasNext()){
+                Row currentRow = rows.next();
+                Iterator<Cell> cellsInRow = currentRow.iterator();
+
+                // If First Cell is empty break from loop
+                if (currentRow == null || isCellEmpty(currentRow.getCell(0))) {
+                    break;
+                }
+
+                // Skip header After Check of Header Formats
+                if (rowNumber == 0) {
+                    List<String> excelColNames = new ArrayList<>();
+                    int i = 0;
+                    while (cellsInRow.hasNext()) {
+                        Cell cell = cellsInRow.next();
+                        String cellValue = dataFormatter.formatCellValue(cell).trim().toUpperCase();
+                        excelColNames.add(cellValue);
+                        i++;
+                        if (i == ACTIVATION_LIST.size()) {
+                            break;
+                        }
+                    }
+                    boolean value = checkExcelFileValidity(ACTIVATION_LIST, excelColNames);
+                    if (!value) {
+                        String errorMessage = "Failure, Incorrect File Header Format";
+                        throw new CustomException(errorMessage, HttpStatus.BAD_REQUEST);
+                    }
+                    rowNumber++;
+                    continue;
+                }
+
+                int cellIdx = 0;
+                String validId = null;
+                while (cellsInRow.hasNext()){
+                    Cell cell = cellsInRow.next();
+                    String colName = CellReference.convertNumToColString(cell.getColumnIndex()).toUpperCase();
+                    switch (colName) {
+                        case "C":
+                            validId = validateActivationId(cell, cellIdx, rowNumber);
+                            break;
+                        default:
+                            break;
+                    }
+                    cellIdx++;
+                }
+                if(validId != null)
+                    userList.add(validId);
+            }
+            return userList;
+        }catch (Exception ex){
+            throw new CustomException(ex.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
     public static BulkCorporateUserCreationDTO excelToCorporatePojo(InputStream is, String fileName){
 
         try(Workbook workbook = getWorkBook(is, fileName)) {
@@ -132,7 +207,7 @@ public class ExcelHelper {
                 throw new CustomException("Invalid Excel File Format Passed, Check Extension", HttpStatus.BAD_REQUEST);
             }
             Set<CorporateUserPojo> models = new HashSet<>();
-
+            
             Sheet sheet = workbook.getSheet(SHEET);
             if(sheet == null) throw new CustomException("Invalid Excel File Format Passed, Check Sheet Name", HttpStatus.BAD_REQUEST);
             Iterator<Row> rows = sheet.iterator();
@@ -228,13 +303,101 @@ public class ExcelHelper {
         }
     }
 
+
+    public static BulkBonusTransferDTO excelToBonusTransferPojo(InputStream is, String fileName){
+
+        try(Workbook workbook = getWorkBook(is, fileName)) {
+            if(workbook == null){
+                throw new CustomException("Invalid Excel File Format Passed, Check Extension", HttpStatus.BAD_REQUEST);
+            }
+            Set<BonusTransferExcelPojo> models = new HashSet<>();
+
+            Sheet sheet = workbook.getSheet(BONUS_SHEET);
+            if(sheet == null) throw new CustomException("Invalid Excel File Format Passed, Check Sheet Name", HttpStatus.BAD_REQUEST);
+            Iterator<Row> rows = sheet.iterator();
+            int rowNumber = 0;
+            while (rows.hasNext()){
+                Row currentRow = rows.next();
+                Iterator<Cell> cellsInRow = currentRow.iterator();
+                BonusTransferExcelPojo pojo = new BonusTransferExcelPojo();
+
+                // If First Cell is empty break from loop
+                if (currentRow == null || isCellEmpty(currentRow.getCell(0))) {
+                    break;
+                }
+
+                // skip header After Check of Header Formats
+                if (rowNumber == 0) {
+                    List<String> excelColNames = new ArrayList<>();
+                    int i = 0;
+                    while (cellsInRow.hasNext()) {
+                        Cell cell = cellsInRow.next();
+                        String cellValue = dataFormatter.formatCellValue(cell).trim().toUpperCase();
+                        excelColNames.add(cellValue);
+                        i++;
+                        if (i == USER_BONUS_HEADERS.size()) {
+                            break;
+                        }
+                    }
+                    boolean value = checkExcelFileValidity(USER_BONUS_HEADERS, excelColNames);
+                    if (!value) {
+                        String errorMessage = "Failure, Incorrect File Format";
+                        throw new CustomException(errorMessage, HttpStatus.BAD_REQUEST);
+                    }
+                    rowNumber++;
+                    continue;
+                }
+
+                int cellIdx = 0;
+                while (cellsInRow.hasNext()){
+                    Cell cell = cellsInRow.next();
+                    String colName = CellReference.convertNumToColString(cell.getColumnIndex()).toUpperCase();
+                    switch (colName) {
+                        case "A":
+                            pojo.setAmount(Double.parseDouble(validateStringDoubleOnly(cell, cellIdx, rowNumber)));
+                            break;
+                        case "B":
+                            pojo.setOfficeDebitAccount(defaultStringCell(cell));
+                            break;
+                        case "C":
+                            pojo.setCustomerCreditNumber(defaultStringCell(cell));
+                            break;
+                        case "D":
+                            pojo.setTranType(defaultStringCell(cell));
+                            break;
+                        case "E":
+                            pojo.setTranCrncy(defaultStringCell(cell));
+                            break;
+                        case "F":
+                            pojo.setTranNarration(defaultStringCell(cell));
+                            break;
+                        default:
+                            break;
+                    }
+                    cellIdx++;
+                }
+                models.add(pojo);
+                rowNumber++;
+            }
+            workbook.close();
+            return new BulkBonusTransferDTO(models);
+        }catch (Exception ex){
+            throw new CustomException(ex.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
     public static ByteArrayInputStream createExcelSheet(List<String> HEADERS){
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
+            DataFormat fmt = workbook.createDataFormat();
+            CellStyle cellStyle = workbook.createCellStyle();
+            cellStyle.setDataFormat(fmt.getFormat("@"));
+            
             Sheet sheet = workbook.createSheet(SHEET);
             Row headerRow = sheet.createRow(0);
             for (int col = 0; col < HEADERS.size(); col++) {
                 Cell cell = headerRow.createCell(col);
                 cell.setCellValue(HEADERS.get(col));
+                cell.setCellStyle(cellStyle);
             }
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
@@ -279,12 +442,14 @@ public class ExcelHelper {
     }
 
     private static String defaultStringCell(final Cell cell) {
+
         return dataFormatter.formatCellValue(cell).trim();
     }
 
     private static String validateAndPassStringValue(Cell cell, int cellNumber, int rowNumber){
         String cellValue =  dataFormatter.formatCellValue(cell).trim();
         boolean val = alphabetsPattern.matcher(cellValue).find();
+        log.info("val :" + val);
         if(!cellValue.isBlank() && val && cellValue.length() >= 2){
             return cellValue;
         }
@@ -303,11 +468,44 @@ public class ExcelHelper {
     }
 
     private static String validateStringNumericOnly(Cell cell, int cellNumber, int rowNumber) {
-        String cellValue =  dataFormatter.formatCellValue(cell).trim();
+    	String cellValue;
+    	try {
+    		double d = cell.getNumericCellValue();
+    		cellValue = String.format("%.0f", d);
+    	}catch(IllegalStateException | NumberFormatException ex) {
+    		cellValue = dataFormatter.formatCellValue(cell).trim();
+    	}
         boolean val = numericPattern.matcher(cellValue).find();
         if(!val) {
             String errorMessage = String.format("Invalid Numeric Cell Value Passed in row %s, cell %s", rowNumber + 1, cellNumber + 1);
             throw new CustomException(errorMessage, HttpStatus.EXPECTATION_FAILED);
+        }
+        return cellValue;
+    }
+
+    private static String validateActivationId(Cell cell, int cellNumber, int rowNumber) {
+        String cellValue;
+        try {
+            double d = cell.getNumericCellValue();
+            cellValue = String.format("%.0f", d);
+        }catch(IllegalStateException | NumberFormatException ex) {
+            cellValue = dataFormatter.formatCellValue(cell).trim();
+        }
+        boolean val = isEmailOrPhoneNumber(cellValue);
+        if(!val) {
+            String errorMessage = String.format("Invalid Numeric Cell Value Passed in row %s, cell %s", rowNumber + 1, cellNumber + 1);
+            log.error("Invalid Numeric Cell entered :: {}", errorMessage);
+            return null;
+        }
+        return cellValue;
+    }
+
+    private static String validateStringDoubleOnly(Cell cell, int cellNumber, int rowNumber) throws CustomException {
+        String cellValue =  dataFormatter.formatCellValue(cell).trim();
+        boolean val = formatter.matcher(cellValue).find();
+        if(!val) {
+            String errorMessage = String.format("Invalid Numeric Cell Value Passed in row %s, cell %s", rowNumber + 1, cellNumber + 1);
+            throw new CustomException(errorMessage,HttpStatus.EXPECTATION_FAILED);
         }
         return cellValue;
     }

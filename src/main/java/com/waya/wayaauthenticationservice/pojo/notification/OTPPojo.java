@@ -23,4 +23,10 @@ public class OTPPojo {
     @NotBlank(message = "OTP Cannot be blank")
     @CustomValidator(message = "OTP Passed must be numeric", type = Type.NUMERIC_STRING)
     private String otp;
+    
+    public void setPhoneOrEmail(String value) {
+    	if(value.startsWith("+"))
+    		value = value.substring(1);
+		this.phoneOrEmail = value.replaceAll("\\s+", "").trim();
+    }
 }

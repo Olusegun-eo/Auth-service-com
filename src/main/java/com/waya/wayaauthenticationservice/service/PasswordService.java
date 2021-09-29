@@ -4,6 +4,8 @@ import com.waya.wayaauthenticationservice.pojo.password.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import javax.validation.Valid;
+
 public interface PasswordService {
 
     ResponseEntity<?> changePassword(PasswordPojo passwordPojo);
@@ -20,7 +22,7 @@ public interface PasswordService {
 
     ResponseEntity<?> sendPINResetOTPByPhoneNumber(String phoneNumber);
 
-    @PreAuthorize(value = "@userSecurity.useHierarchy(#email, authentication) or hasRole('APP_ADMIN')")
+    @PreAuthorize(value = "@userSecurity.useHierarchy(#email, authentication)")
     ResponseEntity<?> sendPinResetOTPByEmail(String email, String redirectUrl);
 
     ResponseEntity<?> sendPINChangeOTPByPhoneNumber(String phoneNumber);
@@ -33,7 +35,6 @@ public interface PasswordService {
 
     ResponseEntity<?> changeForgotPIN(NewPinPojo pinPojo);
 
-    @PreAuthorize(value = "hasRole('APP_ADMIN')")
     ResponseEntity<?> validatePin(Long userId, int pin);
 
     ResponseEntity<?> validatePinFromUser(int pin);
@@ -41,4 +42,9 @@ public interface PasswordService {
     ResponseEntity<?> sendPinCreationOTPPhone(String phoneNumber);
 
     ResponseEntity<?> sendPinCreationOTPEmail(String email, String redirectUrl);
+
+	ResponseEntity<?> changePassword(@Valid ChangePasswordPojo pojo);
+
+    //@PreAuthorize(value = "@userSecurity.useHierarchy(#pojo.phoneOrEmail, authentication)")
+    ResponseEntity<?> resetPassword(@Valid ChangePasswordPojo pojo);
 }

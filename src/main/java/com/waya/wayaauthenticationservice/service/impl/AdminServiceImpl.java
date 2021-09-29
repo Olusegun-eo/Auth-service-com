@@ -1,20 +1,20 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
 import com.waya.wayaauthenticationservice.entity.OTPBase;
-import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.SMSAlertConfig;
 import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.enums.OTPRequestType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.mail.context.AdminCheckContext;
+import com.waya.wayaauthenticationservice.pojo.others.SMSRequest;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
-import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
+import com.waya.wayaauthenticationservice.response.SMSResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.security.AuthenticatedUserFacade;
 import com.waya.wayaauthenticationservice.service.*;
@@ -55,25 +55,25 @@ public class AdminServiceImpl implements AdminService {
     RolesRepository rolesRepository;
 
     @Autowired
-    ProfileRepository profileRepo;
-
-    @Autowired
     AuthenticationService authenticationService;
 
     @Autowired
     UserService userService;
 
     @Autowired
-    OTPTokenService OTPTokenService;
+    OTPTokenService otpTokenService;
 
     @Autowired
     PasswordEncoder passwordEncoder;
 
     @Autowired
-    MailService mailService;
+    MessagingService messagingService;
 
     @Autowired
     AuthenticatedUserFacade authenticatedUserFacade;
+
+    @Autowired
+    ProfileService profileService;
 
     @Override
     public Page<Users> getCorporateUsers(boolean isCorporate, int page, int size) {
@@ -138,21 +138,16 @@ public class AdminServiceImpl implements AdminService {
             if (adminUser == null)
                 throw new CustomException("Error in Fetching Admin User", HttpStatus.INTERNAL_SERVER_ERROR);
 
-            Profile profile = profileRepo.findByUserId(false, String.valueOf(adminUser.getId())).orElse(null);
-            if (profile == null)
-                return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
-                        + " For Profile with userId: " + adminUser.getId(), null), HttpStatus.BAD_REQUEST);
-
-            AdminCheckContext emailContext = new AdminCheckContext();
-            Integer otpToken = generateEmailOTP(adminUser.getEmail(), ADMIN_VERIFICATION);
-            emailContext.init(profile);
-            emailContext.seToken(String.valueOf(otpToken));
+            OTPBase otpToken = otpTokenService.generateOTP(adminUser.getPhoneNumber(), adminUser.getEmail(), ADMIN_VERIFICATION);
 
             //Send the Mail
-            CompletableFuture.runAsync(() -> this.mailService.sendMail(emailContext));
+            AdminCheckContext emailContext = new AdminCheckContext();
+            emailContext.init(adminUser);
+            emailContext.seToken(String.valueOf(otpToken.getCode()));
+            CompletableFuture.runAsync(() -> this.messagingService.sendMail(emailContext));
 
             // Send the Phone Number
-            CompletableFuture.runAsync(() -> this.OTPTokenService.sendSMSOTP(adminUser.getPhoneNumber(), adminUser.getName(), ADMIN_VERIFICATION));
+            CompletableFuture.runAsync(() -> this.otpTokenService.sendSMSOTP(adminUser.getName(), otpToken));
 
             return new ResponseEntity<>(new SuccessResponse("OTP has been sent"), HttpStatus.OK);
         } catch (Exception ex) {
@@ -167,12 +162,12 @@ public class AdminServiceImpl implements AdminService {
         if (adminUser == null)
             throw new CustomException("Error in Fetching Admin User", HttpStatus.INTERNAL_SERVER_ERROR);
 
-        OTPVerificationResponse resp = this.OTPTokenService.verifyEmailToken(adminUser.getEmail(), otp, ADMIN_VERIFICATION);
+        OTPVerificationResponse resp = this.otpTokenService.verifyEmailToken(adminUser.getEmail(), otp, ADMIN_VERIFICATION);
         if (!resp.isValid()) {
-            resp = this.OTPTokenService.verifySMSOTP(adminUser.getPhoneNumber(), otp, ADMIN_VERIFICATION);
-            this.OTPTokenService.invalidateOldTokenViaEmail(adminUser.getEmail(), ADMIN_VERIFICATION);
+            resp = this.otpTokenService.verifySMSOTP(adminUser.getPhoneNumber(), otp, ADMIN_VERIFICATION);
+            this.otpTokenService.invalidateOldTokenViaEmail(adminUser.getEmail(), ADMIN_VERIFICATION);
         } else {
-            this.OTPTokenService.invalidateOldTokenViaPhoneNumber(adminUser.getPhoneNumber(), ADMIN_VERIFICATION);
+            this.otpTokenService.invalidateOldTokenViaPhoneNumber(adminUser.getPhoneNumber(), ADMIN_VERIFICATION);
         }
 
         if (!resp.isValid())
@@ -193,8 +188,7 @@ public class AdminServiceImpl implements AdminService {
                     if (!user.getRoleList().contains(mRole.get()))
                         user.getRoleList().add(mRole.get());
                 } else {
-                    if (user.getRoleList().contains(mRole.get()))
-                        user.getRoleList().remove(mRole.get());
+                    user.getRoleList().remove(mRole.get());
                 }
                 userRepository.save(user);
             }
@@ -219,7 +213,7 @@ public class AdminServiceImpl implements AdminService {
             user.setAccountStatus(-1);
             userRepository.save(user);
 
-            CompletableFuture.runAsync(() -> this.authenticationService.sendEmailNewPassword(newPassword, user));
+            CompletableFuture.runAsync(() -> this.authenticationService.sendNewPassword(newPassword, user));
 
             return new ResponseEntity<>(new SuccessResponse("User Password Reset Completed", null), HttpStatus.OK);
         } catch (Exception e) {
@@ -230,7 +224,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public InputStream createDeactivationExcelSheet() {
-        return ExcelHelper.createExcelSheet(ExcelHelper.PRIVATE_USER_HEADERS);
+        return ExcelHelper.createExcelSheet(ExcelHelper.ACTIVATION_LIST);
     }
 
     @Override
@@ -238,7 +232,7 @@ public class AdminServiceImpl implements AdminService {
         String message;
         if (ExcelHelper.hasExcelFormat(file)) {
             try {
-                return userService.deactivateAccounts(ExcelHelper.excelToPrivateUserPojo(file.getInputStream(),
+                return userService.deactivateAccounts(ExcelHelper.excelActivation(file.getInputStream(),
                             file.getOriginalFilename()));
             } catch (Exception e) {
                 throw new CustomException("failed to Parse excel data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -253,7 +247,7 @@ public class AdminServiceImpl implements AdminService {
         String message;
         if (ExcelHelper.hasExcelFormat(file)) {
             try {
-                return userService.activateAccounts(ExcelHelper.excelToPrivateUserPojo(file.getInputStream(),
+                return userService.activateAccounts(ExcelHelper.excelActivation(file.getInputStream(),
                         file.getOriginalFilename()));
             } catch (Exception e) {
                 throw new CustomException("failed to Parse excel data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -268,9 +262,26 @@ public class AdminServiceImpl implements AdminService {
         return rolesRepository.findAll();
     }
 
-    private Integer generateEmailOTP(String email, OTPRequestType otpRequestType) {
-        OTPBase otpBase = this.OTPTokenService.generateEmailToken(email, otpRequestType);
-        return otpBase.getCode();
+    @Override
+    public ResponseEntity<?> toggleActivation(Long id) {
+        return this.userService.toggleActivation(id);
+    }
+
+    @Override
+    public ResponseEntity<?> toggleLock(Long id) {
+        return this.userService.toggleLock(id);
+    }
+
+    @Override
+    public SMSResponse adminToggleSMSAlert(SMSRequest smsRequest) {
+        SMSResponse smsResponse = profileService.toggleSMSAlert(smsRequest);
+        return smsResponse;
+    }
+
+    @Override
+    public SMSResponse adminCheckSMSAlert(String phoneNumber) {
+        SMSResponse smsResponse = profileService.getSMSAlertStatus(phoneNumber);
+        return smsResponse;
     }
 
 }

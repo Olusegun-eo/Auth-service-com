@@ -1,6 +1,11 @@
 spring:
   application:
     name: auth-service
+  data:
+    redis:
+      repositories:
+        enabled: false
+        type: none
   datasource:
     url: ${POSTGRES_URL}
     username: ${POSTGRES_USERNAME}
@@ -14,6 +19,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        show-sql: true
         jdbc:
           time_zone: UTC
     open-in-view: false #this config disables database queries which  may be performed during view rendering
@@ -24,6 +30,7 @@ spring:
       file-size-threshold: 2KB
       max-file-size: 2MB
       max-request-size: 2MB
+      resolve-lazily: true
 
   cache:
     type: redis
@@ -88,7 +95,7 @@ server:
   error:
     include-message: always
   servlet:
-    context-path: /
+    context-path: /auth-service
 
 eureka:
   client:
@@ -105,7 +112,21 @@ feign:
       default:
         connectTimeout: 60000
         readTimeout: 10000
-
+logging:
+  level:
+    net.sf.jmimemagic.MagicParser: ERROR
+    org:
+#      hibernate:
+#        SQL: DEBUG
+#        type:
+#          descriptor:
+#            sql:
+#              BasicBinder: TRACE
+      apache:
+        kafka:
+          clients:
+            producer:
+              ProducerConfig: ERROR
 
 jwt:
   secret: ${JWT_SECRET:wayas3cr3t}
@@ -117,10 +138,23 @@ job:
     5amED: 0 0 5 * * ? #5am every day
     5min1318: 0 0-5 13-18 * * ? #Every minute starting at 1pm and 6pm and ending after 5 minutes, and every day
 
+cipher:
+  utils:
+    value: ${CIPHER_KEY:WALMIFOS}
+
+referral:
+  account: ${REFERRAL_ACCOUNT:NGN008019345880}
+
 app:
   config:
+    biller-service:
+      base-url: http://157.230.223.54:8181/billspay
     access-service:
       base-url: http://46.101.41.187:8061
+    fraud-service:
+      base-url: http://157.230.223.54:8084
+    logging-service:
+      base-url: http://46.101.41.187:8083
     wayagram-profile:
       base-url: http://157.245.84.14:1000
     file-resource:
@@ -364,7 +398,15 @@ api:
         if the request passes all validation, it will update a users profile image successfully,
         # Error Response
         returns with a detailed response about the error.
-
+        
+    update-user-images:
+      description: updates a Corporate users Surrounding image
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will update a users profile image successfully,
+        # Error Response
+        returns with a detailed response about the error.
+        
     search-name:
       description: search for a user by name
       notes: |

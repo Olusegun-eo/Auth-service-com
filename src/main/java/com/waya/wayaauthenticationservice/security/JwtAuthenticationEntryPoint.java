@@ -26,9 +26,13 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint, Se
                          AuthenticationException e) throws IOException, ServletException {
        
         String tokenPassed = req.getHeader(SecurityConstants.HEADER_STRING);
-        logger.error("Responding with unauthorized error. Message - {}:: token Passed is", e.getMessage(), tokenPassed);
+        String message = e.getMessage() + ":: Attempt to access the protected URL: " + req.getRequestURI()
+                + " is Denied.";
+
+        logger.error("Message - {} :: token Passed is" +
+                " {}", message, tokenPassed);
         
         httpServletResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED,
-                e.getLocalizedMessage());
+                message);
     }
 }

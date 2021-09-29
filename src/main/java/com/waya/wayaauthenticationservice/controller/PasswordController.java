@@ -1,26 +1,20 @@
 package com.waya.wayaauthenticationservice.controller;
 
-import javax.validation.Valid;
-import javax.validation.constraints.Email;
-
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
+import com.waya.wayaauthenticationservice.pojo.password.ChangePasswordPojo;
 import com.waya.wayaauthenticationservice.pojo.password.PasswordPojo;
 import com.waya.wayaauthenticationservice.pojo.password.ResetPasswordPojo;
 import com.waya.wayaauthenticationservice.service.PasswordService;
 import com.waya.wayaauthenticationservice.util.ValidPhone;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import javax.validation.constraints.Email;
 
 @RestController
 @RequestMapping("/api/v1/password")
@@ -72,6 +66,25 @@ public class PasswordController {
     @PostMapping("/change-password")
     public ResponseEntity<?> changeForgotPassword(@Valid @RequestBody PasswordPojo passwordPojo) {
         return passwordService.changePassword(passwordPojo);
+    }
+
+    @ApiOperation(value = "Change password Get Request", notes = "Change password Get Request")
+    @GetMapping("/change")
+    public String sendChangePassword() {
+        return "to return the HTML Page for Change Password";
+    }
+    
+    @ApiOperation(value = "Change password post Request {ADMIN ACTION}", notes = "Change password post Request")
+    @PostMapping("/change")
+    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordPojo passwordPojo) {
+        return passwordService.changePassword(passwordPojo);
+    }
+
+    @ApiOperation(value = "Reset password post Request {ADMIN ACTION}", notes = "Reset password post Request")
+    @PostMapping("/reset")
+    @PreAuthorize(value = "hasAuthority('ROLE_APP_ADMIN') and @userSecurity.useHierarchy(#pojo.phoneOrEmail, authentication)")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ChangePasswordPojo pojo) {
+        return passwordService.resetPassword(pojo);
     }
 
 }

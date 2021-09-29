@@ -3,14 +3,16 @@ package com.waya.wayaauthenticationservice.integration;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.others.CreateAccountResponse;
 import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
+import com.waya.wayaauthenticationservice.pojo.others.VirtualAccountResponse;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.proxy.WayagramProxy;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.service.OTPTokenService;
+import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +24,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -39,6 +42,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@DirtiesContext
+@Slf4j
 public class AuthenticationControllerTest {
 
     Users user = new Users();
@@ -66,36 +71,36 @@ public class AuthenticationControllerTest {
 
     @BeforeAll
     public void setUp() {
-        user.setEmail("stan@toju.com");
+        user.setEmail("stan@tojuq.com");
         user.setFirstName("Stan");
         user.setSurname("Toju");
         user.setActive(true);
-        user.setPhoneNumber("2348166302445");
+        user.setPhoneNumber("2348163024451");
         user.setPassword(passwordEncoder.encode("test@123"));
         user.setName(String.format("%s %s", user.getFirstName(), user.getSurname()));
-        user.setId(1l);
 
-        userRepository.save(user);
+        user = userRepository.save(user);
     }
 
     @Test
     @DisplayName("create personal profile successfully")
     public void createPersonalUserSuccessfully() throws Exception {
-    	ResponseEntity<?> resp = ResponseEntity.ok(new ApiResponse<>("Success", true));
-        ApiResponse<CreateAccountResponse> acctResponse = new ApiResponse<>
+        ApiResponseBody<?> resp = new ApiResponseBody<>("Success", true);
+        ResponseEntity<String> response = ResponseEntity.ok("Success");
+        ApiResponseBody<CreateAccountResponse> acctResponse = new ApiResponseBody<>
                 (new CreateAccountResponse("1", "5055555783"), "Success", true);
 
     	doReturn(resp).when(virtualAccountService).createVirtualAccount(any());
-    	doReturn(resp).when(wayagramService).createWayagramProfile(any());
-    	doReturn(resp).when(wayagramService).autoFollowWayagram(any());
+    	doReturn(response).when(wayagramService).createWayagramProfile(any());
+    	doReturn(response).when(wayagramService).autoFollowWayagram(any());
     	doReturn(acctResponse).when(walletService).createUserAccount(any());
         doNothing().when(otpService).sendAccountVerificationToken(any(), any(), any());
     	
         BaseUserPojo user = new BaseUserPojo();
-        user.setEmail("emmox55@gmail.com");
+        user.setEmail("emmox5523@gmail.com");
         user.setFirstName("Stan");
         user.setSurname("Toju");
-        user.setPhoneNumber("2348104728022");
+        user.setPhoneNumber("2348114700022");
         user.setPassword("test@123");
 
         createNewUser(user, "$.message", "Successful", status().isCreated());
@@ -117,8 +122,8 @@ public class AuthenticationControllerTest {
     @Test
     @DisplayName("create corporate profile successfully")
     public void createCorpUserSuccessfully() throws Exception {
-    	ResponseEntity<?> resp = ResponseEntity.ok(new ApiResponse<>("Success", true));
-        ApiResponse<CreateAccountResponse> acctResponse = new ApiResponse<>
+        ApiResponseBody<VirtualAccountResponse> resp = new ApiResponseBody<>("Success", true);
+        ApiResponseBody<CreateAccountResponse> acctResponse = new ApiResponseBody<>
                 (new CreateAccountResponse("1", "5055555783"), "Success", true);
 
         doReturn(resp).when(virtualAccountService).createVirtualAccount(any());
@@ -126,10 +131,10 @@ public class AuthenticationControllerTest {
         doNothing().when(otpService).sendAccountVerificationToken(any(), any(), any());
     	
         CorporateUserPojo user = new CorporateUserPojo();
-        user.setEmail("micro@toju.com");
+        user.setEmail("micro@company.com");
         user.setFirstName("Stan");
         user.setSurname("Toju");
-        user.setPhoneNumber("2347030355396");
+        user.setPhoneNumber("2347010366596");
         user.setPassword("test@123");
         user.setCity("Shomolu");
         user.setBusinessType("Banking");
@@ -150,7 +155,7 @@ public class AuthenticationControllerTest {
         user.setEmail("stan-toju.com"); // wrong-email
         user.setFirstName("Stan");
         user.setSurname("Toju");
-        user.setPhoneNumber("2368166302445"); // Wrong Phone Number
+        user.setPhoneNumber("2368145302445"); // Wrong Phone Number
         user.setPassword("test@123");
 
         createCorporateNewUser(user, "$.message", "Validation Errors", status().isBadRequest());

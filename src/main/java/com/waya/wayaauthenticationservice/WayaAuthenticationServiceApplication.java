@@ -3,7 +3,10 @@ package com.waya.wayaauthenticationservice;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.crypto.tink.config.TinkConfig;
+import com.waya.wayaauthenticationservice.config.AuditorAwareImpl;
 import com.waya.wayaauthenticationservice.config.LoggableDispatcherServlet;
+import com.waya.wayaauthenticationservice.util.Utils;
 import feign.RequestInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
@@ -18,6 +21,7 @@ import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
@@ -34,7 +38,7 @@ import java.util.Collections;
 @EnableDiscoveryClient
 @EnableFeignClients
 @EnableSwagger2
-@EnableJpaAuditing
+@EnableJpaAuditing(auditorAwareRef = "auditorProvider")
 @Slf4j
 public class WayaAuthenticationServiceApplication {
 
@@ -101,7 +105,7 @@ public class WayaAuthenticationServiceApplication {
 	public CommonsMultipartResolver createMultipartResolver() {
 		CommonsMultipartResolver resolver=new CommonsMultipartResolver();
 		resolver.setDefaultEncoding("utf-8");
-		resolver.setMaxUploadSize(100000000);
+		resolver.setMaxUploadSize(10000000);
 		resolver.setMaxInMemorySize(10240000);
 
 		return resolver;
@@ -110,6 +114,21 @@ public class WayaAuthenticationServiceApplication {
 	@Bean
 	public RequestInterceptor requestInterceptor(){
 		return requestTemplate -> requestTemplate.header(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.getMimeType());
+	}
+
+	@Bean
+	AuditorAware<String> auditorProvider() {
+		return new AuditorAwareImpl();
+	}
+
+	@Bean(name = "encryptSignature")
+	public byte[] signData() throws Exception {
+		TinkConfig.register();
+
+		Utils utils = (Utils) SpringApplicationContext.getBean("utils");
+		assert utils != null;
+		utils.generateKeySet();
+		return utils.encryptData();
 	}
 
 }

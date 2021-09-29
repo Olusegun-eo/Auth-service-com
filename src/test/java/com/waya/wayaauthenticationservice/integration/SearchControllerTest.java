@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -29,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@DirtiesContext
 class SearchControllerTest {
 
     @Autowired
@@ -75,7 +77,7 @@ class SearchControllerTest {
     @Order(4)
     @Test
     void searchByOrganisationName() throws Exception {
-        searchAndVerifyProfileOrganisationName("name", status().isOk());
+        searchAndVerifyProfileOrganisationName("organisation name", status().isOk());
     }
 
     private void searchAndVerifyProfileByName(
@@ -126,7 +128,7 @@ class SearchControllerTest {
         profile.setSurname("appp");
         profile.setState("state");
         profile.setCorporate(false);
-        profile.setUserId(String.valueOf(user.getId()));
+        profile.setUserId(user.getId().toString());
         profile.setDeleted(false);
 
         if (!profileRepository.existsByEmail(profile.getEmail()))
@@ -139,7 +141,6 @@ class SearchControllerTest {
         otherDetails.setOrganisationName("organisation name");
 
         Profile corporate = new Profile();
-        corporate.setOrganisationName("name");
         corporate.setCity("city");
         corporate.setReferral("");
         corporate.setUserId("42114");

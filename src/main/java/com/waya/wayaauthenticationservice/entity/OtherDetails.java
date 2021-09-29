@@ -20,12 +20,20 @@ public class OtherDetails {
 
     @NotBlank(message = "please enter your organisation name")
     private String organisationName;
+    private String organisationEmail;
+    private String organisationPhone;
+    private String organizationCity;
+    private String organizationAddress;
+    private String organizationState;
 
-    @NotBlank(message = "please enter your organisation type")
     private String organisationType;
 
     @NotBlank(message = "please enter your business type")
     private String businessType;
+
+    private String frontImage;
+    private String leftImage;
+    private String rightImage;
 
     @JsonIgnore
     @OneToOne(mappedBy = "otherDetails")

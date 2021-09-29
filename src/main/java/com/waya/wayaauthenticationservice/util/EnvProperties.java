@@ -9,6 +9,8 @@ public class EnvProperties {
 	
 	@Autowired
 	private Environment env;
+
+	public String getCipherPass() { return env.getProperty("cipher.utils.key");}
 	
 	public String getTokenSecret() {
 		return env.getProperty("jwt.secret");

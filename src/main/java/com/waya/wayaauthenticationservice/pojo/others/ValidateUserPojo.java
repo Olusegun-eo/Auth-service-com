@@ -12,7 +12,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class ValidateUserPojo {
 
-    private long id;
+    private String id;
     private String email;
     private String phoneNumber;
     private String referenceCode;
@@ -25,5 +25,5 @@ public class ValidateUserPojo {
     private boolean isCorporate = false;
     private Set<String> roles = new HashSet<>();
     private Set<String> permits = new HashSet<>();
-
+    private String transactionLimit;
 }

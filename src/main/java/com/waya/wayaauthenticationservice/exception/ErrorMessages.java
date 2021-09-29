@@ -2,7 +2,7 @@ package com.waya.wayaauthenticationservice.exception;
 
 public enum ErrorMessages {
 	
-	MISSING_REQUIRED_FIELD("Missing required field. Please check documentation for required fields"),
+	MISSING_REQUIRED_FIELD("Missing required field. Please check documentation for required fields."),
 	RECORD_ALREADY_EXISTS("Record Already Exists"),
 	INTERNAL_SERVER_ERROR("Internal Server Error"),
 	NO_RECORD_FOUND("Record with Provided input not Found"),

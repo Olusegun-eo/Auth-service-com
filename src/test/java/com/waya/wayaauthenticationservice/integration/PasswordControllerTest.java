@@ -1,6 +1,5 @@
 package com.waya.wayaauthenticationservice.integration;
 
-import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
@@ -12,6 +11,7 @@ import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import com.waya.wayaauthenticationservice.util.SecurityConstants;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +23,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -43,9 +44,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@DirtiesContext
+@Slf4j
 public class PasswordControllerTest {
-
-	Profile profile = new Profile();
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -94,7 +95,7 @@ public class PasswordControllerTest {
 
 		ResetPasswordPojo pojo = buildResetPojo(23456, "test@123", "noemail@waya.com");
 		resetPassword(pojo, "$.message",
-				ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User with email/phoneNumber: noemail@waya.com",
+				ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User with identity: noemail@waya.com",
 				status().isBadRequest());
 	}
 
@@ -156,14 +157,13 @@ public class PasswordControllerTest {
 	}
 
 	private Users setUpUser() {
-		user.setEmail("stan@toju.com");
+		user.setEmail("stan@tojue.com");
 		user.setFirstName("Stan");
 		user.setSurname("Toju");
 		user.setActive(true);
-		user.setPhoneNumber("2348166302445");
+		user.setPhoneNumber("2348160302443");
 		user.setPassword(passwordEncoder.encode("test@123"));
 		user.setName(String.format("%s %s", user.getFirstName(), user.getSurname()));
-		user.setId(1l);
 		return userRepository.save(user);
 	}
 

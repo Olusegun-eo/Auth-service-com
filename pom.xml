@@ -81,7 +81,11 @@
 			<artifactId>guava</artifactId>
 			<version>23.0</version>
 		</dependency>
-
+		<dependency>
+			<groupId>com.vladmihalcea</groupId>
+			<artifactId>hibernate-types-52</artifactId>
+			<version>2.12.1</version>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis</artifactId>
@@ -153,6 +157,13 @@
 			<version>2.3.5</version>
 			<type>jar</type>
 		</dependency>
+
+		<dependency>
+			<groupId>net.sf.jmimemagic</groupId>
+			<artifactId>jmimemagic</artifactId>
+			<version>0.1.5</version>
+		</dependency>
+
 		<!-- Apache Commons IO -->
 		<dependency>
 			<groupId>commons-io</groupId>
@@ -178,8 +189,6 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- <dependency> <groupId>junit</groupId> <artifactId>junit</artifactId> 
-			<scope>test</scope> </dependency> -->
 
 		<dependency>
 			<groupId>org.jacoco</groupId>
@@ -200,19 +209,14 @@
 			<artifactId>spring-mobile-device</artifactId>
 			<version>2.0.0.M3</version>
 		</dependency>
-        <!-- <dependency>
-            <groupId>org.springframework.kafka</groupId>
-            <artifactId>spring-kafka-test</artifactId>
-            <version>2.5.5.RELEASE</version>
-            <scope>test</scope>
-        </dependency> -->
-        <dependency>
-            <groupId>org.springframework.kafka</groupId>
-            <artifactId>spring-kafka-test</artifactId>
-            <scope>test</scope>
-        </dependency>
 
-		<!--Read and Write to Excel Files-->
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!--Read and Write to Excel Files -->
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>
@@ -222,6 +226,19 @@
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
 			<version>3.15</version>
+		</dependency>
+
+		<!--Cryptography -->
+		<dependency>
+			<groupId>com.google.crypto.tink</groupId>
+			<artifactId>tink</artifactId>
+			<version>1.6.1</version>
+		</dependency>
+		<!--JavaFaker library -->
+		<dependency>
+			<groupId>com.github.javafaker</groupId>
+			<artifactId>javafaker</artifactId>
+			<version>0.15</version>
 		</dependency>
 	</dependencies>
 

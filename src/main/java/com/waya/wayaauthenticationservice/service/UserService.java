@@ -1,21 +1,32 @@
 package com.waya.wayaauthenticationservice.service;
 
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mobile.device.Device;
+import org.springframework.security.access.prepost.PreAuthorize;
+
+import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
+import com.waya.wayaauthenticationservice.pojo.log.LogRequest;
 import com.waya.wayaauthenticationservice.pojo.others.ContactPojoReq;
+import com.waya.wayaauthenticationservice.pojo.others.FakePojo;
 import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
 import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BulkCorporateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BulkPrivateUserCreationDTO;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserSetupPojo;
+import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
-import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mobile.device.Device;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
 
 public interface UserService {
 
@@ -39,18 +50,24 @@ public interface UserService {
 
 	SuccessResponse UpdateUser(UserRoleUpdateRequest user);
 
-	UserEditPojo UpdateUserDetails(UserEditPojo userEditPojo);
-
 	// Get user details for Roles service
 	UserEditPojo getUserForRole(Long id);
 
-	ResponseEntity<?> activateAccount(Long userId);
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#id, authentication)")
+	ResponseEntity<?> toggleActivation(Long id);
+
+	@PreAuthorize(value = "@userSecurity.useHierarchy(#id, authentication)")
+	ResponseEntity<?> toggleLock(Long id);
 
 	ResponseEntity<?> isUserAdmin(Long userId);
 
-	ApiResponse<UserAccessResponse> getAccessResponse(Long userId);
+	ApiResponseBody<UserAccessResponse> getAccessResponse(Long userId);
 
-	UserProfileResponsePojo toModelDTO(Users user);
+    void saveLog(LogRequest logPojo);
+
+    UserProfileResponsePojo toModelDTO(Users user);
+    
+    UserProfileResponsePojo toModelDTO(Users user, Profile profile);
 
 	Page<Users> getAllUsers(int page, int size);
 
@@ -62,13 +79,29 @@ public interface UserService {
 
 	ResponseEntity<?> createUsers(@Valid BulkPrivateUserCreationDTO userList, HttpServletRequest request, Device device);
 
-    void deactivationServices(Users user, String token);
+    void deactivationServices(Users user, String token) throws InterruptedException, ExecutionException;
 
     ResponseEntity<?> unDeleteUser(Long id);
 
-    ResponseEntity<?> deactivateAccounts(BulkPrivateUserCreationDTO excelToPrivateUserPojo);
+    ResponseEntity<?> deactivateAccounts(Set<String> bulkUpload);
 
-    ResponseEntity<?> activateAccounts(BulkPrivateUserCreationDTO excelToPrivateUserPojo);
+    ResponseEntity<?> activateAccounts(Set<String> bulkUpload);
 
-	ResponseEntity<?> validateWalletUserCall(Long userId, String key);
+	ResponseEntity<?> validateServiceUserCall(Long userId, String key);
+
+	Page<Users> getAllUsers(int page, int size, String searchString);
+	
+	ResponseEntity<?> getAllUsersRec();
+	
+	ResponseEntity<?> GetAllUserProfile(Sort sort);
+	
+	ResponseEntity<?> GetAllUserProfile(Pageable page);
+
+	ResponseEntity<?> validateUser();
+
+	ResponseEntity<?> getUserSetupById(Long id);
+
+	ResponseEntity<?> maintainUserSetup(UserSetupPojo pojo);
+	
+	ResponseEntity<?> GenerateUser(FakePojo pojo, HttpServletRequest request, Device device);
 }

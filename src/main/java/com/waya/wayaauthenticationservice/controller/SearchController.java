@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.waya.wayaauthenticationservice.response.ApiResponse;
+import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import java.util.List;
 import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_400;
 import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_422;
@@ -44,9 +44,9 @@ public class SearchController {
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
     })
     @GetMapping("search-profile-name/{name}")
-    ResponseEntity<ApiResponse<List<SearchProfileResponse>>> findWayaUserByName(@PathVariable String name){
+    ResponseEntity<ApiResponseBody<List<SearchProfileResponse>>> findWayaUserByName(@PathVariable String name){
         List<SearchProfileResponse> searchProfileResponses = profileService.searchProfileByName(name);
-        ApiResponse<List<SearchProfileResponse>> response = new ApiResponse<>(searchProfileResponses,
+        ApiResponseBody<List<SearchProfileResponse>> response = new ApiResponseBody<>(searchProfileResponses,
                 RETRIEVE_DATA_SUCCESS_MSG, true);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -66,11 +66,11 @@ public class SearchController {
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
     })
     @GetMapping("search-profile-phoneNumber/{phoneNumber}")
-    ResponseEntity<ApiResponse<List<SearchProfileResponse>>> findWayaUserByPhoneNumber(
+    ResponseEntity<ApiResponseBody<List<SearchProfileResponse>>> findWayaUserByPhoneNumber(
             @PathVariable String phoneNumber) {
         List<SearchProfileResponse> searchProfileResponses =
                 profileService.searchProfileByPhoneNumber(phoneNumber);
-        ApiResponse<List<SearchProfileResponse>> response = new ApiResponse<>(searchProfileResponses,
+        ApiResponseBody<List<SearchProfileResponse>> response = new ApiResponseBody<>(searchProfileResponses,
                 RETRIEVE_DATA_SUCCESS_MSG, true);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -89,10 +89,10 @@ public class SearchController {
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
     })
     @GetMapping("search-profile-email/{email}")
-    ResponseEntity<ApiResponse<List<SearchProfileResponse>>> findWayaUserByEmail(@PathVariable String email)
+    ResponseEntity<ApiResponseBody<List<SearchProfileResponse>>> findWayaUserByEmail(@PathVariable String email)
     {
         List<SearchProfileResponse> searchProfileResponses = profileService.searchProfileByEmail(email);
-        ApiResponse<List<SearchProfileResponse>> response = new ApiResponse<>(searchProfileResponses,
+        ApiResponseBody<List<SearchProfileResponse>> response = new ApiResponseBody<>(searchProfileResponses,
                 RETRIEVE_DATA_SUCCESS_MSG, true);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -111,12 +111,12 @@ public class SearchController {
             @io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422)
     })
     @GetMapping("search-profile-organisationName/{organisationName}")
-    ResponseEntity<ApiResponse<List<SearchProfileResponse>>> findWayaUserByOrganisationName(@PathVariable String organisationName)
+    ResponseEntity<ApiResponseBody<List<SearchProfileResponse>>> findWayaUserByOrganisationName(@PathVariable String organisationName)
     {
         List<SearchProfileResponse> searchProfileResponses = profileService
                 .searchProfileByOrganizationName(organisationName);
 
-        ApiResponse<List<SearchProfileResponse>> response = new ApiResponse<>(searchProfileResponses,
+        ApiResponseBody<List<SearchProfileResponse>> response = new ApiResponseBody<>(searchProfileResponses,
                 RETRIEVE_DATA_SUCCESS_MSG, true);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
