@@ -91,7 +91,7 @@ spring:
             userInfoUri: https://graph.facebook.com/v3.0/me?fields=id,first_name,middle_name,last_name,name,email,verified,is_verified,picture.width(250).height(250)
 
 server:
-  port: ${SERVER_PORT:8059}
+  port: ${SERVER_PORT}
   error:
     include-message: always
   servlet:
@@ -129,8 +129,8 @@ logging:
               ProducerConfig: ERROR
 
 jwt:
-  secret: ${JWT_SECRET:wayas3cr3t}
-  expiration: ${JWT_EXPIRATION:31557600000}
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
 
 #Scheduled Jobs
 job:
@@ -140,31 +140,31 @@ job:
 
 cipher:
   utils:
-    value: ${CIPHER_KEY:WALMIFOS}
+    value: ${CIPHER_KEY}
 
 referral:
-  account: ${REFERRAL_ACCOUNT:NGN008019345880}
+  account: ${REFERRAL_ACCOUNT}
 
 app:
   config:
     biller-service:
-      base-url: ${BILLER_SERVICE:http://157.230.223.54:8181/billspay}
+      base-url: ${BILLER_SERVICE}
     access-service:
-      base-url: ${ROLE_SERVICE:http://46.101.41.187:8061}
+      base-url: ${ROLE_SERVICE}
     fraud-service:
-      base-url: ${FRAUD_SERVICE:http://157.230.223.54:8084}
+      base-url: ${FRAUD_SERVICE}
     logging-service:
-      base-url: ${LOGGIN_SERVICE:http://46.101.41.187:8083}
+      base-url: ${LOGGIN_SERVICE}
     wayagram-profile:
-      base-url: ${WAYAGRAM_PROFILE:http://157.245.84.14:1000}
+      base-url: ${WAYAGRAM_PROFILE}
     file-resource:
-      base-url: ${FILE_RESOURCE:http://46.101.41.187:9098/file-resource/api}
+      base-url: ${FILE_RESOURCE}
     virtual-account:
-      base-url: ${VIRTUAL_ACCOUNT:http://46.101.41.187:7090/account-creation-service/api}
+      base-url: ${VIRTUAL_ACCOUNT}
     wallet-service:
-      base-url: ${WALLET_SERVICE:http://157.230.223.54:9009/api/v1/wallet}
+      base-url: ${WALLET_SERVICE}
     notification-service:
-      base-url: ${NOTIFICATION_SERVICE:http://68.183.60.114:8085/notification-service}
+      base-url: ${NOTIFICATION_SERVICE}
 
   auth:
     tokenSecret: ${AUTH_TOKEN_SECRET}
