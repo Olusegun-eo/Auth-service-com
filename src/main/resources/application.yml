@@ -95,7 +95,7 @@ server:
   error:
     include-message: always
   servlet:
-    context-path: /
+    context-path: /auth-service
 
 eureka:
   client:
