@@ -1,3 +1,5 @@
+server:
+  port: ${SERVER_PORT}
 spring:
   autoconfigure:
     exclude:
@@ -49,6 +51,25 @@ app:
   auth:
     tokenSecret: ${AUTH_TOKEN_SECRET:926D96C90030DD58429D2751AC1BDBBC}
     tokenExpirationMsec: ${TOKEN_EXPIRATION_TIME:864000000}
+  config:
+    biller-service:
+      base-url: ${BILLER_SERVICE:http://157.230.223.54:8181/billspay}
+    access-service:
+      base-url: ${ROLE_SERVICE:http://46.101.41.187:8061}
+    fraud-service:
+      base-url: ${FRAUD_SERVICE:http://157.230.223.54:8084}
+    logging-service:
+      base-url: ${LOGGIN_SERVICE:http://46.101.41.187:8083/api/v1}
+    wayagram-profile:
+      base-url: ${WAYAGRAM_PROFILE:http://157.245.84.14:1000}
+    file-resource:
+      base-url: ${FILE_RESOURCE:http://46.101.41.187:9098/file-resource/api}
+    virtual-account:
+      base-url: ${VIRTUAL_ACCOUNT:http://46.101.41.187:7090/account-creation-service/api}
+    wallet-service:
+      base-url: ${WALLET_SERVICE:http://157.230.223.54:9009/api/v1/wallet}
+    notification-service:
+      base-url: ${NOTIFICATION_SERVICE:http://68.183.60.114:8085/notification-service}
 
 api:
   server:
