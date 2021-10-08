@@ -433,7 +433,7 @@ public class ManageReferralServiceImpl implements ManageReferralService {
             log.info("HERE" +referralCode2.get());
             profile2 = profileRepository.findByUserId(false,referralCode2.get().getUserId());
         }else{
-            log.info("HERE 000 null" +referralCode2.get() );
+            log.info("null");
         }
 
         return profile2.get();
