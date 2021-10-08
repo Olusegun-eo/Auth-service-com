@@ -890,10 +890,11 @@ public class ProfileServiceImpl implements ProfileService {
         SMSResponse SMSResponse;
         if (smsCharges.isPresent()) {
             smsCharges.get().setActive(!smsCharges.get().isActive());
+            smsCharges.get().setUserId(user.getId());
             smsAlertConfigRepository.save(smsCharges.get());
             SMSResponse = new SMSResponse(smsCharges.get().getId(),"",
                     smsCharges.get().getPhoneNumber(),
-                    smsCharges.get().isActive());
+                    smsCharges.get().isActive(), smsCharges.get().getUserId());
         } else {
             SMSAlertConfig smsCharges1 = new SMSAlertConfig();
             smsCharges1.setActive(smsCharges1.isActive());
@@ -901,7 +902,7 @@ public class ProfileServiceImpl implements ProfileService {
             smsCharges1.setUserId(user.getId());
             smsCharges1 = smsAlertConfigRepository.save(smsCharges1);
             SMSResponse = new SMSResponse(smsCharges1.getId(), "",smsCharges1.getPhoneNumber(),
-                    smsCharges1.isActive());
+                    smsCharges1.isActive(), smsCharges.get().getUserId());
         }
         return SMSResponse;
     }
@@ -912,10 +913,11 @@ public class ProfileServiceImpl implements ProfileService {
             throw new CustomException(PHONE_NUMBER_REQUIRED, HttpStatus.BAD_REQUEST);
         }
         Optional<SMSAlertConfig> smsCharges = smsAlertConfigRepository.findByPhoneNumber(phoneNumber);
+        log.info("smsCharges ::: " +smsCharges);
 
         if (smsCharges.isPresent()) {
             SMSResponse = new SMSResponse(smsCharges.get().getId(), "",smsCharges.get().getPhoneNumber(),
-                    smsCharges.get().isActive());
+                    smsCharges.get().isActive(), smsCharges.get().getUserId());
         }
         return SMSResponse;
     }
