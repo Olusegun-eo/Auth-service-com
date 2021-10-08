@@ -6,6 +6,8 @@ import com.waya.wayaauthenticationservice.enums.ERole;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserSetupPojo;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.util.JwtUtil;
+
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.hamcrest.core.Is;
@@ -26,6 +28,8 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.waya.wayaauthenticationservice.util.JsonString.asJsonString;
@@ -167,9 +171,15 @@ public class UserControllerTest {
 
 	private String generateToken() {
 		try {
-			String token = Jwts.builder().setSubject("stan@toju.com")
+			/*String token = Jwts.builder().setSubject("stan@toju.com")
 					.setExpiration(new Date(System.currentTimeMillis() + getExpiration() * 1000))
-					.signWith(SignatureAlgorithm.HS512, getSecret()).compact();
+					.signWith(SignatureAlgorithm.HS512, getSecret()).compact();*/
+			JwtUtil jwtUtil = new JwtUtil();
+            Map<String, Object> claims = new HashMap<>();
+	        claims.put("id", user.getId());
+	        claims.put("role", user.getRoleList());
+	        Date expirationDate = new Date(System.currentTimeMillis() + getExpiration());
+			String token = jwtUtil.doGenerateToken(claims, user.getEmail(), expirationDate);
 			System.out.println(":::::Token:::::");
 			return TOKEN_PREFIX + token;
 		} catch (Exception e) {

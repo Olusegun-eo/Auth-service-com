@@ -23,10 +23,10 @@ public class JwtUtil {
 
 	private Key key;
 
-	@PostConstruct
+	/*@PostConstruct
 	public void init() {
-		this.key = Keys.hmacShaKeyFor(secret.getBytes());
-	}
+		this.key = Keys.hmacShaKeyFor(getSecret().getBytes());
+	}*/
 
 	private Key getSigningKey() {
 		byte[] keyBytes = getSecret().getBytes();
