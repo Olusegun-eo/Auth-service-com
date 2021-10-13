@@ -35,4 +35,6 @@ public interface ManageReferralService {
     Map<String, Object> getUserThatHaveBeenReferred(String referralCode, int page, int size);
 
     Map<String, Object> getUsersSMSAlertStatus(int page, int size);
+
+    List<WalletTransactionPojo> refundFailedTransaction(RefundTransactionRequest transfer) throws CustomException;
 }

@@ -36,7 +36,7 @@ public class ExcelHelper {
             "OFFICE_ADDRESS", "CITY", "STATE", "ORG_NAME", "ORG_EMAIL",
             "ORG_PHONE", "ORG_TYPE", "BUSINESS_TYPE", "REFERENCE_CODE");
     public static List<String> ACTIVATION_LIST = Arrays.asList("FIRSTNAME", "SURNAME", "PHONE_NUMBER OR EMAIL");
-    public static List<String> USER_BONUS_HEADERS = Arrays.asList("AMOUNT", "OFFICE_DEBIT_ACCOUNT", "CUSTOMER_CREDIT_NUMBER", "TRAN_TYPE", "TRAN_C_RNCY", "TRAN_NARRATION" );
+    public static List<String> USER_BONUS_HEADERS = Arrays.asList("AMOUNT", "OFFICE_DEBIT_ACCOUNT", "CUSTOMER_CREDIT_NUMBER", "TRAN_TYPE", "TRAN_C_RNCY", "TRAN_NARRATION", "USER_ID" );
     static String SHEET = "Users";
     static String BONUS_SHEET = "UserBonus";
 
@@ -370,6 +370,9 @@ public class ExcelHelper {
                             break;
                         case "F":
                             pojo.setTranNarration(defaultStringCell(cell));
+                            break;
+                        case "G":
+                            pojo.setUserId(defaultStringCell(cell));
                             break;
                         default:
                             break;
