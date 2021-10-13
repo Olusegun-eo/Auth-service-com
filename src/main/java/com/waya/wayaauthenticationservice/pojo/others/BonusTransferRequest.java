@@ -22,6 +22,9 @@ public class BonusTransferRequest {
     private String tranCrncy;
     private String tranNarration;
     private String tranType;
+    @ApiModelProperty(example = "userId")
+    @NotBlank(message = "please enter the customers userId")
+    private String userId;
 
 
 }

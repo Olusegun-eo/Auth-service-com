@@ -2,12 +2,14 @@ package com.waya.wayaauthenticationservice.entity;
 
 import com.waya.wayaauthenticationservice.util.ReferralBonusStatus;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
 
 import static javax.persistence.EnumType.STRING;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Entity
 @Table(name = "m_referral_bonus_earning")

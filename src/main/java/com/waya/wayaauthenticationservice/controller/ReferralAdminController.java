@@ -288,9 +288,19 @@ public class ReferralAdminController {
     }
 
 
-
-
-
+    @ApiOperation(value = "Send refund failed transaction to users users.",notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
+    @ApiResponses(value = {
+            @io.swagger.annotations.ApiResponse(code = 200, message = "Successful"),
+            @io.swagger.annotations.ApiResponse(code = 400, message = "Bad Request"),
+            @io.swagger.annotations.ApiResponse(code = 401, message = "Unauthorized")
+    })
+    @PostMapping("/users/refund-faild-transaction")
+    ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> refundFailedTransaction(@Valid @RequestBody
+                                                                                                 RefundTransactionRequest transfer) throws CustomException {
+        List<WalletTransactionPojo> referralBonus = referralService.refundFailedTransaction(transfer);
+        ApiResponseBody<List<WalletTransactionPojo>> response = new ApiResponseBody<>(referralBonus, "Referral Bonus sent successfully", true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
 
 

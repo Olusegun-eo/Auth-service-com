@@ -44,4 +44,8 @@ public interface WalletProxy {
 	ResponseEntity<ApiResponseBody<List<NewWalletResponse>>> getWayaOfficialWallet(@RequestHeader("Authorization") String token);
 
 
+	@PostMapping("/official/user/transfer")
+	ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> refundFailedTransaction(@RequestBody RefundTransactionRequest transfer, @RequestHeader("Authorization") String token);
+
+
 }
