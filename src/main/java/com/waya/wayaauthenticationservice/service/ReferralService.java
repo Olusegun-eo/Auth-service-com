@@ -10,7 +10,5 @@ import java.util.Map;
 
 public interface ReferralService {
     ReferralCodeResponse getReferralCode(String userId);
-
     List<UserProfileResponse> getUsersWithUpToFiveTransactions(String userId, String token) throws CustomException;
-
     }

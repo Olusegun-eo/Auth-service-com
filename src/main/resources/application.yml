@@ -165,6 +165,8 @@ app:
       base-url: http://157.230.223.54:9009/api/v1/wallet
     notification-service:
       base-url: ${NOTIFICATION_SERVICE_BASE_URL:http://68.183.60.114:8085/notification-service}
+    referral-service:
+      base-url: ${REFERRAL_SERVICE_BASE_URL}
 
   auth:
     tokenSecret: ${AUTH_TOKEN_SECRET}

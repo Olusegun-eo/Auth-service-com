@@ -443,7 +443,7 @@ public class ManageReferralServiceImpl implements ManageReferralService {
         return profilePage1.getContent();
     }
 
-    private double getReferralBonusEarning(String userId){
+    public Double getReferralBonusEarning(String userId){
 
         double totalEarnings = 0.0;
         List<ReferralBonusEarning> referralBonusEarningList = referralBonusEarningRepository.findAllByUserId(userId);

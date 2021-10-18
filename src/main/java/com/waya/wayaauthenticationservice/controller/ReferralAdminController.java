@@ -23,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,6 +41,7 @@ import static com.waya.wayaauthenticationservice.util.Constant.*;
 @CrossOrigin
 @RestController
 @RequestMapping("/api/v1/referral/admin")
+@PreAuthorize(value = "hasRole('APP_ADMIN')")
 @Validated
 public class ReferralAdminController {
 
