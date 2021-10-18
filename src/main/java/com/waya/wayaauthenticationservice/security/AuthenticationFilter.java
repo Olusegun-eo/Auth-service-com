@@ -1,19 +1,28 @@
 package com.waya.wayaauthenticationservice.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.waya.wayaauthenticationservice.SpringApplicationContext;
-import com.waya.wayaauthenticationservice.entity.*;
-import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
-import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
-import com.waya.wayaauthenticationservice.pojo.others.LoginResponsePojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
-import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.SignatureException;
-import lombok.NoArgsConstructor;
+import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.HEADER_STRING;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.TOKEN_PREFIX;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.getExpiration;
+
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.servlet.FilterChain;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,23 +30,30 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.waya.wayaauthenticationservice.SpringApplicationContext;
+import com.waya.wayaauthenticationservice.entity.Privilege;
+import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.entity.ReferralCode;
+import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
+import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
+import com.waya.wayaauthenticationservice.pojo.others.LoginResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
+import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.util.JwtUtil;
 
-import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
-import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
+import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 	private final Gson gson = new Gson();
 	private String loginPrincipal = "";
+	JwtUtil jwtUtil = new JwtUtil();
 
 	public AuthenticationFilter(AuthenticationManager manager) {
 		super.setAuthenticationManager(manager);
@@ -68,7 +84,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 	@Override
 	protected void successfulAuthentication(HttpServletRequest req, HttpServletResponse res, FilterChain chain,
-			Authentication auth) throws IOException, SignatureException {
+			Authentication auth) throws IOException {
 		// Inspect Here
 		if (auth != null && auth.getPrincipal() instanceof UserPrincipal) {
 			UserPrincipal userPrincipal = ((UserPrincipal) auth.getPrincipal());
@@ -79,9 +95,14 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 			String userName = (user.getEmail() == null || user.getEmail().isBlank()) ? user.getPhoneNumber() :  user.getEmail();
 
-			String token = Jwts.builder().setSubject(userName)
-					.setExpiration(new Date(System.currentTimeMillis() + getExpiration()))
-					.signWith(SignatureAlgorithm.HS256, getSecret()).compact();
+			//String token = Jwts.builder().setSubject(userName)
+			//.setExpiration(new Date(System.currentTimeMillis() + getExpiration()))
+			//.signWith(SignatureAlgorithm.HS256, getSecret()).compact();
+			Map<String, Object> claims = new HashMap<>();
+	        claims.put("id", user.getId());
+	        claims.put("role", user.getRoleList());
+	        Date expirationDate = new Date(System.currentTimeMillis() + getExpiration());
+			String token = jwtUtil.doGenerateToken(claims, userName, expirationDate);
 
 			// Check for First Login Attempt and Update User Table
 			UserRepository userRepository = (UserRepository) SpringApplicationContext.getBean("userRepository");

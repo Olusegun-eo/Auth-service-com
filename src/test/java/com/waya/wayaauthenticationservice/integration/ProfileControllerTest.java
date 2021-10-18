@@ -1,21 +1,33 @@
 package com.waya.wayaauthenticationservice.integration;
 
-import com.waya.wayaauthenticationservice.entity.Profile;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.enums.DeleteType;
-import com.waya.wayaauthenticationservice.pojo.others.*;
-import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
-import com.waya.wayaauthenticationservice.repository.ProfileRepository;
-import com.waya.wayaauthenticationservice.repository.RolesRepository;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.service.OTPTokenService;
-import com.waya.wayaauthenticationservice.util.Constant;
-import com.waya.wayaauthenticationservice.util.TestHelper;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import lombok.extern.slf4j.Slf4j;
+import static com.waya.wayaauthenticationservice.util.JsonString.asJsonString;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.TOKEN_PREFIX;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.getExpiration;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import org.hamcrest.core.Is;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,19 +41,24 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.Optional;
+import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.enums.DeleteType;
+import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.DeleteRequest;
+import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
+import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
+import com.waya.wayaauthenticationservice.repository.ProfileRepository;
+import com.waya.wayaauthenticationservice.repository.RolesRepository;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.service.OTPTokenService;
+import com.waya.wayaauthenticationservice.util.Constant;
+import com.waya.wayaauthenticationservice.util.JwtUtil;
+import com.waya.wayaauthenticationservice.util.TestHelper;
 
-import static com.waya.wayaauthenticationservice.util.JsonString.asJsonString;
-import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import lombok.extern.slf4j.Slf4j;
 
 @ActiveProfiles("test")
 @SpringBootTest(properties = { "eureka.client.enabled=false" })
@@ -53,6 +70,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @Slf4j
 class ProfileControllerTest {
+	
+	JwtUtil jwtUtil = new JwtUtil();
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -507,9 +526,14 @@ class ProfileControllerTest {
 	public String generateToken(Users user) {
 		try {
 			System.out.println("::::::GENERATE TOKEN:::::");
-			String token = Jwts.builder().setSubject(user.getEmail())
+			/*String token = Jwts.builder().setSubject(user.getEmail())
 					.setExpiration(new Date(System.currentTimeMillis() + getExpiration() * 1000))
-					.signWith(SignatureAlgorithm.HS512, getSecret()).compact();
+					.signWith(SignatureAlgorithm.HS512, getSecret()).compact();*/
+			Map<String, Object> claims = new HashMap<>();
+	        claims.put("id", user.getId());
+	        claims.put("role", user.getRoleList());
+	        Date expirationDate = new Date(System.currentTimeMillis() + getExpiration());
+			String token = jwtUtil.doGenerateToken(claims, user.getEmail(), expirationDate);
 			System.out.println(":::::Token:::::");
 			return TOKEN_PREFIX + token;
 		} catch (Exception e) {
