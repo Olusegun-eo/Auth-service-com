@@ -31,6 +31,7 @@ spring:
       max-file-size: 2MB
       max-request-size: 2MB
       resolve-lazily: true
+      
 
   cache:
     type: redis
@@ -96,7 +97,7 @@ server:
     include-message: always
   servlet:
     context-path: /
-
+    
 eureka:
   client:
     serviceUrl:
