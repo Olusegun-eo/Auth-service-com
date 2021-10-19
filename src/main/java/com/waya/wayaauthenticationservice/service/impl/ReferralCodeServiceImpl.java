@@ -65,6 +65,8 @@ public class ReferralCodeServiceImpl implements ReferralService {
         return newUserProfileResponseList;
     }
 
+
+
     public long getTrans(String userId, String token) throws CustomException {
         try {
             ResponseEntity<Long> responseEntity = billerProxy.getTransaction(userId,token);
