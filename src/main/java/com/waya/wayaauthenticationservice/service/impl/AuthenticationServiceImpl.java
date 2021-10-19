@@ -1,16 +1,55 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.EMAIL_VERIFICATION;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.JOINT_VERIFICATION;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PHONE_VERIFICATION;
+import static com.waya.wayaauthenticationservice.util.Constant.VIRTUAL_ACCOUNT_TOPIC;
+import static com.waya.wayaauthenticationservice.util.Constant.WAYAGRAM_PROFILE_TOPIC;
+import static com.waya.wayaauthenticationservice.util.HelperUtils.generateRandomNumber;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.TOKEN_PREFIX;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.getExpiration;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mobile.device.Device;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.waya.wayaauthenticationservice.entity.RedisUser;
 import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.ERole;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
+import com.waya.wayaauthenticationservice.pojo.access.UserAccessDTO;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordCreateContext;
 import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
-import com.waya.wayaauthenticationservice.pojo.others.*;
+import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.CreateAccountPojo;
+import com.waya.wayaauthenticationservice.pojo.others.DevicePojo;
+import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.VirtualAccountPojo;
+import com.waya.wayaauthenticationservice.pojo.others.WayagramPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
+import com.waya.wayaauthenticationservice.proxy.RoleProxy;
 import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.repository.RedisUserDao;
@@ -23,35 +62,10 @@ import com.waya.wayaauthenticationservice.response.SuccessResponse;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
 import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.util.JwtUtil;
 import com.waya.wayaauthenticationservice.util.Utils;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mobile.device.Device;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import javax.servlet.http.HttpServletRequest;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-
-import static com.waya.wayaauthenticationservice.enums.OTPRequestType.*;
-import static com.waya.wayaauthenticationservice.util.Constant.VIRTUAL_ACCOUNT_TOPIC;
-import static com.waya.wayaauthenticationservice.util.Constant.WAYAGRAM_PROFILE_TOPIC;
-import static com.waya.wayaauthenticationservice.util.HelperUtils.generateRandomNumber;
-import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
 
 @Service
 @Slf4j
@@ -64,10 +78,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	private final RedisUserDao redisUserDao;
 	private final WalletProxy walletProxy;
 	private final VirtualAccountProxy virtualAccountProxy;
+	private final RoleProxy roleProxy;
 	private final Utils reqUtil;
 	private final MessagingService messagingService;
 	private final ProfileService profileService;
 	private final OTPTokenService otpTokenService;
+	private final JwtUtil jwtUtil;
 
 	@Value("${api.server.deployed}")
 	private String urlRedirect;
@@ -76,7 +92,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 									 RolesRepository rolesRepo, BCryptPasswordEncoder passwordEncoder,
 									 RedisUserDao redisUserDao, WalletProxy walletProxy, VirtualAccountProxy virtualAccountProxy,
 									 Utils reqUtil, MessagingService messagingService,
-									 ProfileService profileService, OTPTokenService otpTokenService) {
+									 ProfileService profileService, OTPTokenService otpTokenService,
+									 RoleProxy roleProxy, JwtUtil jwtUtil) {
 		this.kafkaMessageProducer = kafkaMessageProducer;
 		this.userRepo = userRepo;
 		this.rolesRepo = rolesRepo;
@@ -88,6 +105,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		this.messagingService = messagingService;
 		this.profileService = profileService;
 		this.otpTokenService = otpTokenService;
+		this.roleProxy = roleProxy;
+		this.jwtUtil = jwtUtil;
 	}
 
 	private static CustomException getRoleError() {
@@ -323,6 +342,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			}
 			return res;
 		}).thenAccept(p -> log.info("Response from Call to Create Corporate Wallet is: {}", p));
+		
+		//To assign Role and Permission for corporate user
+		UserAccessDTO userAccess = new UserAccessDTO();
+		userAccess.setUserId(userId);
+		userAccess.setName(mUser.getFirstName() + " " + mUser.getSurname());
+		userAccess.setEmailAddress(mUser.getEmail());
+		userAccess.setPhoneNumber(mUser.getPhoneNumber());
+		userAccess.setRoleId(1L);
+		String key = "WAYA855##0AUTH";
+		CompletableFuture.supplyAsync(() -> roleProxy.PostUserAccess(userAccess, key))
+		.orTimeout(3, TimeUnit.MINUTES).handle((res, ex) -> {
+			if (ex != null) {
+				log.error("Error Creating Role Permission, {}", ex.getMessage());
+				return new ApiResponseBody<>("An error has occurred", false);
+			}
+			return res;
+		}).thenAccept(p -> log.info("Response from Call to Create Corporate Role and Permission Assign is: {}", p));
+
+		
 	}
 
 	public void createPrivateUser(BaseUserPojo user, Long userId, String token, String baseUrl) {
@@ -376,10 +414,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	public String generateToken(Users user) {
 		try {
-			String name = user.getEmail() != null ? user.getEmail() : user.getPhoneNumber();
-			String token = Jwts.builder().setSubject(name)
+			//String name = user.getEmail() != null ? user.getEmail() : user.getPhoneNumber();
+			/*String token = Jwts.builder().setSubject(name)
 					.setExpiration(new Date(System.currentTimeMillis() + getExpiration() * 1000))
-					.signWith(SignatureAlgorithm.HS512, getSecret()).compact();
+					.signWith(SignatureAlgorithm.HS512, getSecret()).compact();*/
+			String userName = (user.getEmail() == null || user.getEmail().isBlank()) ? user.getPhoneNumber() :  user.getEmail();
+			Map<String, Object> claims = new HashMap<>();
+	        claims.put("id", user.getId());
+	        claims.put("role", user.getRoleList());
+	        Date expirationDate = new Date(System.currentTimeMillis() + getExpiration());
+			String token = jwtUtil.doGenerateToken(claims, userName, expirationDate);
 			return TOKEN_PREFIX + token;
 		} catch (Exception e) {
 			log.error("An Error Occurred:: {}", e.getMessage());
