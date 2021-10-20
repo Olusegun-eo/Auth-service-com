@@ -4,11 +4,13 @@ pipeline {
     		registryCredential = 'DigitalOcean-registry-for-development'
     		dockerImage = ''
     	}
-      	/*	parameters {
-	    strings(name: 'FROM_BUILD' defaultValue: '', description: 'Build Source')
-	} */
     
 	agent any
+	options {
+		skipStagesAfterUnstable()
+		disableConcurrentBuilds()
+		parallelsAlwaysFailFast()
+	}
 
    	tools {
         	jdk 'jdk-11'
@@ -28,33 +30,19 @@ pipeline {
             		steps {
                			sh "mvn clean install"
             		}
-                }
+         }
+    
 		
 		stage('Code Quality Check via SonarQube') {
 			steps {
-                 		script {
-			     		def scannerHome = tool 'Jenkins-sonar-scanner';
-                     			withSonarQubeEnv("Jenkins-sonar-scanner") {
-                     				sh "${tool("Jenkins-sonar-scanner")}/bin/sonar-scanner \
-		     				-Dsonar.projectName=waya-auth-service \
-	             				-Dsonar.projectKey=waya-auth-service \
-	             				-Dsonar.sources=/var/jenkins_home/workspace/waya-2.0-auth-service-dev \
-		     				-Dsonar.projectBaseDir=/var/jenkins_home/workspace/waya-2.0-auth-service-dev \
-                     				-Dsonar.sources=. \
-		     				-Dsonar.projectVersion=1.0 \
-                     				-Dsonar.language=java \
-                     				-Dsonar.java.binaries=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/classes \
-                     				-Dsonar.sourceEncoding=UTF-8 \
-                     				-Dsonar.exclusions=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/src/test/**/* \
-		     				-Dsonar.junit.reportsPath=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/surefire-reports \
-                     				-Dsonar.surefire.reportsPath=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/surefire-reports \
-                     				-Dsonar.jacoco.reportPath=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/coverage-reports/jacoco-unit.exec \
-                     				-Dsonar.java.coveragePlugin=/var/jenkins_home/workspace/waya-2.0-auth-service-dev/target/jacoco  \
-		     				-Dsonar.host.url=https://sonarqube.waya-pay.com \
-		     				-Dsonar.verbose=true "
-               				}
-           			}
-      		 	}
+				script {
+        				def scannerHome = tool 'Jenkins-sonar-scanner';
+					def mvn         = tool 'mvn3.6.3'
+					withSonarQubeEnv("Jenkins-sonar-scanner") {
+          					sh "${mvn}/bin/mvn sonar:sonar"
+					}
+        			}
+      			}
    		}
 	    
 		//stage("Quality Gate") {
@@ -88,7 +76,6 @@ pipeline {
        
    		stage('Remove Unused docker image') {
       			steps{
-				cleanWs()
          			/* sh "docker rmi $registry:$BUILD_NUMBER" */
 	   			sh "docker rmi $registry"
       			}
@@ -100,7 +87,13 @@ pipeline {
 				parameters: [[$class: 'StringParameterValue', name: 'FROM_BUILD', value: "${BUILD_NUMBER}"]
 	        			    ]
 	    		}	    
-    		}	 
+    		}
+		
     	}
+	post {
+			always{
+				cleanWs()
+			}
+		}
 
 }

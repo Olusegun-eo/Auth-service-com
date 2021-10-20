@@ -129,7 +129,7 @@ logging:
               ProducerConfig: ERROR
 
 jwt:
-  secret: ${JWT_SECRET:wayas3cr3t}
+  secret: ${JWT_SECRET:BvPHGM8C0ia4uOuxxqPD5DTbWC9F9TWvPStp3pb7ARo0oK2mJ3pd3YG4lxA9i8bj6OTbadwezxgeEByY}
   expiration: ${JWT_EXPIRATION:31557600000}
 
 #Scheduled Jobs
@@ -137,7 +137,8 @@ job:
   cron:
     5amED: 0 0 5 * * ? #5am every day
     5min1318: 0 0-5 13-18 * * ? #Every minute starting at 1pm and 6pm and ending after 5 minutes, and every day
-
+    kyc: 0/5 * * * * ? #5am every day
+    
 cipher:
   utils:
     value: ${CIPHER_KEY:WALMIFOS}
@@ -167,7 +168,9 @@ app:
       base-url: ${NOTIFICATION_SERVICE_BASE_URL:http://68.183.60.114:8085/notification-service}
     referral-service:
       base-url: ${REFERRAL_SERVICE_BASE_URL}
-
+    kyc-service:
+      base-url: http://46.101.41.187:8070/kyc-service/kyc
+      
   auth:
     tokenSecret: ${AUTH_TOKEN_SECRET}
     tokenExpirationMsec: ${TOKEN_EXPIRATION_TIME}

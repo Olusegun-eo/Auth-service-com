@@ -1,11 +1,15 @@
 package com.waya.wayaauthenticationservice.security;
 
-import com.waya.wayaauthenticationservice.SpringApplicationContext;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.util.SecurityConstants;
-import io.jsonwebtoken.*;
-import lombok.extern.slf4j.Slf4j;
+import static com.waya.wayaauthenticationservice.util.HelperUtils.isEmail;
+
+import java.io.IOException;
+import java.util.Date;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,18 +17,22 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.util.StringUtils;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import com.waya.wayaauthenticationservice.SpringApplicationContext;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.util.JwtUtil;
+import com.waya.wayaauthenticationservice.util.SecurityConstants;
 
-import static com.waya.wayaauthenticationservice.util.HelperUtils.isEmail;
-import static com.waya.wayaauthenticationservice.util.SecurityConstants.getSecret;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AuthorizationFilter extends BasicAuthenticationFilter {
-
+	
+	JwtUtil jwtUtil = new JwtUtil();
+	
 	public AuthorizationFilter(AuthenticationManager authManager) {
 		super(authManager);
 	}
@@ -80,10 +88,8 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
 
 	private boolean validateToken(String authToken) {
 		try {
-			Jwts.parser().setSigningKey(getSecret()).parseClaimsJws(authToken);
-			return true;
-		} catch (SignatureException ex) {
-			log.error("Invalid JWT signature");
+			final Date expiration = jwtUtil.getAllClaimsFromToken(authToken).getExpiration();
+			return !expiration.before(new Date());
 		} catch (MalformedJwtException ex) {
 			log.error("Invalid JWT token");
 		} catch (ExpiredJwtException ex) {
@@ -93,7 +99,7 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
 		} catch (IllegalArgumentException ex) {
 			log.error("JWT claims string is empty.");
 		}
-		return false;
+		return true;
 	}
 
 	private String parseJwt(HttpServletRequest request) {
@@ -106,6 +112,7 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
 	}
 
 	private String getUserNameFromToken(String token) {
-		return Jwts.parser().setSigningKey(getSecret()).parseClaimsJws(token).getBody().getSubject();
+		//return Jwts.parser().setSigningKey(getSecret()).parseClaimsJws(token).getBody().getSubject();
+		return jwtUtil.getAllClaimsFromToken(token).getSubject();
 	}
 }
