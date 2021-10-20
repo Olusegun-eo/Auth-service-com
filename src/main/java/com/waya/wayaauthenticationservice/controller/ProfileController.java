@@ -8,6 +8,7 @@ import com.waya.wayaauthenticationservice.response.DeleteResponse;
 import com.waya.wayaauthenticationservice.response.SMSResponse;
 import com.waya.wayaauthenticationservice.response.UserProfileResponse;
 import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.service.UserService;
 import com.waya.wayaauthenticationservice.util.CustomValidator;
 import com.waya.wayaauthenticationservice.util.EnumValue;
 import com.waya.wayaauthenticationservice.util.ValidPhone;
@@ -41,13 +42,15 @@ import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_422;
 public class ProfileController {
 
 	private final ProfileService profileService;
+	private final UserService userService;
 
 	@Value("${api.server.deployed}")
 	private String urlRedirect;
 
 	@Autowired
-	public ProfileController(ProfileService profileService) {
+	public ProfileController(ProfileService profileService, UserService userService) {
 		this.profileService = profileService;
+		this.userService = userService;
 	}
 
 	/**
@@ -267,5 +270,12 @@ public class ProfileController {
 	private String getBaseUrl(HttpServletRequest request) {
 		return "http://" + urlRedirect + ":" + request.getServerPort() + request.getContextPath();
 	}
+
+	@ApiOperation(value = "Get User Details by Phone (In-app use only)", tags = {"PROFILE RESOURCE"})
+	@GetMapping("phone/{phone}")
+	public ResponseEntity<?> getUserByPhone(@PathVariable String phone) {
+		return userService.getUserByPhone(phone);
+	}
+
 
 }
