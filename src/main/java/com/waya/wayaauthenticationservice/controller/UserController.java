@@ -61,11 +61,23 @@ public class UserController {
     public ResponseEntity<?> getUserByEmail(@PathVariable @Email String email) {
         return userService.getUserByEmail(email);
     }
+    
+    @ApiOperation(value = "Get User Details by Email (In-app use only)", tags = {"USER SERVICE"})
+    @GetMapping("email/{email}/key")
+    public ResponseEntity<?> getUserByEmailKey(@PathVariable @Email String email) {
+        return userService.getUserByEmail(email);
+    }
 
     @ApiOperation(value = "Get User Details by Phone (In-app use only)", tags = {"USER SERVICE"})
     @GetMapping("phone/{phone}")
     @PreAuthorize(value = "@userSecurity.useHierarchy(#phone, authentication)")
     public ResponseEntity<?> getUserByPhone(@PathVariable String phone) {
+        return userService.getUserByPhone(phone);
+    }
+    
+    @ApiOperation(value = "Get User Details by Phone (In-app use only)", tags = {"USER SERVICE"})
+    @GetMapping("phone/{phone}/key")
+    public ResponseEntity<?> getUserByPhoneKey(@PathVariable String phone) {
         return userService.getUserByPhone(phone);
     }
 
