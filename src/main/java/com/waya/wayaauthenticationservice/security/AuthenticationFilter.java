@@ -5,7 +5,6 @@ import static com.waya.wayaauthenticationservice.util.SecurityConstants.HEADER_S
 import static com.waya.wayaauthenticationservice.util.SecurityConstants.TOKEN_PREFIX;
 import static com.waya.wayaauthenticationservice.util.SecurityConstants.getExpiration;
 
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
@@ -38,12 +37,14 @@ import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.ReferralCode;
 import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.access.UserAccessPojo;
 import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
 import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
 import com.waya.wayaauthenticationservice.pojo.others.LoginResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.service.RoleService;
 import com.waya.wayaauthenticationservice.util.JwtUtil;
 
 import lombok.NoArgsConstructor;
@@ -94,7 +95,8 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			UserAccessResponse access = userPrincipal.getAccess();
 
 			String userName = (user.getEmail() == null || user.getEmail().isBlank()) ? user.getPhoneNumber() :  user.getEmail();
-
+            String pwd = user.getPassword();
+            System.out.println(pwd);
 			//String token = Jwts.builder().setSubject(userName)
 			//.setExpiration(new Date(System.currentTimeMillis() + getExpiration()))
 			//.signWith(SignatureAlgorithm.HS256, getSecret()).compact();
@@ -122,10 +124,20 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 			Set<String> permit = getPrivileges(user.getRoleList());
 			Set<String> roles = user.getRoleList().stream().map(Role::getName).collect(Collectors.toSet());
-
+            
 			loginResponsePojo.setCode(0);
 			loginResponsePojo.setStatus(true);
 			loginResponsePojo.setMessage("Login Successful");
+			
+			if(user.isCorporate()) {
+				//RoleService roleService = SpringApplicationContext.getBean(RoleService.class);
+				UserAccessPojo userAccess = null;
+				RoleService roleService = (RoleService) SpringApplicationContext.getBean("roleService");
+				userAccess = roleService.getAccess(user.getId());
+				if(userAccess != null) {
+					m.put("corporateAccess", userAccess.getRole().getName());
+				}
+			}
 
 			m.put("token", TOKEN_PREFIX + token);
 			m.put("privilege", permit);
