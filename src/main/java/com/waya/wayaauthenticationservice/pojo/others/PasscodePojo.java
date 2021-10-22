@@ -31,4 +31,9 @@ public class PasscodePojo {
 		this.name = name;
 	}
 
+	public PasscodePojo() {
+		super();
+	}
+	
+
 }
