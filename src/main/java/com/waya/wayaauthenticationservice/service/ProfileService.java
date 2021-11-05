@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public interface ProfileService {
 
@@ -111,11 +112,11 @@ public interface ProfileService {
 
 	UserProfileResponse getProfileByReferralCode(String referralCode);
 
-	UserProfileResponse saveDeviceToken(DeviceTokenRequest deviceTokenRequest);
+	UserProfileResponse saveDeviceToken(DeviceTokenRequest deviceTokenRequest) throws Exception;
 
 
 
-
+	void postMigrateReferralCode(UUID profileId, String userId, String token) throws Exception;
 
 
 	/**

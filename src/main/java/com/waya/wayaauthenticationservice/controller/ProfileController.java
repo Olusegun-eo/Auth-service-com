@@ -259,7 +259,7 @@ public class ProfileController {
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
 	@ResponseStatus(HttpStatus.OK)
 	@PostMapping("/save-device-token")
-	ResponseEntity<ApiResponseBody<UserProfileResponse>> saveDeviceToken(@Valid @RequestBody DeviceTokenRequest deviceTokenRequest) {
+	ResponseEntity<ApiResponseBody<UserProfileResponse>> saveDeviceToken(@Valid @RequestBody DeviceTokenRequest deviceTokenRequest) throws Exception {
 		UserProfileResponse userProfileResponse = profileService.saveDeviceToken(deviceTokenRequest);
 		ApiResponseBody<UserProfileResponse> response = new ApiResponseBody<>(userProfileResponse, "Data created successfully",
 				true);

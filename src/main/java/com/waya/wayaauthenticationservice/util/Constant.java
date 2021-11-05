@@ -9,6 +9,7 @@ public class Constant {
 
     public static final String VIRTUAL_ACCOUNT_TOPIC = "virtual-account";
     public static final String WAYAGRAM_PROFILE_TOPIC = "wayagram-profile";
+    public static final String WAYAGRAM_PAYMENT_TOPIC = "wayagram-payment";
     public static final String WALLET_ACCOUNT_TOPIC = "wallet-account";
     public static final String CHAT_TOPIC = "wayagram-chat";
     public static final String EMAIL_TOPIC = "email";

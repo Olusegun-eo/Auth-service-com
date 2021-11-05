@@ -6,6 +6,7 @@ import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.ERole;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
+import com.waya.wayaauthenticationservice.pojo.TransferPojo;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordCreateContext;
 import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
 import com.waya.wayaauthenticationservice.pojo.others.*;
@@ -48,8 +49,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static com.waya.wayaauthenticationservice.enums.OTPRequestType.*;
-import static com.waya.wayaauthenticationservice.util.Constant.VIRTUAL_ACCOUNT_TOPIC;
-import static com.waya.wayaauthenticationservice.util.Constant.WAYAGRAM_PROFILE_TOPIC;
+import static com.waya.wayaauthenticationservice.util.Constant.*;
 import static com.waya.wayaauthenticationservice.util.HelperUtils.generateRandomNumber;
 import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
 
@@ -392,6 +392,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		try {
 			log.info("Verify Account Creation starts {}", otpPojo);
 			Users user = userRepo.findByEmailOrPhoneNumber(otpPojo.getPhoneOrEmail()).orElse(null);
+			log.info("user :::: " + user);
 			if (user == null)
 				return new ResponseEntity<>(new ErrorResponse(
 						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + "For User with " + otpPojo.getPhoneOrEmail()),
@@ -531,6 +532,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			emailOrPhoneNumber = emailOrPhoneNumber.substring(1);
         
 		Users user = userRepo.findByEmailOrPhoneNumber(emailOrPhoneNumber).orElse(null);
+
 		if (user == null)
 			return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
 					HttpStatus.NOT_FOUND);
@@ -591,6 +593,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		kafkaMessageProducer.send(WAYAGRAM_PROFILE_TOPIC, wayagramPojo);
 		return new ResponseEntity<>(new SuccessResponse("Pushed to Kafka", null), HttpStatus.OK);
 	}
+
 
 	@Override
 	public ResponseEntity<?> createProfileAccount(PersonalProfileRequest profilePojo, String baseUrl) {

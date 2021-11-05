@@ -1,6 +1,7 @@
 package com.waya.wayaauthenticationservice.service;
 
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.TransferPojo;
 import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;

@@ -1,5 +1,6 @@
 package com.waya.wayaauthenticationservice.controller;
 
+import com.waya.wayaauthenticationservice.pojo.TransferPojo;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;

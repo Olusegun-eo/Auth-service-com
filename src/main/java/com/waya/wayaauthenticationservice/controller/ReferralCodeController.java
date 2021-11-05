@@ -1,5 +1,6 @@
 package com.waya.wayaauthenticationservice.controller;
 
+import com.waya.wayaauthenticationservice.entity.ReferralCode;
 import com.waya.wayaauthenticationservice.response.ReferralCodeResponse;
 import com.waya.wayaauthenticationservice.service.ManageReferralService;
 import com.waya.wayaauthenticationservice.service.ReferralService;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import springfox.documentation.annotations.ApiIgnore;
 
+import java.util.List;
 import java.util.Map;
 
 @Tag(name = "REFERRAL RESOURCE",  description = "REST API for Referral Service API")
@@ -43,8 +45,19 @@ public class ReferralCodeController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @ApiOperation( value = "migrate-referral-code", notes = "", tags = {"REFERRAL RESOURCE"})
+    @ApiResponses(value = {
+            @io.swagger.annotations.ApiResponse(code = 400, message = Constant.MESSAGE_400),
+            @io.swagger.annotations.ApiResponse(code = 422, message = Constant.MESSAGE_422)
+    })
+    @PostMapping("migrate-referral-code")
+    public ResponseEntity<ApiResponseBody<List<ReferralCode>>> getReferralCode() throws Exception {
+        List<ReferralCode> referralCodeResponse = referralService.migrateReferralCode();
+        ApiResponseBody<List<ReferralCode>> response = new ApiResponseBody<>(referralCodeResponse, "retrieved data successfully", true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
-    @ApiOperation( value = "profile-with-five-transactions/user/{userId}", notes = "", tags = {"REFERRAL RESOURCE"})
+    @ApiOperation( value = "profile-with-five-transactions", notes = "", tags = {"REFERRAL RESOURCE"})
     @ApiResponses(value = {
             @io.swagger.annotations.ApiResponse(code = 400, message = Constant.MESSAGE_400),
             @io.swagger.annotations.ApiResponse(code = 422, message = Constant.MESSAGE_422)
