@@ -3,6 +3,9 @@ package com.waya.wayaauthenticationservice.controller;
 import com.waya.wayaauthenticationservice.enums.Type;
 import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
 import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
+import com.waya.wayaauthenticationservice.pojo.others.LoginPasscodePojo;
+import com.waya.wayaauthenticationservice.pojo.others.LoginResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.others.PasscodePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
@@ -101,6 +104,20 @@ public class AuthenticationController {
 	@PostMapping("/login")
 	public void login(@Valid @RequestBody LoginDetailsPojo loginRequestModel) {
 		throw new IllegalStateException("This Method should not be called!");
+	}
+	
+	@ApiOperation(value = "${api.auth.login.description}", notes = "${api.auth.login.notes}", tags = { "AUTH" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@PostMapping("/login/passcode")
+	public LoginResponsePojo authToken(@Valid @RequestBody LoginPasscodePojo loginRequestModel) {
+		return authenticationServiceImpl.loginPasscode(loginRequestModel);
+	}
+	
+	@ApiOperation(value = "${api.auth.login.description}", notes = "${api.auth.login.notes}", tags = { "AUTH" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@PostMapping("/create/passcode")
+	public ResponseEntity<?> createPasscode(@Valid @RequestBody PasscodePojo passcode) {
+		return authenticationServiceImpl.PostPasscode(passcode);
 	}
 
 	@GetMapping("/social")
