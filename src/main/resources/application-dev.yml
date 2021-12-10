@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: ${POSTGRES_URL}
-    username: ${POSTGRES_USERNAME}
-    password: ${POSTGRES_PASSWORD}
+    url: ${AUTH_SVC_POSTGRES_URL}
+    username: ${AUTH_SVC_POSTGRES_USERNAME}
+    password: ${AUTH_SVC_POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
 api:
   server:
-    deployed: ${SERVER.URL}
+    deployed: ${AUTH_SERVER_URL}
