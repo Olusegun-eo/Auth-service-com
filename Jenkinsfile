@@ -1,57 +1,94 @@
 pipeline {
-    agent any
-    environment {
-        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
-        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-        AWS_DEFAULT_REGION = 'eu-west-2'
-        CLUSTER_NAME = 'WAYA-PROD-ENV-k8s'
-        REGISTRY = '863852973330.dkr.ecr.eu-west-2.amazonaws.com'
-        REPO_NAME = 'auth-service'
-        SERVICE_NAME = 'auth-service'
-    }
+	environment {
+    		registry = "wayapaychat-container-registry/waya-auth-service-staging"
+    		registryCredential = 'DigitalOcean-registry-for-development'
+    		dockerImage = ''
+    	}
+    
+	agent any
+	options {
+		skipStagesAfterUnstable()
+		disableConcurrentBuilds()
+		parallelsAlwaysFailFast()
+	}
 
+   	tools {
+        	jdk 'jdk-11'
+        	maven 'mvn3.6.3'
+    	}
 
-    stages{
-        stage("build") {
-            steps{
-                script {
-                    sh 'mvn clean install package -DskipTests'
-                    echo 'Build with Maven'
-                }
-            }   
-        }
-        stage("Image Build") {
-            steps{
-                script {
-                    dockerImage = docker.build "${REGISTRY}/${REPO_NAME}:${SERVICE_NAME}"
-                }
-            }   
-        }
-        stage("ECR") {
-            steps{
-                script {
-                    sh "aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin ${REGISTRY}"
-                }
-            }   
-        }
+	stages {
+		
+		 stage('Checkout') {
+            		steps {
+				sh "git branch"
+                		sh "ls -lart ./*"
+            		}
+        	}     
+		
+        	stage('compile') {
+            		steps {
+               			sh "mvn clean install -DenvFile=/var/jenkins_home/auth/.env"
+            		}
+         }
+    
+		
+		stage('Code Quality Check via SonarQube') {
+			steps {
+				script {
+        				def scannerHome = tool 'Jenkins-sonar-scanner';
+					def mvn         = tool 'mvn3.6.3'
+					withSonarQubeEnv("Jenkins-sonar-scanner") {
+          					sh "${mvn}/bin/mvn sonar:sonar"
+					}
+        			}
+      			}
+   		}
+	    
+		//stage("Quality Gate") {
+			//steps {
+				//timeout(time: 1, unit: 'HOURS') {
+                    	    		// Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
+                    	    		// true = set pipeline to UNSTABLE, false = don't
+                   	    		//waitForQualityGate abortPipeline: true
+                		//}
+           	 	//}
+       	 	//}
+		
+		stage('Building image') {
+      			steps{
+        			script {
+          				/*dockerImage = docker.build registry + ":$BUILD_NUMBER" */
+	    				dockerImage=docker.build registry
+        			}
+      			}
+		}
+    
+		stage('Deploy Image') {
+      			steps{
+         			script {
+		    			docker.withRegistry( 'https://registry.digitalocean.com/wayapaychat-container-registry', registryCredential ) {
+            					dockerImage.push()
+          				}
+        			}
+      			}
+    		} 
+       
+   		stage('Remove Unused docker image') {
+      			steps{
+				cleanWs()
+         			/* sh "docker rmi $registry:$BUILD_NUMBER" */
+	   			sh "docker rmi $registry"
+      			}
+    		}
+		
+		stage ('Starting the deployment job') {
+			steps {
+                		build job: 'waya-staging-auth-service-deploy', 
+				parameters: [[$class: 'StringParameterValue', name: 'FROM_BUILD', value: "${BUILD_NUMBER}"]
+	        			    ]
+	    		}	    
+    		}	 
+    	}
 
-        stage("pushing to ECR") {
-            steps{
-                script {
-                    sh "docker push ${REGISTRY}/${REPO_NAME}:${SERVICE_NAME}"
-                }
-            }   
-        }
-        stage("Deploy to EKS cluster") {
-            steps{
-                script {
-                    sh '''
-                        aws eks --region $AWS_DEFAULT_REGION update-kubeconfig --name $CLUSTER_NAME
-                        kubectl apply -f staging.yaml --namespace=staging
-                        '''
-                }
-
-            }
-        }   
-    }
 }
