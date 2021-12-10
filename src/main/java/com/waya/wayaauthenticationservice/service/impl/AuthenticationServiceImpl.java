@@ -204,14 +204,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			user.setAdmin(mUser.isAdmin());
 			user.setCorporate(false);
 			user.setEmail(mUser.getEmail());
-			user.setFirstName(mUser.getFirstName());
+			user.setFirstName(mUser.getFirstName().toUpperCase());
 			user.setPhoneNumber(mUser.getPhoneNumber());
 			user.setReferenceCode(mUser.getReferenceCode());
-			user.setSurname(mUser.getSurname());
+			user.setSurname(mUser.getSurname().toUpperCase());
 			user.setAccountStatus(1);
 			user.setRegDeviceIP(ip);
 			String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
-			user.setName(fullName);
+			user.setName(fullName.toUpperCase());
 			user.setRegDevicePlatform(dev.getPlatform());
 			user.setRegDeviceType(dev.getDeviceType());
 			user.setPassword(passwordEncoder.encode(mUser.getPassword()));
@@ -287,15 +287,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			user.setRoleList(roleList);
 			user.setEmail(mUser.getEmail().trim());
 			user.setEmailVerified(false);
-			user.setFirstName(mUser.getFirstName());
+			user.setFirstName(mUser.getFirstName().toUpperCase());
 			user.setPhoneNumber(mUser.getPhoneNumber());
 			user.setPhoneVerified(false);
 			user.setPinCreated(false);
 			user.setReferenceCode(mUser.getReferenceCode());
-			user.setSurname(mUser.getSurname());
+			user.setSurname(mUser.getSurname().toUpperCase());
 			user.setEncryptedPIN(cryptoUtils.encrypt(mUser.getPassword()));
 			String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
-			user.setName(fullName);
+			user.setName(fullName.toUpperCase());
 			if (adminAction) {
 				user.setActive(true);
 				user.setAccountStatus(-1);
