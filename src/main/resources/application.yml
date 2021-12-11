@@ -7,19 +7,22 @@ spring:
         enabled: false
         type: none
   datasource:
-    url: ${POSTGRES_URL}
-    username: ${POSTGRES_USERNAME}
-    password: ${POSTGRES_PASSWORD}
+    url: ${AUTH_SVC_POSTGRES_URL}
+    username: ${AUTH_SVC_POSTGRES_USERNAME}
+    password: ${AUTH_SVC_POSTGRES_PASSWORD}
     initialization-mode: always
     driver-class-name: org.postgresql.Driver
     continue-on-error: true
   jpa:
     hibernate:
       ddl-auto: update
+   
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         show-sql: true
+        hbm2ddl:
+            auto: update
         jdbc:
           time_zone: UTC
     open-in-view: false #this config disables database queries which  may be performed during view rendering
@@ -31,6 +34,7 @@ spring:
       max-file-size: 2MB
       max-request-size: 2MB
       resolve-lazily: true
+      
 
   cache:
     type: redis
@@ -64,22 +68,22 @@ spring:
       client:
         registration:
           google:
-            clientId: 120295942246-mf4abvh2gpnvsbcs2u5ffbmrq3a06qu9.apps.googleusercontent.com
-            clientSecret: zyVoMw6DAFW1TUWlstyG4_QM
+            clientId: ${AUTH_SVC_GOOGLE_CLIENTID}
+            clientSecret: ${AUTH_SVC_GOOGLE_SECRET}
             redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
             scope:
               - email
               - profile
           facebook:
-            clientId: 160272946020602
-            clientSecret: d684f1d33157445aa1d15dad401206bd
+            clientId: ${AUTH_SVC_FACEBOOK_CLIENTID}
+            clientSecret: ${AUTH_SVC_FACEBOOK_SECRET}
             redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
             scope:
               - email
               - public_profile
           github:
-            clientId: 32f01a4bdb2d9ab43954
-            clientSecret: 04be0187fcf95e4b40e7c9d05a7220c5099084af
+            clientId: ${AUTH_SVC_GITHUB_CLIENTID}
+            clientSecret: ${AUTH_SVC_GITHUB_SECRET}
             redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
             scope:
               - user:email
@@ -96,13 +100,13 @@ server:
     include-message: always
   servlet:
     context-path: /auth-service
-
+    
 eureka:
   client:
     serviceUrl:
-      defaultZone: ${EUREKA_SERVER_URL}
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
     service-url:
-      default-zone: ${EUREKA_SERVER_URL}
+      default-zone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
   instance:
     preferIpAddress: true
 
@@ -129,25 +133,62 @@ logging:
               ProducerConfig: ERROR
 
 jwt:
+<<<<<<< HEAD
+  secret: ${AUTH_JWT_SECRET:BvPHGM8C0ia4uOuxxqPD5DTbWC9F9TWvPStp3pb7ARo0oK2mJ3pd3YG4lxA9i8bj6OTbadwezxgeEByY}
+  expiration: ${AUTH_JWT_EXPIRATION:31557600000}
+=======
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION}
+>>>>>>> baa90cef27188adb997f8a8335064d8ba00b552c
 
 #Scheduled Jobs
 job:
   cron:
     5amED: 0 0 5 * * ? #5am every day
     5min1318: 0 0-5 13-18 * * ? #Every minute starting at 1pm and 6pm and ending after 5 minutes, and every day
-
+    kyc: 0/5 * * * * ? #5am every day
+    
 cipher:
   utils:
+<<<<<<< HEAD
+    value: ${AUTH_CIPHER_KEY:WALMIFOS}
+
+referral:
+  account: ${AUTH_REFERRAL_ACCOUNT:NGN008019345880}
+=======
     value: ${CIPHER_KEY}
 
 referral:
   account: ${REFERRAL_ACCOUNT}
+>>>>>>> baa90cef27188adb997f8a8335064d8ba00b552c
 
 app:
   config:
     biller-service:
+<<<<<<< HEAD
+      base-url: ${CONFIG_BASEURL_BILLPAY:http://157.230.223.54:8181/billspay}
+    access-service:
+      base-url: ${CONFIG_BASEURL_ROLEACCESS:http://46.101.41.187:8061}
+    fraud-service:
+      base-url: ${CONFIG_BASEURL_FRAUD:http://157.230.223.54:8084}
+    logging-service:
+      base-url: ${CONFIG_BASEURL_LOGAUDIT:http://46.101.41.187:8083}
+    wayagram-profile:
+      base-url: ${CONFIG_BASEURL_SOCIAL:http://157.245.84.14:1000}
+    file-resource:
+      base-url: ${CONFIG_BASEURL_FILERESOURCE:http://46.101.41.187:9098/file-resource/api}
+    virtual-account:
+      base-url: ${CONFIG_BASEURL_VIRACCOUNT:http://46.101.41.187:7090/account-creation-service/api}
+    wallet-service:
+      base-url: ${CONFIG_BASEURL_TWALLET:http://157.230.223.54:9009/api/v1/wallet}
+    notification-service:
+      base-url: ${CONFIG_BASEURL_NOTIFICATION:http://68.183.60.114:8085/notification-service}
+    referral-service:
+      base-url: ${CONFIG_BASEURL_REFERRAL:http://68.183.60.114:8282}
+    kyc-service:
+      base-url: ${CONFIG_BASEURL_KYC:http://46.101.41.187:8070/kyc-service/kyc}
+      
+=======
       base-url: ${BILLER_SERVICE}
     access-service:
       base-url: ${ROLE_SERVICE}
@@ -166,9 +207,10 @@ app:
     notification-service:
       base-url: ${NOTIFICATION_SERVICE}
 
+>>>>>>> baa90cef27188adb997f8a8335064d8ba00b552c
   auth:
     tokenSecret: ${AUTH_TOKEN_SECRET}
-    tokenExpirationMsec: ${TOKEN_EXPIRATION_TIME}
+    tokenExpirationMsec: ${AUTH_TOKEN_EXPIRATION_TIME}
   oauth2:
     # After successfully authenticating with the OAuth2 Provider,
     # we'll be generating an auth token for the user and sending the token to the

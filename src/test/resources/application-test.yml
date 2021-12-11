@@ -44,7 +44,7 @@ h2:
   console:
     enabled: true
 jwt:
-  secret: ${JWT_SECRET:wayas3cr3t}
+  secret: ${JWT_SECRET:BvPHGM8C0ia4uOuxxqPD5DTbWC9F9TWvPStp3pb7ARo0oK2mJ3pd3YG4lxA9i8bj6OTbadwezxgeEByY}
   expiration: ${JWT_EXPIRATION:31557600000}
 
 app:

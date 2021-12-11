@@ -23,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,6 +41,7 @@ import static com.waya.wayaauthenticationservice.util.Constant.*;
 @CrossOrigin
 @RestController
 @RequestMapping("/api/v1/referral/admin")
+@PreAuthorize(value = "hasRole('APP_ADMIN')")
 @Validated
 public class ReferralAdminController {
 
@@ -288,9 +290,19 @@ public class ReferralAdminController {
     }
 
 
-
-
-
+    @ApiOperation(value = "Send refund failed transaction to users users.",notes = "", tags = {"REFERRAL ADMIN RESOURCE"})
+    @ApiResponses(value = {
+            @io.swagger.annotations.ApiResponse(code = 200, message = "Successful"),
+            @io.swagger.annotations.ApiResponse(code = 400, message = "Bad Request"),
+            @io.swagger.annotations.ApiResponse(code = 401, message = "Unauthorized")
+    })
+    @PostMapping("/users/refund-faild-transaction")
+    ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> refundFailedTransaction(@Valid @RequestBody
+                                                                                                 RefundTransactionRequest transfer) throws CustomException {
+        List<WalletTransactionPojo> referralBonus = referralService.refundFailedTransaction(transfer);
+        ApiResponseBody<List<WalletTransactionPojo>> response = new ApiResponseBody<>(referralBonus, "Referral Bonus sent successfully", true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
 
 

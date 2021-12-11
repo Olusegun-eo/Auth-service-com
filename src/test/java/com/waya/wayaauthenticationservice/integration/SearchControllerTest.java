@@ -6,6 +6,7 @@ import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.util.JwtUtil;
 import com.waya.wayaauthenticationservice.util.TestHelper;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -21,6 +22,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -161,9 +164,15 @@ class SearchControllerTest {
     public String generateToken(Users user) {
         try {
             System.out.println("::::::GENERATE TOKEN:::::");
-            String token = Jwts.builder().setSubject(user.getEmail())
+            /*String token = Jwts.builder().setSubject(user.getEmail())
                     .setExpiration(new Date(System.currentTimeMillis() + getExpiration() * 1000))
-                    .signWith(SignatureAlgorithm.HS512, getSecret()).compact();
+                    .signWith(SignatureAlgorithm.HS512, getSecret()).compact();*/
+            JwtUtil jwtUtil = new JwtUtil();
+            Map<String, Object> claims = new HashMap<>();
+	        claims.put("id", user.getId());
+	        claims.put("role", user.getRoleList());
+	        Date expirationDate = new Date(System.currentTimeMillis() + getExpiration());
+			String token = jwtUtil.doGenerateToken(claims, user.getEmail(), expirationDate);
             System.out.println(":::::Token:::::");
             return TOKEN_PREFIX + token;
         } catch (Exception e) {

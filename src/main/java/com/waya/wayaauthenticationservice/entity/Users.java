@@ -119,6 +119,8 @@ public class Users extends AuditModel implements Serializable {
     
     @Column(name = "is_welcomed", nullable = false)
     private boolean isWelcomed = false;
+    
+    private String encryptedPIN;
 
     @Column(name = "last_time_password_updated")
     @CreationTimestamp

@@ -1,82 +1,129 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import com.waya.wayaauthenticationservice.entity.RedisUser;
-import com.waya.wayaauthenticationservice.entity.Role;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.enums.ERole;
-import com.waya.wayaauthenticationservice.exception.CustomException;
-import com.waya.wayaauthenticationservice.exception.ErrorMessages;
-import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordCreateContext;
-import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
-import com.waya.wayaauthenticationservice.pojo.others.*;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
-import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
-import com.waya.wayaauthenticationservice.proxy.WalletProxy;
-import com.waya.wayaauthenticationservice.repository.RedisUserDao;
-import com.waya.wayaauthenticationservice.repository.RolesRepository;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.response.ApiResponseBody;
-import com.waya.wayaauthenticationservice.response.ErrorResponse;
-import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
-import com.waya.wayaauthenticationservice.response.SuccessResponse;
-import com.waya.wayaauthenticationservice.service.AuthenticationService;
-import com.waya.wayaauthenticationservice.service.OTPTokenService;
-import com.waya.wayaauthenticationservice.service.ProfileService;
-import com.waya.wayaauthenticationservice.util.Utils;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mobile.device.Device;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.EMAIL_VERIFICATION;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.JOINT_VERIFICATION;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PHONE_VERIFICATION;
+import static com.waya.wayaauthenticationservice.util.Constant.VIRTUAL_ACCOUNT_TOPIC;
+import static com.waya.wayaauthenticationservice.util.Constant.WAYAGRAM_PROFILE_TOPIC;
+import static com.waya.wayaauthenticationservice.util.HelperUtils.generateRandomNumber;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.TOKEN_PREFIX;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.getExpiration;
 
-import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
-import static com.waya.wayaauthenticationservice.enums.OTPRequestType.*;
-import static com.waya.wayaauthenticationservice.util.Constant.VIRTUAL_ACCOUNT_TOPIC;
-import static com.waya.wayaauthenticationservice.util.Constant.WAYAGRAM_PROFILE_TOPIC;
-import static com.waya.wayaauthenticationservice.util.HelperUtils.generateRandomNumber;
-import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mobile.device.Device;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.waya.wayaauthenticationservice.entity.CorporateUser;
+import com.waya.wayaauthenticationservice.entity.Privilege;
+import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.entity.RedisUser;
+import com.waya.wayaauthenticationservice.entity.ReferralCode;
+import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.enums.ERole;
+import com.waya.wayaauthenticationservice.exception.CustomException;
+import com.waya.wayaauthenticationservice.exception.ErrorMessages;
+import com.waya.wayaauthenticationservice.pojo.access.UserAccessDTO;
+import com.waya.wayaauthenticationservice.pojo.access.UserAccessPojo;
+import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
+import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordCreateContext;
+import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
+import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.CreateAccountPojo;
+import com.waya.wayaauthenticationservice.pojo.others.DevicePojo;
+import com.waya.wayaauthenticationservice.pojo.others.LoginPasscodePojo;
+import com.waya.wayaauthenticationservice.pojo.others.LoginResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.others.PasscodePojo;
+import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.VirtualAccountPojo;
+import com.waya.wayaauthenticationservice.pojo.others.WayagramPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
+import com.waya.wayaauthenticationservice.proxy.RoleProxy;
+import com.waya.wayaauthenticationservice.proxy.VirtualAccountProxy;
+import com.waya.wayaauthenticationservice.proxy.WalletProxy;
+import com.waya.wayaauthenticationservice.repository.CorporateUserRepository;
+import com.waya.wayaauthenticationservice.repository.RedisUserDao;
+import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
+import com.waya.wayaauthenticationservice.repository.RolesRepository;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.response.ApiResponseBody;
+import com.waya.wayaauthenticationservice.response.ErrorResponse;
+import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
+import com.waya.wayaauthenticationservice.response.SuccessResponse;
+import com.waya.wayaauthenticationservice.security.UserPrincipal;
+import com.waya.wayaauthenticationservice.service.AuthenticationService;
+import com.waya.wayaauthenticationservice.service.OTPTokenService;
+import com.waya.wayaauthenticationservice.service.ProfileService;
+import com.waya.wayaauthenticationservice.service.RoleService;
+import com.waya.wayaauthenticationservice.util.CryptoUtils;
+import com.waya.wayaauthenticationservice.util.JwtUtil;
+import com.waya.wayaauthenticationservice.util.Utils;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 public class AuthenticationServiceImpl implements AuthenticationService {
 
 	private final KafkaMessageProducer kafkaMessageProducer;
-	private final  UserRepository userRepo;
+	private final UserRepository userRepo;
 	private final RolesRepository rolesRepo;
+	private final CorporateUserRepository corporateUserRepo;
+	private final ReferralCodeRepository referralRepo;
 	private final BCryptPasswordEncoder passwordEncoder;
 	private final RedisUserDao redisUserDao;
 	private final WalletProxy walletProxy;
 	private final VirtualAccountProxy virtualAccountProxy;
+	private final RoleProxy roleProxy;
 	private final Utils reqUtil;
 	private final MessagingService messagingService;
 	private final ProfileService profileService;
 	private final OTPTokenService otpTokenService;
+	private final JwtUtil jwtUtil;
+	private final AuthenticationManager authenticationManager;
+	private final CryptoUtils cryptoUtils;
+	private final RoleService roleService;
 
 	@Value("${api.server.deployed}")
 	private String urlRedirect;
 
 	public AuthenticationServiceImpl(KafkaMessageProducer kafkaMessageProducer, UserRepository userRepo,
-									 RolesRepository rolesRepo, BCryptPasswordEncoder passwordEncoder,
-									 RedisUserDao redisUserDao, WalletProxy walletProxy, VirtualAccountProxy virtualAccountProxy,
-									 Utils reqUtil, MessagingService messagingService,
-									 ProfileService profileService, OTPTokenService otpTokenService) {
+			RolesRepository rolesRepo, BCryptPasswordEncoder passwordEncoder, RedisUserDao redisUserDao,
+			WalletProxy walletProxy, VirtualAccountProxy virtualAccountProxy, Utils reqUtil,
+			MessagingService messagingService, ProfileService profileService, OTPTokenService otpTokenService,
+			RoleProxy roleProxy, JwtUtil jwtUtil, AuthenticationManager authenticationManager,
+			CorporateUserRepository corporateUserRepo, CryptoUtils cryptoUtils,RoleService roleService,
+			ReferralCodeRepository referralRepo) {
 		this.kafkaMessageProducer = kafkaMessageProducer;
 		this.userRepo = userRepo;
 		this.rolesRepo = rolesRepo;
@@ -88,6 +135,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		this.messagingService = messagingService;
 		this.profileService = profileService;
 		this.otpTokenService = otpTokenService;
+		this.roleProxy = roleProxy;
+		this.jwtUtil = jwtUtil;
+		this.authenticationManager = authenticationManager;
+		this.corporateUserRepo = corporateUserRepo;
+		this.cryptoUtils = cryptoUtils;
+		this.roleService = roleService;
+		this.referralRepo = referralRepo;
 	}
 
 	private static CustomException getRoleError() {
@@ -116,7 +170,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
 						HttpStatus.BAD_REQUEST);
 
-			if(mUser.getEmail() == null && mUser.getPhoneNumber() == null){
+			if (mUser.getEmail() == null && mUser.getPhoneNumber() == null) {
 				return new ResponseEntity<>(new ErrorResponse("Both Phone number and Email cannot be null"),
 						HttpStatus.BAD_REQUEST);
 			}
@@ -150,14 +204,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			user.setAdmin(mUser.isAdmin());
 			user.setCorporate(false);
 			user.setEmail(mUser.getEmail());
-			user.setFirstName(mUser.getFirstName());
+			user.setFirstName(mUser.getFirstName().toUpperCase());
 			user.setPhoneNumber(mUser.getPhoneNumber());
 			user.setReferenceCode(mUser.getReferenceCode());
-			user.setSurname(mUser.getSurname());
+			user.setSurname(mUser.getSurname().toUpperCase());
 			user.setAccountStatus(1);
 			user.setRegDeviceIP(ip);
 			String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
-			user.setName(fullName);
+			user.setName(fullName.toUpperCase());
 			user.setRegDevicePlatform(dev.getPlatform());
 			user.setRegDeviceType(dev.getDeviceType());
 			user.setPassword(passwordEncoder.encode(mUser.getPassword()));
@@ -169,8 +223,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			Users regUser = userRepo.saveAndFlush(user);
 
 			if (adminAction)
-				CompletableFuture.runAsync(
-						() -> sendNewPassword(mUser.getPassword(), regUser));
+				CompletableFuture.runAsync(() -> sendNewPassword(mUser.getPassword(), regUser));
 
 			String token = generateToken(regUser);
 			createPrivateUser(mUser, regUser.getId(), token, getBaseUrl(request));
@@ -201,7 +254,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
 						HttpStatus.BAD_REQUEST);
 
-			if(mUser.getEmail() == null && mUser.getPhoneNumber() == null){
+			if (mUser.getEmail() == null && mUser.getPhoneNumber() == null) {
 				return new ResponseEntity<>(new ErrorResponse("Both Phone number and Email cannot be null"),
 						HttpStatus.BAD_REQUEST);
 			}
@@ -234,14 +287,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			user.setRoleList(roleList);
 			user.setEmail(mUser.getEmail().trim());
 			user.setEmailVerified(false);
-			user.setFirstName(mUser.getFirstName());
+			user.setFirstName(mUser.getFirstName().toUpperCase());
 			user.setPhoneNumber(mUser.getPhoneNumber());
 			user.setPhoneVerified(false);
 			user.setPinCreated(false);
 			user.setReferenceCode(mUser.getReferenceCode());
-			user.setSurname(mUser.getSurname());
+			user.setSurname(mUser.getSurname().toUpperCase());
+			user.setEncryptedPIN(cryptoUtils.encrypt(mUser.getPassword()));
 			String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
-			user.setName(fullName);
+			user.setName(fullName.toUpperCase());
 			if (adminAction) {
 				user.setActive(true);
 				user.setAccountStatus(-1);
@@ -249,8 +303,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			Users regUser = userRepo.saveAndFlush(user);
 
 			if (adminAction)
-				CompletableFuture.runAsync(
-						() -> sendNewPassword(mUser.getPassword(), regUser));
+				CompletableFuture.runAsync(() -> sendNewPassword(mUser.getPassword(), regUser));
 
 			String token = generateToken(regUser);
 
@@ -267,7 +320,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	public void createCorporateUser(CorporateUserPojo mUser, Long userId, String token, String baseUrl) {
 
-		 String Id = String.valueOf(userId);
+		String Id = String.valueOf(userId);
 
 		// Implementation for internal calls begin here
 		CorporateProfileRequest profileRequest = new CorporateProfileRequest();
@@ -323,6 +376,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			}
 			return res;
 		}).thenAccept(p -> log.info("Response from Call to Create Corporate Wallet is: {}", p));
+
+		// To assign Role and Permission for corporate user
+		UserAccessDTO userAccess = new UserAccessDTO();
+		userAccess.setUserId(userId);
+		userAccess.setName(mUser.getFirstName() + " " + mUser.getSurname());
+		userAccess.setEmailAddress(mUser.getEmail());
+		userAccess.setPhoneNumber(mUser.getPhoneNumber());
+		userAccess.setRoleId(1L);
+		String key = "WAYA855##0AUTH";
+		CompletableFuture.supplyAsync(() -> roleProxy.PostUserAccess(userAccess, key)).orTimeout(3, TimeUnit.MINUTES)
+				.handle((res, ex) -> {
+					if (ex != null) {
+						log.error("Error Creating Role Permission, {}", ex.getMessage());
+						return new ApiResponseBody<>("An error has occurred", false);
+					}
+					return res;
+				}).thenAccept(
+						p -> log.info("Response from Call to Create Corporate Role and Permission Assign is: {}", p));
+
 	}
 
 	public void createPrivateUser(BaseUserPojo user, Long userId, String token, String baseUrl) {
@@ -376,10 +448,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	public String generateToken(Users user) {
 		try {
-			String name = user.getEmail() != null ? user.getEmail() : user.getPhoneNumber();
-			String token = Jwts.builder().setSubject(name)
-					.setExpiration(new Date(System.currentTimeMillis() + getExpiration() * 1000))
-					.signWith(SignatureAlgorithm.HS512, getSecret()).compact();
+			// String name = user.getEmail() != null ? user.getEmail() :
+			// user.getPhoneNumber();
+			/*
+			 * String token = Jwts.builder().setSubject(name) .setExpiration(new
+			 * Date(System.currentTimeMillis() + getExpiration() * 1000))
+			 * .signWith(SignatureAlgorithm.HS512, getSecret()).compact();
+			 */
+			String userName = (user.getEmail() == null || user.getEmail().isBlank()) ? user.getPhoneNumber()
+					: user.getEmail();
+			Map<String, Object> claims = new HashMap<>();
+			claims.put("id", user.getId());
+			claims.put("role", user.getRoleList());
+			Date expirationDate = new Date(System.currentTimeMillis() + getExpiration());
+			String token = jwtUtil.doGenerateToken(claims, userName, expirationDate);
 			return TOKEN_PREFIX + token;
 		} catch (Exception e) {
 			log.error("An Error Occurred:: {}", e.getMessage());
@@ -409,7 +491,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				user.setActive(true);
 				user.setDateOfActivation(LocalDateTime.now());
 				// send a welcome email
-				if(user.getEmail() != null && !user.getEmail().isBlank()) {
+				if (user.getEmail() != null && !user.getEmail().isBlank()) {
 					CompletableFuture.runAsync(() -> this.profileService.sendWelcomeEmail(user));
 					user.setWelcomed(true);
 				}
@@ -474,7 +556,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 				Integer.parseInt(otpPojo.getOtp()));
 		if (emailResponse != null && emailResponse.isValid()) {
 			user.setEmailVerified(true);
-			if(!user.isWelcomed()) {
+			if (!user.isWelcomed()) {
 				CompletableFuture.runAsync(() -> this.profileService.sendWelcomeEmail(user));
 				user.setWelcomed(true);
 			}
@@ -527,9 +609,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Override
 	public ResponseEntity<?> resendOTPForAccountVerification(String emailOrPhoneNumber, String baseUrl) {
-		if(emailOrPhoneNumber.startsWith("+"))
+		if (emailOrPhoneNumber.startsWith("+"))
 			emailOrPhoneNumber = emailOrPhoneNumber.substring(1);
-        
+
 		Users user = userRepo.findByEmailOrPhoneNumber(emailOrPhoneNumber).orElse(null);
 		if (user == null)
 			return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
@@ -570,9 +652,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Override
 	public ResponseEntity<?> userByPhone(String phone) {
-		if(phone.startsWith("+") || phone.startsWith("0"))
+		if (phone.startsWith("+") || phone.startsWith("0"))
 			phone = phone.substring(1);
-        
+
 		Users users = userRepo.findByPhoneNumber(phone).orElse(null);
 		if (users == null) {
 			return new ResponseEntity<>(new ErrorResponse("Invalid Phone Number."), HttpStatus.BAD_REQUEST);
@@ -619,14 +701,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	@Override
 	public void sendNewPassword(String randomPassword, Users user) {
 		// Email Sending of new Password Here
-		if(user.getEmail() != null){
+		if (user.getEmail() != null) {
 			PasswordCreateContext context = new PasswordCreateContext();
 			context.init(user);
 			context.setPassword(randomPassword);
 			this.messagingService.sendMail(context);
-		}else{
-			String message = String.format("An account has been created for you with password: %s." +
-					" Kindly login with your phone Number and change your password", randomPassword);
+		} else {
+			String message = String.format("An account has been created for you with password: %s."
+					+ " Kindly login with your phone Number and change your password", randomPassword);
 			this.messagingService.sendSMS(user.getFirstName(), message, user.getPhoneNumber());
 		}
 	}
@@ -653,6 +735,180 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		createAccount.setSolId("0000");
 
 		return createAccount;
+	}
+
+	@Override
+	public LoginResponsePojo loginPasscode(LoginPasscodePojo login) {
+		try {
+			LoginResponsePojo loginResponsePojo = new LoginResponsePojo();
+			CorporateUser user = login.getEmailOrPhoneNumber() == null ? null
+					: corporateUserRepo.findByEmailOrPhoneNumber(login.getEmailOrPhoneNumber()).orElse(null);
+			if (user == null) {
+				throw new CustomException("Invalid Email OR Phone number", HttpStatus.BAD_REQUEST);
+			}
+			boolean passMatch = passwordEncoder.matches(login.getPasscode(), user.getPasscode());
+			if (!passMatch) {
+				throw new CustomException("Wrong Passcode", HttpStatus.BAD_REQUEST);
+			}
+			Users mUser = userRepo.findById(user.getInvitorId()).orElse(null);
+			if (mUser == null) {
+				throw new CustomException("No attached corporate", HttpStatus.BAD_REQUEST);
+			}
+			Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+					mUser.getEmail(), cryptoUtils.decrypt(mUser.getEncryptedPIN())));
+			SecurityContextHolder.getContext().setAuthentication(authentication);
+
+			if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal) {
+				UserPrincipal userPrincipal = ((UserPrincipal) authentication.getPrincipal());
+				Users sUser = userPrincipal.getUser().orElse(null);
+				if (sUser == null)
+					throw new CustomException("Unable authenticate", HttpStatus.BAD_REQUEST);
+				UserAccessResponse access = userPrincipal.getAccess();
+
+				String userName = (mUser.getEmail() == null || mUser.getEmail().isBlank()) ? mUser.getPhoneNumber()
+						: mUser.getEmail();
+				String pwd = mUser.getPassword();
+				System.out.println(pwd);
+
+				Map<String, Object> claims = new HashMap<>();
+				claims.put("id", mUser.getId());
+				claims.put("role", mUser.getRoleList());
+				Date expirationDate = new Date(System.currentTimeMillis() + getExpiration());
+				String token = jwtUtil.doGenerateToken(claims, userName, expirationDate);
+				
+				//ReferralCodeRepository referralRepo = SpringApplicationContext.getBean(ReferralCodeRepository.class);
+				ReferralCode referral = referralRepo.getReferralCodeByUserId(String.valueOf(user.getId()))
+						.orElse(new ReferralCode());
+				
+				Map<String, Object> m = new HashMap<>();
+
+				Set<String> permit = getPrivileges(mUser.getRoleList());
+				Set<String> roles = mUser.getRoleList().stream().map(Role::getName).collect(Collectors.toSet());
+
+				loginResponsePojo.setCode(0);
+				loginResponsePojo.setStatus(true);
+				loginResponsePojo.setMessage("Login Successful");
+
+				if (mUser.isCorporate()) {
+					// RoleService roleService =
+					// SpringApplicationContext.getBean(RoleService.class);
+					UserAccessPojo userAccess = null;
+					//RoleService roleService = (RoleService) SpringApplicationContext.getBean("roleService");
+					userAccess = roleService.getAccess(user.getInviteeId());
+					if (userAccess != null) {
+						m.put("corporateAccess", userAccess.getRole().getName());
+					}
+				}
+
+				m.put("token", TOKEN_PREFIX + token);
+				m.put("privilege", permit);
+				m.put("roles", roles);
+				m.put("access", access);
+				m.put("pinCreated", mUser.isPinCreated());
+				m.put("corporate", mUser.isCorporate());
+
+
+				UserProfileResponsePojo userProfile = convert(mUser, referral);
+
+				m.put("user", userProfile);
+				loginResponsePojo.setData(m);
+				
+			}
+			return loginResponsePojo;
+		} catch (Exception ex) {
+			log.info(ex.getMessage());
+			String errorLog = String.format("%s: %s", ErrorMessages.AUTHENTICATION_FAILED.getErrorMessage(),
+					ex.getMessage());
+			throw new CustomException(errorLog, HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	@Override
+	public ResponseEntity<?> PostPasscode(PasscodePojo passcode) {
+		try {
+			// Check if email exists
+			CorporateUser user = passcode.getEmail() == null ? null
+					: corporateUserRepo.findByEmailIgnoreCase(passcode.getEmail()).orElse(null);
+			if (user != null)
+				return new ResponseEntity<>(new ErrorResponse("This email already exists"), HttpStatus.BAD_REQUEST);
+
+			// Check if Phone exists
+			user = passcode.getPhoneNumber() == null ? null
+					: corporateUserRepo.findByPhoneNumber(passcode.getPhoneNumber()).orElse(null);
+			if (user != null)
+				return new ResponseEntity<>(new ErrorResponse("This Phone number already exists"),
+						HttpStatus.BAD_REQUEST);
+
+			if (passcode.getEmail() == null && passcode.getPhoneNumber() == null) {
+				return new ResponseEntity<>(new ErrorResponse("Both Phone number and Email cannot be null"),
+						HttpStatus.BAD_REQUEST);
+			}
+
+			user = new CorporateUser();
+			user.setEmail(passcode.getEmail());
+			user.setPhoneNumber(passcode.getPhoneNumber());
+			user.setPasscode(passwordEncoder.encode(passcode.getPasscode()));
+			user.setInviteeId(passcode.getInviteeId());
+			user.setInvitorId(passcode.getInvitorId());
+			user.setRoleId(passcode.getRoleId());
+			user.setName(passcode.getName());
+			corporateUserRepo.save(user);
+
+			return new ResponseEntity<>(new SuccessResponse("Corporate User Created Successfully "),
+					HttpStatus.CREATED);
+
+		} catch (Exception e) {
+			log.error("Error::: {}", e.getMessage());
+			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	private Set<String> getPrivileges(final Collection<Role> roles) {
+		Set<String> privileges = new HashSet<>();
+		for (Role role : roles) {
+			privileges.addAll(role.getPrivileges().stream().map(Privilege::getName).collect(Collectors.toSet()));
+		}
+		return privileges;
+	}
+
+	private UserProfileResponsePojo convert(Users user, ReferralCode referral) {
+		Profile profile = referral.getProfile();
+		String referralCode = referral.getReferralCode();
+
+		Set<String> permit = getPrivileges(user.getRoleList());
+		Set<String> roles = user.getRoleList().stream().map(Role::getName).collect(Collectors.toSet());
+
+		UserProfileResponsePojo userProfile = new UserProfileResponsePojo();
+
+		userProfile.setId(user.getId());
+		userProfile.setEmail(Objects.toString(user.getEmail(), ""));
+		userProfile.setPhoneNumber(Objects.toString(user.getPhoneNumber(), ""));
+		userProfile.setReferenceCode(Objects.toString(referralCode, ""));
+		userProfile.setFirstName(user.getFirstName());
+		userProfile.setLastName(user.getSurname());
+		userProfile.setAdmin(user.isAdmin());
+		userProfile.setPinCreated(user.isPinCreated());
+		userProfile.setCorporate(user.isCorporate());
+		userProfile.setEmailVerified(user.isEmailVerified());
+		userProfile.setPhoneVerified(user.isPhoneVerified());
+		userProfile.setActive(user.isActive());
+		userProfile.setAccountDeleted(user.isDeleted());
+		userProfile.setRoles(roles);
+		userProfile.setPermits(permit);
+		userProfile.setAccountExpired(!user.isAccountNonExpired());
+		userProfile.setAccountLocked(!user.isAccountNonLocked());
+		userProfile.setCredentialsExpired(!user.isCredentialsNonExpired());
+
+		userProfile.setGender(Objects.toString(profile.getGender(), ""));
+		userProfile.setMiddleName(Objects.toString(profile.getMiddleName(), ""));
+		userProfile.setDateOfBirth(Objects.toString(profile.getDateOfBirth(), ""));
+		userProfile.setDistrict(Objects.toString(profile.getDistrict(), ""));
+		userProfile.setAddress(Objects.toString(profile.getAddress(), ""));
+		userProfile.setCity(Objects.toString(profile.getCity(), ""));
+		userProfile.setState(Objects.toString(profile.getState(), ""));
+		userProfile.setProfileImage(Objects.toString(profile.getProfileImage(), ""));
+
+		return userProfile;
 	}
 
 }

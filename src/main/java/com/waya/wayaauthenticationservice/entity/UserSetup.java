@@ -23,6 +23,9 @@ public class UserSetup extends AuditModel {
 
     @Column(name = "is_deleted")
     private boolean isDeleted = false;
+    
+    @Column(name = "is_updated")
+    private boolean isUpdated = false;
 
 	@OneToOne
 	@JoinColumn(name = "user_id")

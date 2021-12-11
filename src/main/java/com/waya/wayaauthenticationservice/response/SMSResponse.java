@@ -15,4 +15,5 @@ public class SMSResponse {
     private String fullName;
     private String phoneNumber;
     private boolean active = true;
+    private Long userId;
 }

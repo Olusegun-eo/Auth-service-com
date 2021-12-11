@@ -2,6 +2,7 @@ package com.waya.wayaauthenticationservice.config;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import org.springframework.context.annotation.Bean;
@@ -28,6 +29,7 @@ public class SwaggerConfig {
 	@Bean
     public Docket docket() {
         return new Docket(DocumentationType.SWAGGER_2)
+        		    .protocols(new HashSet<>(Arrays.asList("HTTP","HTTPs")))
                     .select()
                     .apis(RequestHandlerSelectors.basePackage("com.waya.wayaauthenticationservice.controller"))
                     .paths(PathSelectors.any())
