@@ -133,13 +133,8 @@ logging:
               ProducerConfig: ERROR
 
 jwt:
-<<<<<<< HEAD
   secret: ${AUTH_JWT_SECRET:BvPHGM8C0ia4uOuxxqPD5DTbWC9F9TWvPStp3pb7ARo0oK2mJ3pd3YG4lxA9i8bj6OTbadwezxgeEByY}
   expiration: ${AUTH_JWT_EXPIRATION:31557600000}
-=======
-  secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION}
->>>>>>> baa90cef27188adb997f8a8335064d8ba00b552c
 
 #Scheduled Jobs
 job:
@@ -150,22 +145,14 @@ job:
     
 cipher:
   utils:
-<<<<<<< HEAD
     value: ${AUTH_CIPHER_KEY:WALMIFOS}
 
 referral:
   account: ${AUTH_REFERRAL_ACCOUNT:NGN008019345880}
-=======
-    value: ${CIPHER_KEY}
-
-referral:
-  account: ${REFERRAL_ACCOUNT}
->>>>>>> baa90cef27188adb997f8a8335064d8ba00b552c
 
 app:
   config:
     biller-service:
-<<<<<<< HEAD
       base-url: ${CONFIG_BASEURL_BILLPAY:http://157.230.223.54:8181/billspay}
     access-service:
       base-url: ${CONFIG_BASEURL_ROLEACCESS:http://46.101.41.187:8061}
@@ -188,26 +175,6 @@ app:
     kyc-service:
       base-url: ${CONFIG_BASEURL_KYC:http://46.101.41.187:8070/kyc-service/kyc}
       
-=======
-      base-url: ${BILLER_SERVICE}
-    access-service:
-      base-url: ${ROLE_SERVICE}
-    fraud-service:
-      base-url: ${FRAUD_SERVICE}
-    logging-service:
-      base-url: ${LOGGIN_SERVICE}
-    wayagram-profile:
-      base-url: ${WAYAGRAM_PROFILE}
-    file-resource:
-      base-url: ${FILE_RESOURCE}
-    virtual-account:
-      base-url: ${VIRTUAL_ACCOUNT}
-    wallet-service:
-      base-url: ${WALLET_SERVICE}
-    notification-service:
-      base-url: ${NOTIFICATION_SERVICE}
-
->>>>>>> baa90cef27188adb997f8a8335064d8ba00b552c
   auth:
     tokenSecret: ${AUTH_TOKEN_SECRET}
     tokenExpirationMsec: ${AUTH_TOKEN_EXPIRATION_TIME}
