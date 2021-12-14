@@ -108,3 +108,8 @@
   "timeTakenMs": 333,
   "requestBody": "null"
 }
+2021-12-14 17:58:06 INFO  com.waya.wayaauthenticationservice.WayaAuthenticationServiceApplication - Starting WayaAuthenticationServiceApplication using Java 11.0.11 on DESKTOP-695LLFB with PID 1316 (C:\JavaProject\WAYA-PAY-CHAT-2.0-AUTH-SERVICE\target\classes started by Emmanuel Njoku in C:\JavaProject\WAYA-PAY-CHAT-2.0-AUTH-SERVICE)
+2021-12-14 17:58:06 INFO  com.waya.wayaauthenticationservice.WayaAuthenticationServiceApplication - No active profile set, falling back to default profiles: default
+2021-12-14 18:01:00 INFO  com.waya.wayaauthenticationservice.WayaAuthenticationServiceApplication - Starting WayaAuthenticationServiceApplication using Java 11.0.11 on DESKTOP-695LLFB with PID 1316 (C:\JavaProject\WAYA-PAY-CHAT-2.0-AUTH-SERVICE\target\classes started by Emmanuel Njoku in C:\JavaProject\WAYA-PAY-CHAT-2.0-AUTH-SERVICE)
+2021-12-14 18:01:00 INFO  com.waya.wayaauthenticationservice.WayaAuthenticationServiceApplication - No active profile set, falling back to default profiles: default
+2021-12-14 18:01:11 INFO  com.waya.wayaauthenticationservice.WayaAuthenticationServiceApplication - Started WayaAuthenticationServiceApplication in 12.554 seconds (JVM running for 891.387)
