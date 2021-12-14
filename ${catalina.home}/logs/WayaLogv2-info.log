@@ -1,0 +1,3 @@
+2021-12-14 21:11:33 INFO  com.waya.wayaauthenticationservice.WayaAuthenticationServiceApplication - Starting WayaAuthenticationServiceApplication using Java 11.0.11 on DESKTOP-695LLFB with PID 20380 (C:\JavaProject\WAYA-PAY-CHAT-2.0-AUTH-SERVICE\target\classes started by Emmanuel Njoku in C:\JavaProject\WAYA-PAY-CHAT-2.0-AUTH-SERVICE)
+2021-12-14 21:11:33 INFO  com.waya.wayaauthenticationservice.WayaAuthenticationServiceApplication - No active profile set, falling back to default profiles: default
+2021-12-14 21:11:45 INFO  com.waya.wayaauthenticationservice.WayaAuthenticationServiceApplication - Started WayaAuthenticationServiceApplication in 13.787 seconds (JVM running for 321.983)
