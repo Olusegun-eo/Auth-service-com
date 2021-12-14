@@ -1,11 +1,7 @@
 pipeline {
-<<<<<<< HEAD
-    agent any
-=======
 
     agent { label 'worker1' }
 
->>>>>>> 9017b72ae75d88ca4402896bb54ebc6043b03dc7
     environment {
         AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
