@@ -33,10 +33,15 @@ spec:
       - name: auth-service
         image: 863852973330.dkr.ecr.eu-west-2.amazonaws.com/auth-service:latest
         env:
-        - name: MESSAGING_GROUP_ID
-          value: "events" 
+        envFrom:
+        - configMapRef:
+            name: common-services-config
+        - configMapRef:
+            name: auth-service-config
+        - secretRef:
+            name: common-services-creds
+        - secretRef:
+            name: auth-service-creds
         ports: 
         - name: http
           containerPort: 80
-      imagePullSecrets:
-      - name: dynamowit
