@@ -2,6 +2,7 @@
 ##EXPOSE 8059
 ##ADD target/*.jar waya-authentication-service.jar
 ##ENTRYPOINT ["java", "-Dspring.profiles.active=dev", "-jar", "/waya-authentication-service.jar"]
+
 FROM openjdk:13-jdk-alpine as base
 WORKDIR /app
 RUN addgroup -S waya && adduser -S waya -G waya
