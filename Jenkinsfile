@@ -1,29 +1,37 @@
 pipeline {
-    agent any
+
+    agent { label 'worker1' }
+
     environment {
         AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-        AWS_DEFAULT_REGION = 'eu-west-2'
-        CLUSTER_NAME = 'WAYA-PROD-ENV-k8s'
-        REGISTRY = '863852973330.dkr.ecr.eu-west-2.amazonaws.com'
-        REPO_NAME = 'auth-service'
+        AWS_DEFAULT_REGION = credentials('AWS_DEFAULT_REGION')
+        CLUSTER_NAME = credentials('CLUSTER_NAME')
+        REGISTRY = credentials('REGISTRY')
         SERVICE_NAME = 'auth-service'
+        VERSION = 'latest'
     }
 
 
     stages{
+
         stage("build") {
             steps{
                 script {
-                    sh 'mvn clean install package -DskipTests'
+                    sh '''
+                    java -version
+                    mvn clean
+                    mvn clean package -DskipTests
+                    '''
                     echo 'Build with Maven'
                 }
             }   
         }
+
         stage("Image Build") {
             steps{
                 script {
-                    dockerImage = docker.build "${REGISTRY}/${REPO_NAME}:${SERVICE_NAME}"
+                    dockerImage = docker.build "${REGISTRY}/${SERVICE_NAME}:${VERSION}"
                 }
             }   
         }
@@ -38,7 +46,7 @@ pipeline {
         stage("pushing to ECR") {
             steps{
                 script {
-                    sh "docker push ${REGISTRY}/${REPO_NAME}:${SERVICE_NAME}"
+                    sh "docker push ${REGISTRY}/${SERVICE_NAME}:${VERSION}"
                 }
             }   
         }

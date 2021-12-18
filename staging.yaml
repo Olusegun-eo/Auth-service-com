@@ -10,33 +10,38 @@ spec:
     port: 80
     targetPort: 80
   selector:
-    app: authservice
+    app: auth-service
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: authservice
+  name: auth-service
   namespace: staging
   labels:
-    app: authservice
+    app: auth-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: authservice
+      app: auth-service
   template:
     metadata:
       labels:
-        app: authservice
+        app: auth-service
     spec:
       containers:
-      - name: authservice
-        image: 863852973330.dkr.ecr.eu-west-2.amazonaws.com/authservice:authservice
+      - name: auth-service
+        image: 863852973330.dkr.ecr.eu-west-2.amazonaws.com/auth-service:latest
         env:
-        - name: MESSAGING_GROUP_ID
-          value: "events" 
+        envFrom:
+        - configMapRef:
+            name: common-services-config
+        - configMapRef:
+            name: auth-service-config
+        - secretRef:
+            name: common-services-creds
+        - secretRef:
+            name: auth-service-creds
         ports: 
         - name: http
           containerPort: 80
-      imagePullSecrets:
-      - name: dynamowit
