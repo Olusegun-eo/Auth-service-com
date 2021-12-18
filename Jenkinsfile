@@ -18,7 +18,11 @@ pipeline {
         stage("build") {
             steps{
                 script {
-                    sh 'mvn clean install package -DskipTests'
+                    sh '''
+                    java -version
+                    mvn clean
+                    mvn clean package -DskipTests
+                    '''
                     echo 'Build with Maven'
                 }
             }   
