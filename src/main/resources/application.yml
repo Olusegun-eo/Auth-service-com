@@ -104,9 +104,9 @@ server:
 eureka:
   client:
     serviceUrl:
-      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
+      defaultZone: ${EUREKA_SERVER_URL:http://eureka-service/eureka}
     service-url:
-      default-zone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
+      default-zone: ${EUREKA_SERVER_URL:http://eureka-service/eureka}
   instance:
     preferIpAddress: true
 
