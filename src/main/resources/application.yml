@@ -57,7 +57,7 @@ spring:
   session:
     store-type: jdbc
   kafka:
-    bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:https://kafka-service}
+    bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:https://kafka-service:9092}
     groupId: ${KAFKA_GROUP_ID:waya}
     consumer:
       group-id: waya
