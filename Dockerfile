@@ -1,13 +1,10 @@
-##FROM openjdk:11-jre-slim
-##EXPOSE 8059
-##ADD target/*.jar waya-authentication-service.jar
-##ENTRYPOINT ["java", "-Dspring.profiles.active=dev", "-jar", "/waya-authentication-service.jar"]
+FROM adoptopenjdk/openjdk11:alpine-jre as base
 
-FROM openjdk:13-jdk-alpine as base
 WORKDIR /app
 RUN addgroup -S waya && adduser -S waya -G waya
 USER waya:waya
 COPY target/*.jar app.jar
 COPY my_keyset.json my_keyset.json
 COPY src/main/resources/application.yml application.yml
+
 ENTRYPOINT ["java","-jar","/app/app.jar"]
