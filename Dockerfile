@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk11:alpine-jre as base
+FROM openjdk:11.0.11-jdk-slim as base 
 
 WORKDIR /app
 RUN addgroup -S waya && adduser -S waya -G waya
