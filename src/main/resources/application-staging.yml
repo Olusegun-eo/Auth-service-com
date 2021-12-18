@@ -14,11 +14,11 @@ spring:
         enabled: false
         type: none
   datasource:
-    url: ${AUTH_SVC_DB_URL:jdbc:h2:mem:dbAuth}
-    username: ${AUTH_SVC_DB_USERNAME:sa}
-    password: ${AUTH_SVC_DB_PASSWORD:sa}
+    url: jdbc:h2:mem:dbAuth
+    username: sa
+    password: sa
     initialization-mode: always
-    driver-class-name: ${AUTH_SVC_DB_DRIVER:org.h2.Driver}
+    driver-class-name: org.h2.Driver
     continue-on-error: true
   jpa:
     hibernate:
@@ -26,7 +26,7 @@ spring:
    
     properties:
       hibernate:
-        dialect: ${AUTH_SVC_DB_DIALECT:org.hibernate.dialect.H2Dialect}
+        dialect: org.hibernate.dialect.H2Dialect
         show-sql: true
         hbm2ddl:
             auto: update
@@ -51,10 +51,10 @@ spring:
       use-key-prefix: true
       key-prefix: tokens
   redis:
-    host: ${REDIS_HOST:waya-redis-staging-env.tk8m9t.0001.euw1.cache.amazonaws.com}
-    port: ${REDIS_PORT:6379}
+    host: waya-redis-staging-env.tk8m9t.0001.euw1.cache.amazonaws.com
+    port: 6379
     timeout: 10000
-    password: ${REDIS_PASSWORD:wIYretruTPWPmAyLgq6HNQMa0wjRG3q8}
+    password: wIYretruTPWPmAyLgq6HNQMa0wjRG3q8
     ttl: 86400000
     connect-timeout: 10000
 
@@ -64,8 +64,8 @@ spring:
   session:
     store-type: jdbc
   kafka:
-    bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:https://messaging.staging.mywayapay.com}
-    groupId: ${KAFKA_GROUP_ID:waya}
+    bootstrapServers: http://kafka-service:9092
+    groupId: waya
     consumer:
       group-id: waya
       auto-offset-reset: earliest
@@ -75,8 +75,8 @@ spring:
       client:
         registration:
           google:
-            clientId: ${AUTH_SVC_GOOGLE_CLIENTID:120295942246-mf4abvh2gpnvsbcs2u5ffbmrq3a06qu9.apps.googleusercontent.com}
-            clientSecret: ${AUTH_SVC_GOOGLE_SECRET:zyVoMw6DAFW1TUWlstyG4_QM}
+            clientId: 120295942246-mf4abvh2gpnvsbcs2u5ffbmrq3a06qu9.apps.googleusercontent.com
+            clientSecret: zyVoMw6DAFW1TUWlstyG4_QM
             redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
             scope:
               - email
@@ -104,9 +104,9 @@ spring:
 eureka:
   client:
     serviceUrl:
-      defaultZone: ${EUREKA_SERVER_URL:http://eureka-service/eureka}
+      defaultZone: http://eureka-service/eureka
     service-url:
-      default-zone: ${EUREKA_SERVER_URL:http://eureka-service/eureka}
+      default-zone: http://eureka-service/eureka
   instance:
     preferIpAddress: true
 
@@ -133,8 +133,8 @@ logging:
               ProducerConfig: ERROR
 
 jwt:
-  secret: ${AUTH_JWT_SECRET:BvPHGM8C0ia4uOuxxqPD5DTbWC9F9TWvPStp3pb7ARo0oK2mJ3pd3YG4lxA9i8bj6OTbadwezxgeEByY}
-  expiration: ${AUTH_JWT_EXPIRATION:31557600000}
+  secret: BvPHGM8C0ia4uOuxxqPD5DTbWC9F9TWvPStp3pb7ARo0oK2mJ3pd3YG4lxA9i8bj6OTbadwezxgeEByY
+  expiration: 31557600000
 
 #Scheduled Jobs
 job:
@@ -145,10 +145,10 @@ job:
     
 cipher:
   utils:
-    value: ${AUTH_CIPHER_KEY:WALMIFOS}
+    value: WALMIFOS
 
 referral:
-  account: ${AUTH_REFERRAL_ACCOUNT:NGN008019345880}
+  account: NGN008019345880
 
 app:
   config:
@@ -176,8 +176,8 @@ app:
       base-url: ${CONFIG_BASEURL_KYC:http://46.101.41.187:8070/kyc-service/kyc}
       
   auth:
-    tokenSecret: ${AUTH_TOKEN_SECRET:926D96C90030DD58429D2751AC1BDBBC}
-    tokenExpirationMsec: ${AUTH_TOKEN_EXPIRATION_TIME:864000000}
+    tokenSecret: 926D96C90030DD58429D2751AC1BDBBC
+    tokenExpirationMsec: 864000000
   oauth2:
     # After successfully authenticating with the OAuth2 Provider,
     # we'll be generating an auth token for the user and sending the token to the
