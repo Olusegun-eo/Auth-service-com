@@ -21,7 +21,7 @@ pipeline {
                     sh '''
                     java -version
                     mvn clean
-                    mvn clean install package -DskipTests
+                    mvn clean package -DskipTests
                     '''
                     echo 'Build with Maven'
                 }
