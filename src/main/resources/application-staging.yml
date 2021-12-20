@@ -155,7 +155,7 @@ app:
     biller-service:
       base-url: ${CONFIG_BASEURL_BILLPAY:http://157.230.223.54:8181/billspay}
     access-service:
-      base-url: ${CONFIG_BASEURL_ROLEACCESS:http://46.101.41.187:8061}
+      base-url: ${CONFIG_BASEURL_ROLEACCESS:https://services.staging.mywayapay.com/role-service}
     fraud-service:
       base-url: ${CONFIG_BASEURL_FRAUD:http://157.230.223.54:8084}
     logging-service:
@@ -163,11 +163,11 @@ app:
     wayagram-profile:
       base-url: ${CONFIG_BASEURL_SOCIAL:http://157.245.84.14:1000}
     file-resource:
-      base-url: ${CONFIG_BASEURL_FILERESOURCE:http://46.101.41.187:9098/file-resource/api}
+      base-url: ${CONFIG_BASEURL_FILERESOURCE:https://services.staging.mywayapay.com/file-resource-service}
     virtual-account:
-      base-url: ${CONFIG_BASEURL_VIRACCOUNT:http://46.101.41.187:7090/account-creation-service/api}
+      base-url: ${CONFIG_BASEURL_VIRACCOUNT:https://services.staging.mywayapay.com/account-service}
     wallet-service:
-      base-url: ${CONFIG_BASEURL_TWALLET:http://157.230.223.54:9009/api/v1/wallet}
+      base-url: ${CONFIG_BASEURL_TWALLET:https://services.staging.mywayapay.com/temporal-service/api/v1/wallet}
     notification-service:
       base-url: ${CONFIG_BASEURL_NOTIFICATION:http://68.183.60.114:8085/notification-service}
     referral-service:
