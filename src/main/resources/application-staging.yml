@@ -169,7 +169,7 @@ app:
     wallet-service:
       base-url: ${CONFIG_BASEURL_TWALLET:https://services.staging.mywayapay.com/temporal-service/api/v1/wallet}
     notification-service:
-      base-url: ${CONFIG_BASEURL_NOTIFICATION:http://68.183.60.114:8085/notification-service}
+      base-url: ${CONFIG_BASEURL_NOTIFICATION:https://services.staging.mywayapay.com/notification-service}
     referral-service:
       base-url: ${CONFIG_BASEURL_REFERRAL:http://68.183.60.114:8282}
     kyc-service:
