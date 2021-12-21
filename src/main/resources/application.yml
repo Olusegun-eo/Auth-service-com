@@ -153,7 +153,7 @@ referral:
 app:
   config:
     biller-service:
-      base-url: ${CONFIG_BASEURL_BILLPAY:http://157.230.223.54:8181/billspay}
+      base-url: ${CONFIG_BASEURL_BILLPAY:https://services.staging.mywayapay.com/billspayment-service}
     access-service:
       base-url: ${CONFIG_BASEURL_ROLEACCESS:https://services.staging.mywayapay.com/role-service}
     fraud-service:
@@ -161,7 +161,7 @@ app:
     logging-service:
       base-url: ${CONFIG_BASEURL_LOGAUDIT:http://46.101.41.187:8083}
     wayagram-profile:
-      base-url: ${CONFIG_BASEURL_SOCIAL:http://157.245.84.14:1000}
+      base-url: ${CONFIG_BASEURL_SOCIAL:https://services.staging.mywayapay.com/wayagram-service}
     file-resource:
       base-url: ${CONFIG_BASEURL_FILERESOURCE:https://services.staging.mywayapay.com/file-resource-service}
     virtual-account:
@@ -173,7 +173,7 @@ app:
     referral-service:
       base-url: ${CONFIG_BASEURL_REFERRAL:http://68.183.60.114:8282}
     kyc-service:
-      base-url: ${CONFIG_BASEURL_KYC:http://46.101.41.187:8070/kyc-service/kyc}
+      base-url: ${CONFIG_BASEURL_KYC:https://services.staging.mywayapay.com/kyc-service}
       
   auth:
     tokenSecret: ${AUTH_TOKEN_SECRET:926D96C90030DD58429D2751AC1BDBBC}
