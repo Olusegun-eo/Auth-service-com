@@ -14,7 +14,7 @@ spring:
         enabled: false
         type: none
   datasource:
-    url: jdbc:postgresql://postgresdb:5432/auth-service-db?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+    url: jdbc:postgresql://postgresdb:5432/auth-service?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
     username: root
     password: pONvagaJf3BTbu9l
     initialization-mode: always
@@ -153,15 +153,15 @@ referral:
 app:
   config:
     biller-service:
-      base-url: ${CONFIG_BASEURL_BILLPAY:http://157.230.223.54:8181/billspay}
+      base-url: ${CONFIG_BASEURL_BILLPAY:https://services.staging.mywayapay.com/billspayment-service}
     access-service:
       base-url: ${CONFIG_BASEURL_ROLEACCESS:https://services.staging.mywayapay.com/role-service}
     fraud-service:
-      base-url: ${CONFIG_BASEURL_FRAUD:http://157.230.223.54:8084}
+      base-url: ${CONFIG_BASEURL_FRAUD:https://services.staging.mywayapay.com/fraud-service}
     logging-service:
-      base-url: ${CONFIG_BASEURL_LOGAUDIT:http://46.101.41.187:8083}
+      base-url: ${CONFIG_BASEURL_LOGAUDIT:https://services.staging.mywayapay.com/logs-service}
     wayagram-profile:
-      base-url: ${CONFIG_BASEURL_SOCIAL:http://157.245.84.14:1000}
+      base-url: ${CONFIG_BASEURL_SOCIAL:https://services.staging.mywayapay.com/wayagram-service}
     file-resource:
       base-url: ${CONFIG_BASEURL_FILERESOURCE:https://services.staging.mywayapay.com/file-resource-service}
     virtual-account:
@@ -173,7 +173,7 @@ app:
     referral-service:
       base-url: ${CONFIG_BASEURL_REFERRAL:http://68.183.60.114:8282}
     kyc-service:
-      base-url: ${CONFIG_BASEURL_KYC:http://46.101.41.187:8070/kyc-service/kyc}
+      base-url: ${CONFIG_BASEURL_KYC:https://services.staging.mywayapay.com/kyc-service}
       
   auth:
     tokenSecret: 926D96C90030DD58429D2751AC1BDBBC
