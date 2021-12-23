@@ -11,8 +11,8 @@
 		</Console>
 
 		<RollingFile name="debugLog"
-			fileName="C:/home/logs/WayaLogv2-debug.log"
-			filePattern="C:/home/logs/$${date:yyyy-MM}/WayaLogv2-debug-%d{-dd-MMMM-yyyy}-%i.log.gz">
+			fileName="./logs/WayaLogv2-debug.log"
+			filePattern="./logs/$${date:yyyy-MM}/WayaLogv2-debug-%d{-dd-MMMM-yyyy}-%i.log.gz">
 			<LevelRangeFilter minLevel="DEBUG" maxLevel="DEBUG"
 				onMatch="ACCEPT" onMismatch="DENY" />
 			<PatternLayout
@@ -26,8 +26,8 @@
 		</RollingFile>
 
 		<RollingFile name="infoLog"
-			fileName="C:/home/logs/WayaLogv2-info.log"
-			filePattern="C:/home/logs/$${date:yyyy-MM}/WayaLogv2-info-%d{-dd-MMMM-yyyy}-%i.log.gz">
+			fileName="./logs/WayaLogv2-info.log"
+			filePattern="./logs/$${date:yyyy-MM}/WayaLogv2-info-%d{-dd-MMMM-yyyy}-%i.log.gz">
 			<LevelRangeFilter minLevel="INFO" maxLevel="INFO"
 				onMatch="ACCEPT" onMismatch="DENY" />
 			<PatternLayout
@@ -41,8 +41,8 @@
 		</RollingFile>
 
 		<RollingFile name="errorLog"
-			fileName="C:/home/logs/WayaLogv2-error.log"
-			filePattern="C:/home/logs/$${date:yyyy-MM}/WayaLogv2-error-%d{-dd-MMMM-yyyy}-%i.log.gz">
+			fileName="./logs/WayaLogv2-error.log"
+			filePattern="./logs/$${date:yyyy-MM}/WayaLogv2-error-%d{-dd-MMMM-yyyy}-%i.log.gz">
 			<LevelRangeFilter minLevel="ERROR" maxLevel="ERROR"
 				onMatch="ACCEPT" onMismatch="DENY" />
 			<PatternLayout
@@ -57,8 +57,8 @@
 
 
 		<RollingFile name="requestLog"
-					 fileName="C:/home/logs/WayaLogv2-request.log"
-					 filePattern="C:/home/logs/$${date:yyyy-MM}/WayaLogv2-request-%d{-dd-MMMM-yyyy}-%i.log.gz">
+					 fileName="./logs/WayaLogv2-request.log"
+					 filePattern="./logs/$${date:yyyy-MM}/WayaLogv2-request-%d{-dd-MMMM-yyyy}-%i.log.gz">
 			<LevelRangeFilter minLevel="INFO" maxLevel="INFO"
 							  onMatch="ACCEPT" onMismatch="DENY" />
 			<PatternLayout
@@ -72,8 +72,8 @@
 		</RollingFile>
 
 		<RollingFile name="cronLog"
-					 fileName="C:/home/logs/WayaLogv2-cron.log"
-					 filePattern="C:/home/logs/$${date:yyyy-MM}/WayaLogv2-cron-%d{-dd-MMMM-yyyy}-%i.log.gz">
+					 fileName="./logs/WayaLogv2-cron.log"
+					 filePattern="./logs/$${date:yyyy-MM}/WayaLogv2-cron-%d{-dd-MMMM-yyyy}-%i.log.gz">
 			<LevelRangeFilter minLevel="INFO" maxLevel="INFO"
 							  onMatch="ACCEPT" onMismatch="DENY" />
 			<PatternLayout

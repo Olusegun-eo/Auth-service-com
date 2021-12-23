@@ -18,6 +18,8 @@ import com.waya.wayaauthenticationservice.security.UserPrincipal;
 import com.waya.wayaauthenticationservice.service.FraudService;
 import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import com.waya.wayaauthenticationservice.service.PasswordService;
+import com.waya.wayaauthenticationservice.util.CryptoUtils;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -47,6 +49,7 @@ public class PasswordServiceImpl implements PasswordService {
 	private final MessagingService messagingService;
 	private final BCryptPasswordEncoder passwordEncoder;
 	private final AuthenticatedUserFacade authenticatedUserFacade;
+	private final CryptoUtils cryptoUtils;
 
 	@Override
 	public ResponseEntity<?> changePassword(PasswordPojo passPojo) {
@@ -75,6 +78,9 @@ public class PasswordServiceImpl implements PasswordService {
 						+ map.get("message").toString();
 				return new ResponseEntity<>(new ErrorResponse(errorMessage), HttpStatus.BAD_REQUEST);
 			}
+			if(user.isCorporate()) {
+            	user.setEncryptedPIN(cryptoUtils.encrypt(passPojo.getNewPassword()));
+            }
 			String newPassword = passwordEncoder.encode(passPojo.getNewPassword());
 			user.setPassword(newPassword);
 			user.setCredentialsNonExpired(true);
@@ -155,7 +161,9 @@ public class PasswordServiceImpl implements PasswordService {
 						+ map.get("message").toString();
 				return new ResponseEntity<>(new ErrorResponse(errorMessage), HttpStatus.BAD_REQUEST);
 			}
-
+            if(user.isCorporate()) {
+            	user.setEncryptedPIN(cryptoUtils.encrypt(passPojo.getNewPassword()));
+            }
 			String newPassword = passwordEncoder.encode(passPojo.getNewPassword());
 			user.setPassword(newPassword);
 			user.setAccountStatus(1);
@@ -580,6 +588,9 @@ public class PasswordServiceImpl implements PasswordService {
 			if (!isPasswordMatched) {
 				return new ResponseEntity<>(new ErrorResponse("Incorrect Old Password"), HttpStatus.BAD_REQUEST);
 			}
+			if(user.isCorporate()) {
+            	user.setEncryptedPIN(cryptoUtils.encrypt(passPojo.getNewPassword()));
+            }
 			String newPassword = passwordEncoder.encode(passPojo.getNewPassword());
 			user.setPassword(newPassword);
 			user.setCredentialsNonExpired(true);
@@ -599,6 +610,9 @@ public class PasswordServiceImpl implements PasswordService {
 				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
 						+ " For User with identity: " + passPojo.getPhoneOrEmail(), null), HttpStatus.BAD_REQUEST);
 			}
+			if(user.isCorporate()) {
+            	user.setEncryptedPIN(cryptoUtils.encrypt(passPojo.getNewPassword()));
+            }
 			String newPassword = passwordEncoder.encode(passPojo.getNewPassword());
 			user.setPassword(newPassword);
 			user.setAccountStatus(1);

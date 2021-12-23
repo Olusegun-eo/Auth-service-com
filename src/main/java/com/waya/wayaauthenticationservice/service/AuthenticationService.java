@@ -48,5 +48,9 @@ public interface AuthenticationService {
 	void createPrivateUser(BaseUserPojo user, Long userId, String token, String baseUrl);
 
 	void sendNewPassword(String randomPassword, Users user);
+	
+	LoginResponsePojo loginPasscode(LoginPasscodePojo loginRequestModel);
+	
+	ResponseEntity<?> PostPasscode(PasscodePojo passcode);
 
 }

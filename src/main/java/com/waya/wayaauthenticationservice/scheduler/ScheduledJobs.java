@@ -47,8 +47,8 @@ public class ScheduledJobs {
 		Integer count = otpRepository.deleteByExpiryDateLessThan(now);
 		log.info("{} OTP Token(s) deleted", count);
 	}
-	
-	@Scheduled(cron = "${job.cron.kyc}")
+
+	/*@Scheduled(cron = "${job.cron.kyc}")
 	public void updateKyc() {
 		log.info("Update KYC");
 		String key = "WAYA219766005KYC";
@@ -81,6 +81,6 @@ public class ScheduledJobs {
 				
 			}
 		}
-	}
+	}*/
 
 }

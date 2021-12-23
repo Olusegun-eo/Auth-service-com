@@ -1,0 +1,1 @@
+2021-12-14 17:50:18 ERROR com.waya.wayaauthenticationservice.security.AuthenticationFailureListener - Login Failed: Bad credentials - UsernamePasswordAuthenticationToken [Principal=8030907963, Credentials=[PROTECTED], Authenticated=true, Details=null, Granted Authorities=[]]
