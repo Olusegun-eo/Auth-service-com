@@ -93,6 +93,8 @@ public class ReferralCodeServiceImpl implements ReferralService {
             ResponseEntity<Long> responseEntity = billerProxy.getTransaction(userId,token);
             Long infoResponse = responseEntity.getBody();
 
+            log.info("infoResponse ::: " + infoResponse);
+
            // long count = infoResponse.data;
 
             return infoResponse;

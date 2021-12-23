@@ -14,5 +14,4 @@ public interface NotificationProxy {
     @PostMapping("/email-notification")
     NotificationResponsePojo sendEmail(@RequestBody NotificationResponsePojo notificationResponsePojo);
 
-
 }

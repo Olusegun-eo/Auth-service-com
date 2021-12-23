@@ -8,6 +8,7 @@ import lombok.Setter;
 public class NotificationResponsePojo {
     private String eventType;
     private String initiator;
+    private String eventCategory;
     private DataPojo data;
 
 }
