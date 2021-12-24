@@ -171,7 +171,7 @@ app:
     notification-service:
       base-url: ${CONFIG_BASEURL_NOTIFICATION:https://services.staging.mywayapay.com/notification-service}
     referral-service:
-      base-url: ${CONFIG_BASEURL_REFERRAL:http://68.183.60.114:8282}
+      base-url: ${CONFIG_BASEURL_REFERRAL:https://services.staging.mywayapay.com/referral-service}
     kyc-service:
       base-url: ${CONFIG_BASEURL_KYC:https://services.staging.mywayapay.com/kyc-service}
       
