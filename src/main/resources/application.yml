@@ -157,9 +157,9 @@ app:
     access-service:
       base-url: ${CONFIG_BASEURL_ROLEACCESS:https://services.staging.mywayapay.com/role-service}
     fraud-service:
-      base-url: ${CONFIG_BASEURL_FRAUD:http://157.230.223.54:8084}
+      base-url: ${CONFIG_BASEURL_FRAUD:https://services.staging.mywayapay.com/fraud-service}
     logging-service:
-      base-url: ${CONFIG_BASEURL_LOGAUDIT:http://46.101.41.187:8083}
+      base-url: ${CONFIG_BASEURL_LOGAUDIT:https://services.staging.mywayapay.com/logs-service}
     wayagram-profile:
       base-url: ${CONFIG_BASEURL_SOCIAL:https://services.staging.mywayapay.com/wayagram-service}
     file-resource:
@@ -171,7 +171,7 @@ app:
     notification-service:
       base-url: ${CONFIG_BASEURL_NOTIFICATION:https://services.staging.mywayapay.com/notification-service}
     referral-service:
-      base-url: ${CONFIG_BASEURL_REFERRAL:http://68.183.60.114:8282}
+      base-url: ${CONFIG_BASEURL_REFERRAL:https://services.staging.mywayapay.com/referral-service}
     kyc-service:
       base-url: ${CONFIG_BASEURL_KYC:https://services.staging.mywayapay.com/kyc-service}
       
