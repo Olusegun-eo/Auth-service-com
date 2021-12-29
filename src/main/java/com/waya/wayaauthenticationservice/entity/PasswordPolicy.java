@@ -57,9 +57,9 @@ public class PasswordPolicy {
     
     private int passwordAge;
     
+    @Column(columnDefinition="TEXT")
     private String token;
     
-    @Column(columnDefinition="TEXT")
     private int tokenAge;
     
     private LocalDate updatedTokenDate;
