@@ -1,6 +1,35 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PASSWORD_CHANGE_EMAIL;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PASSWORD_CHANGE_PHONE;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PASSWORD_RESET_EMAIL;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PASSWORD_RESET_PHONE;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PIN_CHANGE_EMAIL;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PIN_CHANGE_PHONE;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PIN_CREATE_EMAIL;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PIN_CREATE_PHONE;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PIN_RESET_EMAIL;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PIN_RESET_PHONE;
+import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
+
+import javax.validation.Valid;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.waya.wayaauthenticationservice.entity.OTPBase;
+import com.waya.wayaauthenticationservice.entity.PasswordPolicy;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.OTPRequestType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
@@ -8,7 +37,12 @@ import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordChangeEmailContext;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PasswordResetContext;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PinResetContext;
-import com.waya.wayaauthenticationservice.pojo.password.*;
+import com.waya.wayaauthenticationservice.pojo.password.ChangePINPojo;
+import com.waya.wayaauthenticationservice.pojo.password.ChangePasswordPojo;
+import com.waya.wayaauthenticationservice.pojo.password.NewPinPojo;
+import com.waya.wayaauthenticationservice.pojo.password.PasswordPojo;
+import com.waya.wayaauthenticationservice.pojo.password.ResetPasswordPojo;
+import com.waya.wayaauthenticationservice.repository.PasswordPolicyRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
@@ -22,21 +56,6 @@ import com.waya.wayaauthenticationservice.util.CryptoUtils;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import javax.validation.Valid;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.regex.Matcher;
-
-import static com.waya.wayaauthenticationservice.enums.OTPRequestType.*;
-import static com.waya.wayaauthenticationservice.util.HelperUtils.emailPattern;
 
 @Service
 @AllArgsConstructor
@@ -50,6 +69,7 @@ public class PasswordServiceImpl implements PasswordService {
 	private final BCryptPasswordEncoder passwordEncoder;
 	private final AuthenticatedUserFacade authenticatedUserFacade;
 	private final CryptoUtils cryptoUtils;
+	private final PasswordPolicyRepository passwordPolicyRepo;
 
 	@Override
 	public ResponseEntity<?> changePassword(PasswordPojo passPojo) {
@@ -78,14 +98,82 @@ public class PasswordServiceImpl implements PasswordService {
 						+ map.get("message").toString();
 				return new ResponseEntity<>(new ErrorResponse(errorMessage), HttpStatus.BAD_REQUEST);
 			}
-			if(user.isCorporate()) {
-            	user.setEncryptedPIN(cryptoUtils.encrypt(passPojo.getNewPassword()));
-            }
+			// Check repeat
+			PasswordPolicy policy = passwordPolicyRepo.findByUser(user).orElse(null);
+			if (policy != null) {
+				boolean p1 = false, p2 = false, p3 = false, p4 = false, p5 = false;
+				p1 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getNewPassword());
+				if (!policy.getOldPassword().isBlank()) {
+					p2 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getOldPassword());
+				}
+
+				if (!policy.getOldPassword().isBlank()) {
+					p3 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getSecondOldPassword());
+				}
+
+				if (!policy.getOldPassword().isBlank()) {
+					p4 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getThirdOldPassword());
+				}
+
+				if (!policy.getOldPassword().isBlank()) {
+					p5 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getFouthOldPassword());
+				}
+
+				if (!p1 || !p2 || !p3 || !p4 || !p5) {
+					return new ResponseEntity<>(new ErrorResponse("Password already used"), HttpStatus.BAD_REQUEST);
+				}
+			}
+			if (user.isCorporate()) {
+				user.setEncryptedPIN(cryptoUtils.encrypt(passPojo.getNewPassword()));
+			}
 			String newPassword = passwordEncoder.encode(passPojo.getNewPassword());
 			user.setPassword(newPassword);
 			user.setCredentialsNonExpired(true);
 			user.setAccountStatus(1);
 			usersRepo.save(user);
+			if (policy != null) {
+				int passwordCnt = policy.getPasswordCnt();
+				if (passwordCnt == 0) {
+					policy.setNewPassword(passPojo.getNewPassword());
+					policy.setOldPassword(policy.getNewPassword());
+					policy.setChangePasswordDate(LocalDateTime.now());
+					policy.setLchgDate(LocalDateTime.now());
+					policy.setUpdatedPasswordDate(LocalDate.now());
+					policy.setPasswordCnt(1);
+					policy.setPasswordAge(0);
+				} else if (passwordCnt == 1) {
+					policy.setNewPassword(passPojo.getNewPassword());
+					policy.setOldPassword(policy.getNewPassword());
+					policy.setSecondOldPassword(policy.getOldPassword());
+					policy.setChangePasswordDate(LocalDateTime.now());
+					policy.setLchgDate(LocalDateTime.now());
+					policy.setUpdatedPasswordDate(LocalDate.now());
+					policy.setPasswordCnt(2);
+					policy.setPasswordAge(0);
+				} else if (passwordCnt == 2) {
+					policy.setNewPassword(passPojo.getNewPassword());
+					policy.setOldPassword(policy.getNewPassword());
+					policy.setSecondOldPassword(policy.getOldPassword());
+					policy.setThirdOldPassword(policy.getSecondOldPassword());
+					policy.setChangePasswordDate(LocalDateTime.now());
+					policy.setLchgDate(LocalDateTime.now());
+					policy.setUpdatedPasswordDate(LocalDate.now());
+					policy.setPasswordCnt(3);
+					policy.setPasswordAge(0);
+				} else if (passwordCnt == 3) {
+					policy.setNewPassword(passPojo.getNewPassword());
+					policy.setOldPassword(policy.getNewPassword());
+					policy.setSecondOldPassword(policy.getOldPassword());
+					policy.setThirdOldPassword(policy.getSecondOldPassword());
+					policy.setFouthOldPassword(policy.getThirdOldPassword());
+					policy.setChangePasswordDate(LocalDateTime.now());
+					policy.setLchgDate(LocalDateTime.now());
+					policy.setUpdatedPasswordDate(LocalDate.now());
+					policy.setPasswordCnt(3);
+					policy.setPasswordAge(0);
+				}
+				passwordPolicyRepo.save(policy);
+			}
 			return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);
 		} catch (Exception ex) {
 			return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.BAD_REQUEST);
@@ -161,13 +249,81 @@ public class PasswordServiceImpl implements PasswordService {
 						+ map.get("message").toString();
 				return new ResponseEntity<>(new ErrorResponse(errorMessage), HttpStatus.BAD_REQUEST);
 			}
-            if(user.isCorporate()) {
-            	user.setEncryptedPIN(cryptoUtils.encrypt(passPojo.getNewPassword()));
-            }
+			// Check repeat
+			PasswordPolicy policy = passwordPolicyRepo.findByUser(user).orElse(null);
+			if (policy != null) {
+				boolean p1 = false, p2 = false, p3 = false, p4 = false, p5 = false;
+				p1 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getNewPassword());
+				if (!policy.getOldPassword().isBlank()) {
+					p2 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getOldPassword());
+				}
+
+				if (!policy.getOldPassword().isBlank()) {
+					p3 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getSecondOldPassword());
+				}
+
+				if (!policy.getOldPassword().isBlank()) {
+					p4 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getThirdOldPassword());
+				}
+
+				if (!policy.getOldPassword().isBlank()) {
+					p5 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getFouthOldPassword());
+				}
+
+				if (!p1 || !p2 || !p3 || !p4 || !p5) {
+					return new ResponseEntity<>(new ErrorResponse("Password already used"), HttpStatus.BAD_REQUEST);
+				}
+			}
+			if (user.isCorporate()) {
+				user.setEncryptedPIN(cryptoUtils.encrypt(passPojo.getNewPassword()));
+			}
 			String newPassword = passwordEncoder.encode(passPojo.getNewPassword());
 			user.setPassword(newPassword);
 			user.setAccountStatus(1);
 			usersRepo.save(user);
+			if (policy != null) {
+				int passwordCnt = policy.getPasswordCnt();
+				if (passwordCnt == 0) {
+					policy.setNewPassword(passPojo.getNewPassword());
+					policy.setOldPassword(policy.getNewPassword());
+					policy.setChangePasswordDate(LocalDateTime.now());
+					policy.setLchgDate(LocalDateTime.now());
+					policy.setUpdatedPasswordDate(LocalDate.now());
+					policy.setPasswordCnt(1);
+					policy.setPasswordAge(0);
+				} else if (passwordCnt == 1) {
+					policy.setNewPassword(passPojo.getNewPassword());
+					policy.setOldPassword(policy.getNewPassword());
+					policy.setSecondOldPassword(policy.getOldPassword());
+					policy.setChangePasswordDate(LocalDateTime.now());
+					policy.setLchgDate(LocalDateTime.now());
+					policy.setUpdatedPasswordDate(LocalDate.now());
+					policy.setPasswordCnt(2);
+					policy.setPasswordAge(0);
+				} else if (passwordCnt == 2) {
+					policy.setNewPassword(passPojo.getNewPassword());
+					policy.setOldPassword(policy.getNewPassword());
+					policy.setSecondOldPassword(policy.getOldPassword());
+					policy.setThirdOldPassword(policy.getSecondOldPassword());
+					policy.setChangePasswordDate(LocalDateTime.now());
+					policy.setLchgDate(LocalDateTime.now());
+					policy.setUpdatedPasswordDate(LocalDate.now());
+					policy.setPasswordCnt(3);
+					policy.setPasswordAge(0);
+				} else if (passwordCnt == 3) {
+					policy.setNewPassword(passPojo.getNewPassword());
+					policy.setOldPassword(policy.getNewPassword());
+					policy.setSecondOldPassword(policy.getOldPassword());
+					policy.setThirdOldPassword(policy.getSecondOldPassword());
+					policy.setFouthOldPassword(policy.getThirdOldPassword());
+					policy.setChangePasswordDate(LocalDateTime.now());
+					policy.setLchgDate(LocalDateTime.now());
+					policy.setUpdatedPasswordDate(LocalDate.now());
+					policy.setPasswordCnt(3);
+					policy.setPasswordAge(0);
+				}
+				passwordPolicyRepo.save(policy);
+			}
 			return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);
 		} catch (Exception ex) {
 			return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.BAD_REQUEST);
@@ -478,17 +634,17 @@ public class PasswordServiceImpl implements PasswordService {
 
 		boolean isPinMatched = passwordEncoder.matches(String.valueOf(pin), users.getPinHash());
 		if (isPinMatched) {
-			if(principal != null && principal.getUser().isPresent() && principal.getUser().get().getId() != null) {
+			if (principal != null && principal.getUser().isPresent() && principal.getUser().get().getId() != null) {
 				Long authId = principal.getUser().get().getId();
-				if(authId.equals(userId)){
+				if (authId.equals(userId)) {
 					fraudService.actionOnPinValidateSuccess(users);
 				}
 			}
 			return new ResponseEntity<>(new SuccessResponse("Pin valid."), HttpStatus.OK);
 		} else {
-			if(principal != null && principal.getUser().isPresent() && principal.getUser().get().getId() != null) {
+			if (principal != null && principal.getUser().isPresent() && principal.getUser().get().getId() != null) {
 				Long authId = principal.getUser().get().getId();
-				if(authId.equals(userId)){
+				if (authId.equals(userId)) {
 					fraudService.actionOnInvalidPin(users);
 				}
 			}
@@ -575,7 +731,7 @@ public class PasswordServiceImpl implements PasswordService {
 	@Override
 	public ResponseEntity<?> changePassword(@Valid ChangePasswordPojo passPojo) {
 		try {
-			if(Objects.isNull(passPojo.getOldPassword()) || passPojo.getOldPassword().isBlank()){
+			if (Objects.isNull(passPojo.getOldPassword()) || passPojo.getOldPassword().isBlank()) {
 				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.MISSING_REQUIRED_FIELD.getErrorMessage()
 						+ " Old Password: can not be null or empty ", null), HttpStatus.BAD_REQUEST);
 			}
@@ -588,14 +744,82 @@ public class PasswordServiceImpl implements PasswordService {
 			if (!isPasswordMatched) {
 				return new ResponseEntity<>(new ErrorResponse("Incorrect Old Password"), HttpStatus.BAD_REQUEST);
 			}
-			if(user.isCorporate()) {
-            	user.setEncryptedPIN(cryptoUtils.encrypt(passPojo.getNewPassword()));
-            }
+			// Check repeat
+			PasswordPolicy policy = passwordPolicyRepo.findByUser(user).orElse(null);
+			if (policy != null) {
+				boolean p1 = false, p2 = false, p3 = false, p4 = false, p5 = false;
+				p1 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getNewPassword());
+				if (!policy.getOldPassword().isBlank()) {
+					p2 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getOldPassword());
+				}
+
+				if (!policy.getOldPassword().isBlank()) {
+					p3 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getSecondOldPassword());
+				}
+
+				if (!policy.getOldPassword().isBlank()) {
+					p4 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getThirdOldPassword());
+				}
+
+				if (!policy.getOldPassword().isBlank()) {
+					p5 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getFouthOldPassword());
+				}
+
+				if (!p1 || !p2 || !p3 || !p4 || !p5) {
+					return new ResponseEntity<>(new ErrorResponse("Password already used"), HttpStatus.BAD_REQUEST);
+				}
+			}
+			if (user.isCorporate()) {
+				user.setEncryptedPIN(cryptoUtils.encrypt(passPojo.getNewPassword()));
+			}
 			String newPassword = passwordEncoder.encode(passPojo.getNewPassword());
 			user.setPassword(newPassword);
 			user.setCredentialsNonExpired(true);
 			user.setAccountStatus(1);
 			usersRepo.save(user);
+			if (policy != null) {
+				int passwordCnt = policy.getPasswordCnt();
+				if (passwordCnt == 0) {
+					policy.setNewPassword(passPojo.getNewPassword());
+					policy.setOldPassword(policy.getNewPassword());
+					policy.setChangePasswordDate(LocalDateTime.now());
+					policy.setLchgDate(LocalDateTime.now());
+					policy.setUpdatedPasswordDate(LocalDate.now());
+					policy.setPasswordCnt(1);
+					policy.setPasswordAge(0);
+				} else if (passwordCnt == 1) {
+					policy.setNewPassword(passPojo.getNewPassword());
+					policy.setOldPassword(policy.getNewPassword());
+					policy.setSecondOldPassword(policy.getOldPassword());
+					policy.setChangePasswordDate(LocalDateTime.now());
+					policy.setLchgDate(LocalDateTime.now());
+					policy.setUpdatedPasswordDate(LocalDate.now());
+					policy.setPasswordCnt(2);
+					policy.setPasswordAge(0);
+				} else if (passwordCnt == 2) {
+					policy.setNewPassword(passPojo.getNewPassword());
+					policy.setOldPassword(policy.getNewPassword());
+					policy.setSecondOldPassword(policy.getOldPassword());
+					policy.setThirdOldPassword(policy.getSecondOldPassword());
+					policy.setChangePasswordDate(LocalDateTime.now());
+					policy.setLchgDate(LocalDateTime.now());
+					policy.setUpdatedPasswordDate(LocalDate.now());
+					policy.setPasswordCnt(3);
+					policy.setPasswordAge(0);
+				} else if (passwordCnt == 3) {
+					policy.setNewPassword(passPojo.getNewPassword());
+					policy.setOldPassword(policy.getNewPassword());
+					policy.setSecondOldPassword(policy.getOldPassword());
+					policy.setThirdOldPassword(policy.getSecondOldPassword());
+					policy.setFouthOldPassword(policy.getThirdOldPassword());
+					policy.setChangePasswordDate(LocalDateTime.now());
+					policy.setLchgDate(LocalDateTime.now());
+					policy.setUpdatedPasswordDate(LocalDate.now());
+					policy.setPasswordCnt(3);
+					policy.setPasswordAge(0);
+				}
+				passwordPolicyRepo.save(policy);
+			}
 			return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);
 		} catch (Exception ex) {
 			return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.BAD_REQUEST);
@@ -610,13 +834,81 @@ public class PasswordServiceImpl implements PasswordService {
 				return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()
 						+ " For User with identity: " + passPojo.getPhoneOrEmail(), null), HttpStatus.BAD_REQUEST);
 			}
-			if(user.isCorporate()) {
-            	user.setEncryptedPIN(cryptoUtils.encrypt(passPojo.getNewPassword()));
-            }
+			// Check repeat
+			PasswordPolicy policy = passwordPolicyRepo.findByUser(user).orElse(null);
+			if (policy != null) {
+				boolean p1 = false, p2 = false, p3 = false, p4 = false, p5 = false;
+				p1 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getNewPassword());
+				if (!policy.getOldPassword().isBlank()) {
+					p2 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getOldPassword());
+				}
+
+				if (!policy.getOldPassword().isBlank()) {
+					p3 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getSecondOldPassword());
+				}
+
+				if (!policy.getOldPassword().isBlank()) {
+					p4 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getThirdOldPassword());
+				}
+
+				if (!policy.getOldPassword().isBlank()) {
+					p5 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getFouthOldPassword());
+				}
+
+				if (!p1 || !p2 || !p3 || !p4 || !p5) {
+					return new ResponseEntity<>(new ErrorResponse("Password already used"), HttpStatus.BAD_REQUEST);
+				}
+			}
+			if (user.isCorporate()) {
+				user.setEncryptedPIN(cryptoUtils.encrypt(passPojo.getNewPassword()));
+			}
 			String newPassword = passwordEncoder.encode(passPojo.getNewPassword());
 			user.setPassword(newPassword);
 			user.setAccountStatus(1);
 			usersRepo.save(user);
+			if (policy != null) {
+				int passwordCnt = policy.getPasswordCnt();
+				if (passwordCnt == 0) {
+					policy.setNewPassword(passPojo.getNewPassword());
+					policy.setOldPassword(policy.getNewPassword());
+					policy.setChangePasswordDate(LocalDateTime.now());
+					policy.setLchgDate(LocalDateTime.now());
+					policy.setUpdatedPasswordDate(LocalDate.now());
+					policy.setPasswordCnt(1);
+					policy.setPasswordAge(0);
+				} else if (passwordCnt == 1) {
+					policy.setNewPassword(passPojo.getNewPassword());
+					policy.setOldPassword(policy.getNewPassword());
+					policy.setSecondOldPassword(policy.getOldPassword());
+					policy.setChangePasswordDate(LocalDateTime.now());
+					policy.setLchgDate(LocalDateTime.now());
+					policy.setUpdatedPasswordDate(LocalDate.now());
+					policy.setPasswordCnt(2);
+					policy.setPasswordAge(0);
+				} else if (passwordCnt == 2) {
+					policy.setNewPassword(passPojo.getNewPassword());
+					policy.setOldPassword(policy.getNewPassword());
+					policy.setSecondOldPassword(policy.getOldPassword());
+					policy.setThirdOldPassword(policy.getSecondOldPassword());
+					policy.setChangePasswordDate(LocalDateTime.now());
+					policy.setLchgDate(LocalDateTime.now());
+					policy.setUpdatedPasswordDate(LocalDate.now());
+					policy.setPasswordCnt(3);
+					policy.setPasswordAge(0);
+				} else if (passwordCnt == 3) {
+					policy.setNewPassword(passPojo.getNewPassword());
+					policy.setOldPassword(policy.getNewPassword());
+					policy.setSecondOldPassword(policy.getOldPassword());
+					policy.setThirdOldPassword(policy.getSecondOldPassword());
+					policy.setFouthOldPassword(policy.getThirdOldPassword());
+					policy.setChangePasswordDate(LocalDateTime.now());
+					policy.setLchgDate(LocalDateTime.now());
+					policy.setUpdatedPasswordDate(LocalDate.now());
+					policy.setPasswordCnt(3);
+					policy.setPasswordAge(0);
+				}
+				passwordPolicyRepo.save(policy);
+			}
 			return new ResponseEntity<>(new SuccessResponse("Password Changed.", null), HttpStatus.OK);
 		} catch (Exception ex) {
 			return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.BAD_REQUEST);

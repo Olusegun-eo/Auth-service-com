@@ -18,7 +18,9 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import org.springframework.util.StringUtils;
 
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
+import com.waya.wayaauthenticationservice.entity.PasswordPolicy;
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.repository.PasswordPolicyRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.util.JwtUtil;
 import com.waya.wayaauthenticationservice.util.SecurityConstants;
@@ -70,6 +72,18 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
 
 				Users user = userLoginRepo.findByEmailOrPhoneNumber(userToken).orElse(null);
 				if (user != null) {
+					//Check token valid days
+					PasswordPolicyRepository passwordPolicyRepo = (PasswordPolicyRepository) SpringApplicationContext.getBean("passwordPolicyRepository");
+					PasswordPolicy policy = passwordPolicyRepo.findByUser(user).orElse(null);
+					if(policy != null) {
+						int tokenAge = policy.getTokenAge();
+						int passwordAge = policy.getPasswordAge();
+						if(tokenAge > 5)
+							return new UsernamePasswordAuthenticationToken(null, null, null);
+						
+						if(passwordAge > 90)
+							return new UsernamePasswordAuthenticationToken(null, null, null);
+					}
 					UserPrincipal userPrincipal = new UserPrincipal(user);
 					UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
 							userPrincipal, null, userPrincipal.getAuthorities());
