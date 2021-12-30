@@ -8,6 +8,7 @@ import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserIDPojo;
 import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
+import com.waya.wayaauthenticationservice.proxy.ReferralProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.repository.*;
 import com.waya.wayaauthenticationservice.response.*;
@@ -16,7 +17,6 @@ import com.waya.wayaauthenticationservice.service.ProfileService;
 import com.waya.wayaauthenticationservice.util.BearerTokenUtil;
 import com.waya.wayaauthenticationservice.util.CommonUtils;
 import com.waya.wayaauthenticationservice.util.Constant;
-import com.waya.wayaauthenticationservice.util.EventCharges;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jmimemagic.Magic;
 import net.sf.jmimemagic.MagicException;
@@ -65,6 +65,7 @@ public class ProfileServiceImpl implements ProfileService {
     private String wayagramUrl;
     private final WalletProxy walletProxy;
     private final ReferralBonusRepository referralBonusRepository;
+    private final ReferralProxy referralProxy;
 
     @Value("${referral.account}")
     public String referralAccount;
@@ -76,7 +77,7 @@ public class ProfileServiceImpl implements ProfileService {
                               @Qualifier("restClient") RestTemplate restClient,
                               OtherDetailsRepository otherDetailsRepository,
                               SMSAlertConfigRepository smsAlertConfigRepository, MessagingService messagingService,
-                              ReferralCodeRepository referralCodeRepository, WalletProxy walletProxy, ReferralBonusRepository referralBonusRepository) {
+                              ReferralCodeRepository referralCodeRepository, WalletProxy walletProxy, ReferralBonusRepository referralBonusRepository, ReferralProxy referralProxy) {
         this.modelMapper = modelMapper;
         this.profileRepository = profileRepository;
         this.otpTokenService = otpTokenService;
@@ -89,6 +90,7 @@ public class ProfileServiceImpl implements ProfileService {
         this.restClient = restClient;
         this.walletProxy = walletProxy;
         this.referralBonusRepository = referralBonusRepository;
+        this.referralProxy = referralProxy;
     }
 
     private static SearchProfileResponse apply(Profile profilePersonal) {
@@ -122,14 +124,23 @@ public class ProfileServiceImpl implements ProfileService {
                 parsePageNumber--;
 
             // make a call to the profile service to get getReferralCodeByUserId
+            ReferralCodePojo referralCodePojo = checkReferralCode(userId);
+            log.info("referralCodePojo :::: " + referralCodePojo);
 
             ReferralCode referrals = referralCodeRepository.getReferralCodeByUserId(userId).orElse(null);
             if (referrals == null) {
                 return Collections.emptyList();
             }
-            return profileRepository
-                    .findAllByReferralCode(referrals.getReferralCode(), LIMIT, parsePageNumber * LIMIT, false).stream()
-                    .map(this::setProfileResponse).collect(Collectors.toList());
+//            return profileRepository
+//                    .findAllByReferralCode(referrals.getReferralCode(), LIMIT, parsePageNumber * LIMIT, false).stream()
+//                    .map(this::setProfileResponse).collect(Collectors.toList());
+            List<UserProfileResponse> list = new ArrayList<>();
+            for (Profile profile : profileRepository
+                    .findAllByReferralCode(referrals.getReferralCode(), LIMIT, parsePageNumber * LIMIT, false)) {
+                UserProfileResponse userProfileResponse = setProfileResponse(profile);
+                list.add(userProfileResponse);
+            }
+            return list;
 
         } catch (Exception exception) {
             throw new CustomException(exception.getMessage(), exception, HttpStatus.UNPROCESSABLE_ENTITY);
@@ -158,7 +169,10 @@ public class ProfileServiceImpl implements ProfileService {
                     profileRepository.findByEmail(false, request.getEmail());
 
             // check if the user exist in the referral table
-            Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(request.getUserId().toString());
+            ReferralCodePojo referralCodePojo = checkReferralCode(request.getUserId());
+            log.info("referralCodePojo :::: " + referralCodePojo);
+
+            Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(request.getUserId());
 
             // validation check
             ApiResponseBody<String> validationCheck = validationCheckOnProfile(profile, referralCode);
@@ -176,7 +190,11 @@ public class ProfileServiceImpl implements ProfileService {
                 newProfile.setDateOfBirth(request.getDateOfBirth().toString());
                 // save new personal profile
                 Profile savedProfile = profileRepository.save(newProfile);
-                // save referral code
+
+                // save referral code to referral service
+                 postReferralCode(savedProfile, request.getUserId());
+
+                // save referral code in auth service:: NOTE THIS WILL BE REMOVED SOON
                 saveReferralCode(savedProfile, request.getUserId());
 
                 String fullName = String.format("%s %s", savedProfile.getFirstName(), savedProfile.getSurname());
@@ -187,7 +205,7 @@ public class ProfileServiceImpl implements ProfileService {
 
                 // create waya gram profile
                 CompletableFuture.runAsync(
-                        () -> createWayagramProfile(savedProfile.getUserId().toString(), savedProfile.getSurname(), fullName))
+                        () -> createWayagramProfile(savedProfile.getUserId(), savedProfile.getSurname(), fullName))
                         .orTimeout(5, TimeUnit.MINUTES).handle((res, ex) -> {
                     if (ex != null) {
                         log.error("Error With Setting up Wayagram Profile:: {}", ex.getMessage());
@@ -214,6 +232,45 @@ public class ProfileServiceImpl implements ProfileService {
         }
     }
 
+    private ReferralCodePojo checkReferralCode(String userId) throws Exception {
+        try {
+            ResponseEntity<ApiResponseBody<ReferralCodePojo>> responseEntity = referralProxy.getUserByReferralCode(userId);
+            ApiResponseBody<ReferralCodePojo> responseBody = responseEntity.getBody();
+            ReferralCodePojo referralCodePojo = responseBody.getData();
+            log.info("referralCodePojo :::: " + referralCodePojo);
+            return referralCodePojo;
+        }catch (Exception exception) {
+            throw new Exception(exception.getMessage());
+        }
+
+    }
+
+    private void postReferralCode(Profile savedProfile, String userId) throws Exception {
+        try {
+            ReferralCodeRequest referralCodeRequest = new ReferralCodeRequest();
+            referralCodeRequest.setUserId(userId);
+            referralCodeRequest.setProfile(savedProfile.getId());
+
+            ResponseEntity<String> responseEntity = referralProxy.saveReferralCode(referralCodeRequest);
+            log.info("responseEntity :::: " + responseEntity);
+        }catch (Exception exception) {
+            throw new Exception(exception.getMessage());
+        }
+
+    }
+
+
+    public void postMigrateReferralCode(UUID profileId, String userId, String token) {
+
+            ReferralCodeRequest referralCodeRequest = new ReferralCodeRequest();
+            referralCodeRequest.setUserId(userId);
+            referralCodeRequest.setProfile(profileId);
+
+            ResponseEntity<String> responseEntity = referralProxy.saveReferralCode(referralCodeRequest);
+            log.info("responseEntity :::: " + responseEntity);
+
+    }
+
     /**
      * create a new corporate profile.
      *
@@ -224,6 +281,7 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ApiResponseBody<String> createProfile(CorporateProfileRequest profileRequest, String baseUrl) {
         try {
+
             Users user = this.userRepository.findById(false, Long.valueOf(profileRequest.getUserId())).orElse(null);
             if (user == null)
                 throw new CustomException("Base User with Provided ID not Found", HttpStatus.BAD_REQUEST);
@@ -245,6 +303,9 @@ public class ProfileServiceImpl implements ProfileService {
 
             // check if the user exist in the referral table
             // now this check will extend to the referral service
+            ReferralCodePojo referralCodePojo = checkReferralCode(profileRequest.getUserId());
+            log.info("referralCodePojo :::: " + referralCodePojo);
+
             Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(profileRequest.getUserId());
             // validation check
             ApiResponseBody<String> validationCheck = validationCheckOnProfile(profile, referralCode);
@@ -252,6 +313,8 @@ public class ProfileServiceImpl implements ProfileService {
                 Profile savedProfile = saveCorporateProfile(profileRequest);
 
                 // save the referral code make request to the referral service
+                postReferralCode(savedProfile, profileRequest.getUserId());
+
                 saveReferralCode(savedProfile, profileRequest.getUserId());
 
                 // send otp to Phone and Email
@@ -262,7 +325,7 @@ public class ProfileServiceImpl implements ProfileService {
 
                 // create waya gram profile
                 CompletableFuture.runAsync(
-                        () -> createWayagramProfile(savedProfile.getUserId().toString(), savedProfile.getSurname(), fullName))
+                        () -> createWayagramProfile(savedProfile.getUserId(), savedProfile.getSurname(), fullName))
                         .orTimeout(5, TimeUnit.MINUTES).handle((res, ex) -> {
                     if (ex != null) {
                         log.error("Error With Setting up Wayagram Profile:: {}", ex.getMessage());
@@ -271,6 +334,12 @@ public class ProfileServiceImpl implements ProfileService {
                 });
 
                 if (profileRequest.getReferralCode() !=null){
+                    String token = BearerTokenUtil.getBearerTokenHeader();
+                    // send request to referral service
+                    AutoSignUpReferralRequest request = new AutoSignUpReferralRequest();
+                    request.setUserId(savedProfile.getUserId());
+                    CompletableFuture.runAsync(() -> referralProxy.autoSendSignUpReferralBonus(request,token));
+
                     CompletableFuture.runAsync(() -> sendSignUpBonusToUser(savedProfile.getUserId()));
                 }
 
@@ -698,13 +767,21 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     public UserProfileResponse setProfileResponse(Profile profile) {
+      
+
+
         // initialize to empty
         Optional<OtherDetails> otherDetails = Optional.empty();
         // check if other details is present in profile
         if (profile.getOtherDetails() != null) {
             otherDetails = Optional.of(profile.getOtherDetails());
         }
-
+        try{
+        ReferralCodePojo referralCodePojo = checkReferralCode(profile.getUserId());
+        log.info("referralCodePojo :::: " + referralCodePojo.getReferralCode());
+        } catch (Exception exception) {
+            throw new CustomException(exception.getMessage(), exception, HttpStatus.UNPROCESSABLE_ENTITY);
+        }
         // get referralCodeValue for this user
         Optional<ReferralCode> referralCode;
         String referralCodeValue = null;
@@ -750,7 +827,9 @@ public class ProfileServiceImpl implements ProfileService {
                 .corporate(profile.isCorporate())
                 .deviceToken(profile.getDeviceToken())
                 .otherDetails(otherdetailsResponse).build();
+
     }
+
 
     private ApiResponseBody<String> validationCheckOnProfile(Optional<Profile> profile,
                                                              Optional<ReferralCode> referralCodePojo) {
@@ -937,6 +1016,14 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public UserProfileResponse getProfileByReferralCode(String referralCode) {
         try {
+            String token = BearerTokenUtil.getBearerTokenHeader();
+
+            ResponseEntity<ApiResponseBody<ReferralCodePojo>> responseEntity = referralProxy.getReferralCodeByCode(referralCode,token);
+            ApiResponseBody<ReferralCodePojo> responseBody = responseEntity.getBody();
+            ReferralCodePojo referralCodePojo = responseBody.getData();
+
+            log.info("Inside getProfileByReferralCode :: {} " + referralCodePojo);
+
             ReferralCode referral = referralCodeRepository.getReferralCodeByCode(referralCode).orElse(null);
             if (referral == null) {
                 throw new CustomException("Referral Code Supplied does not exist", HttpStatus.BAD_REQUEST);
@@ -955,7 +1042,7 @@ public class ProfileServiceImpl implements ProfileService {
 
         // get users wallet
         ResponseEntity<ApiResponseBody<NewWalletResponse>> responseEntity1 = walletProxy.getDefaultWallet(userId, token);
-        ApiResponseBody<NewWalletResponse> infoResponse2 = (ApiResponseBody<NewWalletResponse>) responseEntity1.getBody();
+        ApiResponseBody<NewWalletResponse> infoResponse2 = responseEntity1.getBody();
         NewWalletResponse mainWalletResponse2 = infoResponse2.getData();
 
         // get the referral Amount
@@ -990,7 +1077,7 @@ public class ProfileServiceImpl implements ProfileService {
 
 
 
-    public UserProfileResponse saveDeviceToken(DeviceTokenRequest deviceTokenRequest){
+    public UserProfileResponse saveDeviceToken(DeviceTokenRequest deviceTokenRequest) throws Exception {
 
         Optional<Profile> profile = profileRepository.findByUserId(false, deviceTokenRequest.getUserId().toString());
 

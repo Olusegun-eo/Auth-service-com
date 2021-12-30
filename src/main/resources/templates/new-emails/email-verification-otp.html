@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:v="urn:schemas-microsoft-com:vml"
+      xmlns:o="urn:schemas-microsoft-com:office:office">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1191, maximum-scale=1.0" />
+    <link rel="shortcut icon" type="image/png" href="https://animaproject.s3.amazonaws.com/home/favicon.png" />
+    <meta name="og:type" content="website" />
+    <meta name="twitter:card" content="photo" />
+    <style>
+        /* screen - email-verification-notification */
+        a{
+            color: #ff4b01;
+        }
+        .email-verification-notification {
+            align-items: flex-start;
+            background-image: url(../img/bg@1x.png);
+            background-size: 100% 100%;
+            display: flex;
+            height: 889px;
+            min-width: 1191px;
+            padding: 0 310px;
+        }
+
+        .email-verification-notification .group-2324 {
+
+            background-color: var(--white);
+            display: flex;
+            flex-direction: column;
+            margin-left: 1px;
+            margin-top: 119px;
+            min-height: 652px;
+            padding: 30px 26px;
+            width: 570px;
+        }
+
+        .email-verification-notification .wayapay-logo-1 {
+            height: 44px;
+            width: 102px;
+        }
+
+        .email-verification-notification .group-15 {
+            align-items: flex-start;
+            align-self: flex-end;
+            display: flex;
+            flex-direction: column;
+            margin-top: 25px;
+            min-height: 254px;
+            width: 509px;
+        }
+
+        .email-verification-notification .paragraph-1 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            min-height: 22px;
+            white-space: nowrap;
+        }
+
+        .email-verification-notification .paragraph-4 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            margin-top: 26px;
+            min-height: 66px;
+            width: 501px;
+        }
+
+        .email-verification-notification .paragraph-5 {
+            color: #240d04;
+            font-family: var(--font-family-inter);
+            font-size: 35px;
+            font-weight: 700;
+            letter-spacing: 0;
+            line-height: 56.0px;
+            margin-top: 19px;
+            min-height: 56px;
+            white-space: nowrap;
+        }
+
+        .email-verification-notification .surname {
+            color: var(--vermilion);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xxl);
+            font-weight: 500;
+            letter-spacing: 0;
+            line-height: 21.0px;
+            margin-top: 23px;
+            min-height: 42px;
+        }
+
+        .email-verification-notification .overlap-group {
+            height: 218px;
+            margin-left: 4.0px;
+            margin-top: 51px;
+            position: relative;
+            width: 492px;
+        }
+
+        .email-verification-notification .group-2320 {
+            align-items: flex-start;
+            display: flex;
+            height: 38px;
+            left: 119px;
+            min-width: 250px;
+            position: absolute;
+            top: 35px;
+        }
+
+        .email-verification-notification .app-store-btn-1 {
+            height: 38px;
+            object-fit: cover;
+            width: 122px;
+        }
+
+        .email-verification-notification .playstore-btn-1 {
+            height: 38px;
+            margin-left: 6px;
+            object-fit: cover;
+            width: 122px;
+        }
+
+        .email-verification-notification .group-20 {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            left: 0;
+            min-height: 218px;
+            position: absolute;
+            top: 0;
+            width: 492px;
+        }
+
+        .email-verification-notification .rectangle-1 {
+            background-color: var(--gray-nurse);
+            height: 1px;
+            margin-right: 4.0px;
+            width: 482px;
+        }
+
+        .email-verification-notification .paragraph-6 {
+            letter-spacing: 0;
+            line-height: 14.0px;
+            margin-right: 4.0px;
+            margin-top: 143px;
+            min-height: 14px;
+            min-width: 206px;
+            white-space: nowrap;
+        }
+
+        .email-verification-notification .you-are-receiving-th {
+            height: 42px;
+            letter-spacing: 0;
+            line-height: 14.0px;
+            margin-right: 4.0px;
+            margin-top: 18px;
+            text-align: center;
+            width: 488px;
+        }
+
+        .email-verification-notification .frame-1 {
+            align-items: flex-start;
+            display: flex;
+            height: 15px;
+            left: 175px;
+            min-width: 137px;
+            position: absolute;
+            top: 97px;
+        }
+
+        .email-verification-notification .email-icon {
+            height: 15px;
+            object-fit: cover;
+            width: 22px;
+        }
+
+        .email-verification-notification .x-icon {
+            height: 15px;
+            margin-left: 8px;
+            object-fit: cover;
+            width: 15px;
+        }
+
+        .email-verification-notification .twitter-icon {
+            height: 15px;
+            margin-left: 8px;
+            object-fit: cover;
+            width: 19px;
+        }
+
+        .email-verification-notification .wayapay-logo-2 {
+            height: 15px;
+            margin-left: 8px;
+            width: 34px;
+        }
+
+        :root {
+            --black: #000000;
+            --desert-storm: #f8f8f8;
+            --granite-gray: #666666;
+            --gray-nurse: #e8e8e8;
+            --mine-shaft: #333333;
+            --sonic-silver: #777777;
+            --vermilion: #ff4400;
+            --vermilion-2: #ff4b01;
+            --white: #ffffff;
+
+            --font-size-l: 12px;
+            --font-size-m: 10px;
+            --font-size-xl: 14px;
+            --font-size-xxl: 15px;
+            --font-size-xxxl: 16px;
+            --font-size-xxxxl: 18px;
+            --font-size-xxxxxl: 24px;
+
+            --font-family-inter: "Inter", Helvetica;
+            --font-family-inter-regular: "Inter-Regular", Helvetica;
+        }
+        .inter-semi-bold-mine-shaft-16px {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xxxl);
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        .inter-regular-normal-granite-gray-12px {
+            color: var(--granite-gray);
+            font-family: var(--font-family-inter-regular);
+            font-size: var(--font-size-l);
+            font-style: normal;
+            font-weight: 400;
+        }
+
+        .inter-medium-mine-shaft-14px {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xl);
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        .inter-medium-sonic-silver-10px {
+            color: var(--sonic-silver);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-m);
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        .inter-medium-vermilion-10px {
+            color: var(--vermilion-2);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-m);
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        .inter-semi-bold-white-14px {
+            color: var(--white);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xl);
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        .inter-medium-mine-shaft-10px {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-m);
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        .inter-medium-white-10px {
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-m);
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        .inter-bold-mine-shaft-14px {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xl);
+            font-style: normal;
+            font-weight: 700;
+        }
+
+        @import url("https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css");
+
+        @import url("https://fonts.googleapis.com/css?family=Inter:700,500,600");
+
+        .screen a {
+            display: contents;
+            text-decoration: none;
+        }
+
+        .container-center-horizontal {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            pointer-events: none;
+            width: 100%;
+        }
+
+        .container-center-horizontal > * {
+            flex-shrink: 0;
+            pointer-events: auto;
+        }
+
+        .valign-text-bottom {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+    </style>
+
+</head>
+<body style="margin: 0">
+<input type="hidden" id="anPageName" name="page" value="email-verification-notification" />
+<div class="container-center-horizontal">
+    <div class="email-verification-notification screen">
+
+        <div class="group-2324">
+            <img class="wayapay-logo-1" src="../img/wayapay-logo-1@2x.png" />
+            <div class="group-15">
+                <div class="paragraph-1 inter-semi-bold-mine-shaft-16px">Dear <span th:text="${firstName}"></span>,</div>
+                <p class="paragraph-4 inter-medium-mine-shaft-14px">
+                    Thank you for registering with us. Just one last step to finalize your registration. Please use the One
+                    Time Password (OTP) below when prompted in the application screen to complete your email verification
+                </p>
+                <h1 class="paragraph-5"><span class="linkUrl" th:text="${token}"> 2345442</span></h1>
+
+                <div class="surname">Best wishes,<br />The wayapaychat Team</div>
+            </div>
+            <div class="overlap-group">
+                <div class="group-2320">
+                    <img class="app-store-btn-1" src="../img/app-store-btn-1@2x.png" />
+                    <img class="playstore-btn-1" src="../img/playstore-btn-1@2x.png" />
+                </div>
+                <div class="group-20">
+                    <div class="rectangle-1"></div>
+                    <p class="paragraph-6 inter-medium-mine-shaft-10px">Copyright © Waya 2022 All rights reserved</p>
+                    <p class="you-are-receiving-th valign-text-bottom inter-medium-white-10px">
+                <span
+                ><span class="inter-medium-sonic-silver-10px"
+                >You are receiving this message because you signed up on Waya PayChat. If you would like to stop
+                    receiving messages, you can opt out by clicking </span
+                ><span class="inter-medium-vermilion-10px"><a href="">unsubscribe.</a></span
+                ><span class="inter-medium-sonic-silver-10px">
+                    For more information about how we process data, please see our </span
+                ><span class="inter-medium-vermilion-10px"><a href="">Privacy Policy.</a></span>
+                </span>
+                    </p>
+                </div>
+                <div class="frame-1">
+                    <a href="#">  <img class="email-icon" src="../img/email-icon@2x.png" /></a>
+                    <a href="#"><img class="x-icon" src="../img/instagramicon@2x.png" /></a>
+                    <a href="#"><img class="x-icon" src="../img/facebookicon@2x.png" /></a>
+                    <a href="#"><img class="twitter-icon" src="../img/twittericon@2x.png" /></a>
+                    <a href="#"><img class="wayapay-logo-2" src="../img/wayapay-logo-2@2x.png" /></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

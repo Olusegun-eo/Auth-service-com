@@ -11,10 +11,10 @@ public class ReferralCodePojo {
     private UUID id;
     private String referralCode;
     private String userId;
-    private ProfileDto profile;
+    private String profile;
     private LocalDateTime createdAt;
 
-    public ReferralCodePojo(String referralCode, ProfileDto profile, String userId) {
+    public ReferralCodePojo(String referralCode, String profile, String userId) {
         this.referralCode = referralCode;
         this.profile = profile;
         this.userId = userId;
