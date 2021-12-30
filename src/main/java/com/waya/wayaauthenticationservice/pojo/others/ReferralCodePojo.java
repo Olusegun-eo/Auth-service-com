@@ -19,4 +19,9 @@ public class ReferralCodePojo {
         this.profile = profile;
         this.userId = userId;
     }
+
+	public ReferralCodePojo() {
+		super();
+	}
+    
 }
