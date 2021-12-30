@@ -1,7 +1,10 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import com.waya.wayaauthenticationservice.enums.EventCategory;
 import com.waya.wayaauthenticationservice.enums.StreamsEventType;
 import com.waya.wayaauthenticationservice.pojo.mail.AbstractEmailContext;
+import com.waya.wayaauthenticationservice.pojo.notification.NotificationResponsePojo;
+import com.waya.wayaauthenticationservice.proxy.NotificationProxy;
 import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
 import com.waya.wayaauthenticationservice.streams.*;
 import lombok.AllArgsConstructor;
@@ -22,8 +25,17 @@ public class MessagingService {
 
     private final SpringTemplateEngine templateEngine;
     private final MessageQueueProducer messageQueueProducer;
+    private final NotificationProxy proxy;
 
     public void sendMail(AbstractEmailContext email) throws MessagingException {
+
+        /* update made by Terseer 29/12/2021 */
+        NotificationResponsePojo notificationResponsePojo = new NotificationResponsePojo();
+        notificationResponsePojo.setEventCategory(EventCategory.WELCOME.name());
+        notificationResponsePojo.setEventType(StreamsEventType.EMAIL.toString());
+        notificationResponsePojo.setInitiator(WAYAPAY);
+
+
 
         Context context = new Context();
         context.setVariables(email.getContext());
@@ -41,7 +53,14 @@ public class MessagingService {
         data.setNames(Collections.singletonList(new RecipientsEmail(email.getEmail(), email.getDisplayName())));
         post.setData(data);
 
-        messageQueueProducer.send(EMAIL_TOPIC, post);
+        /* update made by Terseer 29/12/2021 */
+        notificationResponsePojo.setData(data);
+
+//        messageQueueProducer.send(EMAIL_TOPIC, post);
+
+       proxy.sendEmail(notificationResponsePojo);
+        // send to notification service
+
         //log.info("sending Email message kafka message queue::: {}", new Gson().toJson(post));
     }
 

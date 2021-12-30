@@ -13,7 +13,8 @@ public class WelcomeEmailContext extends AbstractEmailContext {
         put("firstName", customer.getFirstName());
         setDisplayName(customer.getFirstName());
         setEmail(customer.getEmail());
-        setTemplateLocation("emails/welcome-mail");
+//        setTemplateLocation("emails/welcome-mail");
+        setTemplateLocation("new-emails/welcome-onboard");
         setSubject("Welcome to the Fold \uD83D\uDC83 \uD83D\uDC83");
         setFrom("WAYA PayChat");
     }
