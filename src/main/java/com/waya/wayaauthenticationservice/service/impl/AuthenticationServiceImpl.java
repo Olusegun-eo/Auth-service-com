@@ -303,7 +303,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 //				CompletableFuture.runAsync(() -> sendNewPassword(mUser.getPassword(), regUser));
 
 			String token = generateToken(regUser);
-			//createPrivateUser(mUser, regUser.getId(), token, getBaseUrl(request));
+			createPrivateUserBySuperAdmin(mUser, regUser.getId(), token, getBaseUrl(request));
 
 			return new ResponseEntity<>(new SuccessResponse(
 					"User Created Successfully and Sub-account creation in process. You will receive an OTP shortly for verification"),
@@ -474,6 +474,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	}
 
+
 	public void createPrivateUser(BaseUserPojo user, Long userId, String token, String baseUrl) {
 		String id = String.valueOf(userId);
 
@@ -522,6 +523,64 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			return res;
 		}).thenAccept(p -> log.info("Response from Call to Create User Wallet is: {}", p));
 	}
+
+
+	public void createPrivateUserBySuperAdmin(SuperAdminCreatUserRequest user, Long userId, String token, String baseUrl) {
+		String id = String.valueOf(userId);
+
+		PersonalProfileRequest personalProfileRequest = new PersonalProfileRequest();
+		personalProfileRequest.setEmail(user.getEmail());
+		personalProfileRequest.setFirstName(user.getFullName());
+		personalProfileRequest.setPhoneNumber("");
+		personalProfileRequest.setSurname("");
+		personalProfileRequest.setUserId(id);
+		personalProfileRequest.setGender("");
+		personalProfileRequest.setReferralCode("");
+		LocalDate dateOfBirth = LocalDate.now();
+				//user.getDateOfBirth() == null ? LocalDate.now() : user.getDateOfBirth();
+		personalProfileRequest.setDateOfBirth(dateOfBirth);
+
+		log.info("PersonalProfile account creation starts: " + personalProfileRequest);
+		ApiResponseBody<String> personalResponse = profileService.createProfile(personalProfileRequest, baseUrl);
+		log.info("PersonalProfile account creation ends: " + personalResponse);
+
+		// Create External Virtual Accounts
+		VirtualAccountPojo virtualAccountPojo = new VirtualAccountPojo();
+		virtualAccountPojo.setAccountName(user.getFullName());
+		virtualAccountPojo.setUserId(id);
+		CompletableFuture.supplyAsync(() -> virtualAccountProxy.createVirtualAccount(virtualAccountPojo))
+				.orTimeout(3, TimeUnit.MINUTES).handle((res, ex) -> {
+			if (ex != null) {
+				log.error("Error Creating Virtual Account, Message is: {}", ex.getMessage());
+				return new ApiResponseBody<>("An error has occurred", false);
+			}
+			return res;
+		}).thenAccept(p -> log.info("Response from Call to Create User Virtual Account is: {}", p));
+
+		// Create Internal Wallet Accounts
+		BaseUserPojo user2 = new BaseUserPojo();
+		user2.setPhoneNumber("2347030355111");
+		user2.setEmail(user.getEmail());
+		user2.setFirstName(user.getFullName());
+		user2.setSurname("admin");
+		user2.setDateOfBirth(dateOfBirth);
+		CreateAccountPojo createAccount = formAccountCreationPojo(userId, user2);
+		CompletableFuture.supplyAsync(() -> {
+			try {
+				TimeUnit.MINUTES.sleep(1);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			return walletProxy.createUserAccount(createAccount);
+		}).orTimeout(3, TimeUnit.MINUTES).handle((res, ex) -> {
+			if (ex != null) {
+				log.error("Error Creating Wallet Account, {}", ex.getMessage());
+				return new ApiResponseBody<>("An error has occurred", false);
+			}
+			return res;
+		}).thenAccept(p -> log.info("Response from Call to Create User Wallet is: {}", p));
+	}
+
 
 	public String generateToken(Users user) {
 		try {
