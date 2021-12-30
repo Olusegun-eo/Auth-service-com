@@ -18,9 +18,9 @@ public class ReferralCodePojo {
     private String referralCode;
     private String userId;
     private String profile;
-    
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-	@JsonDeserialize(using = LocalDateTimeDeserializer.class)
+        
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
 	@JsonSerialize(using = LocalDateTimeSerializer.class)
     private LocalDateTime createdAt;
 
