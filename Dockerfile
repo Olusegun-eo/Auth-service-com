@@ -7,4 +7,4 @@ WORKDIR /app
 RUN addgroup -S waya && adduser -S waya -G waya
 USER waya:waya
 COPY target/*.jar app.jar
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+ENTRYPOINT ["java","-Dspring.profiles.active=staging","-jar","/app/app.jar"]
