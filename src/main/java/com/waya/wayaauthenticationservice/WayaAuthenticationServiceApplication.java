@@ -123,7 +123,7 @@ public class WayaAuthenticationServiceApplication {
 		return new AuditorAwareImpl();
 	}
 
-	@Bean(name = "encryptSignature")
+	/*@Bean(name = "encryptSignature")
 	public byte[] signData() throws Exception {
 		TinkConfig.register();
 
@@ -131,6 +131,6 @@ public class WayaAuthenticationServiceApplication {
 		assert utils != null;
 		utils.generateKeySet();
 		return utils.encryptData();
-	}
+	}*/
 
 }

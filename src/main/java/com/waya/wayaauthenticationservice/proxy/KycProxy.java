@@ -17,11 +17,11 @@ import com.waya.wayaauthenticationservice.util.HandleFeignError;
 @FeignClient(name = "KYC-SERVICE-API", url = "${app.config.kyc-service.base-url}")
 public interface KycProxy {
 	
-	@RequestMapping(method = RequestMethod.GET, value = "/users/kyc/staus/{key}")
+	@RequestMapping(method = RequestMethod.GET, value = "/kyc/users/status/{key}")
 	@HandleFeignError(ApiClientExceptionHandler.class)
 	ApiResponseBody<List<KycStatus>> GetUserKyc(@PathVariable("key") String key);
 	
-	@RequestMapping(method = RequestMethod.PUT, value = "/users/kyc/update/{key}")
+	@RequestMapping(method = RequestMethod.PUT, value = "/kyc/users/update/{key}")
 	@HandleFeignError(ApiClientExceptionHandler.class)
 	ApiResponseBody<KycStatus> PostKycUpdate(@PathVariable("key") String key, 
     		@RequestBody KycAuthUpdate kyc);

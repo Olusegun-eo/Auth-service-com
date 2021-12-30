@@ -57,7 +57,7 @@ spring:
   session:
     store-type: jdbc
   kafka:
-    bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:https://messaging.staging.mywayapay.com}
+    bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:https://kafka-service:9092}
     groupId: ${KAFKA_GROUP_ID:waya}
     consumer:
       group-id: waya
@@ -104,9 +104,9 @@ server:
 eureka:
   client:
     serviceUrl:
-      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
+      defaultZone: ${EUREKA_SERVER_URL:http://eureka-service/eureka}
     service-url:
-      default-zone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
+      default-zone: ${EUREKA_SERVER_URL:http://eureka-service/eureka}
   instance:
     preferIpAddress: true
 
@@ -133,7 +133,7 @@ logging:
               ProducerConfig: ERROR
 
 jwt:
-  secret: ${AUTH_JWT_SECRET:BvPHGM8C0ia4uOuxxqPD5DTbWC9F9TWvPStp3pb7ARo0oK2mJ3pd3YG4lxA9i8bj6OTbadwezxgeEByY}
+  secret: ${AUTH_JWT_SECRET:2YuUlb+t36yVzrTkYLl8xBlBJSC41CE7uNF3somMDxdYDfcACv9JYIU54z17s4Ah313uKu/4Ll+vDNKpxx6v4Q==}
   expiration: ${AUTH_JWT_EXPIRATION:31557600000}
 
 #Scheduled Jobs
@@ -142,6 +142,7 @@ job:
     5amED: 0 0 5 * * ? #5am every day
     5min1318: 0 0-5 13-18 * * ? #Every minute starting at 1pm and 6pm and ending after 5 minutes, and every day
     kyc: 0/5 * * * * ? #5am every day
+    pass: 0/5 * * * * *
     
 cipher:
   utils:
@@ -153,31 +154,32 @@ referral:
 app:
   config:
     biller-service:
-      base-url: ${CONFIG_BASEURL_BILLPAY:http://157.230.223.54:8181/billspay}
+      base-url: ${CONFIG_BASEURL_BILLPAY:https://services.staging.mywayapay.com/billspayment-service}
     access-service:
-      base-url: ${CONFIG_BASEURL_ROLEACCESS:http://46.101.41.187:8061}
+      base-url: ${CONFIG_BASEURL_ROLEACCESS:https://services.staging.mywayapay.com/role-service}
     fraud-service:
-      base-url: ${CONFIG_BASEURL_FRAUD:http://157.230.223.54:8084}
+      base-url: ${CONFIG_BASEURL_FRAUD:https://services.staging.mywayapay.com/fraud-service}
     logging-service:
-      base-url: ${CONFIG_BASEURL_LOGAUDIT:http://46.101.41.187:8083}
+      base-url: ${CONFIG_BASEURL_LOGAUDIT:https://services.staging.mywayapay.com/logs-service}
     wayagram-profile:
-      base-url: ${CONFIG_BASEURL_SOCIAL:http://157.245.84.14:1000}
+      base-url: ${CONFIG_BASEURL_SOCIAL:https://services.staging.mywayapay.com/wayagram-service}
     file-resource:
-      base-url: ${CONFIG_BASEURL_FILERESOURCE:http://46.101.41.187:9098/file-resource/api}
+      base-url: ${CONFIG_BASEURL_FILERESOURCE:https://services.staging.mywayapay.com/file-resource-service}
     virtual-account:
-      base-url: ${CONFIG_BASEURL_VIRACCOUNT:http://46.101.41.187:7090/account-creation-service/api}
+      base-url: ${CONFIG_BASEURL_VIRACCOUNT:https://services.staging.mywayapay.com/account-service}
     wallet-service:
-      base-url: ${CONFIG_BASEURL_TWALLET:http://157.230.223.54:9009/api/v1/wallet}
+      base-url: ${CONFIG_BASEURL_TWALLET:https://services.staging.mywayapay.com/temporal-service/api/v1/wallet}
     notification-service:
-      base-url: ${CONFIG_BASEURL_NOTIFICATION:http://68.183.60.114:8085/notification-service}
+      base-url: ${CONFIG_BASEURL_NOTIFICATION:https://services.staging.mywayapay.com/notification-service}
     referral-service:
-      base-url: ${CONFIG_BASEURL_REFERRAL:http://68.183.60.114:8282}
+      base-url: ${CONFIG_BASEURL_REFERRAL:https://services.staging.mywayapay.com/referral-service}
     kyc-service:
-      base-url: ${CONFIG_BASEURL_KYC:http://46.101.41.187:8070/kyc-service/kyc}
+      base-url: ${CONFIG_BASEURL_KYC:https://services.staging.mywayapay.com/kyc-service}
       
   auth:
     tokenSecret: ${AUTH_TOKEN_SECRET:926D96C90030DD58429D2751AC1BDBBC}
-    tokenExpirationMsec: ${AUTH_TOKEN_EXPIRATION_TIME:864000000}
+    tokenExpirationMsec: 864000000
+    #${AUTH_TOKEN_EXPIRATION_TIME:864000000}
   oauth2:
     # After successfully authenticating with the OAuth2 Provider,
     # we'll be generating an auth token for the user and sending the token to the

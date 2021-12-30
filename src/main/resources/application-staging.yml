@@ -23,7 +23,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -41,8 +40,6 @@ spring:
       max-file-size: 2MB
       max-request-size: 2MB
       resolve-lazily: true
-
-
   cache:
     type: redis
     redis:
@@ -100,7 +97,6 @@ spring:
             authorizationUri: https://www.facebook.com/v3.0/dialog/oauth
             tokenUri: https://graph.facebook.com/v3.0/oauth/access_token
             userInfoUri: https://graph.facebook.com/v3.0/me?fields=id,first_name,middle_name,last_name,name,email,verified,is_verified,picture.width(250).height(250)
-
 eureka:
   client:
     serviceUrl:
@@ -133,7 +129,7 @@ logging:
               ProducerConfig: ERROR
 
 jwt:
-  secret: BvPHGM8C0ia4uOuxxqPD5DTbWC9F9TWvPStp3pb7ARo0oK2mJ3pd3YG4lxA9i8bj6OTbadwezxgeEByY
+  secret: 2YuUlb+t36yVzrTkYLl8xBlBJSC41CE7uNF3somMDxdYDfcACv9JYIU54z17s4Ah313uKu/4Ll+vDNKpxx6v4Q== ##BvPHGM8C0ia4uOuxxqPD5DTbWC9F9TWvPStp3pb7ARo0oK2mJ3pd3YG4lxA9i8bj6OTbadwezxgeEByY
   expiration: 31557600000
 
 #Scheduled Jobs
@@ -142,7 +138,6 @@ job:
     5amED: 0 0 5 * * ? #5am every day
     5min1318: 0 0-5 13-18 * * ? #Every minute starting at 1pm and 6pm and ending after 5 minutes, and every day
     kyc: 0/5 * * * * ? #5am every day
-
 cipher:
   utils:
     value: WALMIFOS
@@ -174,7 +169,6 @@ app:
       base-url: ${CONFIG_BASEURL_REFERRAL:https://services.staging.mywayapay.com/referral-service}
     kyc-service:
       base-url: ${CONFIG_BASEURL_KYC:https://services.staging.mywayapay.com/kyc-service}
-
   auth:
     tokenSecret: 926D96C90030DD58429D2751AC1BDBBC
     tokenExpirationMsec: 864000000
@@ -391,7 +385,6 @@ api:
         if the request passes all validation, it will update a users profile image successfully,
         # Error Response
         returns with a detailed response about the error.
-
     update-user-images:
       description: updates a Corporate users Surrounding image
       notes: |
@@ -399,7 +392,6 @@ api:
         if the request passes all validation, it will update a users profile image successfully,
         # Error Response
         returns with a detailed response about the error.
-
     search-name:
       description: search for a user by name
       notes: |

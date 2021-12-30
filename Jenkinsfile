@@ -18,7 +18,11 @@ pipeline {
         stage("build") {
             steps{
                 script {
-                    sh 'mvn clean install package -DskipTests'
+                    sh '''
+                    java -version
+                    mvn clean
+                    mvn clean package -DskipTests
+                    '''
                     echo 'Build with Maven'
                 }
             }   
@@ -51,7 +55,7 @@ pipeline {
                 script {
                     sh '''
                         aws eks --region $AWS_DEFAULT_REGION update-kubeconfig --name $CLUSTER_NAME
-                        kubectl apply -f staging.yaml --namespace=staging
+                        kubectl replace --force -f staging.yaml --namespace=staging
                         '''
                 }
 

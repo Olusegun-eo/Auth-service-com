@@ -7,6 +7,7 @@ import static com.waya.wayaauthenticationservice.util.SecurityConstants.getExpir
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,6 +33,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
+import com.waya.wayaauthenticationservice.entity.PasswordPolicy;
 import com.waya.wayaauthenticationservice.entity.Privilege;
 import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.ReferralCode;
@@ -42,6 +44,7 @@ import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
 import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
 import com.waya.wayaauthenticationservice.pojo.others.LoginResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
+import com.waya.wayaauthenticationservice.repository.PasswordPolicyRepository;
 import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.service.RoleService;
@@ -105,7 +108,18 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	        claims.put("role", user.getRoleList());
 	        Date expirationDate = new Date(System.currentTimeMillis() + getExpiration());
 			String token = jwtUtil.doGenerateToken(claims, userName, expirationDate);
-
+			//Log token generated
+			PasswordPolicyRepository passwordPolicyRepo = (PasswordPolicyRepository) SpringApplicationContext.getBean("passwordPolicyRepository");
+			PasswordPolicy policy = passwordPolicyRepo.findByUser(user).orElse(null);
+			int passwordAge = 0;
+			if(policy != null) {
+				policy.setChangeTokenDate(LocalDateTime.now());
+				policy.setUpdatedTokenDate(LocalDate.now());
+				policy.setToken(token);
+				policy.setTokenAge(0);
+				passwordAge = policy.getPasswordAge() + 1;
+				passwordPolicyRepo.save(policy);
+			}
 			// Check for First Login Attempt and Update User Table
 			UserRepository userRepository = (UserRepository) SpringApplicationContext.getBean("userRepository");
 			if (user.isFirstTimeLogin()) {
@@ -145,6 +159,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			m.put("access", access);
 			m.put("pinCreated", user.isPinCreated());
 			m.put("corporate", user.isCorporate());
+			m.put("passwordAge", passwordAge);
 
 			res.addHeader(HEADER_STRING, TOKEN_PREFIX + token);
 			UserProfileResponsePojo userProfile = convert(user, referral);
