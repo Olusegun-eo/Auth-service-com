@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:v="urn:schemas-microsoft-com:vml"
+      xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <link rel="shortcut icon" type="image/png" href="https://animaproject.s3.amazonaws.com/home/favicon.png" />
+    <meta name="og:type" content="website" />
+    <meta name="twitter:card" content="photo" />
+
+    <style>
+        /* screen - team-invite-email-notification */
+        a{
+            color: #ff4b01;
+        }
+        .team-invite-email-notification {
+            align-items: flex-start;
+            background-image: url(../img/bg@1x.png);
+            background-size: 100% 100%;
+            display: flex;
+            height: 973px;
+            min-width: 1191px;
+            padding: 0 307px;
+        }
+
+        .team-invite-email-notification .overlap-group {
+            border-radius: 4px;
+            height: 818px;
+            margin-left: 1px;
+            margin-top: 78px;
+            position: relative;
+            width: 576px;
+        }
+
+        .team-invite-email-notification .body {
+            align-items: center;
+            background-color: var(--white);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            left: 0;
+            min-height: 818px;
+            padding: 100px 33px;
+            position: absolute;
+            top: 0;
+            width: 576px;
+        }
+
+        .team-invite-email-notification .group-15 {
+            align-items: flex-start;
+            align-self: flex-end;
+            display: flex;
+            flex-direction: column;
+            min-height: 174px;
+            width: 507px;
+        }
+
+        .team-invite-email-notification .paragraph-1 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            min-height: 22px;
+            white-space: nowrap;
+        }
+
+        .team-invite-email-notification .paragraph-4 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            margin-top: 26px;
+            min-height: 66px;
+            width: 501px;
+        }
+
+        .team-invite-email-notification .paragraph-5 {
+            cursor: pointer;
+            letter-spacing: 0;
+            line-height: 22.4px;
+            margin-top: 16px;
+            min-height: 44px;
+            text-decoration: underline;
+            width: 491px;
+        }
+
+        .team-invite-email-notification .rectangle-1 {
+            background-color: var(--gray-nurse);
+            height: 1px;
+            margin-top: 57px;
+            width: 488px;
+        }
+
+        .team-invite-email-notification .group-2317 {
+            align-items: flex-start;
+            display: flex;
+            flex-direction: column;
+            margin-right: 5.0px;
+            margin-top: 24px;
+            min-height: 161px;
+            width: 483px;
+        }
+
+        .team-invite-email-notification .paragraph-13 {
+            letter-spacing: 0;
+            line-height: 25.2px;
+            min-height: 25px;
+            white-space: nowrap;
+        }
+
+        .team-invite-email-notification .paragraph-14 {
+            letter-spacing: 0;
+            line-height: 16.8px;
+            margin-top: 8px;
+            min-height: 128px;
+            width: 479px;
+        }
+
+        .team-invite-email-notification .span3 {
+            line-height: 21.0px;
+        }
+
+        .team-invite-email-notification .group-2320 {
+            align-items: flex-start;
+            display: flex;
+            margin-top: 77px;
+            min-width: 250px;
+        }
+
+        .team-invite-email-notification .app-store-btn-1 {
+            height: 38px;
+            object-fit: cover;
+            width: 122px;
+        }
+
+        .team-invite-email-notification .playstore-btn-1 {
+            height: 38px;
+            margin-left: 6px;
+            object-fit: cover;
+            width: 122px;
+        }
+
+        .team-invite-email-notification .wayapay-logo-1 {
+            height: 44px;
+            left: 35px;
+            position: absolute;
+            top: 31px;
+            width: 102px;
+        }
+
+        .team-invite-email-notification .group-20 {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            left: 44px;
+            min-height: 218px;
+            position: absolute;
+            top: 559px;
+            width: 492px;
+        }
+
+        .team-invite-email-notification .rectangle-1-1 {
+            background-color: var(--gray-nurse);
+            height: 1px;
+            margin-right: 4.0px;
+            width: 482px;
+        }
+
+        .team-invite-email-notification .paragraph-6 {
+            letter-spacing: 0;
+            line-height: 14.0px;
+            margin-right: 4.0px;
+            margin-top: 143px;
+            min-height: 14px;
+            min-width: 206px;
+            white-space: nowrap;
+        }
+
+        .team-invite-email-notification .you-are-receiving-th {
+            height: 42px;
+            letter-spacing: 0;
+            line-height: 14.0px;
+            margin-right: 4.0px;
+            margin-top: 18px;
+            text-align: center;
+            width: 488px;
+        }
+
+        .team-invite-email-notification .frame-1 {
+            align-items: flex-start;
+            display: flex;
+            height: 15px;
+            left: 219px;
+            min-width: 137px;
+            position: absolute;
+            top: 678px;
+        }
+
+        .team-invite-email-notification .email-icon {
+            height: 15px;
+            object-fit: cover;
+            width: 22px;
+        }
+
+        .team-invite-email-notification .x-icon {
+            height: 15px;
+            margin-left: 8px;
+            object-fit: cover;
+            width: 15px;
+        }
+
+        .team-invite-email-notification .twitter-icon {
+            height: 15px;
+            margin-left: 8px;
+            object-fit: cover;
+            width: 19px;
+        }
+
+        .team-invite-email-notification .wayapay-logo-2 {
+            height: 15px;
+            margin-left: 8px;
+            width: 34px;
+        }
+
+        :root {
+            --azure-radiance: #00a1ff;
+            --black: #000000;
+            --desert-storm: #f8f8f8;
+            --granite-gray: #666666;
+            --gray-nurse: #e8e8e8;
+            --mine-shaft: #333333;
+            --sonic-silver: #777777;
+            --vermilion: #ff4400;
+            --vermilion-2: #ff4b01;
+            --white: #ffffff;
+
+            --font-size-l: 14px;
+            --font-size-m: 12px;
+            --font-size-s: 10px;
+            --font-size-xl: 15px;
+            --font-size-xxl: 16px;
+            --font-size-xxxl: 18px;
+            --font-size-xxxxl: 24px;
+
+            --font-family-inter: "Inter", Helvetica;
+        }
+        .inter-bold-mine-shaft-14px {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-l);
+            font-style: normal;
+            font-weight: 700;
+        }
+
+        .inter-medium-mine-shaft-14px {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-l);
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        .inter-normal-granite-gray-12px {
+            color: var(--granite-gray);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-m);
+            font-style: normal;
+            font-weight: 400;
+        }
+
+        .inter-semi-bold-mine-shaft-16px {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xxl);
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        .inter-medium-sonic-silver-10px {
+            color: var(--sonic-silver);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-s);
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        .inter-medium-vermilion-10px {
+            color: var(--vermilion-2);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-s);
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        .inter-semi-bold-granite-gray-18px {
+            color: var(--granite-gray);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xxxl);
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        .inter-normal-white-12px {
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-m);
+            font-style: normal;
+            font-weight: 400;
+        }
+
+        .inter-semi-bold-granite-gray-12px {
+            color: var(--granite-gray);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-m);
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        .inter-normal-vermilion-12px {
+            color: var(--vermilion);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-m);
+            font-style: normal;
+            font-weight: 400;
+        }
+
+        .inter-medium-mine-shaft-10px {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-s);
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        .inter-medium-white-10px {
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-s);
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        .inter-semi-bold-white-14px {
+            color: var(--white);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-l);
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        .inter-medium-azure-radiance-14px {
+            color: var(--azure-radiance);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-l);
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        .inter-medium-vermilion-15px {
+            color: var(--vermilion);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xl);
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        @import url("https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css");
+
+        @import url("https://fonts.googleapis.com/css?family=Inter:400,700,500,600");
+
+        .screen a {
+            display: contents;
+            text-decoration: none;
+        }
+
+        .container-center-horizontal {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            pointer-events: none;
+            width: 100%;
+        }
+
+        .container-center-horizontal > * {
+            flex-shrink: 0;
+            pointer-events: auto;
+        }
+
+        .valign-text-bottom {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+    </style>
+</head>
+<body style="margin: 0">
+<input type="hidden" id="anPageName" name="page" value="team-invite-email-notification" />
+<div class="container-center-horizontal">
+    <div class="team-invite-email-notification screen">
+        <div class="overlap-group">
+            <div class="body">
+                <div class="group-15">
+                    <div class="paragraph-1 inter-semi-bold-mine-shaft-16px">Hi <span th:text="${firstName}"></span>,</div>
+                    <p class="paragraph-4 inter-bold-mine-shaft-14px">
+                <span class="inter-bold-mine-shaft-14px">RICH CREATIVE DESIGN</span
+                ><span class="inter-medium-mine-shaft-14px"> has invited you to join their team </span
+                    ><span class="inter-bold-mine-shaft-14px">(RICH CREATIVE DESIGN)</span
+                    ><span class="inter-medium-mine-shaft-14px"
+                    >. If you do not already have an account, you may click the following link to get started:</span
+                    >
+                    </p>
+                    <a
+                            href="https://dashboard.wayapaychat.com/#/access/signup?invitation=ROB0lAUAWTxQrpvYGw1fX5LlUKJuceePBEEXGIYy"
+                            target="_blank"
+                    ><div class="paragraph-5 inter-medium-azure-radiance-14px">
+                        https://dashboard.wayapaychat.com/#/access/signup invitation=ROB0lAUAWTxQrpvYGw1fX5LlUKJuceePBEEXGIYy
+                    </div>
+                    </a>
+                </div>
+                <div class="rectangle-1"></div>
+                <div class="group-2317">
+                    <div class="paragraph-13 inter-semi-bold-granite-gray-18px">Any Questions?</div>
+                    <p class="paragraph-14 inter-normal-white-12px">
+                <span class="inter-normal-granite-gray-12px"
+                >Our Help Desk has answers to many of the most common questions about Wayapaychat. If you have further
+                  questions, our friendly Customer Success Team is always ready to help. Simply send an email to </span
+                ><span class="inter-semi-bold-granite-gray-12px">customerservice@wayapaychat.com.<br /></span
+                    ><span class="inter-normal-vermilion-12px"><br /></span
+                    ><span class="span3 inter-medium-vermilion-15px">Best wishes,<br />The wayapaychat Team</span>
+                    </p>
+                </div>
+                <div class="group-2320">
+                    <img class="app-store-btn-1" src="../img/app-store-btn-1@2x.png" />
+                    <img class="playstore-btn-1" src="../img/playstore-btn-1@2x.png" />
+                </div>
+            </div>
+            <img class="wayapay-logo-1" src="../img/wayapay-logo-1@2x.png" />
+            <div class="group-20">
+                <div class="rectangle-1-1"></div>
+                <p class="paragraph-6 inter-medium-mine-shaft-10px">Copyright © Waya 2022 All rights reserved</p>
+                <p class="you-are-receiving-th valign-text-bottom inter-medium-white-10px">
+              <span
+              ><span class="inter-medium-sonic-silver-10px"
+              >You are receiving this message because you signed up on Waya PayChat. If you would like to stop
+                  receiving messages, you can opt out by clicking </span
+              ><span class="inter-medium-vermilion-10px"><a href="">unsubscribe.</a></span
+              ><span class="inter-medium-sonic-silver-10px">
+                  For more information about how we process data, please see our </span
+              ><span class="inter-medium-vermilion-10px"><a href="">Privacy Policy.</a></span>
+              </span>
+                </p>
+            </div>
+
+            <div class="frame-1">
+                <a href="#">  <img class="email-icon" src="../img/email-icon@2x.png" /></a>
+                <a href="#"><img class="x-icon" src="../img/instagramicon@2x.png" /></a>
+                <a href="#"><img class="x-icon" src="../img/facebookicon@2x.png" /></a>
+                <a href="#"><img class="twitter-icon" src="../img/twittericon@2x.png" /></a>
+                <a href="#"><img class="wayapay-logo-2" src="../img/wayapay-logo-2@2x.png" /></a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

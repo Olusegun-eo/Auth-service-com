@@ -10,13 +10,15 @@ import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
 import com.waya.wayaauthenticationservice.response.ReferralCodeResponse;
 import com.waya.wayaauthenticationservice.response.UserProfileResponse;
 import com.waya.wayaauthenticationservice.service.ReferralService;
+import com.waya.wayaauthenticationservice.util.BearerTokenUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-
+@Slf4j
 @Service
 public class ReferralCodeServiceImpl implements ReferralService {
 
@@ -42,6 +44,25 @@ public class ReferralCodeServiceImpl implements ReferralService {
         return referralCode.map(x -> new ReferralCodeResponse(x.getReferralCode())).get();
 
     }
+
+    public List<ReferralCode> migrateReferralCode() throws Exception {
+        String token = BearerTokenUtil.getBearerTokenHeader();
+        List<ReferralCode> errorList = new ArrayList<>();
+        List<ReferralCode> referralCodeList = referralCodeRepository.findAll();
+        for (ReferralCode referralCode: referralCodeList){
+            try{
+                profileService.postMigrateReferralCode(referralCode.getProfile().getId(),referralCode.getUserId(), token);
+            }catch (Exception exception) {
+                errorList.add(referralCode);
+                continue;
+            }
+        }
+        log.info("List with errors " + errorList);
+
+        return referralCodeList;
+    }
+
+
 
     public List<UserProfileResponse> getUsersWithUpToFiveTransactions(String userId, String token) throws CustomException {
         List<UserProfileResponse> newUserProfileResponseList = new ArrayList<>();
@@ -71,6 +92,8 @@ public class ReferralCodeServiceImpl implements ReferralService {
         try {
             ResponseEntity<Long> responseEntity = billerProxy.getTransaction(userId,token);
             Long infoResponse = responseEntity.getBody();
+
+            log.info("infoResponse ::: " + infoResponse);
 
            // long count = infoResponse.data;
 

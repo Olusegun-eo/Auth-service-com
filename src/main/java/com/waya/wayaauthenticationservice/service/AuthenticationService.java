@@ -1,6 +1,7 @@
 package com.waya.wayaauthenticationservice.service;
 
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.TransferPojo;
 import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
@@ -14,6 +15,8 @@ import javax.servlet.http.HttpServletRequest;
 public interface AuthenticationService {
 
 	ResponseEntity<?> createUser(BaseUserPojo userPojo, HttpServletRequest request, Device device, boolean adminAction);
+
+	ResponseEntity<?> superAdminCreateUser(SuperAdminCreatUserRequest userPojo, HttpServletRequest request, Device device, boolean adminAction);
 
 	ResponseEntity<?> createCorporateUser(CorporateUserPojo corporateUserPojo, HttpServletRequest request,
 										  Device device, boolean adminAction);

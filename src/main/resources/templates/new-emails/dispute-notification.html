@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:v="urn:schemas-microsoft-com:vml"
+      xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <link rel="shortcut icon" type="image/png" href="https://animaproject.s3.amazonaws.com/home/favicon.png" />
+    <meta name="og:type" content="website" />
+    <meta name="twitter:card" content="photo" />
+
+    <style>
+        /* screen - welcome-notification */
+
+        img, a {border:none; outline: none;}
+
+        .welcome-notification {
+            align-items: center;
+            background-color: var(--white);
+            display: flex;
+            flex-direction: column;
+            height: 1737px;
+            width: 640px;
+        }
+
+        .welcome-notification .group-2339 {
+            background-image: url(../img/group-2339@1x.png);
+            height: 304px;
+            margin-top: -25px;
+            width: 640px;
+        }
+
+        .welcome-notification .paragraph-1 {
+            letter-spacing: 0;
+            line-height: 19.6px;
+            margin-left: 4.0px;
+            margin-top: 32px;
+            min-height: 162px;
+            width: 540px;
+        }
+
+        .welcome-notification .span-1 {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-l);
+            font-weight: 400;
+        }
+
+        .welcome-notification .span2 {
+            line-height: 22.4px;
+        }
+
+        .welcome-notification .paragraph-2 {
+            align-self: flex-start;
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xxxxl);
+            font-weight: 600;
+            letter-spacing: 0;
+            line-height: 33.6px;
+            margin-left: 52px;
+            margin-top: 30px;
+            min-height: 34px;
+            white-space: nowrap;
+        }
+
+        .welcome-notification .line-1 {
+            align-self: flex-start;
+            height: 4px;
+            margin-left: 52.0px;
+            margin-top: 4px;
+            width: 48px;
+        }
+
+        .welcome-notification .overlap-group-container {
+            align-items: flex-start;
+            display: flex;
+            margin-left: 7.0px;
+            margin-top: 38px;
+            min-width: 415px;
+        }
+
+        .welcome-notification .overlap-group6 {
+            align-items: flex-start;
+            background-color: var(--desert-storm);
+            border-radius: 61.5px;
+            display: flex;
+            height: 123px;
+            justify-content: flex-end;
+            min-width: 123px;
+            padding: 31.0px 27.4px;
+        }
+
+        .welcome-notification .group-2243 {
+            background-image: url(../img/group-2243@1x.png);
+            height: 61px;
+            width: 67px;
+        }
+
+        .welcome-notification .overlap-group4 {
+            align-items: flex-end;
+            background-color: var(--desert-storm);
+            border-radius: 61.5px;
+            display: flex;
+            height: 123px;
+            justify-content: flex-end;
+            margin-left: 169px;
+            min-width: 123px;
+            padding: 30.5px 26.0px;
+        }
+
+        .welcome-notification .group {
+            background-image: url(../img/group@1x.png);
+            height: 61px;
+            width: 69px;
+        }
+
+        .welcome-notification .paragraph-container {
+            align-items: flex-start;
+            display: flex;
+            height: 22px;
+            margin-right: 10.0px;
+            margin-top: 15px;
+            min-width: 358px;
+        }
+
+        .welcome-notification .paragraph-6 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            min-height: 22px;
+            min-width: 84px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .welcome-notification .paragraph-8 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            margin-left: 225px;
+            min-height: 22px;
+            min-width: 49px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .welcome-notification .paragraph-container-1 {
+            align-items: flex-start;
+            display: flex;
+            height: 51px;
+            margin-left: 27.0px;
+            margin-top: 4px;
+            min-width: 523px;
+        }
+
+        .welcome-notification .paragraph-3 {
+            letter-spacing: 0;
+            line-height: 16.8px;
+            min-height: 51px;
+            text-align: center;
+            width: 212px;
+        }
+
+        .welcome-notification .paragraph-7 {
+            letter-spacing: 0;
+            line-height: 16.8px;
+            margin-left: 61px;
+            min-height: 34px;
+            text-align: center;
+            width: 250px;
+        }
+
+        .welcome-notification .overlap-group-container-1 {
+            align-items: flex-start;
+            display: flex;
+            margin-left: 8.0px;
+            margin-top: 6px;
+            min-width: 436px;
+        }
+
+        .welcome-notification .overlap-group {
+            align-items: center;
+            background-color: var(--vermilion);
+            border-radius: 2px;
+            display: flex;
+            height: 38px;
+            min-width: 144px;
+            padding: 0 27px;
+        }
+
+        .welcome-notification .explore-more {
+            letter-spacing: 0;
+            line-height: 19.6px;
+            min-height: 20px;
+            min-width: 89px;
+            white-space: nowrap;
+        }
+
+        .welcome-notification .overlap-group-1 {
+            align-items: center;
+            background-color: var(--vermilion);
+            border-radius: 2px;
+            display: flex;
+            height: 38px;
+            margin-left: 148px;
+            min-width: 144px;
+            padding: 0 27px;
+        }
+
+        .welcome-notification .overlap-group-container-2 {
+            align-items: flex-start;
+            display: flex;
+            margin-left: 7.0px;
+            margin-top: 32px;
+            min-width: 415px;
+        }
+
+
+        .welcome-notification .overlap-group7 {
+            align-items: flex-start;
+            background-color: var(--desert-storm);
+            border-radius: 61.5px;
+            display: flex;
+            height: 123px;
+            justify-content: flex-end;
+            min-width: 123px;
+            padding: 33.0px 26.0px;
+        }
+
+        .welcome-notification .group-2312 {
+            background-image: url(../img/group-2312@1x.png);
+            height: 57px;
+            width: 69px;
+        }
+
+        .welcome-notification .overlap-group-2 {
+            align-items: center;
+            background-color: var(--desert-storm);
+            border-radius: 61.5px;
+            display: flex;
+            height: 123px;
+            justify-content: flex-end;
+            margin-left: 169px;
+            min-width: 123px;
+            padding: 0 27.2px;
+        }
+
+        .welcome-notification .group-2256 {
+            background-image: url(../img/group-2256@1x.png);
+            height: 61px;
+            width: 68px;
+        }
+
+        .welcome-notification .paragraph-container-2 {
+            align-items: flex-start;
+            display: flex;
+            height: 22px;
+            margin-left: 24.0px;
+            margin-top: 15px;
+            min-width: 380px;
+        }
+
+        .welcome-notification .paragraph-10 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            min-height: 22px;
+            min-width: 72px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .welcome-notification .paragraph-12 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            margin-left: 204px;
+            min-height: 22px;
+            min-width: 104px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .welcome-notification .paragraph-container-3 {
+            align-items: flex-start;
+            display: flex;
+            height: 51px;
+            margin-right: 1.0px;
+            margin-top: 5px;
+            min-width: 553px;
+        }
+
+        .welcome-notification .paragraph-9 {
+            letter-spacing: 0;
+            line-height: 16.8px;
+            min-height: 51px;
+            text-align: center;
+            width: 270px;
+        }
+
+        .welcome-notification .paragraph-11 {
+            letter-spacing: 0;
+            line-height: 16.8px;
+            margin-left: 31px;
+            min-height: 51px;
+            text-align: center;
+            width: 252px;
+        }
+
+        .welcome-notification .overlap-group-container-3 {
+            align-items: flex-start;
+            display: flex;
+            margin-left: 8.0px;
+            margin-top: 15px;
+            min-width: 436px;
+        }
+
+        .welcome-notification .rectangle-1 {
+            background-color: #e8e8e8;
+            height: 1px;
+            margin-left: 4.0px;
+            margin-top: 56px;
+            width: 540px;
+        }
+
+        .welcome-notification .paragraph-13 {
+            align-self: flex-start;
+            color: var(--granite-gray);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xxxl);
+            font-weight: 600;
+            letter-spacing: 0;
+            line-height: 25.2px;
+            margin-left: 52px;
+            margin-top: 24px;
+            min-height: 25px;
+            white-space: nowrap;
+        }
+
+        .welcome-notification .paragraph-14 {
+            color: transparent;
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-m);
+            letter-spacing: 0;
+            line-height: 16.8px;
+            margin-left: 2.0px;
+            margin-top: 8px;
+            min-height: 145px;
+            width: 538px;
+        }
+
+        .welcome-notification .span1 {
+            color: var(--granite-gray);
+            font-weight: 600;
+        }
+
+        .welcome-notification .span2-1 {
+            color: var(--vermilion);
+            font-weight: 400;
+        }
+
+        .welcome-notification .span4 {
+            color: var(--vermilion);
+            font-size: var(--font-size-xl);
+            font-weight: 400;
+            line-height: 21.0px;
+        }
+
+        .welcome-notification .group-20 {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            margin-left: 4.0px;
+            margin-top: 57px;
+            min-height: 218px;
+            width: 544px;
+        }
+
+        .welcome-notification .rectangle-1-1 {
+            background-color: #e8e8e8;
+            height: 1px;
+            margin-right: 4.0px;
+            width: 540px;
+        }
+
+        .welcome-notification .group-container {
+            align-items: flex-start;
+            display: flex;
+            margin-right: 5.0px;
+            margin-top: 39px;
+            min-width: 249px;
+        }
+
+        .welcome-notification .group-5 {
+
+            background-image: url(../img/group-5@1x.png);
+            height: 38px;
+            width: 122px;
+        }
+
+        .welcome-notification .group-13 {
+            background-image: url(../img/group-2338@1x.png);
+            background-size: 100% 100%;
+            height: 38px;
+            margin-left: 5px;
+            width: 122px;
+        }
+
+        .welcome-notification .group-19 {
+            background-image: url(../img/group-19@1x.png);
+            height: 15px;
+            margin-right: 3.91px;
+            margin-top: 26px;
+            width: 149px;
+        }
+
+        .welcome-notification .paragraph-6-1 {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-s);
+            font-weight: 500;
+            letter-spacing: 0;
+            line-height: 14.0px;
+            margin-right: 4.0px;
+            margin-top: 25px;
+            min-height: 14px;
+            min-width: 206px;
+            white-space: nowrap;
+        }
+
+        .welcome-notification .you-are-receiving-th {
+            color: transparent;
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-s);
+            font-weight: 500;
+            height: 42px;
+            letter-spacing: 0;
+            line-height: 14.0px;
+            margin-right: 4.0px;
+            margin-top: 18px;
+            text-align: center;
+            width: 488px;
+        }
+
+        .welcome-notification .span-2 {
+            color: #777777;
+        }
+
+        .welcome-notification .span-3 {
+            color: #ff4b01;
+        }
+
+        :root {
+            --black: #000000;
+            --desert-storm: #f8f8f8;
+            --granite-gray: #666666;
+            --mine-shaft: #333333;
+            --vermilion: #ff4400;
+            --white: #ffffff;
+
+            --font-size-l: 14px;
+            --font-size-m: 12px;
+            --font-size-s: 10px;
+            --font-size-xl: 15px;
+            --font-size-xxl: 16px;
+            --font-size-xxxl: 18px;
+            --font-size-xxxxl: 24px;
+
+            --font-family-inter: "Inter", Helvetica;
+        }
+        .inter-normal-granite-gray-12px {
+            color: var(--granite-gray);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-m);
+            font-style: normal;
+            font-weight: 400;
+        }
+
+        .inter-semi-bold-mine-shaft-16px {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xxl);
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        .inter-semi-bold-white-14px {
+            color: var(--white);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-l);
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        .inter-medium-mine-shaft-14px {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-l);
+            font-style: normal;
+            font-weight: 500;
+        }
+
+
+        @import url("https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css");
+
+        @import url("https://fonts.googleapis.com/css?family=Inter:400,500,600");
+
+        .screen a {
+            display: contents;
+            text-decoration: none;
+        }
+
+        .container-center-horizontal {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            pointer-events: none;
+            width: 100%;
+        }
+
+        .container-center-horizontal > * {
+            flex-shrink: 0;
+            pointer-events: auto;
+        }
+
+        .valign-text-bottom {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+    </style>
+</head>
+<body style="margin: 0; background: #ffffff">
+<input type="hidden" id="anPageName" name="page" value="welcome-notification" />
+<div class="container-center-horizontal">
+    <div class="welcome-notification screen">
+        <span class="group-2339"></span>
+        <span class="inter-medium-mine-shaft-14px"> <br /></span><span class="span-1"><br /></span
+    >
+        <div class="inter-medium-mine-shaft-14px">
+           <span class="span2 inter-semi-bold-mine-shaft-16px">Hi <span th:text="${firstName}"></span>,<br /></span><span class="span-1"><br /></span
+        >
+            <span class="inter-medium-mine-shaft-14px">
+       A customer has logged a dispute with their bank against a transaction with <b>{Merchant Business Name}.</b>
+<br /></span><span class="span-1"><br /></span
+        >
+Customer: customeremail@exapmle.com<br />
+Amount: NGN 1,250<br />
+Transaction Reference ID: 3453435<br />
+Transaction Date: 23 January 2021<br />
+<p></p>
+Kindly login to your Wayapaychat Dashboard to either accept or reject this chargeback.
+<p></p>
+Review chargeback on the Wayapaychat Dashboard
+
+ </span>
+        </div>
+        <h1 class="paragraph-2">Waya Products</h1>
+        <img class="line-1" src="img/line-1@2x.svg" />
+        <div class="overlap-group-container">
+            <div class="overlap-group6"><span class="group-2243"></span></div>
+            <div class="overlap-group4"><span class="group"></span></div>
+        </div>
+        <div class="paragraph-container inter-semi-bold-mine-shaft-16px">
+            <div class="paragraph-6">Socializing</div>
+            <div class="paragraph-8">Wallet</div>
+        </div>
+        <div class="paragraph-container-1 inter-normal-granite-gray-12px">
+            <p class="paragraph-3">
+                Chat, Voice and video call with your friends for free and do lot’s more with our social product!
+            </p>
+            <p class="paragraph-7">
+                Send and receive money, pay bills, recharge airtime, make money by referrals &amp; more.
+            </p>
+        </div>
+        <div class="overlap-group-container-1">
+            <div class="overlap-group"><div class="explore-more inter-semi-bold-white-14px">Explore more</div></div>
+            <div class="overlap-group-1"><div class="explore-more inter-semi-bold-white-14px">Explore more</div></div>
+        </div>
+        <div class="overlap-group-container-2">
+            <div class="overlap-group7">
+                <span class="group-2312"></span>
+            </div>
+            <div class="overlap-group-2">
+                <span class="group-2256"></span>
+            </div>
+        </div>
+        <div class="paragraph-container-2 inter-semi-bold-mine-shaft-16px">
+            <div class="paragraph-10">Web POS</div>
+            <div class="paragraph-12">Terminal POS</div>
+        </div>
+        <div class="paragraph-container-3 inter-normal-granite-gray-12px">
+            <p class="paragraph-9">
+                Collect payment from your customers online via several popular payment channels including card, ussd, bank
+                account and wallet.
+            </p>
+            <p class="paragraph-11">
+                Collect payments from your customers in your physical store with wayapaychat terminal pos.
+            </p>
+        </div>
+        <div class="overlap-group-container-3">
+            <div class="overlap-group"><div class="explore-more inter-semi-bold-white-14px">Explore more</div></div>
+            <div class="overlap-group-1"><div class="explore-more inter-semi-bold-white-14px">Explore more</div></div>
+        </div>
+        <div class="rectangle-1"></div>
+        <div class="paragraph-13">Any Questions?</div>
+        <p class="paragraph-14">
+          <span class="inter-normal-granite-gray-12px"
+          >Our Help Desk has answers to many of the most common questions about Wayapaychat. If you have further
+            questions, our friendly Customer Success Team is always ready to help. Simply send an email to </span
+          ><span class="span1">customerservice@wayapaychat.com.<br /></span><span class="span2-1"><br /></span
+        ><span class="inter-normal-granite-gray-12px">Once again, thanks for choosing Wayapaychat!<br /><br /></span
+        ><span class="span4">Best wishes,<br />Your friends at Wayapaychat.</span>
+        </p>
+        <div class="group-20">
+            <div class="rectangle-1-1"></div>
+            <div class="group-container">
+                <div class="group-5"></div>
+                <div class="group-13"></div>
+            </div>
+
+            <span class="group-19"></span>
+            <p class="paragraph-6-1">Copyright © Waya 2022 All rights reserved</p>
+            <p class="you-are-receiving-th valign-text-bottom">
+            <span
+            ><span class="span-2"
+            >You are receiving this message because you signed up on Waya PayChat. If you would like to stop
+                receiving messages, you can opt out by clicking </span
+            ><span class="span-3">unsubscribe.</span
+            ><span class="span-2"> For more information about how we process data, please see our </span
+            ><span class="span-3">Privacy Policy.</span>
+            </span>
+            </p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

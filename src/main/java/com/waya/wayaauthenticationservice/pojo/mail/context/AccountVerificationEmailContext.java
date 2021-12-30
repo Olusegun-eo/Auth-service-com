@@ -13,7 +13,8 @@ public class AccountVerificationEmailContext extends AbstractEmailContext {
 		put("firstName", customer.getFirstName());
 		setDisplayName(customer.getFirstName());
 		setEmail(customer.getEmail());
-		setTemplateLocation("emails/email-verification");
+		setTemplateLocation("new-emails/email-verification-otp");
+		//	setTemplateLocation("emails/email-verification");
 		setSubject("Complete your Email Verification");
 		setTo(customer.getEmail());
 		put("requestType", "Email Validation");
