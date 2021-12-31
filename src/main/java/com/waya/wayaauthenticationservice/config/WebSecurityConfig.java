@@ -68,7 +68,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				.antMatchers("/api/v1/auth/verify**", "/api/v1/password/forgot-password**/**").permitAll()
 				.antMatchers("/api/v1/password/change-password**/**", "/api/v1/auth/wallet/**").permitAll()
 				.antMatchers("/api/v1/utils/**", "/api/v1/fraud-actions/**", "/auth-service/**").permitAll()
-				//.antMatchers("/api/v1/admin/**").permitAll()
+
+
+
+				.antMatchers("/api/v1/super-user/users/test-template/**").permitAll()
 				// all other requests need to be authenticated
 				.anyRequest().authenticated().and()
 				// make sure we use stateLess session; session won't be used to

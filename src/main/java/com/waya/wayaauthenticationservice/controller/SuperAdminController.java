@@ -20,8 +20,8 @@ import javax.validation.Valid;
 
 @CrossOrigin
 @RestController
-@RequestMapping("/api/v1/super/user")
-@Tag(name = "SUPER ADMIN USER SERVICE", description = "Super Admin User Service API")
+@RequestMapping("/api/v1/super-user")
+@Tag(name = "SUPER-ADMIN", description = "Super Admin User Service API")
 @EnableCaching
 public class SuperAdminController {
 
@@ -37,6 +37,16 @@ public class SuperAdminController {
                                                        HttpServletRequest request, Device device) {
         userPojo.setWayaAdmin(true);
         return superAdminService.createUser(userPojo, request, device);
+    }
+
+
+    @ApiOperation(value = "TEST EMAIL TEMPLATE", tags = {
+            "SUPER-ADMIN" })
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+    @PostMapping("/users/test-template")
+    public ResponseEntity<String> testEmailTemplate() {
+
+        return superAdminService.testEmailTemplate();
     }
 
 

@@ -9,6 +9,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome Email</title>
     <style>
+        a{
+
+        }
+        a {border:none; outline: none; color: red;}
+
         body {
             font-size: 18px;
             letter-spacing: 1px;
@@ -26,6 +31,7 @@
             min-height: 14px;
             min-width: 206px;
             white-space: nowrap;
+            letter-spacing: 1px;
         }
         .container {
             width: 80%;
@@ -35,7 +41,21 @@
             padding: 30px;
             color: #000
         }
-
+        .row{
+            width: 100%;
+        }
+        .col-sm{
+            width: 100%;
+            float-wrap: wrap;
+        }
+        .col-6{
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+        .col-12{
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
         .image-div {
             width: 80%;
             max-width: 100%;
@@ -79,9 +99,410 @@
             color: #ff4b01;
         }
 
-        @import url("https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css");
+        .overlap-group-container-1 {
+            align-items: flex-start;
+            display: flex;
+            margin-left: 8.0px;
+            margin-top: 6px;
+            min-width: 436px;
+        }
 
-        @import url("https://fonts.googleapis.com/css?family=Inter:400,500,600");
+        .welcome-notification .paragraph-6-1 {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-s);
+            font-weight: 500;
+            letter-spacing: 0;
+            line-height: 14.0px;
+            margin-right: 4.0px;
+            margin-top: 25px;
+            min-height: 14px;
+            min-width: 206px;
+            white-space: nowrap;
+        }
+        .welcome-notification .you-are-receiving-th {
+            color: transparent;
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-s);
+            font-weight: 500;
+            height: 42px;
+            letter-spacing: 0;
+            line-height: 14.0px;
+            margin-right: 4.0px;
+            margin-top: 18px;
+            text-align: center;
+            width: 488px;
+        }
+        .valign-text-bottom {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        .paragraph-2 {
+            align-self: flex-start;
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xxxxl);
+            font-weight: 600;
+            letter-spacing: 0;
+            line-height: 33.6px;
+            margin-left: 52px;
+            margin-top: 30px;
+            min-height: 34px;
+            white-space: nowrap;
+        }
+       .paragraph-container {
+            align-items: flex-start;
+            display: flex;
+            height: 22px;
+            margin-right: 10.0px;
+            margin-top: 15px;
+            min-width: 358px;
+        }
+        .inter-normal-granite-gray-12px {
+            color: var(--granite-gray);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-m);
+            font-style: normal;
+            font-weight: 400;
+        }
+
+        .inter-semi-bold-mine-shaft-16px {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xxl);
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        .inter-semi-bold-white-14px {
+            color: var(--white);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-l);
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        .inter-medium-mine-shaft-14px {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-l);
+            font-style: normal;
+            font-weight: 500;
+        }
+        .paragraph-6 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            min-height: 22px;
+            min-width: 84px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .paragraph-8 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            margin-left: 225px;
+            min-height: 22px;
+            min-width: 49px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .paragraph-container-1 {
+            align-items: flex-start;
+            display: flex;
+            height: 51px;
+            margin-left: 27.0px;
+            margin-top: 4px;
+            min-width: 523px;
+        }
+
+        .paragraph-3 {
+            letter-spacing: 0;
+            line-height: 16.8px;
+            min-height: 51px;
+            text-align: center;
+            width: 212px;
+        }
+
+        .paragraph-7 {
+            letter-spacing: 0;
+            line-height: 16.8px;
+            margin-left: 61px;
+            min-height: 34px;
+            text-align: center;
+            width: 250px;
+        }
+        .paragraph-container-2 {
+            align-items: flex-start;
+            display: flex;
+            height: 22px;
+            margin-left: 24.0px;
+            margin-top: 15px;
+            min-width: 380px;
+        }
+
+        .paragraph-10 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            min-height: 22px;
+            min-width: 72px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .paragraph-12 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            margin-left: 204px;
+            min-height: 22px;
+            min-width: 104px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .paragraph-container-3 {
+            align-items: flex-start;
+            display: flex;
+            height: 51px;
+            margin-right: 1.0px;
+            margin-top: 5px;
+            min-width: 553px;
+        }
+
+        .paragraph-9 {
+            letter-spacing: 0;
+            line-height: 16.8px;
+            min-height: 51px;
+            text-align: center;
+            width: 270px;
+        }
+
+        .paragraph-11 {
+            letter-spacing: 0;
+            line-height: 16.8px;
+            margin-left: 31px;
+            min-height: 51px;
+            text-align: center;
+            width: 252px;
+        }
+
+        .overlap-group-container-3 {
+            align-items: flex-start;
+            display: flex;
+            margin-left: 8.0px;
+            margin-top: 15px;
+            min-width: 436px;
+        }
+
+        .rectangle-1 {
+            background-color: #e8e8e8;
+            height: 1px;
+            margin-left: 4.0px;
+            margin-top: 56px;
+            width: 540px;
+        }
+
+        .paragraph-13 {
+            align-self: flex-start;
+            color: var(--granite-gray);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xxxl);
+            font-weight: 600;
+            letter-spacing: 0;
+            line-height: 25.2px;
+            margin-left: 52px;
+            margin-top: 24px;
+            min-height: 25px;
+            white-space: nowrap;
+        }
+
+        .paragraph-14 {
+            color: transparent;
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-m);
+            letter-spacing: 0;
+            line-height: 16.8px;
+            margin-left: 2.0px;
+            margin-top: 8px;
+            min-height: 145px;
+            width: 538px;
+        }
+
+        .overlap-group7 {
+            align-items: flex-start;
+            background-color: var(--desert-storm);
+            border-radius: 61.5px;
+            display: flex;
+            height: 123px;
+            justify-content: flex-end;
+            min-width: 123px;
+            padding: 33.0px 26.0px;
+        }
+
+        .group-2312 {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group-2312.png);
+            height: 57px;
+            width: 69px;
+        }
+
+        .overlap-group {
+            align-items: center;
+            background-color: var(--vermilion);
+            border-radius: 2px;
+            display: flex;
+            height: 38px;
+            min-width: 144px;
+            padding: 0 27px;
+            margin-top: 17px;
+        }
+
+        .explore-more {
+            letter-spacing: 0;
+            line-height: 19.6px;
+            min-height: 20px;
+            min-width: 89px;
+            white-space: nowrap;
+        }
+        .overlap-group-1 {
+            align-items: center;
+            background-color: var(--vermilion);
+            border-radius: 2px;
+            display: flex;
+            height: 38px;
+            margin-left: 148px;
+            min-width: 144px;
+            padding: 0 27px;
+        }
+
+        .overlap-group-container-2 {
+            align-items: flex-start;
+            display: flex;
+            margin-left: 7.0px;
+            margin-top: 32px;
+            min-width: 415px;
+        }
+
+        .group-2243 {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group2243.png);
+            height: 61px;
+            width: 67px;
+        }
+
+        .overlap-group6 {
+            align-items: flex-start;
+            background-color: var(--desert-storm);
+            border-radius: 61.5px;
+            display: flex;
+            height: 123px;
+            justify-content: flex-end;
+            min-width: 123px;
+            padding: 31.0px 27.4px;
+        }
+
+        .overlap-group4 {
+            align-items: flex-end;
+            background-color: var(--desert-storm);
+            border-radius: 61.5px;
+            display: flex;
+            height: 123px;
+            /*justify-content: flex-end;*/
+            margin-left: 169px;
+            min-width: 123px;
+            /*padding: 30.5px 26.0px;*/
+        }
+        .overlap-group-container {
+            align-items: flex-start;
+            display: flex;
+            margin-left: 7.0px;
+            margin-top: 38px;
+            min-width: 415px;
+        }
+        .group {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group1x.png);
+            height: 61px;
+            width: 69px;
+        }
+        .paragraph-container {
+            align-items: flex-start;
+            display: flex;
+            height: 22px;
+            margin-right: 10.0px;
+            margin-top: 15px;
+            min-width: 358px;
+        }
+
+        .group-5 {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group-5.png);
+            height: 38px;
+            width: 122px;
+        }
+
+        .group-13 {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group-2338.png);
+            background-size: 100% 100%;
+            height: 38px;
+            margin-left: 5px;
+            width: 122px;
+        }
+
+        .group-19 {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group-19.png);
+            height: 15px;
+            margin-right: 3.91px;
+            margin-top: 26px;
+            width: 149px;
+        }
+        .group-20 {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            margin-left: 4.0px;
+            margin-top: 57px;
+            min-height: 218px;
+            width: 544px;
+        }
+        .rectangle-1-1 {
+            background-color: #e8e8e8;
+            height: 1px;
+            margin-right: 4.0px;
+            width: 540px;
+        }
+        .group-container {
+            align-items: flex-start;
+            display: flex;
+            margin-right: 5.0px;
+            margin-top: 39px;
+            min-width: 249px;
+        }
+
+        .welcome-notification {
+            align-items: center;
+            background-color: var(--white);
+            display: flex;
+            flex-direction: column;
+            height: 1737px;
+            width: 640px;
+        }
+
+        .group-2256 {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group-2256.png);
+            height: 61px;
+            width: 68px;
+        }
+
+        .overlap-group-2 {
+            align-items: center;
+            background-color: var(--desert-storm);
+            border-radius: 61.5px;
+            display: flex;
+            height: 123px;
+            /*justify-content: flex-end;*/
+            margin-left: 169px;
+            min-width: 123px;
+            /*padding: 0 67.2px;*/
+        }
     </style>
 </head>
 
@@ -90,6 +511,7 @@
     <div class=image-div>
         <img src="https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_banner.png"></img>
     </div>
+
     <p>Welcome on Board!</p>
     <p>Hi <span th:text="${firstName}"></span>,</p>
     <section class="section-1">
@@ -98,62 +520,90 @@
         payments easily in Nigeria from your from your customers all around the world.
     </section>
 
-    <div class="row">
-        <div class="col-md-12">
-            <div class="col-md-6">Web POS</div>
-            <div class="col-md-6">Terminal POS</div>
-        </div>
-    </div>
+<!--    <section>-->
 
+        <h1 class="paragraph-2">Waya Products</h1>
+
+        <table>
+            <tr>
+                <td width="50%"><table><tr><td>  <div class="overlap-group4"><span class="group-2243"></span></div></td></tr><tr><td style="text-align: center;">Socializing</td></tr><tr><td style="text-align: center;">Chat, Voice and video call with your friends for free and do lot’s more with our social product!</td></tr>
+                    <tr><td style="text-align: center;"><div class="explore-more inter-semi-bold-white-14px">Explore more</div></td></tr>
+                </table>
+                </td>
+                <td width="50%"><table><tr><td><div class="overlap-group4"><span class="group"></span></div></td></tr><tr><td style="text-align: center;">Wallet</td></tr><tr><td style="text-align: center;">Send and receive money, pay bills, recharge airtime, make money by referrals & more.</td></tr>
+                    <tr><td style="text-align: center;"><div class="explore-more inter-semi-bold-white-14px">Explore more</div></td></tr>
+                </table>
+                </td>
+            </tr>
+            <tr>
+                <td width="50%"><table><tr><td> <div class="overlap-group-2">
+                    <span class="group-2312"></span>
+                </div> </td></tr><tr><tr><td style="text-align: center;">Web POS</td></tr><tr><td style="text-align: center;">Collect payment from your customers online via several popular payment channels including card, ussd, bank account and wallet.</td></tr>
+                    <tr><td style="text-align: center;"><div class="explore-more inter-semi-bold-white-14px">Explore more</div></td></tr>
+                </table>
+                </td>
+                <td width="50%"><table><tr><td > <div class="overlap-group-2"> <span class="group-2256"></span></div></td></tr><tr><tr><td style="text-align: center;">Terminal POS</td></tr><tr><td style="text-align: center;">Collect payments from your customers in your physical store with wayapaychat terminal pos.</td></tr>
+                    <tr><td style="text-align: center;"><div class="explore-more inter-semi-bold-white-14px">Explore more</div></td></tr>
+                </table>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+<!--    </section>-->
+
+
+    <div class="rectangle-1"></div>
+    <div class="paragraph-13">Any Questions?</div>
     <section class="section-1">
           <span class="inter-normal-granite-gray-12px"
           >Our Help Desk has answers to many of the most common questions about Wayapaychat. If you have further
             questions, our friendly Customer Success Team is always ready to help. Simply send an email to </span
           ><span class="span1">customerservice@wayapaychat.com.<br /></span><span class="span2-1"><br /></span
     ><span class="inter-normal-granite-gray-12px">Once again, thanks for choosing Wayapaychat!<br /><br /></span
-    ><span class="span4">Best wishes,<br />Your friends at Wayapaychat.</span>
+    >
 
     </section>
 
     <div class="end-note">
-        <p>With love,</p>
-        <p>Everyone at Waya PayChat.</p>
+        <span class="span4">Best wishes,<br />Your friends at Wayapaychat.</span>
     </div>
 
-
-
 </div>
 
-<div class="footer">
-    <table align="center">
-        <tr>
-            <td align="center"><p>Copyright © Waya 2022 All rights reserved</p>
-            </td>
-        </tr>
-        <tr>
-            <td align="center">
-            </td>
-        </tr>
-        <tr>
-            <td align="center">
-                You are receiving this message because you signed up on Waya PayChat. <br/>If you would like to stop receiving messages, you can opt out by clicking
-                <span class="span-2" >unsubscribe.</span>
-                For more information about how we process data, please see our.<br/>
-                Privacy Policy.
-            </td>
-        </tr>
-    </table>
-</div>
-
-
-
-<!--            <span-->
-<!--            ><span class="span-2"-->
-<!--            > </span-->
-<!--            ><span class="span-3"></span-->
-<!--            ><span class="span-2"> </span-->
-<!--            ><span class="span-3">Privacy Policy.</span>-->
-<!--            </span>-->
+<table border="0px;" style="border: 0px;">
+    <tr>
+        <td align="center"><div class="rectangle-1-1"></div> </td>
+    </tr>
+    <tr>
+        <td align="center">
+            <table border="0px;" style="border: 0px;">
+                <tr >
+                <td align="right"><div class="group-5"></div></td>
+                <td align="left"><div class="group-13"></div>
+                </td>
+                </tr>
+            </table>
+   </td>
+    </tr>
+    <tr>
+        <td align="center"><div class="group-19"></div> </td>
+    </tr>
+    <tr>
+        <td align="center">Copyright © Waya 2022 All rights reserved </td>
+    </tr>
+    <tr>
+        <td align="center"> <span>
+            <span class="span-2">You are receiving this message because you signed up on Waya PayChat. If you would like to stop
+                    receiving messages, you can opt out by clicking </span
+        ><span class="span-3">unsubscribe.</span
+        ><span class="span-2"> For more information about how we process data, please see our </span
+        ><span class="span-3">Privacy Policy.</span>
+                </span> </td>
+    </tr>
+</table>
 
 </body>
 
