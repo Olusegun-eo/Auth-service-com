@@ -516,7 +516,14 @@
             pointer-events: none;
             width: 100%;
         }
-
+        .container {
+            width: 80%;
+            max-width: 60rem;
+            margin: 0 auto;
+            background: #fbfbfb;
+            padding: 30px;
+            color: #000
+        }
         .container-center-horizontal > * {
             flex-shrink: 0;
             pointer-events: auto;
@@ -535,19 +542,20 @@
     </style>
 </head>
 <body style="margin: 0; background: #ffffff">
-<input type="hidden" id="anPageName" name="page" value="welcome-notification" />
-<div class="container-center-horizontal">
+<!--<input type="hidden" id="anPageName" name="page" value="welcome-notification" />-->
+<div class="container">
     <div class="welcome-notification screen">
         <span class="group-2339"></span>
         <p class="paragraph-1 inter-medium-mine-shaft-14px">
             <span class="inter-medium-mine-shaft-14px">Welcome on Board!<br /></span><span class="span-1"><br /></span
         ><span class="span2 inter-semi-bold-mine-shaft-16px">Hi <span th:text="${firstName}"></span>,<br /></span><span class="span-1"><br /></span
-        ><span class="inter-medium-mine-shaft-14px">
-            Everyone at Wayapaychat is so excited to have you onboard and we can&#39;t wait to travel this road with
+        ><span class="inter-medium-mine-shaft-14px"
+        >Everyone at Wayapaychat is so excited to have you onboard and we can&#39;t wait to travel this road with
             you, enjoying smoother and faster mobile payment experience and socializing online like never before. Accept
             payments easily in Nigeria from your from your customers all around the world.</span
         >
         </p>
+
         <h1 class="paragraph-2">Waya Products</h1>
         <img class="line-1" src="img/line-1@2x.svg" />
         <div class="overlap-group-container">

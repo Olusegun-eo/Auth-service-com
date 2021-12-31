@@ -29,7 +29,7 @@ public class SuperAdminController {
     SuperAdminService superAdminService;
 
     @ApiOperation(value = "Create New Admin User Account (Super Admin Endpoint). Only a user with Owner Role can execute", tags = {
-            "ADMIN" })
+            "SUPER-ADMIN" })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
     @PostMapping("/users/waya-account")
     @PreAuthorize(value = "hasAuthority('ROLE_OWNER_ADMIN')")
@@ -38,5 +38,8 @@ public class SuperAdminController {
         userPojo.setWayaAdmin(true);
         return superAdminService.createUser(userPojo, request, device);
     }
+
+
+
 
 }
