@@ -39,13 +39,13 @@ public class ScheduledJobs {
 
 	@Autowired
 	UserRepository userRepository;
-	
+
 	@Autowired
 	UserSetupRepository userSetupRepository;
-	
+
 	@Autowired
 	KycProxy kycProxy;
-	
+
 	@Autowired
 	PasswordPolicyRepository passwordPolicyRepo;
 
@@ -62,71 +62,76 @@ public class ScheduledJobs {
 		String key = "WAYA219766005KYC";
 		ApiResponseBody<List<KycStatus>> listUser = kycProxy.GetUserKyc(key);
 		List<KycStatus> listKyc = listUser.getData();
-		if(listKyc != null && !listKyc.isEmpty()) {
-			for(KycStatus mkyc : listKyc) {
+		if (listKyc != null && !listKyc.isEmpty()) {
+			for (KycStatus mkyc : listKyc) {
 				UserSetup user = userSetupRepository.GetByUserId(mkyc.getUserId());
-				if(user == null) {
-					UserSetupPojo pojo = new UserSetupPojo();
-					pojo.setId(0L);
-					pojo.setUserId(mkyc.getUserId());
-					pojo.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
-					userService.maintainUserSetup(pojo);
-					user = userSetupRepository.GetByUserId(mkyc.getUserId());
+				Users mUser = userRepository.findById(mkyc.getUserId()).orElse(null);
+				if (mUser != null) {
+					if (user == null && !mUser.isDeleted()) {
+						log.info("USER SETUP LIMIT");
+						UserSetupPojo pojo = new UserSetupPojo();
+						pojo.setId(0L);
+						pojo.setUserId(mkyc.getUserId());
+						pojo.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
+						userService.maintainUserSetup(pojo);
+						user = userSetupRepository.GetByUserId(mkyc.getUserId());
+					}
+					if (user != null && !user.isUpdated()) {
+						log.info("KYC UPDATE");
+						user.setUpdated(true);
+						userSetupRepository.save(user);
+						KycAuthUpdate uKyc = new KycAuthUpdate();
+						uKyc.setUserId(mkyc.getUserId());
+						uKyc.setKcyupdate(true);
+						kycProxy.PostKycUpdate(key, uKyc);
+					}
+
+					if (user != null && user.isUpdated() && !mkyc.isProcessFlg()) {
+						user.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
+						userSetupRepository.save(user);
+					}
+
 				}
-				if(user != null && !user.isUpdated()) {
-					user.setUpdated(true);
-					userSetupRepository.save(user);
-					KycAuthUpdate uKyc = new KycAuthUpdate();
-					uKyc.setUserId(mkyc.getUserId());
-					uKyc.setKcyupdate(true);
-					kycProxy.PostKycUpdate(key, uKyc);
-				}
-				
-				if(user != null && user.isUpdated() && !mkyc.isProcessFlg()) {
-					user.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
-					userSetupRepository.save(user);
-				}
-				
 			}
 		}
 	}
-	
-	//@Scheduled(cron = "0 0/30 20-23 * * *")
-	//@Scheduled(cron = "0/5 * * * * *")
+
+	// @Scheduled(cron = "0 0/30 20-23 * * *")
+	// @Scheduled(cron = "0/5 * * * * *")
 	@Scheduled(cron = "${job.cron.pass}")
 	private void updatePasswordToken() {
 		List<Users> mUser = userRepository.findAll();
-		for(Users user : mUser) {
+		for (Users user : mUser) {
 			PasswordPolicy policy = passwordPolicyRepo.findByUserActive(user).orElse(null);
-			if(policy != null && !user.isDeleted()) {
+			if (policy != null && !user.isDeleted()) {
 				int tokenAge = 0;
 				int passwordAge = 0;
 				LocalDate todate = LocalDate.now();
 				LocalDate lastrun = policy.getRunDate();
-				if(lastrun.compareTo(todate) < 0) {
+				if (lastrun.compareTo(todate) < 0) {
 					policy.setLchgDate(LocalDateTime.now());
 					LocalDate passwordfrom = policy.getUpdatedPasswordDate();
 					LocalDate tokenfrom = policy.getUpdatedTokenDate();
-			        LocalDate to = LocalDate.now();
-			        Period periodPas = Period.between(passwordfrom, to);
-			        Period periodTok = Period.between(tokenfrom, to);
-			        int totalPas = periodPas.getDays();
-			        int totalTok = periodTok.getDays();
-			        if(totalPas > 0 || totalTok > 0) {
-			        	tokenAge = policy.getTokenAge() + totalTok;
-			        	passwordAge = policy.getPasswordAge() + totalPas;
-			        	policy.setPasswordAge(passwordAge);
-			        	policy.setTokenAge(tokenAge);
-			        }
-			        policy.setRunDate(todate);
-			        passwordPolicyRepo.save(policy);
+					LocalDate to = LocalDate.now();
+					Period periodPas = Period.between(passwordfrom, to);
+					Period periodTok = Period.between(tokenfrom, to);
+					int totalPas = periodPas.getDays();
+					int totalTok = periodTok.getDays();
+					if (totalPas > 0 || totalTok > 0) {
+						tokenAge = policy.getTokenAge() + totalTok;
+						passwordAge = policy.getPasswordAge() + totalPas;
+						policy.setPasswordAge(passwordAge);
+						policy.setTokenAge(tokenAge);
+					}
+					policy.setRunDate(todate);
+					passwordPolicyRepo.save(policy);
 				}
-			}else if(policy != null && user.isDeleted()){
+			} else if (policy != null && user.isDeleted()) {
 				policy.setDel_flg(true);
 				policy.setLchgDate(LocalDateTime.now());
 				policy.setRunDate(LocalDate.now());
 				passwordPolicyRepo.save(policy);
-			}else if(policy == null && !user.isDeleted()){
+			} else if (policy == null && !user.isDeleted()) {
 				PasswordPolicy mPolicy = new PasswordPolicy(user, user.getPassword());
 				/*
 				 * mPolicy.setDel_flg(false); mPolicy.setUser(user);
@@ -141,7 +146,26 @@ public class ScheduledJobs {
 				 */
 				passwordPolicyRepo.save(mPolicy);
 			}
-		
+
+		}
+	}
+
+	@Scheduled(cron = "${job.cron.pass}")
+	public void kycAuthSink() {
+		List<Users> mUser = userRepository.findAll();
+		for (Users user : mUser) {
+			if (user.isEmailVerified() && user.isPhoneVerified() && !user.isDeleted()) {
+				String key = "WAYA219766005KYC";
+				log.info("KYC POST");
+				ApiResponseBody<KycStatus> userKyc = kycProxy.GetByUserKyc(key, user.getId());
+				KycStatus kyc = userKyc.getData();
+				if (kyc == null) {
+					log.info("KYC-AUTH-POST");
+					KycAuthUpdate mKyc = new KycAuthUpdate(user.getId(), false);
+					kycProxy.PostKyc(key, mKyc);
+				}
+
+			}
 		}
 	}
 }

@@ -21,9 +21,18 @@ public interface KycProxy {
 	@HandleFeignError(ApiClientExceptionHandler.class)
 	ApiResponseBody<List<KycStatus>> GetUserKyc(@PathVariable("key") String key);
 	
+	@RequestMapping(method = RequestMethod.GET, value = "/kyc/users/status/{key}/{userId}")
+	@HandleFeignError(ApiClientExceptionHandler.class)
+	ApiResponseBody<KycStatus> GetByUserKyc(@PathVariable("key") String key, @PathVariable("userId") Long userId);
+	
 	@RequestMapping(method = RequestMethod.PUT, value = "/kyc/users/update/{key}")
 	@HandleFeignError(ApiClientExceptionHandler.class)
 	ApiResponseBody<KycStatus> PostKycUpdate(@PathVariable("key") String key, 
+    		@RequestBody KycAuthUpdate kyc);
+	
+	@RequestMapping(method = RequestMethod.POST, value = "/kyc/users/post/{key}")
+	@HandleFeignError(ApiClientExceptionHandler.class)
+	ApiResponseBody<KycStatus> PostKyc(@PathVariable("key") String key, 
     		@RequestBody KycAuthUpdate kyc);
 
 }
