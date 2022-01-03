@@ -10,5 +10,5 @@ import javax.servlet.http.HttpServletRequest;
 public interface SuperAdminService {
 
     ResponseEntity<?> createUser(SuperAdminCreatUserRequest userPojo, HttpServletRequest request, Device device);
-
+    ResponseEntity<String> testEmailTemplate();
 }
