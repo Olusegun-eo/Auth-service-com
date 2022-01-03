@@ -66,6 +66,7 @@ public class ScheduledJobs {
 			for(KycStatus mkyc : listKyc) {
 				UserSetup user = userSetupRepository.GetByUserId(mkyc.getUserId());
 				if(user == null) {
+					log.info("USER SETUP LIMIT");
 					UserSetupPojo pojo = new UserSetupPojo();
 					pojo.setId(0L);
 					pojo.setUserId(mkyc.getUserId());
@@ -74,6 +75,7 @@ public class ScheduledJobs {
 					user = userSetupRepository.GetByUserId(mkyc.getUserId());
 				}
 				if(user != null && !user.isUpdated()) {
+					log.info("KYC UPDATE");
 					user.setUpdated(true);
 					userSetupRepository.save(user);
 					KycAuthUpdate uKyc = new KycAuthUpdate();
@@ -142,6 +144,25 @@ public class ScheduledJobs {
 				passwordPolicyRepo.save(mPolicy);
 			}
 		
+		}
+	}
+	
+	@Scheduled(cron = "${job.cron.pass}")
+	public void kycAuthSink() {
+		List<Users> mUser = userRepository.findAll();
+		for(Users user : mUser) {
+			if(user.isEmailVerified() && user.isPhoneVerified()) {
+				String key = "WAYA219766005KYC";
+				log.info("KYC POST");
+				ApiResponseBody<KycStatus> userKyc = kycProxy.GetByUserKyc(key, user.getId());
+				KycStatus kyc = userKyc.getData();
+				if(kyc == null) {
+					log.info("KYC-AUTH-POST");
+					KycAuthUpdate mKyc = new KycAuthUpdate(user.getId(), false);
+					kycProxy.PostKyc(key, mKyc);
+				}
+				
+			}
 		}
 	}
 }
