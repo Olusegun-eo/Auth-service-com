@@ -5,151 +5,126 @@
       xmlns:o="urn:schemas-microsoft-com:office:office">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=1191, maximum-scale=1.0" />
-    <link rel="shortcut icon" type="image/png" href="https://animaproject.s3.amazonaws.com/home/favicon.png" />
-    <meta name="og:type" content="website" />
-    <meta name="twitter:card" content="photo" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Email</title>
     <style>
-        /* screen - email-verification-notification */
         a{
-            color: #ff4b01;
+
         }
-        .email-verification-notification {
-            align-items: flex-start;
-            background-image: url(../img/bg@1x.png);
-            background-size: 100% 100%;
-            display: flex;
-            height: 889px;
-            min-width: 1191px;
-            padding: 0 310px;
+        a {border:none; outline: none; color: red;}
+
+        body {
+            font-size: 18px;
+            letter-spacing: 1px;
         }
 
-        .email-verification-notification .group-2324 {
-
-            background-color: var(--white);
-            display: flex;
-            flex-direction: column;
-            margin-left: 1px;
-            margin-top: 119px;
-            min-height: 652px;
-            padding: 30px 26px;
-            width: 570px;
-        }
-
-        .email-verification-notification .wayapay-logo-1 {
-            height: 44px;
-            width: 102px;
-        }
-
-        .email-verification-notification .group-15 {
-            align-items: flex-start;
-            align-self: flex-end;
-            display: flex;
-            flex-direction: column;
-            margin-top: 25px;
-            min-height: 254px;
-            width: 509px;
-        }
-
-        .email-verification-notification .paragraph-1 {
-            letter-spacing: 0;
-            line-height: 22.4px;
-            min-height: 22px;
-            white-space: nowrap;
-        }
-
-        .email-verification-notification .paragraph-4 {
-            letter-spacing: 0;
-            line-height: 22.4px;
-            margin-top: 26px;
-            min-height: 66px;
-            width: 501px;
-        }
-
-        .email-verification-notification .paragraph-5 {
-            color: #240d04;
+        .footer{
+            color: var(--mine-shaft);
             font-family: var(--font-family-inter);
-            font-size: 35px;
-            font-weight: 700;
-            letter-spacing: 0;
-            line-height: 56.0px;
-            margin-top: 19px;
-            min-height: 56px;
-            white-space: nowrap;
-        }
-
-        .email-verification-notification .surname {
-            color: var(--vermilion);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-xxl);
+            font-size: var(--font-size-s);
             font-weight: 500;
-            letter-spacing: 0;
-            line-height: 21.0px;
-            margin-top: 23px;
-            min-height: 42px;
-        }
-
-        .email-verification-notification .overlap-group {
-            height: 218px;
-            margin-left: 4.0px;
-            margin-top: 51px;
-            position: relative;
-            width: 492px;
-        }
-
-        .email-verification-notification .group-2320 {
-            align-items: flex-start;
-            display: flex;
-            height: 38px;
-            left: 119px;
-            min-width: 250px;
-            position: absolute;
-            top: 35px;
-        }
-
-        .email-verification-notification .app-store-btn-1 {
-            height: 38px;
-            object-fit: cover;
-            width: 122px;
-        }
-
-        .email-verification-notification .playstore-btn-1 {
-            height: 38px;
-            margin-left: 6px;
-            object-fit: cover;
-            width: 122px;
-        }
-
-        .email-verification-notification .group-20 {
-            align-items: center;
-            display: flex;
-            flex-direction: column;
-            left: 0;
-            min-height: 218px;
-            position: absolute;
-            top: 0;
-            width: 492px;
-        }
-
-        .email-verification-notification .rectangle-1 {
-            background-color: var(--gray-nurse);
-            height: 1px;
-            margin-right: 4.0px;
-            width: 482px;
-        }
-
-        .email-verification-notification .paragraph-6 {
             letter-spacing: 0;
             line-height: 14.0px;
             margin-right: 4.0px;
-            margin-top: 143px;
+            margin-top: 25px;
+            min-height: 14px;
+            min-width: 206px;
+            white-space: nowrap;
+            letter-spacing: 1px;
+        }
+        .container {
+            width: 80%;
+            max-width: 60rem;
+            margin: 0 auto;
+            background: #fbfbfb;
+            padding: 30px;
+            color: #000
+        }
+        .row{
+            width: 100%;
+        }
+        .col-sm{
+            width: 100%;
+            float-wrap: wrap;
+        }
+        .col-6{
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+        .col-12{
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+        .image-div {
+            width: 80%;
+            max-width: 100%;
+            text-align: center;
+            margin-bottom: 30px;
+            margin-top: -25px;
+        }
+
+        .image-div img {
+            max-height: 100%;
+            width: inherit;
+            height: inherit;
+        }
+
+        .section-1 {
+            margin-bottom: 40px;
+        }
+
+        .contact-list p {
+            margin-bottom: 0;
+            margin-top: 5px
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .contact-link {
+            color: blue;
+            text-decoration: underline
+        }
+
+        .end-note {
+            margin-top: 40px;
+        }
+        .span-2 {
+            color: #777777;
+        }
+
+        .span-3 {
+            color: #ff4b01;
+        }
+
+        .overlap-group-container-1 {
+            align-items: flex-start;
+            display: flex;
+            margin-left: 8.0px;
+            margin-top: 6px;
+            min-width: 436px;
+        }
+
+        .welcome-notification .paragraph-6-1 {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-s);
+            font-weight: 500;
+            letter-spacing: 0;
+            line-height: 14.0px;
+            margin-right: 4.0px;
+            margin-top: 25px;
             min-height: 14px;
             min-width: 206px;
             white-space: nowrap;
         }
-
-        .email-verification-notification .you-are-receiving-th {
+        .welcome-notification .you-are-receiving-th {
+            color: transparent;
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-s);
+            font-weight: 500;
             height: 42px;
             letter-spacing: 0;
             line-height: 14.0px;
@@ -158,227 +133,433 @@
             text-align: center;
             width: 488px;
         }
-
-        .email-verification-notification .frame-1 {
-            align-items: flex-start;
-            display: flex;
-            height: 15px;
-            left: 175px;
-            min-width: 137px;
-            position: absolute;
-            top: 97px;
-        }
-
-        .email-verification-notification .email-icon {
-            height: 15px;
-            object-fit: cover;
-            width: 22px;
-        }
-
-        .email-verification-notification .x-icon {
-            height: 15px;
-            margin-left: 8px;
-            object-fit: cover;
-            width: 15px;
-        }
-
-        .email-verification-notification .twitter-icon {
-            height: 15px;
-            margin-left: 8px;
-            object-fit: cover;
-            width: 19px;
-        }
-
-        .email-verification-notification .wayapay-logo-2 {
-            height: 15px;
-            margin-left: 8px;
-            width: 34px;
-        }
-
-        :root {
-            --black: #000000;
-            --desert-storm: #f8f8f8;
-            --granite-gray: #666666;
-            --gray-nurse: #e8e8e8;
-            --mine-shaft: #333333;
-            --sonic-silver: #777777;
-            --vermilion: #ff4400;
-            --vermilion-2: #ff4b01;
-            --white: #ffffff;
-
-            --font-size-l: 12px;
-            --font-size-m: 10px;
-            --font-size-xl: 14px;
-            --font-size-xxl: 15px;
-            --font-size-xxxl: 16px;
-            --font-size-xxxxl: 18px;
-            --font-size-xxxxxl: 24px;
-
-            --font-family-inter: "Inter", Helvetica;
-            --font-family-inter-regular: "Inter-Regular", Helvetica;
-        }
-        .inter-semi-bold-mine-shaft-16px {
-            color: var(--mine-shaft);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-xxxl);
-            font-style: normal;
-            font-weight: 600;
-        }
-
-        .inter-regular-normal-granite-gray-12px {
-            color: var(--granite-gray);
-            font-family: var(--font-family-inter-regular);
-            font-size: var(--font-size-l);
-            font-style: normal;
-            font-weight: 400;
-        }
-
-        .inter-medium-mine-shaft-14px {
-            color: var(--mine-shaft);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-xl);
-            font-style: normal;
-            font-weight: 500;
-        }
-
-        .inter-medium-sonic-silver-10px {
-            color: var(--sonic-silver);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-m);
-            font-style: normal;
-            font-weight: 500;
-        }
-
-        .inter-medium-vermilion-10px {
-            color: var(--vermilion-2);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-m);
-            font-style: normal;
-            font-weight: 500;
-        }
-
-        .inter-semi-bold-white-14px {
-            color: var(--white);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-xl);
-            font-style: normal;
-            font-weight: 600;
-        }
-
-        .inter-medium-mine-shaft-10px {
-            color: var(--mine-shaft);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-m);
-            font-style: normal;
-            font-weight: 500;
-        }
-
-        .inter-medium-white-10px {
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-m);
-            font-style: normal;
-            font-weight: 500;
-        }
-
-        .inter-bold-mine-shaft-14px {
-            color: var(--mine-shaft);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-xl);
-            font-style: normal;
-            font-weight: 700;
-        }
-
-        @import url("https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css");
-
-        @import url("https://fonts.googleapis.com/css?family=Inter:700,500,600");
-
-        .screen a {
-            display: contents;
-            text-decoration: none;
-        }
-
-        .container-center-horizontal {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            pointer-events: none;
-            width: 100%;
-        }
-
-        .container-center-horizontal > * {
-            flex-shrink: 0;
-            pointer-events: auto;
-        }
-
         .valign-text-bottom {
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
         }
-
-        * {
-            box-sizing: border-box;
+        .paragraph-2 {
+            align-self: flex-start;
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xxxxl);
+            font-weight: 600;
+            letter-spacing: 0;
+            line-height: 33.6px;
+            margin-left: 52px;
+            margin-top: 30px;
+            min-height: 34px;
+            white-space: nowrap;
+        }
+        .paragraph-container {
+            align-items: flex-start;
+            display: flex;
+            height: 22px;
+            margin-right: 10.0px;
+            margin-top: 15px;
+            min-width: 358px;
+        }
+        .inter-normal-granite-gray-12px {
+            color: var(--granite-gray);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-m);
+            font-style: normal;
+            font-weight: 400;
         }
 
+        .inter-semi-bold-mine-shaft-16px {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xxl);
+            font-style: normal;
+            font-weight: 600;
+        }
 
+        .inter-semi-bold-white-14px {
+            color: var(--white);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-l);
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        .inter-medium-mine-shaft-14px {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-l);
+            font-style: normal;
+            font-weight: 500;
+        }
+        .paragraph-6 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            min-height: 22px;
+            min-width: 84px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .paragraph-8 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            margin-left: 225px;
+            min-height: 22px;
+            min-width: 49px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .paragraph-container-1 {
+            align-items: flex-start;
+            display: flex;
+            height: 51px;
+            margin-left: 27.0px;
+            margin-top: 4px;
+            min-width: 523px;
+        }
+
+        .paragraph-3 {
+            letter-spacing: 0;
+            line-height: 16.8px;
+            min-height: 51px;
+            text-align: center;
+            width: 212px;
+        }
+
+        .paragraph-7 {
+            letter-spacing: 0;
+            line-height: 16.8px;
+            margin-left: 61px;
+            min-height: 34px;
+            text-align: center;
+            width: 250px;
+        }
+        .paragraph-container-2 {
+            align-items: flex-start;
+            display: flex;
+            height: 22px;
+            margin-left: 24.0px;
+            margin-top: 15px;
+            min-width: 380px;
+        }
+
+        .paragraph-10 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            min-height: 22px;
+            min-width: 72px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .paragraph-12 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            margin-left: 204px;
+            min-height: 22px;
+            min-width: 104px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .paragraph-container-3 {
+            align-items: flex-start;
+            display: flex;
+            height: 51px;
+            margin-right: 1.0px;
+            margin-top: 5px;
+            min-width: 553px;
+        }
+
+        .paragraph-9 {
+            letter-spacing: 0;
+            line-height: 16.8px;
+            min-height: 51px;
+            text-align: center;
+            width: 270px;
+        }
+
+        .paragraph-11 {
+            letter-spacing: 0;
+            line-height: 16.8px;
+            margin-left: 31px;
+            min-height: 51px;
+            text-align: center;
+            width: 252px;
+        }
+
+        .overlap-group-container-3 {
+            align-items: flex-start;
+            display: flex;
+            margin-left: 8.0px;
+            margin-top: 15px;
+            min-width: 436px;
+        }
+
+        .rectangle-1 {
+            background-color: #e8e8e8;
+            height: 1px;
+            margin-left: 4.0px;
+            margin-top: 56px;
+            width: 540px;
+        }
+
+        .paragraph-13 {
+            align-self: flex-start;
+            color: var(--granite-gray);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xxxl);
+            font-weight: 600;
+            letter-spacing: 0;
+            line-height: 25.2px;
+            margin-left: 52px;
+            margin-top: 24px;
+            min-height: 25px;
+            white-space: nowrap;
+        }
+
+        .paragraph-14 {
+            color: transparent;
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-m);
+            letter-spacing: 0;
+            line-height: 16.8px;
+            margin-left: 2.0px;
+            margin-top: 8px;
+            min-height: 145px;
+            width: 538px;
+        }
+
+        .overlap-group7 {
+            align-items: flex-start;
+            background-color: var(--desert-storm);
+            border-radius: 61.5px;
+            display: flex;
+            height: 123px;
+            justify-content: flex-end;
+            min-width: 123px;
+            padding: 33.0px 26.0px;
+        }
+
+        .group-2312 {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group-2312.png);
+            height: 57px;
+            width: 69px;
+        }
+
+        .overlap-group {
+            align-items: center;
+            background-color: var(--vermilion);
+            border-radius: 2px;
+            display: flex;
+            height: 38px;
+            min-width: 144px;
+            padding: 0 27px;
+            margin-top: 17px;
+        }
+
+        .explore-more {
+            letter-spacing: 0;
+            line-height: 19.6px;
+            min-height: 20px;
+            min-width: 89px;
+            white-space: nowrap;
+        }
+        .overlap-group-1 {
+            align-items: center;
+            background-color: var(--vermilion);
+            border-radius: 2px;
+            display: flex;
+            height: 38px;
+            margin-left: 148px;
+            min-width: 144px;
+            padding: 0 27px;
+        }
+
+        .overlap-group-container-2 {
+            align-items: flex-start;
+            display: flex;
+            margin-left: 7.0px;
+            margin-top: 32px;
+            min-width: 415px;
+        }
+
+        .group-2243 {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group2243.png);
+            height: 61px;
+            width: 67px;
+        }
+
+        .overlap-group6 {
+            align-items: flex-start;
+            background-color: var(--desert-storm);
+            border-radius: 61.5px;
+            display: flex;
+            height: 123px;
+            justify-content: flex-end;
+            min-width: 123px;
+            padding: 31.0px 27.4px;
+        }
+
+        .overlap-group4 {
+            align-items: flex-end;
+            background-color: var(--desert-storm);
+            border-radius: 61.5px;
+            display: flex;
+            height: 123px;
+            /*justify-content: flex-end;*/
+            margin-left: 169px;
+            min-width: 123px;
+            /*padding: 30.5px 26.0px;*/
+        }
+        .overlap-group-container {
+            align-items: flex-start;
+            display: flex;
+            margin-left: 7.0px;
+            margin-top: 38px;
+            min-width: 415px;
+        }
+        .group {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group1x.png);
+            height: 61px;
+            width: 69px;
+        }
+        .paragraph-container {
+            align-items: flex-start;
+            display: flex;
+            height: 22px;
+            margin-right: 10.0px;
+            margin-top: 15px;
+            min-width: 358px;
+        }
+
+        .group-5 {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group-5.png);
+            height: 38px;
+            width: 122px;
+        }
+
+        .group-13 {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group-2338.png);
+            background-size: 100% 100%;
+            height: 38px;
+            margin-left: 5px;
+            width: 122px;
+        }
+
+        .group-19 {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group-19.png);
+            height: 15px;
+            margin-right: 3.91px;
+            margin-top: 26px;
+            width: 149px;
+        }
+        .group-20 {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            margin-left: 4.0px;
+            margin-top: 57px;
+            min-height: 218px;
+            width: 544px;
+        }
+        .rectangle-1-1 {
+            background-color: #e8e8e8;
+            height: 1px;
+            margin-right: 4.0px;
+            width: 540px;
+        }
+        .group-container {
+            align-items: flex-start;
+            display: flex;
+            margin-right: 5.0px;
+            margin-top: 39px;
+            min-width: 249px;
+        }
+
+        .welcome-notification {
+            align-items: center;
+            background-color: var(--white);
+            display: flex;
+            flex-direction: column;
+            height: 1737px;
+            width: 640px;
+        }
+
+        .group-2256 {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group-2256.png);
+            height: 61px;
+            width: 68px;
+        }
+
+        .overlap-group-2 {
+            align-items: center;
+            background-color: var(--desert-storm);
+            border-radius: 61.5px;
+            display: flex;
+            height: 123px;
+            /*justify-content: flex-end;*/
+            margin-left: 169px;
+            min-width: 123px;
+            /*padding: 0 67.2px;*/
+        }
     </style>
-
 </head>
-<body style="margin: 0">
-<input type="hidden" id="anPageName" name="page" value="email-verification-notification" />
-<div class="container-center-horizontal">
-    <div class="email-verification-notification screen">
 
-        <div class="group-2324">
-            <img class="wayapay-logo-1" src="https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_wayapay-logo.png" />
-            <div class="group-15">
-                <div class="paragraph-1 inter-semi-bold-mine-shaft-16px">Dear <span th:text="${firstName}"></span>,</div>
-                <section>
-                    <p class="paragraph-4 inter-medium-mine-shaft-14px">
-                        Thank you for registering with us. Just one last step to finalize your registration. Please use the One
-                        Time Password (OTP) below when prompted in the application screen to complete your email verification
-                    </p>
-                </section>
+<body>
+<div class="container">
+<!--    <div class=image-div>-->
+<!--        <img src="https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_banner.png"></img>-->
+<!--    </div>-->
+    <img class="wayapay-logo-1" src="https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_wayapay-logo.png" />
 
-                <h1 class="paragraph-5"><span class="linkUrl" th:text="${token}"> 2345442</span></h1>
+    <p>Dear <span th:text="${firstName}"></span>,</p>
+    <p class="paragraph-4 inter-medium-mine-shaft-14px">
+    Thank you for registering with us. Just one last step to finalize your registration. Please use the One
+    Time Password (OTP) below when prompted in the application screen to complete your email verification
+</p>
+    </section>
 
-                <div class="surname">Best wishes,<br />The wayapaychat Team</div>
-            </div>
-            <div class="overlap-group">
-                <div class="group-2320">
-                    <img class="app-store-btn-1" src="https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_app-store-btn.png" />
-                    <img class="playstore-btn-1" src="https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_playstore-btn.png" />
-                </div>
-                <section>
-                <div class="group-20">
-                    <div class="rectangle-1"></div>
-                    <p class="paragraph-6 inter-medium-mine-shaft-10px">Copyright © Waya 2022 All rights reserved</p>
-                    <p class="you-are-receiving-th valign-text-bottom inter-medium-white-10px">
-
-                    <span class="inter-medium-sonic-silver-10px"
-                >You are receiving this message because you signed up on Waya PayChat. If you would like to stop
-                    receiving messages, you can opt out by clicking </span>
-                    <span class="inter-medium-vermilion-10px"><a href="">unsubscribe.</a></span>
-                    <span class="inter-medium-sonic-silver-10px">
-                    For more information about how we process data, please see our</span>
-                    <span class="inter-medium-vermilion-10px"><a href="">Privacy Policy.</a></span>
-
-                    </p>
-                </div>
-                </section>
-                <section>
-                    <div class="frame-1">
-                        <a href="#">  <img class="email-icon" src="https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_email-icon.png" /></a>
-                        <a href="#"><img class="x-icon" src="https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_instagramicon.png" /></a>
-                        <a href="#"><img class="x-icon" src="https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_facebookicon.png" /></a>
-                        <a href="#"><img class="twitter-icon" src="https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_twittericon.png" /></a>
-                        <a href="#"><img class="wayapay-logo-2" src="https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_wayapay-logo2.png" /></a>
-                    </div>
-                </section>
-
-            </div>
-        </div>
+    <h1 class="paragraph-5"><span class="linkUrl" th:text="${token}"> 2345442</span></h1>
+    <div class="rectangle-1"></div>
+      <div class="end-note">
+        <span class="span4">Best wishes,<br />Your friends at Wayapaychat.</span>
     </div>
+
 </div>
+
+<table border="0px;" style="border: 0px;">
+    <tr>
+        <td align="center"><div class="rectangle-1-1"></div> </td>
+    </tr>
+    <tr>
+        <td align="center">
+            <table border="0px;" style="border: 0px;">
+                <tr >
+                    <td align="right"><div class="group-5"></div></td>
+                    <td align="left"><div class="group-13"></div>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td align="center"><div class="group-19"></div> </td>
+    </tr>
+    <tr>
+        <td align="center">Copyright © Waya 2022 All rights reserved </td>
+    </tr>
+    <tr>
+        <td align="center"> <span>
+            <span class="span-2">You are receiving this message because you signed up on Waya PayChat. If you would like to stop
+                    receiving messages, you can opt out by clicking </span
+            ><span class="span-3">unsubscribe.</span
+        ><span class="span-2"> For more information about how we process data, please see our </span
+        ><span class="span-3">Privacy Policy.</span>
+                </span> </td>
+    </tr>
+</table>
+
 </body>
+
 </html>

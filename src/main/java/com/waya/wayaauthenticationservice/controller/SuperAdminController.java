@@ -50,6 +50,14 @@ public class SuperAdminController {
     }
 
 
+    @ApiOperation(value = "TEST EMAIL TEMPLATE", tags = {
+            "SUPER-ADMIN" })
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+    @PostMapping("/users/test-otp-template")
+    public ResponseEntity<String> testOTPEmailTemplate() {
+
+        return superAdminService.testOTPEmailTemplate();
+    }
 
 
 }
