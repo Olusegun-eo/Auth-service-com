@@ -11,4 +11,5 @@ public interface SuperAdminService {
 
     ResponseEntity<?> createUser(SuperAdminCreatUserRequest userPojo, HttpServletRequest request, Device device);
     ResponseEntity<String> testEmailTemplate();
+    ResponseEntity<String> testOTPEmailTemplate();
 }

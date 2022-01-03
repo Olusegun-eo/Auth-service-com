@@ -1,6 +1,8 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import com.waya.wayaauthenticationservice.entity.OTPBase;
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.mail.context.AccountVerificationEmailContext;
 import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
 import com.waya.wayaauthenticationservice.pojo.others.SuperAdminCreatUserRequest;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
@@ -45,6 +47,15 @@ public class SuperAdminServiceImpl implements SuperAdminService {
         return new ResponseEntity<String>("Done", HttpStatus.OK);
     }
 
+    @Override
+    public ResponseEntity<String> testOTPEmailTemplate() {
+        Users user = new Users();
+        user.setEmail("agbe.terseer@gmail.com");
+        user.setFirstName("Terseer");
+        sendOTPEmail(user);
+        return new ResponseEntity<String>("Done", HttpStatus.OK);
+    }
+
     public void sendWelcomeEmail(Users user) {
         WelcomeEmailContext emailContext = new WelcomeEmailContext();
         emailContext.init(user);
@@ -54,6 +65,28 @@ public class SuperAdminServiceImpl implements SuperAdminService {
             log.error("An Error Occurred:: {}", e.getMessage());
         }
         log.info("Welcome email sent!! \n");
+    }
+
+
+    private void sendOTPEmail(Users user) {
+        try {
+            //generate the token
+            String otp = "094824"; 
+            AccountVerificationEmailContext emailContext = new AccountVerificationEmailContext();
+            emailContext.init(user);
+            emailContext.buildURL("http://localhost.com");
+            emailContext.setToken(otp);
+            try {
+                messagingService.sendMail(emailContext);
+            } catch (Exception e) {
+                log.error("An Error Occurred:: {}", e.getMessage());
+            }
+            // mailService.sendMail(user.getEmail(), message);
+            log.info("Activation email sent!!: {} \n", user.getEmail());
+
+        } catch (Exception exception) {
+            log.error("could not process data {}", exception.getMessage());
+        }
     }
 
 }
