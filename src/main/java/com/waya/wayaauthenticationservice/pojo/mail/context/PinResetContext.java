@@ -12,7 +12,8 @@ public class PinResetContext extends AbstractEmailContext {
         Users customer = (Users) context; // we pass the customer information
         put("firstName", customer.getFirstName());
         put("requestType", "Pin Reset");
-        setTemplateLocation("emails/pin-reset");
+       // setTemplateLocation("emails/pin-reset");
+        setTemplateLocation("new-emails/pin-reset-notification");
         setSubject("Reset Pin !!!");
         setEmail(customer.getEmail());
         setDisplayName(customer.getFirstName());

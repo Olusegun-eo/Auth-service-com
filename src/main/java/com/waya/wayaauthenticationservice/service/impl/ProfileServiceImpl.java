@@ -245,8 +245,36 @@ public class ProfileServiceImpl implements ProfileService {
 
     }
 
+    public ResponseEntity<ReferralCodePojo> checkReferralCode2(String userId) throws Exception {
+        try {
+            ResponseEntity<ApiResponseBody<ReferralCodePojo>> responseEntity = referralProxy.getUserByReferralCode(userId);
+            ApiResponseBody<ReferralCodePojo> responseBody = responseEntity.getBody();
+            ReferralCodePojo referralCodePojo = responseBody.getData();
+            log.info("referralCodePojo :::: " + referralCodePojo);
+
+            return new ResponseEntity<>(referralCodePojo, OK);
+        }catch (Exception exception) {
+            throw new Exception(exception.getMessage());
+        }
+
+    }
+
+    public void postReferralCode2(Profile savedProfile, String userId) throws Exception {
+        try {
+            ReferralCodeRequest referralCodeRequest = new ReferralCodeRequest();
+            referralCodeRequest.setUserId(userId);
+            referralCodeRequest.setProfile(savedProfile.getId());
+
+            ResponseEntity<String> responseEntity = referralProxy.saveReferralCode(referralCodeRequest);
+            log.info("responseEntity :::: " + responseEntity);
+        }catch (Exception exception) {
+            throw new Exception(exception.getMessage());
+        }
+
+    }
     private void postReferralCode(Profile savedProfile, String userId) throws Exception {
         try {
+            log.info("Creating ReferralCode in referral-service :::: " + savedProfile);
             ReferralCodeRequest referralCodeRequest = new ReferralCodeRequest();
             referralCodeRequest.setUserId(userId);
             referralCodeRequest.setProfile(savedProfile.getId());
