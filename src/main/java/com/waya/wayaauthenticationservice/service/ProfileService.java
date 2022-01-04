@@ -5,6 +5,7 @@ import com.waya.wayaauthenticationservice.entity.ReferralBonusEarning;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.response.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
@@ -130,4 +131,7 @@ public interface ProfileService {
 
 
 	List<WalletTransactionPojo> sendSignUpBonusToUser(String userId);
+
+
+	ResponseEntity<ReferralCodePojo> checkReferralCode2(String userId) throws Exception;
 }

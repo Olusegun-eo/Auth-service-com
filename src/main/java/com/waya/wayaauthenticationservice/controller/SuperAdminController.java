@@ -59,5 +59,14 @@ public class SuperAdminController {
         return superAdminService.testOTPEmailTemplate();
     }
 
+    @ApiOperation(value = "TEST EMAIL TEMPLATE", tags = {
+            "SUPER-ADMIN" })
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+    @PostMapping("/users/test-pin-rest-template")
+    public ResponseEntity<String> testPinReset() {
+        return superAdminService.testPinReset();
+    }
+
+
 
 }

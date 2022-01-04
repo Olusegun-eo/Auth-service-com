@@ -277,5 +277,11 @@ public class ProfileController {
 		return userService.getUserByPhone(phone);
 	}
 
+	@ApiOperation(value = "Check Referral COde", tags = {"PROFILE RESOURCE"})
+	@GetMapping("check-referral/{userId}")
+	public ResponseEntity<ReferralCodePojo> checkReferralCode2(@PathVariable String userId) throws Exception {
+		return profileService.checkReferralCode2(userId);
+	}
+
 
 }

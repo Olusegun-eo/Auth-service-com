@@ -3,6 +3,7 @@ package com.waya.wayaauthenticationservice.service.impl;
 import com.waya.wayaauthenticationservice.entity.OTPBase;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.mail.context.AccountVerificationEmailContext;
+import com.waya.wayaauthenticationservice.pojo.mail.context.PinResetContext;
 import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
 import com.waya.wayaauthenticationservice.pojo.others.SuperAdminCreatUserRequest;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PIN_CHANGE_EMAIL;
 
 @Service
 @Slf4j
@@ -56,6 +59,15 @@ public class SuperAdminServiceImpl implements SuperAdminService {
         return new ResponseEntity<String>("Done", HttpStatus.OK);
     }
 
+    @Override
+    public ResponseEntity<String> testPinReset() {
+        Users user = new Users();
+        user.setEmail("agbe.terseer@gmail.com");
+        user.setFirstName("Terseer");
+        sendPinReset(user);
+        return new ResponseEntity<String>("Done", HttpStatus.OK);
+    }
+
     public void sendWelcomeEmail(Users user) {
         WelcomeEmailContext emailContext = new WelcomeEmailContext();
         emailContext.init(user);
@@ -87,6 +99,29 @@ public class SuperAdminServiceImpl implements SuperAdminService {
         } catch (Exception exception) {
             log.error("could not process data {}", exception.getMessage());
         }
+    }
+
+
+
+
+    private void sendPinReset(Users user){
+        try{
+        PinResetContext emailContext = new PinResetContext();
+        Integer otpToken =  940349;
+        emailContext.init(user);
+        emailContext.redirectTo("http://localhost.com");
+        emailContext.seToken(String.valueOf(otpToken));
+        try {
+            messagingService.sendMail(emailContext);
+        } catch (Exception e) {
+            log.error("An Error Occurred:: {}", e.getMessage());
+        }
+        // mailService.sendMail(user.getEmail(), message);
+        log.info("Activation email sent!!: {} \n", user.getEmail());
+
+    } catch (Exception exception) {
+        log.error("could not process data {}", exception.getMessage());
+    }
     }
 
 }
