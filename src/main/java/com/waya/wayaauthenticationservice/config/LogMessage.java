@@ -16,6 +16,5 @@ public class LogMessage {
     private long timeTakenMs;
     private String requestBody;
     private String requestParams;
-    private String message;
 
 }
