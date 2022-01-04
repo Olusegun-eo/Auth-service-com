@@ -94,6 +94,7 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
         logMessage.setResponse(getResponsePayload(response));
         logMessage.setJavaMethod(handler == null ? "null" : handler.getHandler().toString());
         logMessage.setRequestParams(request.getQueryString());
+        logMessage.setMessage(null);
 
         String requestData = null;
         try {
