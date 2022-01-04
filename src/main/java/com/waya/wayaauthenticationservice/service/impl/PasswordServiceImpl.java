@@ -251,9 +251,12 @@ public class PasswordServiceImpl implements PasswordService {
 			}
 			// Check repeat
 			PasswordPolicy policy = passwordPolicyRepo.findByUser(user).orElse(null);
+			log.info("Forget Password: " + policy.getId());
 			if (policy != null) {
+				log.info("Password Validation Start");
 				boolean p1 = false, p2 = false, p3 = false, p4 = false, p5 = false;
 				p1 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getNewPassword());
+				
 				if (!policy.getOldPassword().isBlank()) {
 					p2 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getOldPassword());
 				}
@@ -269,7 +272,7 @@ public class PasswordServiceImpl implements PasswordService {
 				if (!policy.getOldPassword().isBlank()) {
 					p5 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getFouthOldPassword());
 				}
-
+                log.info("Password Validation end");
 				if (!p1 || !p2 || !p3 || !p4 || !p5) {
 					return new ResponseEntity<>(new ErrorResponse("Password already used"), HttpStatus.BAD_REQUEST);
 				}
