@@ -251,28 +251,29 @@ public class PasswordServiceImpl implements PasswordService {
 			}
 			// Check repeat
 			PasswordPolicy policy = passwordPolicyRepo.findByUser(user).orElse(null);
-			log.info("Forget Password: " + policy.getId());
+			log.info("Forget Password: " + policy.toString());
 			if (policy != null) {
 				log.info("Password Validation Start");
 				boolean p1 = false, p2 = false, p3 = false, p4 = false, p5 = false;
 				p1 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getNewPassword());
 				
-				if (!policy.getOldPassword().isBlank()) {
+				if (policy.getOldPassword() != null) {
 					p2 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getOldPassword());
 				}
 
-				if (!policy.getOldPassword().isBlank()) {
+				if (policy.getSecondOldPassword() != null) {
 					p3 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getSecondOldPassword());
 				}
 
-				if (!policy.getOldPassword().isBlank()) {
+				if (policy.getThirdOldPassword() != null) {
 					p4 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getThirdOldPassword());
 				}
 
-				if (!policy.getOldPassword().isBlank()) {
+				if (policy.getFouthOldPassword() != null) {
 					p5 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getFouthOldPassword());
 				}
                 log.info("Password Validation end");
+                
 				if (!p1 || !p2 || !p3 || !p4 || !p5) {
 					return new ResponseEntity<>(new ErrorResponse("Password already used"), HttpStatus.BAD_REQUEST);
 				}
