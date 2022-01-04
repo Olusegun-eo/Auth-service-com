@@ -69,13 +69,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				.antMatchers("/api/v1/password/change-password**/**", "/api/v1/auth/wallet/**").permitAll()
 				.antMatchers("/api/v1/utils/**", "/api/v1/fraud-actions/**", "/auth-service/**").permitAll()
 
-
-				.antMatchers("/api/v1/super-user/users/test-template/**").permitAll()
-				.antMatchers("/api/v1/super-user/users/test-otp-template/**").permitAll()
-				.antMatchers("/api/v1/profile/check-referral/{userId}**").permitAll()
-				.antMatchers("/api/v1/super-user/users/test-pin-rest-template/**").permitAll()
-
-
 				// all other requests need to be authenticated
 				.anyRequest().authenticated().and()
 				// make sure we use stateLess session; session won't be used to
