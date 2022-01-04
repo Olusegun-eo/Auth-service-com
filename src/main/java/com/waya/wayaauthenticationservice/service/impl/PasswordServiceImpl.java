@@ -261,15 +261,15 @@ public class PasswordServiceImpl implements PasswordService {
 					p2 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getOldPassword());
 				}
 
-				if (policy.getOldPassword() != null) {
+				if (policy.getSecondOldPassword() != null) {
 					p3 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getSecondOldPassword());
 				}
 
-				if (policy.getOldPassword() != null) {
+				if (policy.getThirdOldPassword() != null) {
 					p4 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getThirdOldPassword());
 				}
 
-				if (policy.getOldPassword() != null) {
+				if (policy.getFouthOldPassword() != null) {
 					p5 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getFouthOldPassword());
 				}
                 log.info("Password Validation end");
