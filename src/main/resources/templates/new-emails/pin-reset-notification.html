@@ -3,229 +3,507 @@
       xmlns="http://www.w3.org/1999/xhtml"
       xmlns:v="urn:schemas-microsoft-com:vml"
       xmlns:o="urn:schemas-microsoft-com:office:office">
+
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=1191, maximum-scale=1.0" />
-    <link rel="shortcut icon" type="image/png" href="https://animaproject.s3.amazonaws.com/home/favicon.png" />
-    <meta name="og:type" content="website" />
-    <meta name="twitter:card" content="photo" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Email</title>
     <style>
         a{
-            color: #ff4b01;
-        }
-        /* screen - pin-reset-email-notification */
 
-        .pin-reset-email-notification {
-            align-items: flex-start;
-            background-image: url(../img/bg@1x.png);
-            background-size: 100% 100%;
-            display: flex;
-            height: 889px;
-            min-width: 1191px;
-            padding: 0 317px;
+        }
+        a {border:none; outline: none; color: red;}
+
+        body {
+            font-size: 18px;
+            letter-spacing: 1px;
         }
 
-        .pin-reset-email-notification .group-2350 {
-            align-items: center;
-            background-color: var(--white);
-            display: flex;
-            height: 678px;
-            justify-content: flex-end;
-            margin-top: 106px;
-            min-width: 557px;
-            padding: 0 27px;
-        }
-
-        .pin-reset-email-notification .group-container {
-            height: 608px;
-            position: relative;
-            width: 502px;
-        }
-
-        .pin-reset-email-notification .group-2348 {
-            align-items: center;
-            display: flex;
-            flex-direction: column;
-            left: 111px;
-            min-height: 77px;
-            position: absolute;
-            top: 419px;
-            width: 250px;
-        }
-
-        .pin-reset-email-notification .group-2320 {
-            align-items: flex-start;
-            display: flex;
-            min-width: 250px;
-        }
-
-        .pin-reset-email-notification .app-store-btn-1 {
-            height: 38px;
-            object-fit: cover;
-            width: 122px;
-        }
-
-        .pin-reset-email-notification .playstore-btn-1 {
-            height: 38px;
-            margin-left: 6px;
-            object-fit: cover;
-            width: 122px;
-        }
-
-        .pin-reset-email-notification .frame-1 {
-            align-items: flex-start;
-            display: flex;
-            margin-right: 0.91px;
-            margin-top: 24px;
-            min-width: 137px;
-        }
-
-        .pin-reset-email-notification .email-icon {
-            height: 15px;
-            object-fit: cover;
-            width: 22px;
-        }
-
-        .pin-reset-email-notification .x-icon {
-            height: 15px;
-            margin-left: 8px;
-            object-fit: cover;
-            width: 15px;
-        }
-
-        .pin-reset-email-notification .twitter-icon {
-            height: 15px;
-            margin-left: 8px;
-            object-fit: cover;
-            width: 19px;
-        }
-
-        .pin-reset-email-notification .wayapay-logo-2 {
-            height: 15px;
-            margin-left: 8px;
-            width: 34px;
-        }
-
-        .pin-reset-email-notification .group-container-1 {
-            height: 608px;
-            left: 0;
-            position: absolute;
-            top: 0;
-            width: 502px;
-        }
-
-        .pin-reset-email-notification .group-2344 {
-            align-items: flex-start;
-            display: flex;
-            flex-direction: column;
-            left: 0;
-            min-height: 608px;
-            position: absolute;
-            top: 0;
-            width: 502px;
-        }
-
-        .pin-reset-email-notification .wayapay-logo-1 {
-            height: 44px;
-            width: 102px;
-        }
-
-        .pin-reset-email-notification .group-15 {
-            align-items: flex-start;
-            display: flex;
-            flex-direction: column;
-            margin-left: 1px;
-            margin-top: 42px;
-            min-height: 270px;
-            width: 507px;
-        }
-
-        .pin-reset-email-notification .paragraph-1 {
-            letter-spacing: 0;
-            line-height: 22.4px;
-            min-height: 22px;
-            white-space: nowrap;
-        }
-
-        .pin-reset-email-notification .paragraph-4 {
-            letter-spacing: 0;
-            line-height: 22.4px;
-            margin-top: 26px;
-            min-height: 44px;
-            width: 501px;
-        }
-
-        .pin-reset-email-notification .surname {
-            color: var(--black);
+        .footer{
+            color: var(--mine-shaft);
             font-family: var(--font-family-inter);
-            font-size: var(--font-size-xxl);
+            font-size: var(--font-size-s);
             font-weight: 500;
-            letter-spacing: 0;
-            line-height: 21.0px;
-            margin-top: 136px;
-            min-height: 42px;
-        }
-
-        .pin-reset-email-notification .group-20 {
-            align-items: center;
-            align-self: flex-end;
-            display: flex;
-            flex-direction: column;
-            margin-right: 1px;
-            margin-top: 34px;
-            min-height: 218px;
-            width: 492px;
-        }
-
-        .pin-reset-email-notification .rectangle-1 {
-            background-color: var(--gray-nurse);
-            height: 1px;
-            margin-right: 4.0px;
-            width: 482px;
-        }
-
-        .pin-reset-email-notification .paragraph-6 {
             letter-spacing: 0;
             line-height: 14.0px;
             margin-right: 4.0px;
-            margin-top: 143px;
+            margin-top: 25px;
+            min-height: 14px;
+            min-width: 206px;
+            white-space: nowrap;
+            letter-spacing: 1px;
+        }
+        .container {
+            width: 80%;
+            max-width: 60rem;
+            margin: 0 auto;
+            background: #fbfbfb;
+            padding: 30px;
+            color: #000
+        }
+        .row{
+            width: 100%;
+        }
+        .col-sm{
+            width: 100%;
+            float-wrap: wrap;
+        }
+        .col-6{
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+        .col-12{
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+        .image-div {
+            width: 80%;
+            max-width: 100%;
+            text-align: center;
+            margin-bottom: 30px;
+            margin-top: -25px;
+        }
+
+        .image-div img {
+            max-height: 100%;
+            width: inherit;
+            height: inherit;
+        }
+
+        .section-1 {
+            margin-bottom: 40px;
+        }
+
+        .contact-list p {
+            margin-bottom: 0;
+            margin-top: 5px
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .contact-link {
+            color: blue;
+            text-decoration: underline
+        }
+
+        .end-note {
+            margin-top: 40px;
+        }
+        .span-2 {
+            color: #777777;
+        }
+
+        .span-3 {
+            color: #ff4b01;
+        }
+
+        .overlap-group-container-1 {
+            align-items: flex-start;
+            display: flex;
+            margin-left: 8.0px;
+            margin-top: 6px;
+            min-width: 436px;
+        }
+
+        .welcome-notification .paragraph-6-1 {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-s);
+            font-weight: 500;
+            letter-spacing: 0;
+            line-height: 14.0px;
+            margin-right: 4.0px;
+            margin-top: 25px;
             min-height: 14px;
             min-width: 206px;
             white-space: nowrap;
         }
-
-        .pin-reset-email-notification .ps-if-you-did-not-i {
-            height: 28px;
+        .welcome-notification .you-are-receiving-th {
+            color: transparent;
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-s);
+            font-weight: 500;
+            height: 42px;
             letter-spacing: 0;
             line-height: 14.0px;
             margin-right: 4.0px;
-            margin-top: 32px;
+            margin-top: 18px;
             text-align: center;
             width: 488px;
         }
-
-        .pin-reset-email-notification .span1 {
-            color: var(--vermilion);
+        .valign-text-bottom {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        .paragraph-2 {
+            align-self: flex-start;
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xxxxl);
+            font-weight: 600;
+            letter-spacing: 0;
+            line-height: 33.6px;
+            margin-left: 52px;
+            margin-top: 30px;
+            min-height: 34px;
+            white-space: nowrap;
+        }
+        .paragraph-container {
+            align-items: flex-start;
+            display: flex;
+            height: 22px;
+            margin-right: 10.0px;
+            margin-top: 15px;
+            min-width: 358px;
+        }
+        .inter-normal-granite-gray-12px {
+            color: var(--granite-gray);
             font-family: var(--font-family-inter);
             font-size: var(--font-size-m);
+            font-style: normal;
             font-weight: 400;
-            text-decoration: underline;
         }
 
-        .pin-reset-email-notification .overlap-group {
-            align-items: flex-end;
-            background-color: var(--vermilion);
-            border-radius: 4px;
+        .inter-semi-bold-mine-shaft-16px {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xxl);
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        .inter-semi-bold-white-14px {
+            color: var(--white);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-l);
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        .inter-medium-mine-shaft-14px {
+            color: var(--mine-shaft);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-l);
+            font-style: normal;
+            font-weight: 500;
+        }
+        .paragraph-6 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            min-height: 22px;
+            min-width: 84px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .paragraph-8 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            margin-left: 225px;
+            min-height: 22px;
+            min-width: 49px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .paragraph-container-1 {
+            align-items: flex-start;
             display: flex;
             height: 51px;
-            left: 1px;
-            min-width: 149px;
-            padding: 14px 28px;
-            position: absolute;
-            top: 218px;
+            margin-left: 27.0px;
+            margin-top: 4px;
+            min-width: 523px;
         }
 
-        .pin-reset-email-notification .reset-my-pin {
+        .paragraph-3 {
+            letter-spacing: 0;
+            line-height: 16.8px;
+            min-height: 51px;
+            text-align: center;
+            width: 212px;
+        }
+
+        .paragraph-7 {
+            letter-spacing: 0;
+            line-height: 16.8px;
+            margin-left: 61px;
+            min-height: 34px;
+            text-align: center;
+            width: 250px;
+        }
+        .paragraph-container-2 {
+            align-items: flex-start;
+            display: flex;
+            height: 22px;
+            margin-left: 24.0px;
+            margin-top: 15px;
+            min-width: 380px;
+        }
+
+        .paragraph-10 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            min-height: 22px;
+            min-width: 72px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .paragraph-12 {
+            letter-spacing: 0;
+            line-height: 22.4px;
+            margin-left: 204px;
+            min-height: 22px;
+            min-width: 104px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .paragraph-container-3 {
+            align-items: flex-start;
+            display: flex;
+            height: 51px;
+            margin-right: 1.0px;
+            margin-top: 5px;
+            min-width: 553px;
+        }
+
+        .paragraph-9 {
+            letter-spacing: 0;
+            line-height: 16.8px;
+            min-height: 51px;
+            text-align: center;
+            width: 270px;
+        }
+
+        .paragraph-11 {
+            letter-spacing: 0;
+            line-height: 16.8px;
+            margin-left: 31px;
+            min-height: 51px;
+            text-align: center;
+            width: 252px;
+        }
+
+        .overlap-group-container-3 {
+            align-items: flex-start;
+            display: flex;
+            margin-left: 8.0px;
+            margin-top: 15px;
+            min-width: 436px;
+        }
+
+        .rectangle-1 {
+            background-color: #e8e8e8;
+            height: 1px;
+            margin-left: 4.0px;
+            margin-top: 56px;
+            width: 540px;
+        }
+
+        .paragraph-13 {
+            align-self: flex-start;
+            color: var(--granite-gray);
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-xxxl);
+            font-weight: 600;
+            letter-spacing: 0;
+            line-height: 25.2px;
+            margin-left: 52px;
+            margin-top: 24px;
+            min-height: 25px;
+            white-space: nowrap;
+        }
+
+        .paragraph-14 {
+            color: transparent;
+            font-family: var(--font-family-inter);
+            font-size: var(--font-size-m);
+            letter-spacing: 0;
+            line-height: 16.8px;
+            margin-left: 2.0px;
+            margin-top: 8px;
+            min-height: 145px;
+            width: 538px;
+        }
+
+        .overlap-group7 {
+            align-items: flex-start;
+            background-color: var(--desert-storm);
+            border-radius: 61.5px;
+            display: flex;
+            height: 123px;
+            justify-content: flex-end;
+            min-width: 123px;
+            padding: 33.0px 26.0px;
+        }
+
+        .group-2312 {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group-2312.png);
+            height: 57px;
+            width: 69px;
+        }
+
+        .overlap-group {
+            align-items: center;
+            background-color: var(--vermilion);
+            border-radius: 2px;
+            display: flex;
+            height: 38px;
+            min-width: 144px;
+            padding: 0 27px;
+            margin-top: 17px;
+        }
+
+        .explore-more {
+            letter-spacing: 0;
+            line-height: 19.6px;
+            min-height: 20px;
+            min-width: 89px;
+            white-space: nowrap;
+        }
+        .overlap-group-1 {
+            align-items: center;
+            background-color: var(--vermilion);
+            border-radius: 2px;
+            display: flex;
+            height: 38px;
+            margin-left: 148px;
+            min-width: 144px;
+            padding: 0 27px;
+        }
+
+        .overlap-group-container-2 {
+            align-items: flex-start;
+            display: flex;
+            margin-left: 7.0px;
+            margin-top: 32px;
+            min-width: 415px;
+        }
+
+        .group-2243 {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group2243.png);
+            height: 61px;
+            width: 67px;
+        }
+
+        .overlap-group6 {
+            align-items: flex-start;
+            background-color: var(--desert-storm);
+            border-radius: 61.5px;
+            display: flex;
+            height: 123px;
+            justify-content: flex-end;
+            min-width: 123px;
+            padding: 31.0px 27.4px;
+        }
+
+        .overlap-group4 {
+            align-items: flex-end;
+            background-color: var(--desert-storm);
+            border-radius: 61.5px;
+            display: flex;
+            height: 123px;
+            /*justify-content: flex-end;*/
+            margin-left: 169px;
+            min-width: 123px;
+            /*padding: 30.5px 26.0px;*/
+        }
+        .overlap-group-container {
+            align-items: flex-start;
+            display: flex;
+            margin-left: 7.0px;
+            margin-top: 38px;
+            min-width: 415px;
+        }
+        .group {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group1x.png);
+            height: 61px;
+            width: 69px;
+        }
+        .paragraph-container {
+            align-items: flex-start;
+            display: flex;
+            height: 22px;
+            margin-right: 10.0px;
+            margin-top: 15px;
+            min-width: 358px;
+        }
+
+        .group-5 {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group-5.png);
+            height: 38px;
+            width: 122px;
+        }
+
+        .group-13 {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group-2338.png);
+            background-size: 100% 100%;
+            height: 38px;
+            margin-left: 5px;
+            width: 122px;
+        }
+
+        .group-19 {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group-19.png);
+            height: 15px;
+            margin-right: 3.91px;
+            margin-top: 26px;
+            width: 149px;
+        }
+        .group-20 {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            margin-left: 4.0px;
+            margin-top: 57px;
+            min-height: 218px;
+            width: 544px;
+        }
+        .rectangle-1-1 {
+            background-color: #e8e8e8;
+            height: 1px;
+            margin-right: 4.0px;
+            width: 540px;
+        }
+        .group-container {
+            align-items: flex-start;
+            display: flex;
+            margin-right: 5.0px;
+            margin-top: 39px;
+            min-width: 249px;
+        }
+
+        .welcome-notification {
+            align-items: center;
+            background-color: var(--white);
+            display: flex;
+            flex-direction: column;
+            height: 1737px;
+            width: 640px;
+        }
+
+        .group-2256 {
+            background-image: url(https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_group-2256.png);
+            height: 61px;
+            width: 68px;
+        }
+
+        .overlap-group-2 {
+            align-items: center;
+            background-color: var(--desert-storm);
+            border-radius: 61.5px;
+            display: flex;
+            height: 123px;
+            /*justify-content: flex-end;*/
+            margin-left: 169px;
+            min-width: 123px;
+            /*padding: 0 67.2px;*/
+        }
+        .reset-my-pin {
             color: var(--white);
             font-family: var(--font-family-lato);
             font-size: var(--font-size-xl);
@@ -236,220 +514,68 @@
             min-width: 93px;
             white-space: nowrap;
         }
-
-        :root {
-            --black: #000000;
-            --desert-storm: #f8f8f8;
-            --granite-gray: #666666;
-            --gray-nurse: #e8e8e8;
-            --mine-shaft: #333333;
-            --sonic-silver: #777777;
-            --vermilion: #ff4400;
-            --vermilion-2: #ff4b01;
-            --white: #ffffff;
-
-            --font-size-l: 12px;
-            --font-size-m: 10px;
-            --font-size-xl: 14px;
-            --font-size-xxl: 15px;
-            --font-size-xxxl: 16px;
-            --font-size-xxxxl: 18px;
-            --font-size-xxxxxl: 24px;
-
-            --font-family-inter: "Inter", Helvetica;
-            --font-family-inter-bold: "Inter-Bold", Helvetica;
-            --font-family-lato: "Lato", Helvetica;
-        }
-        .inter-medium-sonic-silver-10px {
-            color: var(--sonic-silver);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-m);
-            font-style: normal;
-            font-weight: 500;
-        }
-
-        .inter-semi-bold-mine-shaft-16px {
-            color: var(--mine-shaft);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-xxxl);
-            font-style: normal;
-            font-weight: 600;
-        }
-
-        .inter-medium-mine-shaft-14px {
-            color: var(--mine-shaft);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-xl);
-            font-style: normal;
-            font-weight: 500;
-        }
-
-        .inter-medium-vermilion-10px {
-            color: var(--vermilion-2);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-m);
-            font-style: normal;
-            font-weight: 500;
-        }
-
-        .inter-normal-mine-shaft-14px {
-            color: var(--mine-shaft);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-xl);
-            font-style: normal;
-            font-weight: 400;
-        }
-
-        .inter-normal-granite-gray-12px {
-            color: var(--granite-gray);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-l);
-            font-style: normal;
-            font-weight: 400;
-        }
-
-        .inter-medium-mine-shaft-10px {
-            color: var(--mine-shaft);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-m);
-            font-style: normal;
-            font-weight: 500;
-        }
-
-        .inter-medium-white-10px {
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-m);
-            font-style: normal;
-            font-weight: 500;
-        }
-
-        .inter-semi-bold-mine-shaft-14px {
-            color: var(--mine-shaft);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-xl);
-            font-style: normal;
-            font-weight: 600;
-        }
-
-        .inter-bold-mine-shaft-14px {
-            color: var(--mine-shaft);
-            font-family: var(--font-family-inter-bold);
-            font-size: var(--font-size-xl);
-            font-style: normal;
-            font-weight: 700;
-        }
-
-        .inter-semi-bold-white-14px {
-            color: var(--white);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-xl);
-            font-style: normal;
-            font-weight: 600;
-        }
-
-        .inter-normal-vermilion-12px {
-            color: var(--vermilion);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-l);
-            font-style: normal;
-            font-weight: 400;
-        }
-
-        .inter-medium-vermilion-15px {
-            color: var(--vermilion);
-            font-family: var(--font-family-inter);
-            font-size: var(--font-size-xxl);
-            font-style: normal;
-            font-weight: 500;
-        }
-
-        @import url("https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css");
-
-        @import url("https://fonts.googleapis.com/css?family=Inter:400,500,600|Lato:700");
-
-        .screen a {
-            display: contents;
-            text-decoration: none;
-        }
-
-        .container-center-horizontal {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            pointer-events: none;
-            width: 100%;
-        }
-
-        .container-center-horizontal > * {
-            flex-shrink: 0;
-            pointer-events: auto;
-        }
-
-        .valign-text-bottom {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-
-
     </style>
-
 </head>
-<body style="margin: 0">
-<input type="hidden" id="anPageName" name="page" value="pin-reset-email-notification" />
-<div class="container-center-horizontal">
-    <div class="pin-reset-email-notification screen">
-        <div class="group-2350">
-            <div class="group-container">
-                <div class="group-2348">
-                    <div class="group-2320">
-                        <img class="app-store-btn-1" src="../img/app-store-btn-1@2x.png" />
-                        <img class="playstore-btn-1" src="../img/playstore-btn-1@2x.png" />
-                    </div>
-                    <div class="frame-1">
-                        <a href="#"><img class="email-icon" src="../img/email-icon@2x.png" /></a>
-                        <a href="#"><img class="x-icon" src="../img/instagramicon@2x.png" /></a>
-                        <a href="#"><img class="x-icon" src="../img/facebookicon@2x.png" /></a>
-                        <a href="#"><img class="twitter-icon" src="../img/twittericon@2x.png" /></a>
-                        <a href="#"><img class="wayapay-logo-2" src="../img/wayapay-logo-2@2x.png" /></a>
-                    </div>
-                </div>
-                <div class="group-container-1">
-                    <div class="group-2344">
-                        <img class="wayapay-logo-1" src="../img/wayapay-logo-1@2x.png" />
-                        <div class="group-15">
-                            <div class="paragraph-1 inter-semi-bold-mine-shaft-16px">Dear <span th:text="${firstName}"></span>!</div>
-                            <p class="paragraph-4 inter-medium-mine-shaft-14px">
-                                You have requested to reset the PIN to your account on Wayapaychat, Click the link below to get
-                                started.
-                            </p>
-                            <div class="surname">Best wishes,<br />The wayapaychat Team</div>
-                        </div>
-                        <div class="group-20">
-                            <div class="rectangle-1"></div>
-                            <p class="paragraph-6 inter-medium-mine-shaft-10px">Copyright © Waya 2022 All rights reserved</p>
-                            <p class="ps-if-you-did-not-i valign-text-bottom inter-medium-white-10px">
-                    <span
-                    ><span class="inter-medium-sonic-silver-10px"
-                    >PS: If you did not initiate this request, kindly reply to this email or write to </span
-                    ><span class="span1"><a href="#">customerservice@wayapaychat.com</a> </span
-                    ><span class="inter-medium-sonic-silver-10px">
-                        so we can look into a possible attempt to breach your account.</span
-                    >
-                    </span>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="overlap-group"><div class="reset-my-pin">RESET MY PIN</div></div>
-                </div>
-            </div>
-        </div>
+
+<body>
+<div class="container">
+    <!--    <div class=image-div>-->
+    <!--        <img src="https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_banner.png"></img>-->
+    <!--    </div>-->
+    <img class="wayapay-logo-1" src="https://s3.eu-west-3.amazonaws.com/waya-2.0-file-resources/others/48/48_wayapay-logo.png" />
+
+    <p>Dear <span th:text="${firstName}"></span>,</p>
+    <p class="paragraph-4 inter-medium-mine-shaft-14px">
+        You have requested to reset the PIN to your account on Wayapaychat, Click the link below to get
+        started.
+    </p>
+    Use the Token to Reset Your Pin:
+    <h1 class="paragraph-5"><div class="reset-my-pin">  <a th:href="${url}" target="_blank">RESET MY PIN</a></div> </h1>
+    <div class="rectangle-1"></div>
+    <div class="end-note">
+        <span class="span4">Best wishes,<br />Your friends at Wayapaychat.</span>
     </div>
+
 </div>
+
+<table border="0px;" style="border: 0px; align-content: center;">
+    <tr>
+        <td align="center"><div class="rectangle-1-1"></div> </td>
+    </tr>
+    <tr>
+        <td align="center">
+            <table border="0px;" style="border: 0px;">
+                <tr >
+                    <td align="right"><div class="group-5"></div></td>
+                    <td align="left"><div class="group-13"></div>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td align="center"><div class="group-19"></div> </td>
+    </tr>
+    <tr>
+        <td align="center">Copyright © Waya 2022 All rights reserved </td>
+    </tr>
+    <tr>
+        <td align="center">&nbsp;</td>
+    </tr>
+    <tr>
+        <td align="center">&nbsp;</td>
+    </tr>
+    <tr>
+        <td align="center"> <span>
+            <span class="span-2">You are receiving this message because you signed up on Waya PayChat. <br/>
+                If you would like to stop receiving messages, you can opt out by clicking</span
+            ><span class="span-3"><a href="">unsubscribe.</a> </span
+        ><span class="span-2">For more information about how we process data, please see our </span
+        ><span class="span-3"><a href="">Privacy Policy.</a></span>
+                </span> </td>
+    </tr>
+</table>
+
 </body>
+
 </html>
