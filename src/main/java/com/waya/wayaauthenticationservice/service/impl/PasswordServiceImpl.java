@@ -272,37 +272,42 @@ public class PasswordServiceImpl implements PasswordService {
 				log.info("Password Validation Start");
 				boolean p1 = false, p2 = false, p3 = false, p4 = false, p5 = false;
 				p1 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getNewPassword());
-
+				log.info("Password Valid: " + p1);
+				
 				if (policy.getOldPassword() != null) {
 					p2 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getOldPassword());
+					log.info("Old Password Valid: " + p2);
 				}
 
 				if (policy.getSecondOldPassword() != null) {
 					p3 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getSecondOldPassword());
+					log.info("Second Password Valid: " + p3);
 				}
 
 				if (policy.getThirdOldPassword() != null) {
 					p4 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getThirdOldPassword());
+					log.info("Third Password Valid: " + p4);
 				}
 
 				if (policy.getFouthOldPassword() != null) {
 					p5 = passwordEncoder.matches(passPojo.getNewPassword(), policy.getFouthOldPassword());
+					log.info("Fourth Password Valid: " + p5);
 				}
 				log.info("Password Validation end");
 
-				if (!p1) {
+				if (p1 == true) {
 					return new ResponseEntity<>(new ErrorResponse("Password already used"), HttpStatus.BAD_REQUEST);
 				}
-				if (!p2) {
+				if (p2 == true) {
 					return new ResponseEntity<>(new ErrorResponse("Password already used"), HttpStatus.BAD_REQUEST);
 				}
-				if (!p3) {
+				if (p3 == true) {
 					return new ResponseEntity<>(new ErrorResponse("Password already used"), HttpStatus.BAD_REQUEST);
 				}
-				if (!p4) {
+				if (p4 == true) {
 					return new ResponseEntity<>(new ErrorResponse("Password already used"), HttpStatus.BAD_REQUEST);
 				}
-				if (!p5) {
+				if (p5 == true) {
 					return new ResponseEntity<>(new ErrorResponse("Password already used"), HttpStatus.BAD_REQUEST);
 				}
 			}
