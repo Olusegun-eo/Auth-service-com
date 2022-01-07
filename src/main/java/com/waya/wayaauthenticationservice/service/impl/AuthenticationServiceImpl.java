@@ -723,7 +723,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Override
 	public ResponseEntity<?> resendOTPPhone(String phoneNumber) {
-		Users user = userRepo.findByPhoneNumber(phoneNumber).orElse(null);
+		Users user = null;
+		try{
+			user=userRepo.findByPhoneNumber(phoneNumber).orElse(null);
+		} catch (Exception exception){
+			throw new CustomException(exception.getMessage(), HttpStatus.EXPECTATION_FAILED);
+		}
+
 		if (user == null)
 			return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
 					HttpStatus.NOT_FOUND);
