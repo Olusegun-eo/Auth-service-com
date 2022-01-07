@@ -17,5 +17,8 @@ public interface SMSAlertConfigRepository extends JpaRepository<SMSAlertConfig, 
     Optional<SMSAlertConfig> findByPhoneNumber(String phoneNumber);
 
     @Query("SELECT i FROM SMSAlertConfig i WHERE i.phoneNumber = :phoneNumber")
+    SMSAlertConfig findByPhone(String phoneNumber);
+
+    @Query("SELECT i FROM SMSAlertConfig i WHERE i.phoneNumber = :phoneNumber")
     List<SMSAlertConfig> findByAllPhoneNumber(String phoneNumber);
 }

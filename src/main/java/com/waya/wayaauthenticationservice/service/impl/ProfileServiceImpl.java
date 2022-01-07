@@ -1023,12 +1023,12 @@ public class ProfileServiceImpl implements ProfileService {
         if (Objects.isNull(phoneNumber) || phoneNumber.isEmpty()) {
             throw new CustomException(PHONE_NUMBER_REQUIRED, HttpStatus.BAD_REQUEST);
         }
-        Optional<SMSAlertConfig> smsCharges = smsAlertConfigRepository.findByPhoneNumber(phoneNumber);
+        SMSAlertConfig smsCharges = smsAlertConfigRepository.findByPhone(phoneNumber);
         log.info("smsCharges ::: " +smsCharges);
 
-        if (smsCharges.isPresent()) {
-            SMSResponse = new SMSResponse(smsCharges.get().getId(), "",smsCharges.get().getPhoneNumber(),
-                    smsCharges.get().isActive(), smsCharges.get().getUserId());
+        if (smsCharges !=null) {
+            SMSResponse = new SMSResponse(smsCharges.getId(), "",smsCharges.getPhoneNumber(),
+                    smsCharges.isActive(), smsCharges.getUserId());
         }
         return SMSResponse;
     }
