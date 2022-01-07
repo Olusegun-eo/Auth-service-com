@@ -1,5 +1,6 @@
 package com.waya.wayaauthenticationservice.controller;
 
+import com.waya.wayaauthenticationservice.entity.SMSAlertConfig;
 import com.waya.wayaauthenticationservice.enums.Type;
 import com.waya.wayaauthenticationservice.enums.UploadType;
 import com.waya.wayaauthenticationservice.pojo.others.*;
@@ -30,6 +31,8 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+
+import java.util.List;
 
 import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_400;
 import static com.waya.wayaauthenticationservice.util.Constant.MESSAGE_422;
@@ -220,6 +223,18 @@ public class ProfileController {
 			@Valid @RequestBody SMSRequest request) {
 		SMSResponse SMSResponse = profileService.toggleSMSAlert(request);
 		ApiResponseBody<SMSResponse> response = new ApiResponseBody<>(SMSResponse, "Data retrieved successfully",
+				true);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@ApiOperation(value = "Get List SMS ", notes = "Get user SMS LIST", tags = {
+			"PROFILE RESOURCE" })
+	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
+			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
+	@GetMapping("/getSMSLis/{phoneNumber}")
+//	@PreAuthorize(value = "@userSecurity.useHierarchy(#request.phoneNumber, authentication)")
+	ResponseEntity<ApiResponseBody<List<SMSAlertConfig>>> getSMSList(@PathVariable String phoneNumber) {
+		ApiResponseBody<List<SMSAlertConfig>> response = new ApiResponseBody<>(profileService.getPhoneNumber(phoneNumber), "Data retrieved successfully",
 				true);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}

@@ -983,6 +983,10 @@ public class ProfileServiceImpl implements ProfileService {
         return deleteResponse;
     }
 
+    public List<SMSAlertConfig> getPhoneNumber(String phoneNumber){
+        return smsAlertConfigRepository.findByAllPhoneNumber(phoneNumber);
+    }
+
     public SMSResponse toggleSMSAlert(SMSRequest smsRequest) {
         Users user = userRepository.findByPhoneNumber(smsRequest.getPhoneNumber())
                 .orElse(null);
