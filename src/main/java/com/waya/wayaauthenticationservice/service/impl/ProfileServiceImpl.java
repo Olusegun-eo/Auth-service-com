@@ -988,34 +988,40 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     public SMSResponse toggleSMSAlert(SMSRequest smsRequest) {
-        Users user = userRepository.findByPhoneNumber(smsRequest.getPhoneNumber())
-                .orElse(null);
-        if (user == null) {
-            throw new CustomException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User: " +
-                    smsRequest.getPhoneNumber(), HttpStatus.NOT_FOUND);
-        }
+        try{
 
-        Optional<SMSAlertConfig> smsCharges = smsAlertConfigRepository
-                .findByPhoneNumber(smsRequest.getPhoneNumber());
 
-        SMSResponse SMSResponse;
-        if (smsCharges.isPresent()) {
-            smsCharges.get().setActive(!smsCharges.get().isActive());
-            smsCharges.get().setUserId(user.getId());
-            smsAlertConfigRepository.save(smsCharges.get());
-            SMSResponse = new SMSResponse(smsCharges.get().getId(),"",
-                    smsCharges.get().getPhoneNumber(),
-                    smsCharges.get().isActive(), smsCharges.get().getUserId());
-        } else {
-            SMSAlertConfig smsCharges1 = new SMSAlertConfig();
-            smsCharges1.setActive(smsCharges1.isActive());
-            smsCharges1.setPhoneNumber(smsRequest.getPhoneNumber());
-            smsCharges1.setUserId(user.getId());
-            smsCharges1 = smsAlertConfigRepository.save(smsCharges1);
-            SMSResponse = new SMSResponse(smsCharges1.getId(), "",smsCharges1.getPhoneNumber(),
-                    smsCharges1.isActive(), smsCharges.get().getUserId());
+            Users user = userRepository.findByPhoneNumber(smsRequest.getPhoneNumber())
+                    .orElse(null);
+            if (user == null) {
+                throw new CustomException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User: " +
+                        smsRequest.getPhoneNumber(), HttpStatus.NOT_FOUND);
+            }
+
+            SMSAlertConfig smsCharges = smsAlertConfigRepository
+                    .findByPhone(smsRequest.getPhoneNumber());
+
+            SMSResponse SMSResponse;
+            if (smsCharges !=null) {
+                smsCharges.setActive(!smsCharges.isActive());
+                smsCharges.setUserId(user.getId());
+                smsAlertConfigRepository.save(smsCharges);
+                SMSResponse = new SMSResponse(smsCharges.getId(),"",
+                        smsCharges.getPhoneNumber(),
+                        smsCharges.isActive(), smsCharges.getUserId());
+            } else {
+                SMSAlertConfig smsCharges1 = new SMSAlertConfig();
+                smsCharges1.setActive(smsCharges1.isActive());
+                smsCharges1.setPhoneNumber(smsRequest.getPhoneNumber());
+                smsCharges1.setUserId(user.getId());
+                smsCharges1 = smsAlertConfigRepository.save(smsCharges1);
+                SMSResponse = new SMSResponse(smsCharges1.getId(), "",smsCharges1.getPhoneNumber(),
+                        smsCharges1.isActive(), smsCharges.getUserId());
+            }
+            return SMSResponse;
+        }catch (Exception ex){
+            throw new CustomException(ex.getMessage(), HttpStatus.NOT_FOUND);
         }
-        return SMSResponse;
     }
 
     public SMSResponse getSMSAlertStatus(String phoneNumber) {
@@ -1023,14 +1029,21 @@ public class ProfileServiceImpl implements ProfileService {
         if (Objects.isNull(phoneNumber) || phoneNumber.isEmpty()) {
             throw new CustomException(PHONE_NUMBER_REQUIRED, HttpStatus.BAD_REQUEST);
         }
-        SMSAlertConfig smsCharges = smsAlertConfigRepository.findByPhone(phoneNumber);
-        log.info("smsCharges ::: " +smsCharges);
+        try{
+            SMSAlertConfig smsCharges = smsAlertConfigRepository.findByPhone(phoneNumber);
+            log.info("smsCharges ::: " +smsCharges);
 
-        if (smsCharges !=null) {
-            SMSResponse = new SMSResponse(smsCharges.getId(), "",smsCharges.getPhoneNumber(),
-                    smsCharges.isActive(), smsCharges.getUserId());
+            if (smsCharges !=null) {
+                SMSResponse = new SMSResponse(smsCharges.getId(), "",smsCharges.getPhoneNumber(),
+                        smsCharges.isActive(), smsCharges.getUserId());
+            }else{
+                throw new CustomException("PhoneNumber not found", HttpStatus.BAD_REQUEST);
+            }
+            return SMSResponse;
+        }catch (Exception exception){
+            throw new CustomException(exception.getMessage(), HttpStatus.EXPECTATION_FAILED);
         }
-        return SMSResponse;
+
     }
 
     @Override

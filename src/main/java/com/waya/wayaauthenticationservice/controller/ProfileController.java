@@ -213,7 +213,7 @@ public class ProfileController {
 		return new ResponseEntity<>(profileService.toggleDelete(request), HttpStatus.OK);
 	}
 
-	@ApiOperation(value = "SMS Alert", notes = "SMS Alert: user can enable or disable sms alert", tags = {
+	@ApiOperation(value = "Enable and Disable SMS Alert", notes = "SMS Alert: user can enable or disable sms alert", tags = {
 			"PROFILE RESOURCE" })
 	@ApiResponses(value = { @io.swagger.annotations.ApiResponse(code = 400, message = MESSAGE_400),
 			@io.swagger.annotations.ApiResponse(code = 422, message = MESSAGE_422) })
@@ -249,7 +249,7 @@ public class ProfileController {
 			@Valid @ApiParam(example = "2348054354344") @PathVariable @ValidPhone String phoneNumber) {
 
 		SMSResponse SMSResponse = profileService.getSMSAlertStatus(phoneNumber);
-		ApiResponseBody<SMSResponse> response = new ApiResponseBody<>(SMSResponse, "Data created successfully",
+		ApiResponseBody<SMSResponse> response = new ApiResponseBody<>(SMSResponse, "Data retrieved successfully",
 				true);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
