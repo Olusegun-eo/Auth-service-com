@@ -2,6 +2,7 @@ package com.waya.wayaauthenticationservice.service;
 
 import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.ReferralBonusEarning;
+import com.waya.wayaauthenticationservice.entity.SMSAlertConfig;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.response.*;
@@ -106,6 +107,7 @@ public interface ProfileService {
 	DeleteResponse toggleDelete(DeleteRequest deleteRequest);
 
 	SMSResponse toggleSMSAlert(SMSRequest SMSRequest);
+	List<SMSAlertConfig> getPhoneNumber(String phoneNumber);
 
 	SMSResponse getSMSAlertStatus(String phoneNumber);
 
