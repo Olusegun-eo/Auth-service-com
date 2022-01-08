@@ -214,16 +214,16 @@ public class ScheduledJobs {
 			} else {
 				Long userId = sUser.getId();
 				// isCardLinked, wallet, isWebPos and isterminalPos
-				if (!sUser.isWebPos()) {
+				if (!sUser.isWebPos() && !user.isDeleted()) {
 
 				}
-				if (!sUser.isTerminalPos()) {
+				if (!sUser.isTerminalPos() && !user.isDeleted()) {
 
 				}
-				if (!sUser.isCardLinked()) {
+				if (!sUser.isCardLinked() && !user.isDeleted()) {
 
 				}
-				if (sUser.getWallet().isBlank()) {
+				if (sUser.getWallet().isBlank() && !user.isDeleted()) {
 					try {
 						WalletResponse wallet = walletProxy.getTotalWallet(userId);
 						if (wallet != null && wallet.isStatus()) {
