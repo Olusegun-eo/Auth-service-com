@@ -223,7 +223,7 @@ public class ScheduledJobs {
 				}
 				if(sUser.getWallet().isBlank()) {
 					WalletResponse wallet = walletProxy.getTotalWallet(userId);
-					if(wallet != null) {
+					if(wallet != null && wallet.isStatus()) {
 						List<MyWallet> totwallet = wallet.getData();
 						String walletsize = Integer.toString(totwallet.size());
 						sUser.setWallet(walletsize);
