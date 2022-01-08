@@ -31,6 +31,7 @@ import com.waya.wayaauthenticationservice.repository.UserWalletRepository;
 import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.service.UserService;
 
+import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 
 @Configuration
@@ -52,16 +53,16 @@ public class ScheduledJobs {
 
 	@Autowired
 	KycProxy kycProxy;
-	
+
 	@Autowired
 	WalletProxy walletProxy;
 
 	@Autowired
 	PasswordPolicyRepository passwordPolicyRepo;
-	
+
 	@Autowired
 	UserWalletRepository userWalletRepo;
-	
+
 	@Autowired
 	ProfileRepository profileRepo;
 
@@ -184,50 +185,55 @@ public class ScheduledJobs {
 			}
 		}
 	}
-	
+
 	@Scheduled(cron = "${job.cron.pass}")
 	public void AuthWalletSink() {
 		List<Users> mUser = userRepository.findAll();
 		for (Users user : mUser) {
 			UserWallet sUser = userWalletRepo.findByUserId(user.getId()).orElse(null);
-			if(sUser == null) {
+			if (sUser == null) {
 				String status = "INACTIVE";
 				String usertype = "I";
-				if(user.isActive()) {
+				if (user.isActive()) {
 					status = "ACTIVE";
 				}
-				if(!user.isAdmin() && user.isCorporate()) {
+				if (!user.isAdmin() && user.isCorporate()) {
 					usertype = "C";
 				}
 				UserWallet kyc = null;
 				Profile mProfile = profileRepo.findByUserId(user.getId().toString()).orElse(null);
-				if(mProfile != null) {
-				kyc = new UserWallet(user.isDeleted(), user.getId(), user.getName(),user.getPhoneNumber(), 
-						user.getEmail(), mProfile.getCity(), mProfile.getDistrict(), false, status, usertype, user.getCreatedAt(), "");
-				}else {
-					kyc = new UserWallet(user.isDeleted(), user.getId(), user.getName(), user.getPhoneNumber(), user.getEmail(), "","", 
-							false, status, usertype, user.getCreatedAt(),"");
+				if (mProfile != null) {
+					kyc = new UserWallet(user.isDeleted(), user.getId(), user.getName(), user.getPhoneNumber(),
+							user.getEmail(), mProfile.getCity(), mProfile.getDistrict(), false, status, usertype,
+							user.getCreatedAt(), "");
+				} else {
+					kyc = new UserWallet(user.isDeleted(), user.getId(), user.getName(), user.getPhoneNumber(),
+							user.getEmail(), "", "", false, status, usertype, user.getCreatedAt(), "");
 				}
 				userWalletRepo.save(kyc);
-			}else {
+			} else {
 				Long userId = sUser.getId();
-				//isCardLinked, wallet, isWebPos and isterminalPos
-				if(!sUser.isWebPos()) {
-					
+				// isCardLinked, wallet, isWebPos and isterminalPos
+				if (!sUser.isWebPos()) {
+
 				}
-				if(!sUser.isTerminalPos()) {
-					
+				if (!sUser.isTerminalPos()) {
+
 				}
-				if(!sUser.isCardLinked()) {
-					
+				if (!sUser.isCardLinked()) {
+
 				}
-				if(sUser.getWallet().isBlank()) {
-					WalletResponse wallet = walletProxy.getTotalWallet(userId);
-					if(wallet != null && wallet.isStatus()) {
-						List<MyWallet> totwallet = wallet.getData();
-						String walletsize = Integer.toString(totwallet.size());
-						sUser.setWallet(walletsize);
-						userWalletRepo.save(sUser);
+				if (sUser.getWallet().isBlank()) {
+					try {
+						WalletResponse wallet = walletProxy.getTotalWallet(userId);
+						if (wallet != null && wallet.isStatus()) {
+							List<MyWallet> totwallet = wallet.getData();
+							String walletsize = Integer.toString(totwallet.size());
+							sUser.setWallet(walletsize);
+							userWalletRepo.save(sUser);
+						}
+					} catch (FeignException ex) {
+                       log.error(ex.getMessage());
 					}
 				}
 			}
