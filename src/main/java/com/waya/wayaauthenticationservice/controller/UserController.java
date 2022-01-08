@@ -193,4 +193,13 @@ public class UserController {
     public ResponseEntity<?> maintainUserSetUp(@Valid @RequestBody UserSetupPojo pojo) {
         return userService.maintainUserSetup(pojo);
     }
+    
+    @ApiOperation(value = "Get Users Statistics (In-app use only)", tags = {"USER SERVICE"})
+    @GetMapping("/statistics")
+    //@PreAuthorize(value = "@userSecurity.useHierarchy(#pojo.userId, authentication)")
+    public ResponseEntity<?> UserStatistics(@RequestParam("page") final int page, 
+			@RequestParam("size") final int size, @RequestParam("sortBy") final String sortBy, 
+			@RequestParam("sortOrder") final String sortOrder) {
+        return userService.GetUserStatistics(page, size, sortBy, sortOrder);
+    }
 }
