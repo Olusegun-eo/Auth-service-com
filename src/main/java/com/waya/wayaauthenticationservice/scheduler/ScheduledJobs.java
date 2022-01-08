@@ -223,7 +223,7 @@ public class ScheduledJobs {
 				if (!sUser.isCardLinked() && !user.isDeleted()) {
 
 				}
-				if (sUser.getWallet().isBlank() && !user.isDeleted()) {
+				if (sUser.getWallet().isBlank() && !user.isDeleted() && !sUser.isDeleted()) {
 					try {
 						WalletResponse wallet = walletProxy.getTotalWallet(userId);
 						if (wallet != null && wallet.isStatus()) {
@@ -233,7 +233,7 @@ public class ScheduledJobs {
 							userWalletRepo.save(sUser);
 						}
 					} catch (FeignException ex) {
-                       log.error(ex.getMessage());
+                       //log.error(ex.getMessage());
 					}
 				}
 			}
