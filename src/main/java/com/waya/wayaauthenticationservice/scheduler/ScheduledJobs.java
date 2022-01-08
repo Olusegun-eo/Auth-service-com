@@ -11,16 +11,23 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.waya.wayaauthenticationservice.entity.PasswordPolicy;
+import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.UserSetup;
+import com.waya.wayaauthenticationservice.entity.UserWallet;
 import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.MyWallet;
+import com.waya.wayaauthenticationservice.pojo.WalletResponse;
 import com.waya.wayaauthenticationservice.pojo.kyc.KycAuthUpdate;
 import com.waya.wayaauthenticationservice.pojo.kyc.KycStatus;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserSetupPojo;
 import com.waya.wayaauthenticationservice.proxy.KycProxy;
+import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.repository.OTPRepository;
 import com.waya.wayaauthenticationservice.repository.PasswordPolicyRepository;
+import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.repository.UserSetupRepository;
+import com.waya.wayaauthenticationservice.repository.UserWalletRepository;
 import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.service.UserService;
 
@@ -45,9 +52,18 @@ public class ScheduledJobs {
 
 	@Autowired
 	KycProxy kycProxy;
+	
+	@Autowired
+	WalletProxy walletProxy;
 
 	@Autowired
 	PasswordPolicyRepository passwordPolicyRepo;
+	
+	@Autowired
+	UserWalletRepository userWalletRepo;
+	
+	@Autowired
+	ProfileRepository profileRepo;
 
 	@Scheduled(cron = "${job.cron.5amED}")
 	public void deleteExpiredPasswordToken() {
@@ -165,6 +181,55 @@ public class ScheduledJobs {
 					kycProxy.PostKyc(key, mKyc);
 				}
 
+			}
+		}
+	}
+	
+	@Scheduled(cron = "${job.cron.pass}")
+	public void AuthWalletSink() {
+		List<Users> mUser = userRepository.findAll();
+		for (Users user : mUser) {
+			UserWallet sUser = userWalletRepo.findByUserId(user.getId()).orElse(null);
+			if(sUser == null) {
+				String status = "INACTIVE";
+				String usertype = "I";
+				if(user.isActive()) {
+					status = "ACTIVE";
+				}
+				if(!user.isAdmin() && user.isCorporate()) {
+					usertype = "C";
+				}
+				UserWallet kyc = null;
+				Profile mProfile = profileRepo.findByUserId(user.getId().toString()).orElse(null);
+				if(mProfile != null) {
+				kyc = new UserWallet(user.isDeleted(), user.getId(), user.getName(),user.getPhoneNumber(), 
+						user.getEmail(), mProfile.getCity(), mProfile.getDistrict(), false, status, usertype, user.getCreatedAt(), "");
+				}else {
+					kyc = new UserWallet(user.isDeleted(), user.getId(), user.getName(), user.getPhoneNumber(), user.getEmail(), "","", 
+							false, status, usertype, user.getCreatedAt(),"");
+				}
+				userWalletRepo.save(kyc);
+			}else {
+				Long userId = sUser.getId();
+				//isCardLinked, wallet, isWebPos and isterminalPos
+				if(!sUser.isWebPos()) {
+					
+				}
+				if(!sUser.isTerminalPos()) {
+					
+				}
+				if(!sUser.isCardLinked()) {
+					
+				}
+				if(sUser.getWallet().isBlank()) {
+					WalletResponse wallet = walletProxy.getTotalWallet(userId);
+					if(wallet != null) {
+						List<MyWallet> totwallet = wallet.getData();
+						String walletsize = Integer.toString(totwallet.size());
+						sUser.setWallet(walletsize);
+						userWalletRepo.save(sUser);
+					}
+				}
 			}
 		}
 	}

@@ -2,6 +2,7 @@ package com.waya.wayaauthenticationservice.proxy;
 
 import java.util.List;
 
+import com.waya.wayaauthenticationservice.pojo.WalletResponse;
 import com.waya.wayaauthenticationservice.pojo.others.*;
 import com.waya.wayaauthenticationservice.response.NewWalletResponse;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -46,6 +47,9 @@ public interface WalletProxy {
 
 	@PostMapping("/official/user/transfer")
 	ResponseEntity<ApiResponseBody<List<WalletTransactionPojo>>> refundFailedTransaction(@RequestBody RefundTransactionRequest transfer, @RequestHeader("Authorization") String token);
+	
+	@GetMapping("/account/count/{userId}") //  ===> returns single
+	WalletResponse getTotalWallet(@PathVariable("userId") Long userId);
 
 
 }

@@ -35,6 +35,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -56,6 +57,7 @@ import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.ReferralCode;
 import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.UserSetup;
+import com.waya.wayaauthenticationservice.entity.UserWallet;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.DeleteType;
 import com.waya.wayaauthenticationservice.enums.ERole;
@@ -93,6 +95,7 @@ import com.waya.wayaauthenticationservice.repository.ReferralCodeRepository;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.repository.UserSetupRepository;
+import com.waya.wayaauthenticationservice.repository.UserWalletRepository;
 import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.response.ErrorResponse;
 import com.waya.wayaauthenticationservice.response.SuccessResponse;
@@ -153,6 +156,9 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	UserService userService;
+	
+	@Autowired
+	UserWalletRepository userWalletRepo;
 	
 	@Autowired
 	ProfileServiceDAO jdbcprofileService;
@@ -1124,6 +1130,19 @@ public class UserServiceImpl implements UserService {
 			log.error("Error in Maintaining User's Setup::{}", e.getMessage());
 			return new ResponseEntity<>(new ErrorResponse(e.getMessage()), BAD_REQUEST);
 		}
+	}
+	
+	public ResponseEntity<?> GetUserStatistics(int page, int size, String sortBy, String sortOrder) {
+		PageRequest pageable = PageRequest.of(page, size, Direction.fromString(sortOrder), sortBy);
+		Page<UserWallet> user = userWalletRepo.findAll(pageable);
+		if (user == null) {
+			return new ResponseEntity<>(new ErrorResponse("NO USER FOUND"), HttpStatus.BAD_REQUEST);
+		}
+		List<UserWallet> mUser = new ArrayList<UserWallet>();
+		if (!user.isEmpty())
+			mUser = user.getContent();
+		log.info(mUser.toString());
+		return new ResponseEntity<>(new SuccessResponse(user), HttpStatus.OK);
 	}
 
 	public ResponseEntity<?> GenerateUser(FakePojo pojo, HttpServletRequest request, Device device) {

@@ -18,6 +18,8 @@ import java.util.concurrent.CompletableFuture;
 @SuppressWarnings("all")
 @Repository
 public interface ProfileRepository extends JpaRepository<Profile, UUID> {
+	
+	Optional<Profile> findByUserId(String userId);
 
     @Query(value = "update m_user_profile set deleted =:deleted where user_id=:userId", nativeQuery = true)
     void deleteProfileByUserId(boolean deleted, String userId);
