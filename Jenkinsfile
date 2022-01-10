@@ -14,6 +14,12 @@ pipeline {
 
 
     stages{
+        
+        stage('Security Scan') {
+            withSonarQubeEnv() {
+            sh "mvn clean verify sonar:sonar -Dsonar.projectKey=WAYA-PAY-CHAT-2.0-AUTH-SERVICE"
+            }
+        }
 
         stage("build") {
             steps{
