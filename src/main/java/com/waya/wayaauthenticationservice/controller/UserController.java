@@ -202,4 +202,12 @@ public class UserController {
 			@RequestParam("sortOrder") final String sortOrder) {
         return userService.GetUserStatistics(page, size, sortBy, sortOrder);
     }
+    
+    @ApiOperation(value = "Get Users Statistics for Individual Corporate (In-app use only)", tags = {"USER SERVICE"})
+    @GetMapping("/statistics/indvCorp/{userType}")
+    //@PreAuthorize(value = "@userSecurity.useHierarchy(#pojo.userId, authentication)")
+    public ResponseEntity<?> UserStatisticsforIndvCorp(@RequestParam("page") final int page, 
+			@RequestParam("size") final int size, @PathVariable("userType") String userType) {
+        return userService.GetUserStatisticsforIndvCorp(page, size, userType);
+    }
 }
