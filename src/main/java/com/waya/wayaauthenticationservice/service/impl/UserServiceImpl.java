@@ -1144,6 +1144,19 @@ public class UserServiceImpl implements UserService {
 		log.info(mUser.toString());
 		return new ResponseEntity<>(new SuccessResponse(user), HttpStatus.OK);
 	}
+	
+	public ResponseEntity<?> GetUserStatisticsforIndvCorp(int page, int size, String userType) {
+		PageRequest pageable = PageRequest.of(page, size);
+		Page<UserWallet> user = userWalletRepo.findByIndividualCorporate(userType, pageable);
+		if (user == null) {
+			return new ResponseEntity<>(new ErrorResponse("NO USER FOUND"), HttpStatus.BAD_REQUEST);
+		}
+		List<UserWallet> mUser = new ArrayList<UserWallet>();
+		if (!user.isEmpty())
+			mUser = user.getContent();
+		log.info(mUser.toString());
+		return new ResponseEntity<>(new SuccessResponse(user), HttpStatus.OK);
+	}
 
 	public ResponseEntity<?> GenerateUser(FakePojo pojo, HttpServletRequest request, Device device) {
 		try {

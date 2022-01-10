@@ -106,4 +106,6 @@ public interface UserService {
 	ResponseEntity<?> GenerateUser(FakePojo pojo, HttpServletRequest request, Device device);
 	
 	ResponseEntity<?> GetUserStatistics(int page, int size, String sortBy, String sortOrder);
+	
+	ResponseEntity<?> GetUserStatisticsforIndvCorp(int page, int size, String userType);
 }
