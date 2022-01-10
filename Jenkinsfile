@@ -1,5 +1,4 @@
 pipeline {
-
     agent { label 'worker1' }
 
     environment {
@@ -12,17 +11,17 @@ pipeline {
         VERSION = 'latest'
     }
 
-
-    stages{
-        
+    stages {
         stage('Security Scan') {
-            withSonarQubeEnv() {
-            sh "mvn clean verify sonar:sonar -Dsonar.projectKey=WAYA-PAY-CHAT-2.0-AUTH-SERVICE"
+            steps {
+                withSonarQubeEnv() {
+                    sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=WAYA-PAY-CHAT-2.0-AUTH-SERVICE'
+                }
             }
         }
 
-        stage("build") {
-            steps{
+        stage('build') {
+            steps {
                 script {
                     sh '''
                     java -version
@@ -31,41 +30,40 @@ pipeline {
                     '''
                     echo 'Build with Maven'
                 }
-            }   
+            }
         }
 
-        stage("Image Build") {
-            steps{
+        stage('Image Build') {
+            steps {
                 script {
                     dockerImage = docker.build "${REGISTRY}/${SERVICE_NAME}:${VERSION}"
                 }
-            }   
+            }
         }
-        stage("ECR") {
-            steps{
+        stage('ECR') {
+            steps {
                 script {
                     sh "aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin ${REGISTRY}"
                 }
-            }   
+            }
         }
 
-        stage("pushing to ECR") {
-            steps{
+        stage('pushing to ECR') {
+            steps {
                 script {
                     sh "docker push ${REGISTRY}/${SERVICE_NAME}:${VERSION}"
                 }
-            }   
+            }
         }
-        stage("Deploy to EKS cluster") {
-            steps{
+        stage('Deploy to EKS cluster') {
+            steps {
                 script {
                     sh '''
                         aws eks --region $AWS_DEFAULT_REGION update-kubeconfig --name $CLUSTER_NAME
                         kubectl replace --force -f staging.yaml --namespace=staging
                         '''
                 }
-
             }
-        }   
+        }
     }
 }
