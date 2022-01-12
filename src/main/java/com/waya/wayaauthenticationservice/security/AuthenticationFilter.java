@@ -117,7 +117,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 				policy.setUpdatedTokenDate(LocalDate.now());
 				policy.setToken(token);
 				policy.setTokenAge(0);
-				passwordAge = policy.getPasswordAge() + 1;
+				passwordAge = policy.getPasswordAge();
 				passwordPolicyRepo.save(policy);
 			}
 			// Check for First Login Attempt and Update User Table
