@@ -8,13 +8,14 @@ pipeline {
         CLUSTER_NAME = credentials('CLUSTER_NAME')
         REGISTRY = credentials('REGISTRY')
         SERVICE_NAME = 'auth-service'
-        VERSION = 'latest'
+        VERSION = sh (script: 'git rev-parse HEAD', returnStdout: true).trim().take(10)
+        NAMESPACE = "${env.GIT_BRANCH == 'origin/production' ? 'production' : 'staging' }"
     }
 
     stages {
         stage('Security Scan') {
             steps {
-                withSonarQubeEnv("Waya Sonar") {
+                withSonarQubeEnv('Waya Sonar') {
                     sh 'mvn clean verify sonar:sonar -DskipTests -Dsonar.projectKey=WAYA-PAY-CHAT-2.0-AUTH-SERVICE'
                 }
             }
@@ -40,6 +41,7 @@ pipeline {
                 }
             }
         }
+
         stage('ECR') {
             steps {
                 script {
@@ -55,12 +57,30 @@ pipeline {
                 }
             }
         }
-        stage('Deploy to EKS cluster') {
+
+        stage('Deploy to Staging') {
+            when {
+                branch 'staging'
+            }
             steps {
                 script {
                     sh '''
-                        aws eks --region $AWS_DEFAULT_REGION update-kubeconfig --name $CLUSTER_NAME
-                        kubectl replace --force -f staging.yaml --namespace=staging
+                        chmod +x ./deploy.sh
+                        ./deploy.sh
+                        '''
+                }
+            }
+        }
+
+        stage('Deploy to Production') {
+            when {
+                branch 'production'
+            }
+            steps {
+                script {
+                    sh '''
+                        chmod +x ./deploy.sh
+                        ./deploy.sh
                         '''
                 }
             }
