@@ -59,8 +59,8 @@ pipeline {
         }
 
         stage('Deploy to Staging') {
-            when { 
-                branch pattern: "staging", comparator: "REGEXP"
+            when {
+                branch 'staging'
             }
             steps {
                 script {
@@ -74,7 +74,7 @@ pipeline {
 
         stage('Deploy to Production') {
             when {
-                branch pattern: "production", comparator: "REGEXP"
+                branch 'production'
             }
             steps {
                 script {
