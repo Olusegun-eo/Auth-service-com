@@ -16,7 +16,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: auth-service
-  namespace: staging
   labels:
     app: auth-service
 spec:
@@ -31,7 +30,7 @@ spec:
     spec:
       containers:
       - name: auth-service
-        image: 863852973330.dkr.ecr.eu-west-2.amazonaws.com/auth-service:latest
+        image: 863852973330.dkr.ecr.eu-west-2.amazonaws.com/auth-service:imgtag
         env:
         envFrom:
         - configMapRef:
