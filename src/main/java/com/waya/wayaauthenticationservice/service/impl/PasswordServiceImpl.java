@@ -373,7 +373,9 @@ public class PasswordServiceImpl implements PasswordService {
 	}
 
 	private Integer generateEmailOTP(String email, OTPRequestType otpRequestType) {
+		log.info("OTP REQUEST: " + email + "|" + otpRequestType.name());
 		OTPBase otpBase = this.OTPTokenService.generateEmailToken(email, otpRequestType);
+		log.info("OTP GENERATE: " + otpBase.getCode() + "|" + otpRequestType.name());
 		return otpBase.getCode();
 	}
 
