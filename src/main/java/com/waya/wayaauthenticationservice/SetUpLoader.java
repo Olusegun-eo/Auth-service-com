@@ -57,16 +57,19 @@ public class SetUpLoader implements ApplicationListener<ContextRefreshedEvent> {
         Privilege appAdmin = createPrivilegeIfNotFound("APP_ADMIN", "ADMIN");
 		Privilege appSuperAdmin = createPrivilegeIfNotFound("APP_SUPER_ADMIN", "SUPER ADMIN");
         Privilege appOwner = createPrivilegeIfNotFound("APP_OWNER", "OWNER");
+        Privilege appMerchant = createPrivilegeIfNotFound("APP_MERCHANT","MERCHANT");
+        Privilege appAggregator = createPrivilegeIfNotFound("APP_AGGREGATOR","AGGREGATOR");
+        Privilege appAgent = createPrivilegeIfNotFound("APP_AGENT","AGENT");
 
 		List<Privilege> userPrivileges = Collections.singletonList(readPrivilege);
         List<Privilege> merchAdminPrivileges = Arrays.asList(readPrivilege, updatePrivilege, writePrivilege, lockPrivilege,
-                unlockPrivilege);
+                unlockPrivilege,appMerchant,appAggregator,appAgent);
         List<Privilege> adminPrivileges = Arrays.asList(readPrivilege, updatePrivilege, writePrivilege, lockPrivilege,
-                unlockPrivilege, deletePrivilege, appAdmin);
+                unlockPrivilege, deletePrivilege, appAdmin,appMerchant,appAggregator,appAgent);
 		List<Privilege> superAdminPrivileges = Arrays.asList(readPrivilege, updatePrivilege, writePrivilege, lockPrivilege,
-				unlockPrivilege, deletePrivilege, appAdmin, appSuperAdmin);
+				unlockPrivilege, deletePrivilege, appAdmin, appSuperAdmin,appMerchant,appAggregator,appAgent);
 		List<Privilege> ownerPrivileges = Arrays.asList(readPrivilege, updatePrivilege, writePrivilege, lockPrivilege,
-				unlockPrivilege, deletePrivilege,appAdmin, appSuperAdmin, appOwner);
+				unlockPrivilege, deletePrivilege,appAdmin, appSuperAdmin, appOwner,appMerchant,appAggregator,appAgent);
 
 		createRoleIfNotFound(ERole.ROLE_USER.name(), "USER ROLE", userPrivileges);
         createRoleIfNotFound(ERole.ROLE_CORP.name(), "CORPORATE USER ROLE", userPrivileges);
@@ -74,6 +77,9 @@ public class SetUpLoader implements ApplicationListener<ContextRefreshedEvent> {
 		createRoleIfNotFound(ERole.ROLE_APP_ADMIN.name(), "APPLICATION ADMIN", adminPrivileges);
 		createRoleIfNotFound(ERole.ROLE_SUPER_ADMIN.name(), "SUPER ADMIN ROLE", superAdminPrivileges);
 		createRoleIfNotFound(ERole.ROLE_OWNER_ADMIN.name(), "OWNER ADMIN ROLE", ownerPrivileges);
+		createRoleIfNotFound(ERole.ROLE_AGENT.name(),"BIZ_AGENT", userPrivileges);
+		createRoleIfNotFound(ERole.ROLE_AGGREGATOR.name(), "BIZ_AGGREGATOR", userPrivileges);
+		createRoleIfNotFound(ERole.ROLE_MERCHANT.name(), "BIZ_MERCHANT", userPrivileges);
 
 		alreadySetup = true;
 	}
