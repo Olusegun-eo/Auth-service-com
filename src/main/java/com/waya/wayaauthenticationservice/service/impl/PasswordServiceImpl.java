@@ -630,6 +630,7 @@ public class PasswordServiceImpl implements PasswordService {
 	public ResponseEntity<?> createPin(NewPinPojo pinPojo) {
 		try {
 			// Check if email exists
+			log.info("CREATE PIN: "+ pinPojo.getPin() + "|" + pinPojo.getPhoneOrEmail());
 			Users users = usersRepo.findByEmailOrPhoneNumber(pinPojo.getPhoneOrEmail()).orElse(null);
 			if (users != null) {
 				if (users.isPinCreated())
@@ -702,10 +703,12 @@ public class PasswordServiceImpl implements PasswordService {
 		if (users == null) {
 			return new ResponseEntity<>(new ErrorResponse("Invalid User Logged In."), HttpStatus.NOT_FOUND);
 		}
+		log.info(users.toString());
 		if (!users.isPinCreated())
 			return new ResponseEntity<>(new ErrorResponse("Transaction pin Not Setup yet"), HttpStatus.BAD_REQUEST);
 
 		boolean isPinMatched = passwordEncoder.matches(String.valueOf(pin), users.getPinHash());
+		log.info("PIN Validate: " + isPinMatched);
 		if (isPinMatched) {
 			fraudService.actionOnPinValidateSuccess(users);
 			return new ResponseEntity<>(new SuccessResponse("Pin valid."), HttpStatus.OK);
