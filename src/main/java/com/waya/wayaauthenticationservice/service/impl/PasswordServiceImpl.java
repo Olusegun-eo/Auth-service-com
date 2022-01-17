@@ -631,6 +631,11 @@ public class PasswordServiceImpl implements PasswordService {
 		try {
 			// Check if email exists
 			log.info("CREATE PIN: "+ pinPojo.getPin() + "|" + pinPojo.getPhoneOrEmail());
+			
+			if(pinPojo.getPin() == null || pinPojo.getPin().equals("")) {
+				return new ResponseEntity<>(new ErrorResponse("Pin can't be empty or null"),
+						HttpStatus.BAD_REQUEST);
+			}
 			Users users = usersRepo.findByEmailOrPhoneNumber(pinPojo.getPhoneOrEmail()).orElse(null);
 			if (users != null) {
 				if (users.isPinCreated())
