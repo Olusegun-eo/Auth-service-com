@@ -66,7 +66,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				.antMatchers("/api/v1/auth/resend-otp**/**", "/api/v1/auth/verify-otp").permitAll()
 				.antMatchers("/api/v1/business/type/find/all", "/api/v1/password/forgot-password").permitAll()
 				.antMatchers("/api/v1/auth/verify**", "/api/v1/password/forgot-password**/**").permitAll()
-				.antMatchers("/api/v1/password/change-password**/**", "/api/v1/auth/wallet/**").permitAll()
+				.antMatchers("/api/v1/password/change-password**/**", "/api/v1/user/users", "/api/v1/auth/wallet/**").permitAll()
 				.antMatchers("/api/v1/utils/**", "/api/v1/fraud-actions/**", "/auth-service/**","/api/v1/auth/validate-user").permitAll()
 
 				// all other requests need to be authenticated

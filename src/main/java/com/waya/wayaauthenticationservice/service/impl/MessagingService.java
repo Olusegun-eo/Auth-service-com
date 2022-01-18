@@ -31,7 +31,7 @@ public class MessagingService {
 
         /* update made by Terseer 29/12/2021 */
         NotificationResponsePojo notificationResponsePojo = new NotificationResponsePojo();
-        notificationResponsePojo.setEventCategory(EventCategory.WELCOME.name());
+        //notificationResponsePojo.setEventCategory(EventCategory.WELCOME.name());
         notificationResponsePojo.setEventType(StreamsEventType.EMAIL.toString());
         notificationResponsePojo.setInitiator(WAYAPAY);
 
