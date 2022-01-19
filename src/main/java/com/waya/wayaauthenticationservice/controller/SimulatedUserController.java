@@ -56,7 +56,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @CrossOrigin
 @RestController
 @RequestMapping("/api/v1/sUser")
-@Tag(name = "SimulatedUser", description = "Simulated User Service API")
+@Tag(name = "SIMULATED USER", description = "Simulated User Service API")
 @EnableCaching
 @PreAuthorize(value = "hasRole('APP_ADMIN')")
 @Validated
@@ -80,7 +80,7 @@ public class SimulatedUserController {
 	@Autowired
 	SimulatedService simulatedService;
 
-	@ApiOperation(value = "Fetch all Users (Simulated Endpoint)", tags = { "SimulatedUser" })
+	@ApiOperation(value = "Fetch all Users (Simulated Endpoint)", tags = { "SIMULATED USER" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("/users")
 	public ResponseEntity<PagedModel<UserProfileResponsePojo>> getAllUsersDB(
@@ -92,7 +92,7 @@ public class SimulatedUserController {
 		return new ResponseEntity<>(userPagedModel, HttpStatus.OK);
 	}
 	
-	@ApiOperation(value = "Fetch User By Email (Simulated Endpoint)", tags = { "SimulatedUser" })
+	@ApiOperation(value = "Fetch User By Email (Simulated Endpoint)", tags = { "SIMULATED USER" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("/users/{email_id}")
 	public ResponseEntity<?> getUserByEmailDB(
@@ -101,7 +101,7 @@ public class SimulatedUserController {
 		
 	}
 
-	@ApiOperation(value = "Fetch all Users (Simulated Endpoint)", tags = { "SimulatedUser" })
+	@ApiOperation(value = "Fetch all Users (Simulated Endpoint)", tags = { "SIMULATED USER" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("/users/sort")
 	public ResponseEntity<PagedModel<UserProfileResponsePojo>> getAllUsersDBSorted(
@@ -114,14 +114,14 @@ public class SimulatedUserController {
 		return new ResponseEntity<>(userPagedModel, HttpStatus.OK);
 	}
 	
-	@ApiOperation(value = "Fetch all Users (Admin Endpoint)", tags = { "SimulatedUser" })
+	@ApiOperation(value = "Fetch all Users (Admin Endpoint)", tags = { "SIMULATED USER" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("/all/users")
 	public ResponseEntity<?> getAllUsersRec() {
 		return simulatedService.getAllUsersRec();
 	}
 	
-	@ApiOperation(value = "To Generate simulated User (Simulated Endpoint)", tags = { "SimulatedUser" })
+	@ApiOperation(value = "To Generate simulated User (Simulated Endpoint)", tags = { "SIMULATED USER" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@PostMapping("/users/generate")
 	public ResponseEntity<?> GenerateUser(@Valid @RequestBody FakePojo userPojo, HttpServletRequest request, Device device) {
@@ -129,7 +129,7 @@ public class SimulatedUserController {
 		
 	}
 
-	@ApiOperation(value = "Create New Private User (Simulated Endpoint)", tags = { "SimulatedUser" })
+	@ApiOperation(value = "Create New Private User (Simulated Endpoint)", tags = { "SIMULATED USER" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@PostMapping("/users/create-private")
 	public ResponseEntity<?> createNewPrivateUser(@Valid @RequestBody BaseUserPojo userPojo, HttpServletRequest request,
@@ -138,7 +138,7 @@ public class SimulatedUserController {
 		return adminService.createUser(userPojo, request, device);
 	}
 
-	@ApiOperation(value = "Create New Corporate User (Simulated Endpoint)", tags = { "SimulatedUser" })
+	@ApiOperation(value = "Create New Corporate User (Simulated Endpoint)", tags = { "SIMULATED USER" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@PostMapping("/users/create-corporate")
 	public ResponseEntity<?> createNewCorporateUser(@Valid @RequestBody CorporateUserPojo userPojo,
@@ -147,7 +147,7 @@ public class SimulatedUserController {
 	}
 
 	@ApiOperation(value = "Create New Waya Official User Account (Simulated Endpoint). Only a user with Owner Role can execute", tags = {
-			"SimulatedUser" })
+			"SIMULATED USER" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@PostMapping("/users/waya-account")
 	@PreAuthorize(value = "hasAuthority('ROLE_OWNER_ADMIN')")
@@ -157,7 +157,7 @@ public class SimulatedUserController {
 		return adminService.createUser(userPojo, request, device);
 	}
 
-	@ApiOperation(value = "Bulk Private User Registration", tags = { "SimulatedUser" })
+	@ApiOperation(value = "Bulk Private User Registration", tags = { "SIMULATED USER" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@PostMapping(path = "/users/bulk-user/private", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {
 			MediaType.APPLICATION_JSON_VALUE })
@@ -166,7 +166,7 @@ public class SimulatedUserController {
 		return userService.createUsers(userList, request, device);
 	}
 
-	@ApiOperation(value = "Bulk Corporate User Registration", tags = { "SimulatedUser" })
+	@ApiOperation(value = "Bulk Corporate User Registration", tags = { "SIMULATED USER" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@PostMapping(path = "/users/bulk-user/corporate", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {
 			MediaType.APPLICATION_JSON_VALUE })
@@ -175,7 +175,7 @@ public class SimulatedUserController {
 		return userService.createUsers(userList, request, device);
 	}
 
-	@ApiOperation(value = "Bulk User Registration", tags = { "SimulatedUser" })
+	@ApiOperation(value = "Bulk User Registration", tags = { "SIMULATED USER" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@PostMapping(path = "/users/bulk-user-excel/{isCorporate}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<?> createBulkUserExcel(@RequestPart("file") MultipartFile file,
@@ -183,7 +183,7 @@ public class SimulatedUserController {
 		return adminService.createBulkUser(file, isCorporate, request, device);
 	}
 
-	@ApiOperation(value = "Download Template for Bulk User Creation ", tags = { "SimulatedUser" })
+	@ApiOperation(value = "Download Template for Bulk User Creation ", tags = { "SIMULATED USER" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("/download/bulk-user-excel")
 	public ResponseEntity<Resource> getFile(@RequestParam("isCorporate") boolean isCorporate) {
@@ -196,7 +196,7 @@ public class SimulatedUserController {
 				.body(file);
 	}
 
-	@ApiOperation(value = "Fetch Users by Roles (Simulated Endpoint)", tags = { "SimulatedUser" })
+	@ApiOperation(value = "Fetch Users by Roles (Simulated Endpoint)", tags = { "SIMULATED USER" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("/users/role/{roleId}")
 	public ResponseEntity<?> getUsersByRole(@PathVariable int roleId,
@@ -207,7 +207,7 @@ public class SimulatedUserController {
 		return new ResponseEntity<>(userPagedModel, HttpStatus.OK);
 	}
 
-	@ApiOperation(value = "Fetch Users By Corporate/Non-Corporate (Simulated Endpoint)", tags = { "SimulatedUser" })
+	@ApiOperation(value = "Fetch Users By Corporate/Non-Corporate (Simulated Endpoint)", tags = { "SIMULATED USER" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("/users/corporate/{isCorporate}")
 	public ResponseEntity<?> findAllCorporateUsers(@PathVariable("isCorporate") boolean isCorporate,
@@ -219,7 +219,7 @@ public class SimulatedUserController {
 	}
 
 	@ApiOperation(value = "Simulated Update Corporate Profile of a User", notes = "Simulated Should be able to update Corporate Profile on behalf of the user", tags = {
-			"SimulatedUser" })
+			"SIMULATED USER" })
 	@PutMapping("/update-corporate-profile/{userId}")
 	ResponseEntity<?> updateCorporateProfile(
 			@Valid @RequestBody UpdateCorporateProfileRequest updateCorporateProfileRequest,
@@ -232,7 +232,7 @@ public class SimulatedUserController {
 	}
 
 	@ApiOperation(value = "Simulated Update Personal Profile of a User", notes = "Simulated Should be able to update Profile Profile on behalf of the user", tags = {
-			"SimulatedUser" })
+			"SIMULATED USER" })
 	@PutMapping("/update-personal-profile/{userId}")
 	ResponseEntity<?> updateProfile(@Valid @RequestBody UpdatePersonalProfileRequest updatePersonalProfileRequest,
 			@PathVariable String userId) {
@@ -242,26 +242,26 @@ public class SimulatedUserController {
 	}
 
 	@ApiOperation(value = "Send OTP to email and phoneNumber for Waya Account Viewing", notes = "Send OTP to email and phoneNumber for Waya Account Viewing", tags = {
-			"SimulatedUser" })
+			"SIMULATED USER" })
 	@GetMapping("/authenticate-waya/otp-send")
 	public ResponseEntity<?> sendAdminOTP() {
 		return adminService.sendAdminOTP();
 	}
 
 	@ApiOperation(value = "Send OTP to email and phoneNumber for Waya Account Viewing", notes = "Send OTP to email and phoneNumber for Waya Account Viewing", tags = {
-			"SimulatedUser" })
+			"SIMULATED USER" })
 	@PostMapping("/authenticate-waya/otp-verify/{otp}")
 	public ResponseEntity<?> verifyAdminOTP(@PathVariable Integer otp) {
 		return adminService.verifyAdminOTP(otp);
 	}
 
-	@ApiOperation(value = "Manage and Reset Users Password", notes = "To Alter Password of a User", tags = { "SimulatedUser" })
+	@ApiOperation(value = "Manage and Reset Users Password", notes = "To Alter Password of a User", tags = { "SIMULATED USER" })
 	@PostMapping("/reset/{userId}/password")
 	public ResponseEntity<?> manageUserPass(@PathVariable Long userId) {
 		return adminService.manageUserPass(userId);
 	}
 
-	@ApiOperation(value = "Download Template for Bulk User Activation/Deactivation ", tags = { "SimulatedUser" })
+	@ApiOperation(value = "Download Template for Bulk User Activation/Deactivation ", tags = { "SIMULATED USER" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("/bulk/account-activation/bulk-user-excel")
 	public ResponseEntity<Resource> getFile() {
@@ -275,34 +275,34 @@ public class SimulatedUserController {
 	}
 
 	@ApiOperation(value = "Deactivate Users via Excel Upload", notes = "To deactivate bulk accounts via excel upload", tags = {
-			"SimulatedUser" })
+			"SIMULATED USER" })
 	@PostMapping(path = "bulk/account-deactivation", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<?> bulkDeactivation(@RequestPart("file") MultipartFile file) {
 		return adminService.bulkDeactivation(file);
 	}
 
 	@ApiOperation(value = "Re-activate Users via Excel Upload", notes = "To reactivate bulk accounts via excel upload", tags = {
-			"SimulatedUser" })
+			"SIMULATED USER" })
 	@PostMapping(path = "bulk/account-activation", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<?> bulkActivation(@RequestPart("file") MultipartFile file) {
 		return adminService.bulkActivation(file);
 	}
 
 	@ApiOperation(value = "To Toggle Activation and Deactivation of a single User", notes = "To Toggle Activation and Deactivation of a single User", tags = {
-			"SimulatedUser" })
+			"SIMULATED USER" })
 	@PostMapping("/users/activation-toggle")
 	public ResponseEntity<?> toggleActivation(@RequestParam("userId") Long userId) {
 		return adminService.toggleActivation(userId);
 	}
 
 	@ApiOperation(value = "To Toggle User Lock and Unlock Actions of a single User", notes = "To Toggle User Lock and Unlock Actions of a single User", tags = {
-			"SimulatedUser" })
+			"SIMULATED USER" })
 	@PostMapping("/users/lock-toggle/un-lock")
 	public ResponseEntity<?> toggleLock(@RequestParam("userId") Long userId) {
 		return adminService.toggleLock(userId);
 	}
 
-	@ApiOperation(value = "Fetch all Auth Users Roles (Simulated Endpoint)", tags = { "SimulatedUser" })
+	@ApiOperation(value = "Fetch all Auth Users Roles (Simulated Endpoint)", tags = { "SIMULATED USER" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@GetMapping("/manage-user/roles")
 	public ResponseEntity<List<Role>> getAllAuthRolesDB() {
@@ -310,7 +310,7 @@ public class SimulatedUserController {
 	}
 
 	@ApiOperation(value = "Manage Users Role and Permissions", notes = "To Alter roles and Permission from a User. Only a user with an Higher role can upgrade, "
-			+ "except when another Owner intends upgrading a user role to Owner", tags = { "SimulatedUser" })
+			+ "except when another Owner intends upgrading a user role to Owner", tags = { "SIMULATED USER" })
 	@PostMapping("/manage-user/{userId}/roles/{add}/{roleName}")
 	@PreAuthorize(value = "@userSecurity.useHierarchyForRoles(#roleName, authentication)")
 	public ResponseEntity<?> manageRoles(@PathVariable Long userId, @PathVariable boolean add,
