@@ -1,18 +1,23 @@
 package com.waya.wayaauthenticationservice.controller;
 
+import com.waya.wayaauthenticationservice.assembler.UserAssembler;
 import com.waya.wayaauthenticationservice.entity.RedisUser;
+import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.others.ContactPojoReq;
 import com.waya.wayaauthenticationservice.pojo.others.UserEditPojo;
 import com.waya.wayaauthenticationservice.pojo.others.UserRoleUpdateRequest;
+import com.waya.wayaauthenticationservice.pojo.userDTO.UserProfileResponsePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserSetupPojo;
 import com.waya.wayaauthenticationservice.repository.RedisUserDao;
 import com.waya.wayaauthenticationservice.service.UserService;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.data.domain.Page;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.PagedModel;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,6 +39,12 @@ public class UserController {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    PagedResourcesAssembler<Users> pagedResourcesAssembler;
+
+    @Autowired
+    UserAssembler userAssembler;
 
     @ApiOperation(value = "Save users to redis", hidden = false, tags = {
             "USER SERVICE"})
@@ -210,4 +221,18 @@ public class UserController {
 			@RequestParam("size") final int size, @PathVariable("userType") String userType) {
         return userService.GetUserStatisticsforIndvCorp(page, size, userType);
     }
+
+
+    @ApiOperation(value = "Fetch all Users (Admin Endpoint)", tags = { "USER SERVICE" })
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+    @GetMapping("/users")
+    public ResponseEntity<PagedModel<UserProfileResponsePojo>> getAllUsersDB(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size) {
+        Page<Users> userPagedList = userService.getAllUsers(page, size);
+        PagedModel<UserProfileResponsePojo> userPagedModel = pagedResourcesAssembler.toModel(userPagedList,
+                userAssembler);
+        return new ResponseEntity<>(userPagedModel, HttpStatus.OK);
+    }
+
 }
