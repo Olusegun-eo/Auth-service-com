@@ -18,7 +18,7 @@ import javax.validation.constraints.Email;
 
 @RestController
 @RequestMapping("/api/v1/password")
-@Api(tags = {"Password Resource"})
+@Api(tags = {"PASSWORD RESOURCE"})
 @Tag(name = "PASSWORD RESOURCE", description = "REST API for Password Service.")
 @CrossOrigin
 @Validated

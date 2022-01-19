@@ -77,9 +77,9 @@ public class SetUpLoader implements ApplicationListener<ContextRefreshedEvent> {
 		createRoleIfNotFound(ERole.ROLE_APP_ADMIN.name(), "APPLICATION ADMIN", adminPrivileges);
 		createRoleIfNotFound(ERole.ROLE_SUPER_ADMIN.name(), "SUPER ADMIN ROLE", superAdminPrivileges);
 		createRoleIfNotFound(ERole.ROLE_OWNER_ADMIN.name(), "OWNER ADMIN ROLE", ownerPrivileges);
-		createRoleIfNotFound(ERole.ROLE_AGENT.name(),"BIZ_AGENT", userPrivileges);
-		createRoleIfNotFound(ERole.ROLE_AGGREGATOR.name(), "BIZ_AGGREGATOR", userPrivileges);
-		createRoleIfNotFound(ERole.ROLE_MERCHANT.name(), "BIZ_MERCHANT", userPrivileges);
+		//createRoleIfNotFound(ERole.ROLE_AGENT.name(),"BIZ_AGENT", userPrivileges);
+		//createRoleIfNotFound(ERole.ROLE_AGGREGATOR.name(), "BIZ_AGGREGATOR", userPrivileges);
+		//createRoleIfNotFound(ERole.ROLE_MERCHANT.name(), "BIZ_MERCHANT", userPrivileges);
 
 		alreadySetup = true;
 	}
