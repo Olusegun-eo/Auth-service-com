@@ -804,12 +804,13 @@ public class ProfileServiceImpl implements ProfileService {
         if (profile.getOtherDetails() != null) {
             otherDetails = Optional.of(profile.getOtherDetails());
         }
-        try{
-        ReferralCodePojo referralCodePojo = checkReferralCode(profile.getUserId());
-        log.info("referralCodePojo :::: " + referralCodePojo.getReferralCode());
-        } catch (Exception exception) {
-            throw new CustomException(exception.getMessage(), exception, HttpStatus.UNPROCESSABLE_ENTITY);
-        }
+//
+
+
+
+
+
+
         // get referralCodeValue for this user
         Optional<ReferralCode> referralCode;
         String referralCodeValue = null;
