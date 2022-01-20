@@ -165,6 +165,9 @@ public class UserServiceImpl implements UserService {
 
 	@Value("${api.server.deployed}")
 	private String urlRedirect;
+	
+	@Value("${cipher.utils.value}")
+	private String cipherValue;
 
 	private String getBaseUrl(HttpServletRequest request) {
 		return "http://" + urlRedirect + ":" + request.getServerPort() + request.getContextPath();
@@ -305,7 +308,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public ResponseEntity<?> validateServiceUserCall(Long userId, String key) {
 		try {
-			if (!utils.verifySignedData(key.trim()))
+			if (!cipherValue.equals(key.trim()))
 				return new ResponseEntity<>(new ErrorResponse("Invalid KEY Passed"), HttpStatus.BAD_REQUEST);
 
 			Users user = usersRepository.findById(userId).orElse(null);
