@@ -169,8 +169,8 @@ public class ProfileServiceImpl implements ProfileService {
                     profileRepository.findByEmail(false, request.getEmail());
 
             // check if the user exist in the referral table
-            ReferralCodePojo referralCodePojo = checkReferralCode(request.getUserId());
-            log.info("referralCodePojo :::: " + referralCodePojo);
+//            ReferralCodePojo referralCodePojo = checkReferralCode(request.getUserId());
+//            log.info("referralCodePojo :::: " + referralCodePojo);
 
             Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(request.getUserId());
 
@@ -192,7 +192,7 @@ public class ProfileServiceImpl implements ProfileService {
                 Profile savedProfile = profileRepository.save(newProfile);
 
                 // save referral code to referral service
-                 postReferralCode(savedProfile, request.getUserId());
+               //  postReferralCode(savedProfile, request.getUserId());
 
                 // save referral code in auth service:: NOTE THIS WILL BE REMOVED SOON
                 saveReferralCode(savedProfile, request.getUserId());
@@ -998,14 +998,13 @@ public class ProfileServiceImpl implements ProfileService {
                         smsRequest.getPhoneNumber(), HttpStatus.NOT_FOUND);
             }
 
-            SMSAlertConfig smsCharges = smsAlertConfigRepository
-                    .findByPhone(smsRequest.getPhoneNumber());
+            SMSAlertConfig smsCharges = smsAlertConfigRepository.findByPhone(smsRequest.getPhoneNumber());
 
             SMSResponse SMSResponse;
             if (smsCharges !=null) {
                 smsCharges.setActive(!smsCharges.isActive());
                 smsCharges.setUserId(user.getId());
-                smsAlertConfigRepository.save(smsCharges);
+                smsCharges = smsAlertConfigRepository.save(smsCharges);
                 SMSResponse = new SMSResponse(smsCharges.getId(),"",
                         smsCharges.getPhoneNumber(),
                         smsCharges.isActive(), smsCharges.getUserId());
