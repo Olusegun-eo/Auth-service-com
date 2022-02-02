@@ -16,7 +16,7 @@ public class WelcomeEmailContext extends AbstractEmailContext {
 //        setTemplateLocation("emails/welcome-mail");
         setTemplateLocation("new-emails/welcome-email-template");
         setSubject("Welcome to the Fold \uD83D\uDC83 \uD83D\uDC83");
-        setFrom("WAYA PayChat");
+        setFrom("Wayabank");
     }
 
 

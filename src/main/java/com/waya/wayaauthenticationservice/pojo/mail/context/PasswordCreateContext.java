@@ -11,7 +11,7 @@ public class PasswordCreateContext extends AbstractEmailContext {
         // like setting up some base URL and context
         Users customer = (Users) context; // we pass the customer information
         put("firstName", customer.getFirstName());
-        setTemplateLocation("emails/password-create");
+        setTemplateLocation("new-emails/password-create");
         setSubject("New User Creation !!!");
         setEmail(customer.getEmail());
         setDisplayName(customer.getFirstName());
