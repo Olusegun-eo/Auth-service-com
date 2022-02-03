@@ -57,9 +57,9 @@ public class MessagingService {
         /* update made by Terseer 29/12/2021 */
         //notificationResponsePojo.setData(data);
 
-        messageQueueProducer.send(EMAIL_TOPIC, post);
+        //messageQueueProducer.send(EMAIL_TOPIC, post);
 
-//       proxy.sendEmail(notificationResponsePojo);
+       proxy.sendEmail(notificationResponsePojo);
         // send to notification service
 
         log.info("sending Email message kafka message queue::: {}", new Gson().toJson(post));
