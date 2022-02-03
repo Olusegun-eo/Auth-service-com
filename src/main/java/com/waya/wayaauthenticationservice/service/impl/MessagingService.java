@@ -1,6 +1,5 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
-import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.enums.EventCategory;
 import com.waya.wayaauthenticationservice.enums.StreamsEventType;
 import com.waya.wayaauthenticationservice.pojo.mail.AbstractEmailContext;
@@ -29,40 +28,42 @@ public class MessagingService {
     private final NotificationProxy proxy;
 
     public void sendMail(AbstractEmailContext email) throws MessagingException {
+        try {
+            /* update made by Terseer 29/12/2021 */
+            NotificationResponsePojo notificationResponsePojo = new NotificationResponsePojo();
+            //notificationResponsePojo.setEventCategory(EventCategory.WELCOME.name());
+            notificationResponsePojo.setEventType(StreamsEventType.EMAIL.toString());
+            notificationResponsePojo.setInitiator(WAYAPAY);
 
-        /* update made by Terseer 29/12/2021 */
-        NotificationResponsePojo notificationResponsePojo = new NotificationResponsePojo();
-        //notificationResponsePojo.setEventCategory(EventCategory.WELCOME.name());
-        notificationResponsePojo.setEventType(StreamsEventType.EMAIL.toString());
-        notificationResponsePojo.setInitiator(WAYAPAY);
 
 
+            Context context = new Context();
+            context.setVariables(email.getContext());
 
-        Context context = new Context();
-        context.setVariables(email.getContext());
+            StreamPayload<StreamDataEmail> post = new StreamPayload<>();
+            post.setEventType(StreamsEventType.EMAIL.toString());
+            post.setInitiator(WAYAPAY);
+            post.setToken(null);
+            post.setKey(TWILIO_PROVIDER);
 
-        StreamPayload<StreamDataEmail> post = new StreamPayload<>();
-        post.setEventType(StreamsEventType.EMAIL.toString());
-        post.setInitiator(WAYAPAY);
-        post.setToken(null);
-        post.setKey(TWILIO_PROVIDER);
+            StreamDataEmail data = new StreamDataEmail();
 
-        StreamDataEmail data = new StreamDataEmail();
+            String emailContent = templateEngine.process(email.getTemplateLocation(), context);
+            data.setMessage(emailContent);
+            data.setNames(Collections.singletonList(new RecipientsEmail(email.getEmail(), email.getDisplayName())));
+            post.setData(data);
 
-        String emailContent = templateEngine.process(email.getTemplateLocation(), context);
-        data.setMessage(emailContent);
-        data.setNames(Collections.singletonList(new RecipientsEmail(email.getEmail(), email.getDisplayName())));
-        post.setData(data);
+            /* update made by Terseer 29/12/2021 */
+            notificationResponsePojo.setData(data);
 
-        /* update made by Terseer 29/12/2021 */
-        //notificationResponsePojo.setData(data);
+    //      messageQueueProducer.send(EMAIL_TOPIC, post);
 
-        //messageQueueProducer.send(EMAIL_TOPIC, post);
-
-       proxy.sendEmail(notificationResponsePojo);
+           proxy.sendEmail(notificationResponsePojo);
         // send to notification service
-
-        log.info("sending Email message kafka message queue::: {}", new Gson().toJson(post));
+        } catch (Exception exception) {
+            log.error("could not process data {}", exception.getMessage());
+        }
+        //log.info("sending Email message kafka message queue::: {}", new Gson().toJson(post));
     }
 
     public void sendSMS(String name, String message, String phoneNumber) {
