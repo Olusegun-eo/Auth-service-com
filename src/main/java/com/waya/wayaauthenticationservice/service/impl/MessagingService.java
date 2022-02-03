@@ -1,5 +1,6 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
+import com.google.gson.Gson;
 import com.waya.wayaauthenticationservice.enums.EventCategory;
 import com.waya.wayaauthenticationservice.enums.StreamsEventType;
 import com.waya.wayaauthenticationservice.pojo.mail.AbstractEmailContext;
@@ -54,14 +55,14 @@ public class MessagingService {
         post.setData(data);
 
         /* update made by Terseer 29/12/2021 */
-        notificationResponsePojo.setData(data);
+        //notificationResponsePojo.setData(data);
 
-//        messageQueueProducer.send(EMAIL_TOPIC, post);
+        messageQueueProducer.send(EMAIL_TOPIC, post);
 
-       proxy.sendEmail(notificationResponsePojo);
+//       proxy.sendEmail(notificationResponsePojo);
         // send to notification service
 
-        //log.info("sending Email message kafka message queue::: {}", new Gson().toJson(post));
+        log.info("sending Email message kafka message queue::: {}", new Gson().toJson(post));
     }
 
     public void sendSMS(String name, String message, String phoneNumber) {

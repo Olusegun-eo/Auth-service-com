@@ -17,7 +17,7 @@ public class Constant {
     public static final String ID_IS_REQUIRED = "Id is required";
     public static final String NOTFOUND = "Not found!";
     
-    public static final String WAYAPAY = "Wayapay";
+    public static final String WAYAPAY = "Wayabank";
     public static final String CHARACTERS = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPZMXNCBVALSKDJFHG1234509687";
     public static final String AUTHORITIES_KEY = "scopes";
     public static final String USERNAME = "username";
@@ -25,7 +25,7 @@ public class Constant {
     public static final String TOKEN = "token";
     public static final String ID_IS_INVALID = "Invalid Id provided";
     public static final String MESSAGE = "your OTP is ";
-    public static final String MESSAGE_2 = ". Thanks for choosing wayapaychat";
+    public static final String MESSAGE_2 = ". Thanks for choosing Wayabank";
     public static final String OTP_SUCCESS_MESSAGE = "OTP verified successfully";
     public static final String INVALID_OTP = "Invalid OTP";
     public static final String OTP_ERROR_MESSAGE = "OTP has expired";
