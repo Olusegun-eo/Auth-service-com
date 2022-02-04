@@ -273,7 +273,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
             post.setKey(TWILIO_PROVIDER);
 
             StreamDataSMS data = new StreamDataSMS();
-            data.setMessage(MESSAGE + otp.getCode() + MESSAGE_2);
+            data.setMessage(RESET_PIN_MESSAGE + otp.getCode() + MESSAGE_2);
             data.setRecipients(Collections.singletonList(new RecipientsSMS(name, "+".concat(otp.getPhoneNumber()))));
 
             post.setData(data);

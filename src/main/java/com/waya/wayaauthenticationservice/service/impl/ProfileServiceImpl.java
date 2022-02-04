@@ -51,6 +51,7 @@ import static org.springframework.http.HttpStatus.OK;
 @Slf4j
 public class ProfileServiceImpl implements ProfileService {
 
+    private final KafkaMessageProducer kafkaMessageProducer;
     private final ModelMapper modelMapper;
     private final ProfileRepository profileRepository;
     private final UserRepository userRepository;
@@ -71,13 +72,14 @@ public class ProfileServiceImpl implements ProfileService {
     public String referralAccount;
 
     @Autowired
-    public ProfileServiceImpl(ModelMapper modelMapper, ProfileRepository profileRepository,
+    public ProfileServiceImpl(KafkaMessageProducer kafkaMessageProducer, ModelMapper modelMapper, ProfileRepository profileRepository,
                               UserRepository userRepository, OTPTokenService otpTokenService,
                               FileResourceServiceFeignClient fileResourceServiceFeignClient,
                               @Qualifier("restClient") RestTemplate restClient,
                               OtherDetailsRepository otherDetailsRepository,
                               SMSAlertConfigRepository smsAlertConfigRepository, MessagingService messagingService,
                               ReferralCodeRepository referralCodeRepository, WalletProxy walletProxy, ReferralBonusRepository referralBonusRepository, ReferralProxy referralProxy) {
+        this.kafkaMessageProducer = kafkaMessageProducer;
         this.modelMapper = modelMapper;
         this.profileRepository = profileRepository;
         this.otpTokenService = otpTokenService;
@@ -124,8 +126,8 @@ public class ProfileServiceImpl implements ProfileService {
                 parsePageNumber--;
 
             // make a call to the profile service to get getReferralCodeByUserId
-            ReferralCodePojo referralCodePojo = checkReferralCode(userId);
-            log.info("referralCodePojo :::: " + referralCodePojo);
+            //ReferralCodePojo referralCodePojo = checkReferralCode(userId);
+           // log.info("referralCodePojo :::: " + referralCodePojo);
 
             ReferralCode referrals = referralCodeRepository.getReferralCodeByUserId(userId).orElse(null);
             if (referrals == null) {
@@ -169,12 +171,13 @@ public class ProfileServiceImpl implements ProfileService {
                     profileRepository.findByEmail(false, request.getEmail());
 
             // check if the user exist in the referral table
-//            ReferralCodePojo referralCodePojo = checkReferralCode(request.getUserId());
-//            log.info("referralCodePojo :::: " + referralCodePojo);
+            //ReferralCodePojo referralCodePojo = checkReferralCode(request.getUserId());
+          //  log.info("referralCodePojo :::: " + referralCodePojo);
 
             Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(request.getUserId());
 
             // validation check
+            //ApiResponseBody<String> validationCheck2 = validationCheckOnProfile2(profile, referralCodePojo);  // external implementation
             ApiResponseBody<String> validationCheck = validationCheckOnProfile(profile, referralCode);
             if (validationCheck.getStatus()) {
                 Profile newProfile = modelMapper.map(request, Profile.class);
@@ -192,7 +195,7 @@ public class ProfileServiceImpl implements ProfileService {
                 Profile savedProfile = profileRepository.save(newProfile);
 
                 // save referral code to referral service
-               //  postReferralCode(savedProfile, request.getUserId());
+                CompletableFuture.runAsync(() -> kafkaMessageProducer.send(CREATE_REFERRAL_TOPIC,savedProfile));
 
                 // save referral code in auth service:: NOTE THIS WILL BE REMOVED SOON
                 saveReferralCode(savedProfile, request.getUserId());
@@ -331,19 +334,22 @@ public class ProfileServiceImpl implements ProfileService {
 
             // check if the user exist in the referral table
             // now this check will extend to the referral service
-//            ReferralCodePojo referralCodePojo = checkReferralCode(profileRequest.getUserId());
-//            log.info("referralCodePojo :::: " + referralCodePojo);
+           // ReferralCodePojo referralCodePojo = checkReferralCode(profileRequest.getUserId());   // external call implementation
+           // log.info("referralCodePojo :::: " + referralCodePojo);
 
-            Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(profileRequest.getUserId());
+            Optional<ReferralCode> referralCode = referralCodeRepository.findByUserId(profileRequest.getUserId()); // internal call implementation
             // validation check
-            ApiResponseBody<String> validationCheck = validationCheckOnProfile(profile, referralCode);
+           // ApiResponseBody<String> validationCheck2 = validationCheckOnProfile2(profile, referralCodePojo); // External call implementation
+            ApiResponseBody<String> validationCheck = validationCheckOnProfile(profile, referralCode);       // Internal call
             if (validationCheck.getStatus()) {
                 Profile savedProfile = saveCorporateProfile(profileRequest);
 
                 // save the referral code make request to the referral service
-//                postReferralCode(savedProfile, profileRequest.getUserId());
+                CompletableFuture.runAsync(() -> kafkaMessageProducer.send(CREATE_REFERRAL_TOPIC,savedProfile));
 
                 saveReferralCode(savedProfile, profileRequest.getUserId());
+
+
 
                 // send otp to Phone and Email
                 CompletableFuture.runAsync(() -> otpTokenService.sendAccountVerificationToken(user,
@@ -804,14 +810,13 @@ public class ProfileServiceImpl implements ProfileService {
         if (profile.getOtherDetails() != null) {
             otherDetails = Optional.of(profile.getOtherDetails());
         }
-        
-        /*try{
-        ReferralCodePojo referralCodePojo = checkReferralCode(profile.getUserId());
-        log.info("referralCodePojo :::: " + referralCodePojo.getReferralCode());
-        } catch (Exception exception) {
-            throw new CustomException(exception.getMessage(), exception, HttpStatus.UNPROCESSABLE_ENTITY);
-        }*/
-        
+//        ReferralCodePojo referralCodePojo = null;
+//        try{
+//         referralCodePojo = checkReferralCode(profile.getUserId());
+//        log.info("referralCodePojo :::: " + referralCodePojo.getReferralCode());
+//        } catch (Exception exception) {
+//            throw new CustomException(exception.getMessage(), exception, HttpStatus.UNPROCESSABLE_ENTITY);
+//        }
         // get referralCodeValue for this user
         Optional<ReferralCode> referralCode;
         String referralCodeValue = null;
@@ -819,6 +824,7 @@ public class ProfileServiceImpl implements ProfileService {
             referralCode = referralCodeRepository.findByUserId(profile.getUserId().toString());
             if (referralCode.isPresent()) {
                 referralCodeValue = referralCode.get().getReferralCode();
+               // referralCodeValue = referralCodePojo.getReferralCode();
             }
         }
 
@@ -867,6 +873,18 @@ public class ProfileServiceImpl implements ProfileService {
             return new ApiResponseBody<>(null, DUPLICATE_KEY, false);
         }
         if (referralCodePojo.isPresent()) {
+            return new ApiResponseBody<>(null, "user id already exists", false);
+        } else {
+            return new ApiResponseBody<>(null, "", true);
+        }
+    }
+
+    private ApiResponseBody<String> validationCheckOnProfile2(Optional<Profile> profile,
+                                                              ReferralCodePojo referralCodePojo) {
+        if (profile.isPresent()) {
+            return new ApiResponseBody<>(null, DUPLICATE_KEY, false);
+        }
+        if (referralCodePojo !=null) {
             return new ApiResponseBody<>(null, "user id already exists", false);
         } else {
             return new ApiResponseBody<>(null, "", true);
