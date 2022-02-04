@@ -51,6 +51,7 @@ import static org.springframework.http.HttpStatus.OK;
 @Slf4j
 public class ProfileServiceImpl implements ProfileService {
 
+    private final KafkaMessageProducer kafkaMessageProducer;
     private final ModelMapper modelMapper;
     private final ProfileRepository profileRepository;
     private final UserRepository userRepository;
@@ -71,13 +72,14 @@ public class ProfileServiceImpl implements ProfileService {
     public String referralAccount;
 
     @Autowired
-    public ProfileServiceImpl(ModelMapper modelMapper, ProfileRepository profileRepository,
+    public ProfileServiceImpl(KafkaMessageProducer kafkaMessageProducer, ModelMapper modelMapper, ProfileRepository profileRepository,
                               UserRepository userRepository, OTPTokenService otpTokenService,
                               FileResourceServiceFeignClient fileResourceServiceFeignClient,
                               @Qualifier("restClient") RestTemplate restClient,
                               OtherDetailsRepository otherDetailsRepository,
                               SMSAlertConfigRepository smsAlertConfigRepository, MessagingService messagingService,
                               ReferralCodeRepository referralCodeRepository, WalletProxy walletProxy, ReferralBonusRepository referralBonusRepository, ReferralProxy referralProxy) {
+        this.kafkaMessageProducer = kafkaMessageProducer;
         this.modelMapper = modelMapper;
         this.profileRepository = profileRepository;
         this.otpTokenService = otpTokenService;
@@ -193,10 +195,10 @@ public class ProfileServiceImpl implements ProfileService {
                 Profile savedProfile = profileRepository.save(newProfile);
 
                 // save referral code to referral service
-                 postReferralCode(savedProfile, request.getUserId());
+                CompletableFuture.runAsync(() -> kafkaMessageProducer.send(CREATE_REFERRAL_TOPIC,savedProfile));
 
                 // save referral code in auth service:: NOTE THIS WILL BE REMOVED SOON
-              //  saveReferralCode(savedProfile, request.getUserId());
+                saveReferralCode(savedProfile, request.getUserId());
 
                 String fullName = String.format("%s %s", savedProfile.getFirstName(), savedProfile.getSurname());
 
@@ -343,9 +345,11 @@ public class ProfileServiceImpl implements ProfileService {
                 Profile savedProfile = saveCorporateProfile(profileRequest);
 
                 // save the referral code make request to the referral service
-                postReferralCode(savedProfile, profileRequest.getUserId());
+                CompletableFuture.runAsync(() -> kafkaMessageProducer.send(CREATE_REFERRAL_TOPIC,savedProfile));
 
-                //saveReferralCode(savedProfile, profileRequest.getUserId());
+                saveReferralCode(savedProfile, profileRequest.getUserId());
+
+
 
                 // send otp to Phone and Email
                 CompletableFuture.runAsync(() -> otpTokenService.sendAccountVerificationToken(user,
