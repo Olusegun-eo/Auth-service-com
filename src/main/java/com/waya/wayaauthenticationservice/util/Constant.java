@@ -9,6 +9,7 @@ public class Constant {
 
     public static final String VIRTUAL_ACCOUNT_TOPIC = "virtual-account";
     public static final String WAYAGRAM_PROFILE_TOPIC = "wayagram-profile";
+    public static final String CREATE_REFERRAL_TOPIC = "create-user-referral";
     public static final String WAYAGRAM_PAYMENT_TOPIC = "wayagram-payment";
     public static final String WALLET_ACCOUNT_TOPIC = "wallet-account";
     public static final String CHAT_TOPIC = "wayagram-chat";
@@ -25,6 +26,7 @@ public class Constant {
     public static final String TOKEN = "token";
     public static final String ID_IS_INVALID = "Invalid Id provided";
     public static final String MESSAGE = "your OTP is ";
+    public static final String RESET_PIN_MESSAGE = "Your Wayabank Confirmation Code is";
     public static final String MESSAGE_2 = ". Thanks for choosing Wayabank";
     public static final String OTP_SUCCESS_MESSAGE = "OTP verified successfully";
     public static final String INVALID_OTP = "Invalid OTP";
