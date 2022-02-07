@@ -25,8 +25,6 @@ public class ProfileDto {
     private String state;
     private boolean deleted;
     private String userId;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
     private String referral;
     private boolean corporate;
     private OtherDetailsDto otherDetails;
