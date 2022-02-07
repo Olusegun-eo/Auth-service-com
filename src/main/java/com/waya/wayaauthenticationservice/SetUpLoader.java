@@ -3,13 +3,17 @@ package com.waya.wayaauthenticationservice;
 import com.waya.wayaauthenticationservice.entity.BusinessType;
 import com.waya.wayaauthenticationservice.entity.Privilege;
 import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.ERole;
 import com.waya.wayaauthenticationservice.repository.BusinessTypeRepository;
 import com.waya.wayaauthenticationservice.repository.PrivilegeRepository;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import javax.transaction.Transactional;
@@ -28,6 +32,12 @@ public class SetUpLoader implements ApplicationListener<ContextRefreshedEvent> {
 
 	@Autowired
 	private PrivilegeRepository privilegeRepository;
+	
+	@Autowired
+	private UserRepository userRepository;
+	
+	@Autowired
+    private PasswordEncoder passwordEncoder;
 
 	@Override
 	@Transactional
@@ -77,10 +87,16 @@ public class SetUpLoader implements ApplicationListener<ContextRefreshedEvent> {
 		createRoleIfNotFound(ERole.ROLE_APP_ADMIN.name(), "APPLICATION ADMIN", adminPrivileges);
 		createRoleIfNotFound(ERole.ROLE_SUPER_ADMIN.name(), "SUPER ADMIN ROLE", superAdminPrivileges);
 		createRoleIfNotFound(ERole.ROLE_OWNER_ADMIN.name(), "OWNER ADMIN ROLE", ownerPrivileges);
-		//createRoleIfNotFound(ERole.ROLE_AGENT.name(),"BIZ_AGENT", userPrivileges);
-		//createRoleIfNotFound(ERole.ROLE_AGGREGATOR.name(), "BIZ_AGGREGATOR", userPrivileges);
-		//createRoleIfNotFound(ERole.ROLE_MERCHANT.name(), "BIZ_MERCHANT", userPrivileges);
-
+		createRoleIfNotFound(ERole.ROLE_AGENT.name(),"BIZ_AGENT", userPrivileges);
+		createRoleIfNotFound(ERole.ROLE_AGGREGATOR.name(), "BIZ_AGGREGATOR", userPrivileges);
+		createRoleIfNotFound(ERole.ROLE_MERCHANT.name(), "BIZ_MERCHANT", userPrivileges);
+        
+		List<Role> roleList = new ArrayList<>();
+		Optional<Role> ownerRole = roleRepository.findByName("ROLE_OWNER_ADMIN");
+		roleList.add(ownerRole.get());
+		Optional<Role> superRole = roleRepository.findByName("ROLE_SUPER_ADMIN");
+		roleList.add(superRole.get());
+		createUserIfNotFound("wayaadmin@wayapaychat.com", roleList);
 		alreadySetup = true;
 	}
 
@@ -106,4 +122,27 @@ public class SetUpLoader implements ApplicationListener<ContextRefreshedEvent> {
 		}
 		return role;
 	}
+	
+	void createUserIfNotFound(String username, List<Role> role){
+        Optional<Users> mUser = userRepository.findByEmailOrPhoneNumber(username);
+        if(!mUser.isPresent()) {
+            Users user = new Users();
+            user.setFirstName("WAYA");
+            user.setSurname("ADMIN");
+            user.setName("WAYA ADMIN");
+            user.setPhoneNumber("2349063059889");
+            user.setEmail(username);
+            user.setActive(true);
+            user.setAdmin(true);
+            user.setEmailVerified(true);
+            user.setPhoneVerified(true);
+            user.setCorporate(false);
+            user.setAccountStatus(-1);
+            user.setReferenceCode("XTO440");
+            user.setPassword(passwordEncoder.encode("Test@#123"));
+            user.setRoleList(role);
+            Users regUser = userRepository.saveAndFlush(user);
+            System.out.println(regUser.toString());
+        }
+    }
 }
