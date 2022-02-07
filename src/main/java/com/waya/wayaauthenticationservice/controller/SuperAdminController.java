@@ -39,34 +39,42 @@ public class SuperAdminController {
         return superAdminService.createUser(userPojo, request, device);
     }
 
+//
+//    @ApiOperation(value = "TEST EMAIL TEMPLATE", tags = {
+//            "SUPER-ADMIN" })
+//    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+//    @PostMapping("/users/test-template")
+//    public ResponseEntity<String> testEmailTemplate() {
+//
+//        return superAdminService.testEmailTemplate();
+//    }
+//
+//
+//    @ApiOperation(value = "TEST EMAIL TEMPLATE", tags = {
+//            "SUPER-ADMIN" })
+//    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+//    @PostMapping("/users/test-otp-template")
+//    public ResponseEntity<String> testOTPEmailTemplate() {
+//
+//        return superAdminService.testOTPEmailTemplate();
+//    }
+//
+//    @ApiOperation(value = "TEST EMAIL TEMPLATE", tags = {
+//            "SUPER-ADMIN" })
+//    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+//    @PostMapping("/users/test-pin-rest-template")
+//    public ResponseEntity<String> testPinReset() {
+//        return superAdminService.testPinReset();
+//    }
+
 
     @ApiOperation(value = "TEST EMAIL TEMPLATE", tags = {
             "SUPER-ADMIN" })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
-    @PostMapping("/users/test-template")
-    public ResponseEntity<String> testEmailTemplate() {
-
-        return superAdminService.testEmailTemplate();
+    @PostMapping("/users/test-save-referral/{userID}")
+    public ResponseEntity<String> testPinReset(@PathVariable String userID, HttpServletRequest request) {
+        return superAdminService.testSavaReferral(userID, request);
     }
-
-
-    @ApiOperation(value = "TEST EMAIL TEMPLATE", tags = {
-            "SUPER-ADMIN" })
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
-    @PostMapping("/users/test-otp-template")
-    public ResponseEntity<String> testOTPEmailTemplate() {
-
-        return superAdminService.testOTPEmailTemplate();
-    }
-
-    @ApiOperation(value = "TEST EMAIL TEMPLATE", tags = {
-            "SUPER-ADMIN" })
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
-    @PostMapping("/users/test-pin-rest-template")
-    public ResponseEntity<String> testPinReset() {
-        return superAdminService.testPinReset();
-    }
-
 
 
 }

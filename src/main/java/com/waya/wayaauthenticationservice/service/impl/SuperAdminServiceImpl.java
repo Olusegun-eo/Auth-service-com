@@ -1,15 +1,15 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
 import com.waya.wayaauthenticationservice.entity.OTPBase;
+import com.waya.wayaauthenticationservice.entity.Profile;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.mail.context.AccountVerificationEmailContext;
 import com.waya.wayaauthenticationservice.pojo.mail.context.PinResetContext;
 import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
 import com.waya.wayaauthenticationservice.pojo.others.SuperAdminCreatUserRequest;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
-import com.waya.wayaauthenticationservice.service.AuthenticationService;
-import com.waya.wayaauthenticationservice.service.SuperAdminService;
-import com.waya.wayaauthenticationservice.service.UserService;
+import com.waya.wayaauthenticationservice.service.*;
+import com.waya.wayaauthenticationservice.util.Constant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -34,6 +34,12 @@ public class SuperAdminServiceImpl implements SuperAdminService {
 
     @Autowired
     MessagingService messagingService;
+
+    @Autowired
+    ProfileService profileService;
+
+    @Autowired
+    MessageQueueProducer messageQueueProducer;
 
 
     @Override
@@ -65,6 +71,16 @@ public class SuperAdminServiceImpl implements SuperAdminService {
         user.setEmail("agbe.terseer@gmail.com");
         user.setFirstName("Terseer");
         sendPinReset(user);
+        return new ResponseEntity<String>("Done", HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<String> testSavaReferral(String userId, HttpServletRequest request) {
+
+        Profile profile = profileService.getProfile(userId);
+
+        messageQueueProducer.send(Constant.CREATE_REFERRAL_TOPIC,profile);
+// public static final String CREATE_REFERRAL_TOPIC = "create-user-referral";
         return new ResponseEntity<String>("Done", HttpStatus.OK);
     }
 

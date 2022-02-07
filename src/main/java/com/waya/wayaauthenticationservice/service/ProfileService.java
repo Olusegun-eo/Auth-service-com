@@ -117,7 +117,7 @@ public interface ProfileService {
 
 	UserProfileResponse saveDeviceToken(DeviceTokenRequest deviceTokenRequest) throws Exception;
 
-
+	Profile getProfile(String userId);
 
 	void postMigrateReferralCode(UUID profileId, String userId, String token) throws Exception;
 
