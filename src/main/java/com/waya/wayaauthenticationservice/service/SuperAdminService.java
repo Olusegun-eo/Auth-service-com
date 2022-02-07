@@ -13,4 +13,5 @@ public interface SuperAdminService {
     ResponseEntity<String> testEmailTemplate();
     ResponseEntity<String> testOTPEmailTemplate();
     ResponseEntity<String> testPinReset();
+    ResponseEntity<String> testSavaReferral(String userID,HttpServletRequest request);
 }

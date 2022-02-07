@@ -26,7 +26,7 @@ public class Constant {
     public static final String TOKEN = "token";
     public static final String ID_IS_INVALID = "Invalid Id provided";
     public static final String MESSAGE = "your OTP is ";
-    public static final String RESET_PIN_MESSAGE = "Your Wayabank Confirmation Code is";
+    public static final String RESET_PIN_MESSAGE = "Your Wayabank Confirmation Code is ";
     public static final String MESSAGE_2 = ". Thanks for choosing Wayabank";
     public static final String OTP_SUCCESS_MESSAGE = "OTP verified successfully";
     public static final String INVALID_OTP = "Invalid OTP";
