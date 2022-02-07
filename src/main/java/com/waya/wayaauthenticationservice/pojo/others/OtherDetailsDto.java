@@ -10,5 +10,4 @@ public class OtherDetailsDto {
     private String organisationName;
     private String organisationType;
     private String businessType;
-    private ProfileDto profile;
 }

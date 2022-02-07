@@ -197,9 +197,10 @@ public class ProfileServiceImpl implements ProfileService {
 
                 // save referral code in auth service:: NOTE THIS WILL BE REMOVED SOON
                 ReferralCode referralCode1 = saveReferralCode(savedProfile, request.getUserId());
+                ProfileReferralPojo referralPojo = buildRequest(referralCode1);
 
                 // save referral code to referral service
-                CompletableFuture.runAsync(() -> kafkaMessageProducer.send(CREATE_REFERRAL_TOPIC,referralCode1));
+                CompletableFuture.runAsync(() -> kafkaMessageProducer.send(CREATE_REFERRAL_TOPIC,referralPojo));
 
 
                 String fullName = String.format("%s %s", savedProfile.getFirstName(), savedProfile.getSurname());
@@ -238,6 +239,37 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
 
+
+    private ProfileReferralPojo buildRequest(ReferralCode referralCode){
+        ProfileReferralPojo pojo = new ProfileReferralPojo();
+
+        ProfileDto profileDto = new ProfileDto();
+
+        Profile profile = referralCode.getProfile();
+        profileDto.setSurname(profile.getSurname());
+        profileDto.setState(profile.getState());
+        profileDto.setReferral(profile.getReferral());
+        profileDto.setPhoneNumber(profile.getPhoneNumber());
+        profileDto.setOrganisationName(profile.getFirstName());
+        profileDto.setFirstName(profile.getFirstName());
+        profileDto.setMiddleName(profile.getMiddleName());
+        profileDto.setGender(profile.getGender());
+        profileDto.setEmail(profile.getEmail());
+        profileDto.setDistrict(profile.getDistrict());
+        profileDto.setDateOfBirth(profile.getDateOfBirth());
+        profileDto.setProfileImage(profile.getProfileImage());
+        profileDto.setCity(profile.getCity());
+        profileDto.setAddress(profile.getAddress());
+        profileDto.setDeleted(profile.isDeleted());
+        profileDto.setUserId(profile.getUserId());
+
+        pojo.setId(referralCode.getId());
+        pojo.setProfile(profileDto);
+        pojo.setUserId(referralCode.getUserId());
+        pojo.setReferralCode(referralCode.getReferralCode());
+        return pojo;
+
+    }
 
     private ReferralCodePojo checkReferralCode(String userId) throws Exception {
         try {
@@ -348,11 +380,11 @@ public class ProfileServiceImpl implements ProfileService {
             if (validationCheck.getStatus()) {
                 Profile savedProfile = saveCorporateProfile(profileRequest);
 
-
                 ReferralCode referralCode1 = saveReferralCode(savedProfile, profileRequest.getUserId());
+                ProfileReferralPojo referralPojo = buildRequest(referralCode1);
 
                 // save the referral code make request to the referral service
-                CompletableFuture.runAsync(() -> kafkaMessageProducer.send(CREATE_REFERRAL_TOPIC,referralCode1));
+                CompletableFuture.runAsync(() -> kafkaMessageProducer.send(CREATE_REFERRAL_TOPIC,referralPojo));
 
 
                 // send otp to Phone and Email
