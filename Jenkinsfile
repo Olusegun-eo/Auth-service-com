@@ -37,7 +37,7 @@ pipeline {
         stage('Image Build') {
             steps {
                 script {
-                    dockerImage = docker.build "${REGISTRY}/${SERVICE_NAME}:${VERSION}"
+                    dockerImage = docker.build "${REGISTRY}/${SERVICE_NAME}:${VERSION} --build-arg profile=${NAMESPACE}"
                 }
             }
         }

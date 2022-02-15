@@ -44,3 +44,11 @@ spec:
         ports: 
         - name: http
           containerPort: 80
+        volumeMounts:
+        - name: config-file
+          mountPath: "/app/application-cfgprofile.yml"  # "secret-file" file will be created in "/app" directory
+          subPath: application.yml
+      volumes:
+        - name: config-file
+          secret:
+            secretName: auth-service-config-file # name of the Secret
