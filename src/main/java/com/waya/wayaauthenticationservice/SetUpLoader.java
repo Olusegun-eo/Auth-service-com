@@ -92,11 +92,19 @@ public class SetUpLoader implements ApplicationListener<ContextRefreshedEvent> {
 		createRoleIfNotFound(ERole.ROLE_MERCHANT.name(), "BIZ_MERCHANT", userPrivileges);
         
 		List<Role> roleList = new ArrayList<>();
+		List<Role> adminList = new ArrayList<>();
 		Optional<Role> ownerRole = roleRepository.findByName("ROLE_OWNER_ADMIN");
 		roleList.add(ownerRole.get());
 		Optional<Role> superRole = roleRepository.findByName("ROLE_SUPER_ADMIN");
 		roleList.add(superRole.get());
+		Optional<Role> adminRole = roleRepository.findByName("ROLE_APP_ADMIN");
+		roleList.add(superRole.get());
+		adminList.add(superRole.get());
+		adminList.add(adminRole.get());
 		createUserIfNotFound("wayaadmin@wayapaychat.com", roleList);
+		createHandleIfNotFound("wayaofficialhandle@wayapaychat.com", adminList);
+		createUssdIfNotFound("ussd@wayapaychat.com", adminList);
+		createTbaadmIfNotFound("tbaadm@wayapaychat.com", adminList);
 		alreadySetup = true;
 	}
 
@@ -137,9 +145,78 @@ public class SetUpLoader implements ApplicationListener<ContextRefreshedEvent> {
             user.setEmailVerified(true);
             user.setPhoneVerified(true);
             user.setCorporate(false);
-            user.setAccountStatus(-1);
+            user.setAccountStatus(1);
             user.setReferenceCode("XTO440");
             user.setPassword(passwordEncoder.encode("Test@#123"));
+            user.setRoleList(role);
+            Users regUser = userRepository.saveAndFlush(user);
+            System.out.println(regUser.toString());
+        }
+    }
+	
+	void createHandleIfNotFound(String username, List<Role> role){
+        Optional<Users> mUser = userRepository.findByEmailOrPhoneNumber(username);
+        if(!mUser.isPresent()) {
+            Users user = new Users();
+            user.setFirstName("wayaOfficialHandle");
+            user.setSurname("wayaOfficialHandle");
+            user.setName("wayaOfficialHandle wayaOfficialHandle");
+            user.setPhoneNumber("2349063059887");
+            user.setEmail(username);
+            user.setActive(true);
+            user.setAdmin(true);
+            user.setEmailVerified(true);
+            user.setPhoneVerified(true);
+            user.setCorporate(false);
+            user.setAccountStatus(1);
+            user.setReferenceCode("XTO440");
+            user.setPassword(passwordEncoder.encode("Test@#123"));
+            user.setRoleList(role);
+            Users regUser = userRepository.saveAndFlush(user);
+            System.out.println(regUser.toString());
+        }
+    }
+	
+	void createUssdIfNotFound(String username, List<Role> role){
+        Optional<Users> mUser = userRepository.findByEmailOrPhoneNumber(username);
+        if(!mUser.isPresent()) {
+            Users user = new Users();
+            user.setFirstName("USSD");
+            user.setSurname("ADMIN");
+            user.setName("USSD ADMIN");
+            user.setPhoneNumber("2349070001201");
+            user.setEmail(username);
+            user.setActive(true);
+            user.setAdmin(true);
+            user.setEmailVerified(true);
+            user.setPhoneVerified(true);
+            user.setCorporate(false);
+            user.setAccountStatus(1);
+            user.setReferenceCode("XTO440");
+            user.setPassword(passwordEncoder.encode("Test@#Ussd123"));
+            user.setRoleList(role);
+            Users regUser = userRepository.saveAndFlush(user);
+            System.out.println(regUser.toString());
+        }
+    }
+	
+	void createTbaadmIfNotFound(String username, List<Role> role){
+        Optional<Users> mUser = userRepository.findByEmailOrPhoneNumber(username);
+        if(!mUser.isPresent()) {
+            Users user = new Users();
+            user.setFirstName("TBAADM");
+            user.setSurname("ADMIN");
+            user.setName("TBAADM ADMIN");
+            user.setPhoneNumber("2349063059888");
+            user.setEmail(username);
+            user.setActive(true);
+            user.setAdmin(true);
+            user.setEmailVerified(true);
+            user.setPhoneVerified(true);
+            user.setCorporate(false);
+            user.setAccountStatus(1);
+            user.setReferenceCode("XTO440");
+            user.setPassword(passwordEncoder.encode("fintemp@#123"));
             user.setRoleList(role);
             Users regUser = userRepository.saveAndFlush(user);
             System.out.println(regUser.toString());
