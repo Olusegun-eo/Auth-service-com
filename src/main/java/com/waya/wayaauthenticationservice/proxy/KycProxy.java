@@ -14,7 +14,7 @@ import com.waya.wayaauthenticationservice.proxy.impl.ApiClientExceptionHandler;
 import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.util.HandleFeignError;
 
-@FeignClient(name = "KYC-SERVICE")
+@FeignClient(name = "KYC-SERVICE-API")
 public interface KycProxy {
 	
 	@RequestMapping(method = RequestMethod.GET, value = "/kyc/users/status/{key}")
