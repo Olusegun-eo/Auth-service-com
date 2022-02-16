@@ -16,7 +16,7 @@ import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.response.ImageUrlResponse;
 import com.waya.wayaauthenticationservice.util.HandleFeignError;
 
-@FeignClient(name = "file-resource-service", )
+@FeignClient(name = "file-resource-service")
 public interface FileResourceServiceFeignClient {
 
 	@HandleFeignError(ApiClientExceptionHandler.class)
