@@ -8,7 +8,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@FeignClient(name = "REFERRAL-SERVICE-API", url = "${app.config.referral-service.base-url}")
+@FeignClient(name = "REFERRAL-SERVICE-API")
 public interface ReferralProxy {
 
     @GetMapping("/api/v1/get-user-by-referral-code/{userId}")

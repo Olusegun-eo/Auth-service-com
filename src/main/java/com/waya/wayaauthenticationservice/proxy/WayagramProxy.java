@@ -12,7 +12,7 @@ import com.waya.wayaauthenticationservice.config.AuthClientConfiguration;
 import com.waya.wayaauthenticationservice.pojo.others.CreateWayagram;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserIDPojo;
 
-@FeignClient(name="WAYAGRAM-PROFILE", url = "${app.config.wayagram-profile.base-url}", configuration = AuthClientConfiguration.class)
+@FeignClient(name="WAYAGRAM-PROFILE", configuration = AuthClientConfiguration.class)
 public interface WayagramProxy {
 
 	@PostMapping("/main/profile/create")

@@ -9,7 +9,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "FRAUD-SERVICE-API", url = "${app.config.fraud-service.base-url}")
+@FeignClient(name = "FRAUD-SERVICE-API")
 public interface FraudProxy {
 
     @PostMapping("/api/v1/fraud-event/report")

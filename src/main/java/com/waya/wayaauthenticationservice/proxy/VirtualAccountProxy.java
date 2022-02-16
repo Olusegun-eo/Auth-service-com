@@ -13,7 +13,7 @@ import com.waya.wayaauthenticationservice.pojo.others.VirtualAccountPojo;
 import com.waya.wayaauthenticationservice.pojo.others.VirtualAccountResponse;
 import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 
-@FeignClient(name = "ACCOUNT-CREATION-SERVICE", url = "${app.config.virtual-account.base-url}", configuration = AuthClientConfiguration.class)
+@FeignClient(name = "ACCOUNT-CREATION-SERVICE", configuration = AuthClientConfiguration.class)
 public interface VirtualAccountProxy {
 	
 	@PostMapping("/account/createVirtualAccount")
