@@ -15,7 +15,7 @@ import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.util.HandleFeignError;
 
 
-@FeignClient(name = "TEMPORAL-WALLET-SERVICE", configuration = AuthClientConfiguration.class)
+@FeignClient(name = "TEMPORAL-WALLET-SERVICE", url = "${app.config.wallet-service.base-url}", configuration = AuthClientConfiguration.class)
 public interface WalletProxy {
 	
 	@RequestMapping(method = RequestMethod.POST, value = "/create/cooperate/user")

@@ -11,7 +11,7 @@ import com.waya.wayaauthenticationservice.pojo.access.UserAccessDTO;
 import com.waya.wayaauthenticationservice.proxy.impl.ApiClientExceptionHandler;
 import com.waya.wayaauthenticationservice.util.HandleFeignError;
 
-@FeignClient(name = "ROLE-SERVICE-API")
+@FeignClient(name = "ROLE-SERVICE-API", url = "${app.config.access-service.base-url}")
 public interface RoleProxy {
 	
 	@GetMapping("/api/v1/user-access/auth/{userId}/access/{key}")

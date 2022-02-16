@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.List;
 
-@FeignClient(name = "BILLER-SERVICE-API", configuration = AuthClientConfiguration.class)
+@FeignClient(name = "BILLER-SERVICE-API", url = "${app.config.biller-service.base-url}", configuration = AuthClientConfiguration.class)
 public interface BillerProxy {
 
     @GetMapping("/api/v1/admin/get-transaction-count/{userId}")
