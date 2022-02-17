@@ -55,6 +55,7 @@ public class MessagingService {
 
             /* update made by Terseer 29/12/2021 */
             notificationResponsePojo.setData(data);
+            notificationResponsePojo.productType("WAYABANK");
 
     //      messageQueueProducer.send(EMAIL_TOPIC, post);
 
