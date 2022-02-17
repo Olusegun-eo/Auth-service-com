@@ -58,9 +58,9 @@ public class MessagingService {
             notificationResponsePojo.setProductType("WAYABANK");
             notificationResponsePojo.setEventCategory("WELCOME"); 
 
-            //      messageQueueProducer.send(EMAIL_TOPIC, post);
+            messageQueueProducer.send(EMAIL_TOPIC, notificationResponsePojo);
             //log.info("data {}", notificationResponsePojo.toString());
-           proxy.sendEmail(notificationResponsePojo);
+//           proxy.sendEmail(notificationResponsePojo);
         // send to notification service
         } catch (Exception exception) {
             log.error("could not process data {}", exception.getMessage());
