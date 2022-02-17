@@ -78,8 +78,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
         try {
 
             try {
-
-                messagingService.sendMail(emailContext);
+                messagingService.sendEmailWithContext(emailContext);
             } catch (Exception e) {
                 log.error("An Error Occurred:: {}", e.getMessage());
             }
@@ -90,16 +89,21 @@ public class OTPTokenServiceImpl implements OTPTokenService {
         }
         return false;
     }
-    public void sendWelcomeEmail(Users user) {
-        WelcomeEmailContext emailContext = new WelcomeEmailContext();
-        emailContext.init(user);
-        try {
-            messagingService.sendMail(emailContext);
-        } catch (Exception e) {
-            log.error("An Error Occurred:: {}", e.getMessage());
-        }
-        log.info("Welcome email sent!! \n");
+
+    public boolean sendEmailToken2(String message, Users profile) {
+
+            try {
+                messagingService.sendEmailNotification(message, profile);
+                log.info(" email sent!!- {} \n", profile.getEmail());
+                return true;
+            } catch (Exception e) {
+                log.error("An Error Occurred:: {}", e.getMessage());
+            }
+
+
+        return false;
     }
+
     @Override
     public OTPVerificationResponse verifyJointOTP(String emailOrPhoneNumber, String otp, OTPRequestType otpRequestType) {
         try {
@@ -374,7 +378,8 @@ public class OTPTokenServiceImpl implements OTPTokenService {
                 emailContext.init(profile);
                 emailContext.setToken(String.valueOf(otp.getCode()));
                 emailContext.buildURL(baseUrl);
-                sendEmailToken(emailContext);
+
+                sendEmailToken2(String.valueOf(otp.getCode()), profile);
             }
 
         }catch(Exception ex){
