@@ -55,9 +55,10 @@ public class MessagingService {
 
             /* update made by Terseer 29/12/2021 */
             notificationResponsePojo.setData(data);
+            notificationResponsePojo.setProductType("WAYABANK");
 
-    //      messageQueueProducer.send(EMAIL_TOPIC, post);
-
+            //      messageQueueProducer.send(EMAIL_TOPIC, post);
+            log.error("data {}", notificationResponsePojo.toString());
            proxy.sendEmail(notificationResponsePojo);
         // send to notification service
         } catch (Exception exception) {

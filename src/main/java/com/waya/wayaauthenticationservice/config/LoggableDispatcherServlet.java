@@ -104,7 +104,7 @@ public class LoggableDispatcherServlet extends DispatcherServlet {
         logMessage.setRequestBody(Objects.toString(requestData, "null"));
         String json = gson.toJson(logMessage);
         // Log to Console/File
-        log.info(json);
+        //log.info(json);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if(authentication != null && authentication.getPrincipal() instanceof UserPrincipal){
