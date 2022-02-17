@@ -148,27 +148,27 @@ referral:
 app:
   config:
     biller-service:
-      base-url: ${CONFIG_BASEURL_BILLPAY:https://services.staging.mywayapay.com/billspayment-service}
+      base-url: ${CONFIG_BASEURL_BILLPAY:https://services.staging.wayabank.ng/billspayment-service}
     access-service:
-      base-url: ${CONFIG_BASEURL_ROLEACCESS:https://services.staging.mywayapay.com/role-service}
+      base-url: ${CONFIG_BASEURL_ROLEACCESS:https://services.staging.wayabank.ng/role-service}
     fraud-service:
-      base-url: ${CONFIG_BASEURL_FRAUD:https://services.staging.mywayapay.com/fraud-service}
+      base-url: ${CONFIG_BASEURL_FRAUD:https://services.staging.wayabank.ng/fraud-service}
     logging-service:
-      base-url: ${CONFIG_BASEURL_LOGAUDIT:https://services.staging.mywayapay.com/logs-service}
+      base-url: ${CONFIG_BASEURL_LOGAUDIT:https://services.staging.wayabank.ng/logs-service}
     wayagram-profile:
-      base-url: ${CONFIG_BASEURL_SOCIAL:https://services.staging.mywayapay.com/wayagram-service}
+      base-url: ${CONFIG_BASEURL_SOCIAL:https://services.staging.wayabank.ng/wayagram-service}
     file-resource:
-      base-url: ${CONFIG_BASEURL_FILERESOURCE:https://services.staging.mywayapay.com/file-resource-service}
+      base-url: ${CONFIG_BASEURL_FILERESOURCE:https://services.staging.wayabank.ng/file-resource-service}
     virtual-account:
-      base-url: ${CONFIG_BASEURL_VIRACCOUNT:https://services.staging.mywayapay.com/account-service}
+      base-url: ${CONFIG_BASEURL_VIRACCOUNT:https://services.staging.wayabank.ng/account-service}
     wallet-service:
-      base-url: ${CONFIG_BASEURL_TWALLET:https://services.staging.mywayapay.com/temporal-service/api/v1/wallet}
+      base-url: ${CONFIG_BASEURL_TWALLET:https://services.staging.wayabank.ng/temporal-service/api/v1/wallet}
     notification-service:
-      base-url: ${CONFIG_BASEURL_NOTIFICATION:https://services.staging.mywayapay.com/notification-service}
+      base-url: ${CONFIG_BASEURL_NOTIFICATION:https://services.staging.wayabank.ng/notification-service}
     referral-service:
-      base-url: ${CONFIG_BASEURL_REFERRAL:https://services.staging.mywayapay.com/referral-service}
+      base-url: ${CONFIG_BASEURL_REFERRAL:https://services.staging.wayabank.ng/referral-service}
     kyc-service:
-      base-url: ${CONFIG_BASEURL_KYC:https://services.staging.mywayapay.com/kyc-service}
+      base-url: ${CONFIG_BASEURL_KYC:https://services.staging.wayabank.ng/kyc-service}
   auth:
     tokenSecret: 926D96C90030DD58429D2751AC1BDBBC
     tokenExpirationMsec: 864000000

@@ -13,5 +13,6 @@ public class NotificationResponsePojo {
     private String initiator;
     private String eventCategory;
     private StreamDataEmail data;
-    private String productType;
+    private String productType = "WAYABANK";
+
 }
