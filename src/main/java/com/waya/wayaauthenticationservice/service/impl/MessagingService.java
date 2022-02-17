@@ -109,7 +109,7 @@ public class MessagingService {
         notificationResponsePojo.setData(data);
 
         messageQueueProducer.send(EMAIL_TOPIC, notificationResponsePojo);
-//        proxy.sendEmail(notificationResponsePojo);
+
 
     }
 

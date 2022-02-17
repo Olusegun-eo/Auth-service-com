@@ -47,6 +47,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
     @Override
     public boolean sendVerificationEmailToken(String baseUrl, Users profile, OTPRequestType otpRequestType) {
         try {
+            log.info("TODAYS CURRENT MODIFICATION : {} \n", profile.getEmail());
             //generate the token
             OTPBase otp = generateEmailToken(profile.getEmail(), otpRequestType);
             AccountVerificationEmailContext emailContext = new AccountVerificationEmailContext();
