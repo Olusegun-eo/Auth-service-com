@@ -3,6 +3,7 @@ package com.waya.wayaauthenticationservice.pojo.notification;
 import com.waya.wayaauthenticationservice.streams.StreamDataEmail;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
