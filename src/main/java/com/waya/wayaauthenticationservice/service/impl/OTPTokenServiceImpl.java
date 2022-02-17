@@ -54,7 +54,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
             emailContext.buildURL(baseUrl);
             emailContext.setToken(String.valueOf(otp.getCode()));
             try {
-              
+                log.info("CURRENT MODIFICATION : {} \n", profile.getEmail());
                 messagingService.sendEmailNotification(String.valueOf(otp.getCode()), profile);
             } catch (Exception e) {
                 log.error("An Error Occurred:: {}", e.getMessage());
