@@ -54,11 +54,12 @@ public class OTPTokenServiceImpl implements OTPTokenService {
             emailContext.buildURL(baseUrl);
             emailContext.setToken(String.valueOf(otp.getCode()));
             try {
-                messagingService.sendMail(emailContext);
+                log.info("CURRENT MODIFICATION : {} \n", profile.getEmail());
+                messagingService.sendEmailNotification(String.valueOf(otp.getCode()), profile);
             } catch (Exception e) {
                 log.error("An Error Occurred:: {}", e.getMessage());
             }
-            // mailService.sendMail(user.getEmail(), message);
+           
             log.info("Activation email sent!!: {} \n", profile.getEmail());
             return true;
         } catch (Exception exception) {
