@@ -8,6 +8,7 @@ import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.mail.AbstractEmailContext;
 import com.waya.wayaauthenticationservice.pojo.mail.context.AccountVerificationEmailContext;
+import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
 import com.waya.wayaauthenticationservice.repository.OTPRepository;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
 import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
@@ -75,7 +76,9 @@ public class OTPTokenServiceImpl implements OTPTokenService {
     @Override
     public boolean sendEmailToken(AbstractEmailContext emailContext) {
         try {
+
             try {
+
                 messagingService.sendMail(emailContext);
             } catch (Exception e) {
                 log.error("An Error Occurred:: {}", e.getMessage());
@@ -87,7 +90,16 @@ public class OTPTokenServiceImpl implements OTPTokenService {
         }
         return false;
     }
-
+    public void sendWelcomeEmail(Users user) {
+        WelcomeEmailContext emailContext = new WelcomeEmailContext();
+        emailContext.init(user);
+        try {
+            messagingService.sendMail(emailContext);
+        } catch (Exception e) {
+            log.error("An Error Occurred:: {}", e.getMessage());
+        }
+        log.info("Welcome email sent!! \n");
+    }
     @Override
     public OTPVerificationResponse verifyJointOTP(String emailOrPhoneNumber, String otp, OTPRequestType otpRequestType) {
         try {
