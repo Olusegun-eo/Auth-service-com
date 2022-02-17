@@ -6,6 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
+@ToString
 public class NotificationResponsePojo {
     private String eventType;
     private String initiator;
