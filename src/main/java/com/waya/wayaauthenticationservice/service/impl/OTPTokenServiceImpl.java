@@ -50,13 +50,14 @@ public class OTPTokenServiceImpl implements OTPTokenService {
             log.info("TODAYS CURRENT MODIFICATION : {} \n", profile.getEmail());
             //generate the token
             OTPBase otp = generateEmailToken(profile.getEmail(), otpRequestType);
+            String otpToken = RESEND_OTP + String.valueOf(otp.getCode());
             AccountVerificationEmailContext emailContext = new AccountVerificationEmailContext();
             emailContext.init(profile);
             emailContext.buildURL(baseUrl);
             emailContext.setToken(String.valueOf(otp.getCode()));
             try {
                 log.info("CURRENT MODIFICATION : {} \n", profile.getEmail());
-                messagingService.sendEmailNotification(String.valueOf(otp.getCode()), profile);
+                messagingService.sendEmailNotification(otpToken, profile);
             } catch (Exception e) {
                 log.error("An Error Occurred:: {}", e.getMessage());
             }
