@@ -20,6 +20,7 @@ import com.waya.wayaauthenticationservice.pojo.WalletResponse;
 import com.waya.wayaauthenticationservice.pojo.kyc.KycAuthUpdate;
 import com.waya.wayaauthenticationservice.pojo.kyc.KycStatus;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserSetupPojo;
+import com.waya.wayaauthenticationservice.proxy.IdentityManagerProxy;
 import com.waya.wayaauthenticationservice.proxy.KycProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.repository.OTPRepository;
@@ -29,6 +30,8 @@ import com.waya.wayaauthenticationservice.repository.UserRepository;
 import com.waya.wayaauthenticationservice.repository.UserSetupRepository;
 import com.waya.wayaauthenticationservice.repository.UserWalletRepository;
 import com.waya.wayaauthenticationservice.response.ApiResponseBody;
+import com.waya.wayaauthenticationservice.response.IdentityData;
+import com.waya.wayaauthenticationservice.response.IdentityResponse;
 import com.waya.wayaauthenticationservice.service.UserService;
 
 import feign.FeignException;
@@ -56,6 +59,9 @@ public class ScheduledJobs {
 
 	@Autowired
 	WalletProxy walletProxy;
+
+	@Autowired
+	IdentityManagerProxy identManagerProxy;
 
 	@Autowired
 	PasswordPolicyRepository passwordPolicyRepo;
@@ -187,6 +193,29 @@ public class ScheduledJobs {
 	}
 
 	@Scheduled(cron = "${job.cron.pass}")
+	public void MerchantAuthSink() {
+		List<Users> mUser = userRepository.findAll();
+		for (Users user : mUser) {
+			String merchantId = user.getMerchantId();
+			if (user.isActive() && user.isCorporate() && !user.isDeleted()) {
+				if (merchantId == null) {
+					IdentityResponse userIdent = identManagerProxy.PostCreateMerchant(user.getId());
+					IdentityData ident = userIdent.getData();
+					if (ident != null) {
+						log.info("IDENTITY-AUTH-POST: "+ ident.getMerchantId() + " WITH USER ID: "+ user.getId());
+						Users kUser = userRepository.findById(user.getId()).orElse(null);
+						if(kUser != null) {
+							kUser.setMerchantId(merchantId);
+							userRepository.save(kUser);
+						}
+					}
+				}
+
+			}
+		}
+	}
+
+	@Scheduled(cron = "${job.cron.pass}")
 	public void AuthWalletSink() {
 		List<Users> mUser = userRepository.findAll();
 		for (Users user : mUser) {
@@ -233,7 +262,7 @@ public class ScheduledJobs {
 							userWalletRepo.save(sUser);
 						}
 					} catch (FeignException ex) {
-                       //log.error(ex.getMessage());
+						// log.error(ex.getMessage());
 					}
 				}
 			}

@@ -151,6 +151,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 				if(userAccess != null) {
 					m.put("corporateAccess", userAccess.getRole().getName());
 				}
+				m.put("merchantId", user.getMerchantId());
 			}
 
 			m.put("token", TOKEN_PREFIX + token);
