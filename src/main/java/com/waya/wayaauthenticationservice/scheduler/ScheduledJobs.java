@@ -205,7 +205,7 @@ public class ScheduledJobs {
 						log.info("IDENTITY-AUTH-POST: "+ ident.getMerchantId() + " WITH USER ID: "+ user.getId());
 						Users kUser = userRepository.findById(user.getId()).orElse(null);
 						if(kUser != null) {
-							kUser.setMerchantId(merchantId);
+							kUser.setMerchantId(ident.getMerchantId());
 							userRepository.save(kUser);
 						}
 					}
