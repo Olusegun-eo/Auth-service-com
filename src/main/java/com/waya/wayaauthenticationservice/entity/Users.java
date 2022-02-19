@@ -138,6 +138,8 @@ public class Users extends AuditModel implements Serializable {
     private LocalDateTime pinCreatedDate;
 
     private LocalDateTime dateOfActivation;
+    
+    private String merchantId;
 
     public Users() {
         provider = AuthProvider.local;

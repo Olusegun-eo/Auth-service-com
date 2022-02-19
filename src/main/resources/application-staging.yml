@@ -147,6 +147,8 @@ referral:
 
 app:
   config:
+    identity-service:
+       base-url: ${CONFIG_BASEURL_IDENTITY:https://services.staging.wayapay.ng/identity-manager-service/api/v1}
     biller-service:
       base-url: ${CONFIG_BASEURL_BILLPAY:https://services.staging.wayabank.ng/billspayment-service}
     access-service:
