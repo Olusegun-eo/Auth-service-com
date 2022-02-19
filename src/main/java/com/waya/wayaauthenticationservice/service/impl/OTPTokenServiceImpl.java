@@ -8,6 +8,7 @@ import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.mail.AbstractEmailContext;
 import com.waya.wayaauthenticationservice.pojo.mail.context.AccountVerificationEmailContext;
+import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
 import com.waya.wayaauthenticationservice.repository.OTPRepository;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
 import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
@@ -46,18 +47,21 @@ public class OTPTokenServiceImpl implements OTPTokenService {
     @Override
     public boolean sendVerificationEmailToken(String baseUrl, Users profile, OTPRequestType otpRequestType) {
         try {
+            log.info("TODAYS CURRENT MODIFICATION : {} \n", profile.getEmail());
             //generate the token
             OTPBase otp = generateEmailToken(profile.getEmail(), otpRequestType);
+            String otpToken = RESEND_OTP + String.valueOf(otp.getCode());
             AccountVerificationEmailContext emailContext = new AccountVerificationEmailContext();
             emailContext.init(profile);
             emailContext.buildURL(baseUrl);
             emailContext.setToken(String.valueOf(otp.getCode()));
             try {
-                messagingService.sendMail(emailContext);
+                log.info("CURRENT MODIFICATION : {} \n", profile.getEmail());
+                messagingService.sendEmailNotification(otpToken, profile);
             } catch (Exception e) {
                 log.error("An Error Occurred:: {}", e.getMessage());
             }
-            // mailService.sendMail(user.getEmail(), message);
+           
             log.info("Activation email sent!!: {} \n", profile.getEmail());
             return true;
         } catch (Exception exception) {
@@ -75,8 +79,9 @@ public class OTPTokenServiceImpl implements OTPTokenService {
     @Override
     public boolean sendEmailToken(AbstractEmailContext emailContext) {
         try {
+
             try {
-                messagingService.sendMail(emailContext);
+                messagingService.sendEmailWithContext(emailContext);
             } catch (Exception e) {
                 log.error("An Error Occurred:: {}", e.getMessage());
             }
@@ -85,6 +90,20 @@ public class OTPTokenServiceImpl implements OTPTokenService {
         } catch (Exception exception) {
             log.error("could not process data {}", exception.getMessage());
         }
+        return false;
+    }
+
+    public boolean sendEmailToken2(String message, Users profile) {
+
+            try {
+                messagingService.sendEmailNotification(message, profile);
+                log.info(" email sent!!- {} \n", profile.getEmail());
+                return true;
+            } catch (Exception e) {
+                log.error("An Error Occurred:: {}", e.getMessage());
+            }
+
+
         return false;
     }
 
@@ -362,7 +381,8 @@ public class OTPTokenServiceImpl implements OTPTokenService {
                 emailContext.init(profile);
                 emailContext.setToken(String.valueOf(otp.getCode()));
                 emailContext.buildURL(baseUrl);
-                sendEmailToken(emailContext);
+
+                sendEmailToken2(String.valueOf(otp.getCode()), profile);
             }
 
         }catch(Exception ex){

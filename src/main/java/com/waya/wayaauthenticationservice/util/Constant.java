@@ -29,6 +29,7 @@ public class Constant {
     public static final String RESET_PIN_MESSAGE = "Your Wayabank Confirmation Code is ";
     public static final String MESSAGE_2 = ". Thanks for choosing Wayabank";
     public static final String OTP_SUCCESS_MESSAGE = "OTP verified successfully";
+    public static final String RESEND_OTP = "Please verify your account with this OTP. ";
     public static final String INVALID_OTP = "Invalid OTP";
     public static final String OTP_ERROR_MESSAGE = "OTP has expired";
     public static final String MESSAGE_200 = "Successful";
