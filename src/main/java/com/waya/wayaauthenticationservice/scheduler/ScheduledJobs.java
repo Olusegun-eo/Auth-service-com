@@ -82,11 +82,11 @@ public class ScheduledJobs {
 	//@Scheduled(cron = "${job.cron.kyc}")
 	@Scheduled(cron = "${job.cron.pass}")
 	public void updateKyc() {
-		log.info("Update KYC");
+		//log.info("Update KYC");
 		String key = "WAYA219766005KYC";
 		ApiResponseBody<List<KycStatus>> listUser = kycProxy.GetUserKyc(key);
-		log.info("KYC SUCCESS: " +listUser.getStatus());
-		log.info("DATA KYC: " + listUser.getData());
+		//log.info("KYC SUCCESS: " +listUser.getStatus());
+		//log.info("DATA KYC: " + listUser.getData());
 		List<KycStatus> listKyc = listUser.getData();
 		if (listKyc != null && !listKyc.isEmpty()) {
 			log.info("KYC SINKING");
@@ -131,6 +131,59 @@ public class ScheduledJobs {
 			}
 		}
 	}
+	
+	//@Scheduled(cron = "${job.cron.kyc}")
+		@Scheduled(cron = "${job.cron.pass}")
+		public void postKycUpdate() {
+			//log.info("Update KYC");
+			String key = "WAYA219766005KYC";
+			ApiResponseBody<List<KycStatus>> listUser = kycProxy.GetChangeKyc(key);
+			//log.info("KYC SUCCESS: " +listUser.getStatus());
+			//log.info("DATA KYC: " + listUser.getData());
+			List<KycStatus> listKyc = listUser.getData();
+			if (listKyc != null && !listKyc.isEmpty()) {
+				log.info("KYC SINKING");
+				for (KycStatus mkyc : listKyc) {
+					UserSetup user = userSetupRepository.GetByUserId(mkyc.getUserId());
+					Users mUser = userRepository.findById(mkyc.getUserId()).orElse(null);
+					if (mUser != null) {
+						if (user == null && !mUser.isDeleted()) {
+							log.info("USER SETUP LIMIT");
+							UserSetupPojo pojo = new UserSetupPojo();
+							pojo.setId(0L);
+							pojo.setUserId(mkyc.getUserId());
+							pojo.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
+							userService.maintainUserSetup(pojo);
+							user = userSetupRepository.GetByUserId(mkyc.getUserId());
+						}
+						if (user != null && !user.isUpdated()) {
+							log.info("KYC UPDATE");
+							user.setUpdated(true);
+							userSetupRepository.save(user);
+							KycAuthUpdate uKyc = new KycAuthUpdate();
+							uKyc.setUserId(mkyc.getUserId());
+							uKyc.setKcyupdate(true);
+							kycProxy.PostKycUpdate(key, uKyc);
+						}
+
+						if (user != null && user.isUpdated() && !mkyc.isProcessFlg()) {
+							user.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
+							userSetupRepository.save(user);
+						}
+						
+						if (user != null && user.isUpdated() && mkyc.isProcessFlg()) {
+							log.info("KYC LIMIT INCREASE");
+							int res = user.getTransactionLimit().compareTo(mkyc.getTiers().getMaximumLimit());
+							if( res != 0 ) {
+								user.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
+								userSetupRepository.save(user);
+							}
+						}
+
+					}
+				}
+			}
+		}
 
 	// @Scheduled(cron = "0 0/30 20-23 * * *")
 	// @Scheduled(cron = "0/5 * * * * *")
