@@ -85,6 +85,8 @@ public class ScheduledJobs {
 		log.info("Update KYC");
 		String key = "WAYA219766005KYC";
 		ApiResponseBody<List<KycStatus>> listUser = kycProxy.GetUserKyc(key);
+		log.info("KYC SUCCESS: " +listUser.getStatus());
+		log.info("DATA KYC: " + listUser.getData());
 		List<KycStatus> listKyc = listUser.getData();
 		if (listKyc != null && !listKyc.isEmpty()) {
 			log.info("KYC SINKING");
