@@ -142,13 +142,13 @@ public class ScheduledJobs {
 			//log.info("DATA KYC: " + listUser.getData());
 			List<KycStatus> listKyc = listUser.getData();
 			if (listKyc != null && !listKyc.isEmpty()) {
-				log.info("KYC SINKING");
+				//log.info("KYC SINKING");
 				for (KycStatus mkyc : listKyc) {
 					UserSetup user = userSetupRepository.GetByUserId(mkyc.getUserId());
 					Users mUser = userRepository.findById(mkyc.getUserId()).orElse(null);
 					if (mUser != null) {
 						if (user == null && !mUser.isDeleted()) {
-							log.info("USER SETUP LIMIT");
+							//log.info("USER SETUP LIMIT");
 							UserSetupPojo pojo = new UserSetupPojo();
 							pojo.setId(0L);
 							pojo.setUserId(mkyc.getUserId());
