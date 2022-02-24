@@ -113,6 +113,13 @@ public class ScheduledJobs {
 						user.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
 						userSetupRepository.save(user);
 					}
+					
+					if (user != null && user.isUpdated() && mkyc.isProcessFlg()) {
+						if(user.getTransactionLimit() != mkyc.getTiers().getMaximumLimit()) {
+							user.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
+							userSetupRepository.save(user);
+						}
+					}
 
 				}
 			}
