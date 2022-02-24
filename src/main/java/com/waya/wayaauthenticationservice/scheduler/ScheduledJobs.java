@@ -79,13 +79,15 @@ public class ScheduledJobs {
 		log.info("{} OTP Token(s) deleted", count);
 	}
 
-	@Scheduled(cron = "${job.cron.kyc}")
+	//@Scheduled(cron = "${job.cron.kyc}")
+	@Scheduled(cron = "${job.cron.pass}")
 	public void updateKyc() {
 		log.info("Update KYC");
 		String key = "WAYA219766005KYC";
 		ApiResponseBody<List<KycStatus>> listUser = kycProxy.GetUserKyc(key);
 		List<KycStatus> listKyc = listUser.getData();
 		if (listKyc != null && !listKyc.isEmpty()) {
+			log.info("KYC SINKING");
 			for (KycStatus mkyc : listKyc) {
 				UserSetup user = userSetupRepository.GetByUserId(mkyc.getUserId());
 				Users mUser = userRepository.findById(mkyc.getUserId()).orElse(null);
@@ -188,7 +190,7 @@ public class ScheduledJobs {
 		for (Users user : mUser) {
 			if (user.isEmailVerified() && user.isPhoneVerified() && !user.isDeleted()) {
 				String key = "WAYA219766005KYC";
-				log.info("KYC POST");
+				//log.info("KYC POST");
 				ApiResponseBody<KycStatus> userKyc = kycProxy.GetByUserKyc(key, user.getId());
 				KycStatus kyc = userKyc.getData();
 				if (kyc == null) {
