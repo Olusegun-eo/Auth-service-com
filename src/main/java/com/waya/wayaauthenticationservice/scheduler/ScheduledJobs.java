@@ -115,7 +115,8 @@ public class ScheduledJobs {
 					}
 					
 					if (user != null && user.isUpdated() && mkyc.isProcessFlg()) {
-						if(user.getTransactionLimit() != mkyc.getTiers().getMaximumLimit()) {
+						int res = user.getTransactionLimit().compareTo(mkyc.getTiers().getMaximumLimit());
+						if( res != 0 ) {
 							user.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
 							userSetupRepository.save(user);
 						}
