@@ -78,7 +78,7 @@ public class AuthenticationController {
 	public ResponseEntity<?> generateOTP(
 			@PathVariable("emailOrPhoneNumber") @CustomValidator(message = "Has to be either a valid Email or PhoneNumber", type = Type.EMAIL_OR_PHONE) String emailOrPhoneNumber,
 			final HttpServletRequest request) {
-		return authenticationServiceImpl.resendOTPForAccountVerification(emailOrPhoneNumber, getBaseUrl(request));
+		return authenticationServiceImpl.resendOTPForWalletTransaction(emailOrPhoneNumber, getBaseUrl(request));
 	}
 
 	@ApiOperation(value = "Resend OTP for Account Verification", notes = "See POjo Object for what to pass", tags = {

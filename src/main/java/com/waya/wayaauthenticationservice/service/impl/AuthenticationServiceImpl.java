@@ -3,6 +3,7 @@ package com.waya.wayaauthenticationservice.service.impl;
 import static com.waya.wayaauthenticationservice.enums.OTPRequestType.EMAIL_VERIFICATION;
 import static com.waya.wayaauthenticationservice.enums.OTPRequestType.JOINT_VERIFICATION;
 import static com.waya.wayaauthenticationservice.enums.OTPRequestType.PHONE_VERIFICATION;
+import static com.waya.wayaauthenticationservice.enums.OTPRequestType.TRANSACTION_VERIFICATION;
 import static com.waya.wayaauthenticationservice.util.Constant.VIRTUAL_ACCOUNT_TOPIC;
 import static com.waya.wayaauthenticationservice.util.Constant.WAYAGRAM_PROFILE_TOPIC;
 import static com.waya.wayaauthenticationservice.util.HelperUtils.generateRandomNumber;
@@ -764,6 +765,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 					HttpStatus.CREATED);
 
 		this.otpTokenService.sendAccountVerificationToken(user, JOINT_VERIFICATION, baseUrl);
+
+		return new ResponseEntity<>(new SuccessResponse("OTP sent successfully.", null), HttpStatus.OK);
+	}
+	
+	@Override
+	public ResponseEntity<?> resendOTPForWalletTransaction(String emailOrPhoneNumber, String baseUrl) {
+		if (emailOrPhoneNumber.startsWith("+"))
+			emailOrPhoneNumber = emailOrPhoneNumber.substring(1);
+
+		Users user = userRepo.findByEmailOrPhoneNumber(emailOrPhoneNumber).orElse(null);
+		if (user == null)
+			return new ResponseEntity<>(new ErrorResponse(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()),
+					HttpStatus.NOT_FOUND);
+
+		//if (user.isActive())
+		//	return new ResponseEntity<>(new SuccessResponse("Account has been Verified already.", null), HttpStatus.CREATED);
+
+		this.otpTokenService.sendAccountVerificationToken(user, TRANSACTION_VERIFICATION, baseUrl);
 
 		return new ResponseEntity<>(new SuccessResponse("OTP sent successfully.", null), HttpStatus.OK);
 	}
