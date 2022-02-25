@@ -71,6 +71,16 @@ public class AuthenticationController {
 		return authenticationServiceImpl.verifyAccountCreation(otpPojo);
 	}
 
+	@ApiOperation(value = "${api.auth.generate-otp.description}", notes = "${api.auth.generate-otp.notes}", tags = {
+			"AUTH" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@PostMapping("/generate-otp/{emailOrPhoneNumber}")
+	public ResponseEntity<?> generateOTP(
+			@PathVariable("emailOrPhoneNumber") @CustomValidator(message = "Has to be either a valid Email or PhoneNumber", type = Type.EMAIL_OR_PHONE) String emailOrPhoneNumber,
+			final HttpServletRequest request) {
+		return authenticationServiceImpl.resendOTPForWalletTransaction(emailOrPhoneNumber, getBaseUrl(request));
+	}
+
 	@ApiOperation(value = "Resend OTP for Account Verification", notes = "See POjo Object for what to pass", tags = {
 			"AUTH" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
@@ -105,14 +115,14 @@ public class AuthenticationController {
 	public void login(@Valid @RequestBody LoginDetailsPojo loginRequestModel) {
 		throw new IllegalStateException("This Method should not be called!");
 	}
-	
+
 	@ApiOperation(value = "${api.auth.login.description}", notes = "${api.auth.login.notes}", tags = { "AUTH" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@PostMapping("/login/passcode")
 	public LoginResponsePojo authToken(@Valid @RequestBody LoginPasscodePojo loginRequestModel) {
 		return authenticationServiceImpl.loginPasscode(loginRequestModel);
 	}
-	
+
 	@ApiOperation(value = "${api.auth.login.description}", notes = "${api.auth.login.notes}", tags = { "AUTH" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
 	@PostMapping("/create/passcode")

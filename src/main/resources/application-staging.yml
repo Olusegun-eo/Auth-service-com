@@ -292,6 +292,13 @@ api:
         if the request passes all validation, it will verify the newly created Users account and Send a welcome Mail
         # Error Response
         returns with a detailed response about the error.
+    generate-otp:
+      description: To generate OTP for transaction verification
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will verify the newly created transaction
+        # Error Response
+        returns with a detailed response about the error.
     verify-phone:
       description: Verifies User Phone Numer after OTP has been Generated for it
       notes: |

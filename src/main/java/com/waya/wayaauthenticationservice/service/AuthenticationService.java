@@ -24,6 +24,8 @@ public interface AuthenticationService {
 	ResponseEntity<?> resendOTPPhone(String phoneNumber);
 
 	ResponseEntity<?> resendOTPForAccountVerification(String emailOrPhoneNumber, String baseUrl);
+	
+	ResponseEntity<?> resendOTPForWalletTransaction(String emailOrPhoneNumber, String baseUrl);
 
 	ResponseEntity<?> resendVerificationMail(String email, String baseUrl);
 
