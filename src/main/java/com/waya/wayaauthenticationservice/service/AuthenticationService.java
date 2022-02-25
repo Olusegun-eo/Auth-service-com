@@ -1,15 +1,22 @@
 package com.waya.wayaauthenticationservice.service;
 
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.pojo.TransferPojo;
-import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
-import com.waya.wayaauthenticationservice.pojo.others.*;
-import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
-import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 
-import javax.servlet.http.HttpServletRequest;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
+import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.LoginPasscodePojo;
+import com.waya.wayaauthenticationservice.pojo.others.LoginResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.others.PasscodePojo;
+import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.SuperAdminCreatUserRequest;
+import com.waya.wayaauthenticationservice.pojo.others.VirtualAccountPojo;
+import com.waya.wayaauthenticationservice.pojo.others.WayagramPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
+import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 
 
 public interface AuthenticationService {
@@ -30,6 +37,8 @@ public interface AuthenticationService {
 	ResponseEntity<?> resendVerificationMail(String email, String baseUrl);
 
 	ResponseEntity<?> verifyAccountCreation(OTPPojo otpPojo);
+	
+	ResponseEntity<?> verifyTransactionCreation(OTPPojo otpPojo);
 
 	ResponseEntity<?> verifyPhoneUsingOTP(OTPPojo otpPojo);
 

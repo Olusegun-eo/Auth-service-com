@@ -71,6 +71,14 @@ public class AuthenticationController {
 		return authenticationServiceImpl.verifyAccountCreation(otpPojo);
 	}
 
+	@ApiOperation(value = "${api.auth.transaction-otp.description}", notes = "${api.auth.verify-otp.notes}", tags = {
+			"AUTH" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@PostMapping("/verify-otp/transaction")
+	public ResponseEntity<?> verifyTransaction(@Valid @RequestBody OTPPojo otpPojo) {
+		return authenticationServiceImpl.verifyTransactionCreation(otpPojo);
+	}
+
 	@ApiOperation(value = "${api.auth.generate-otp.description}", notes = "${api.auth.generate-otp.notes}", tags = {
 			"AUTH" })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })

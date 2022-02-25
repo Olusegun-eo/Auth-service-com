@@ -645,6 +645,32 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 			return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
 		}
 	}
+	
+	@Override
+	public ResponseEntity<?> verifyTransactionCreation(OTPPojo otpPojo) {
+		try {
+			log.info("Verify Transaction Creation starts {}", otpPojo);
+			Users user = userRepo.findByEmailOrPhoneNumber(otpPojo.getPhoneOrEmail()).orElse(null);
+			if (user == null)
+				return new ResponseEntity<>(new ErrorResponse(
+						ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + "For User with " + otpPojo.getPhoneOrEmail()),
+						HttpStatus.BAD_REQUEST);
+
+			OTPVerificationResponse otpResponse = otpTokenService.verifyJointOTP(otpPojo.getPhoneOrEmail(),
+					otpPojo.getOtp(), TRANSACTION_VERIFICATION);
+			String message = otpResponse.getMessage();
+			if (otpResponse.isValid()) {
+				return new ResponseEntity<>(new SuccessResponse("OTP verified successfully. Kindly proceed.", null),
+						HttpStatus.CREATED);
+			} else {
+				return new ResponseEntity<>(new ErrorResponse(message), HttpStatus.BAD_REQUEST);
+			}
+
+		} catch (Exception e) {
+			log.info("Error::: {}, {} and {}", e.getMessage(), 2, 3);
+			return new ResponseEntity<>(new ErrorResponse("Error Occurred"), HttpStatus.BAD_REQUEST);
+		}
+	}
 
 	@Override
 	public ResponseEntity<?> verifyPhoneUsingOTP(OTPPojo otpPojo) {
