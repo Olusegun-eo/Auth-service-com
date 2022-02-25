@@ -63,7 +63,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				.antMatchers("/api/v1/auth/login", "/api/v1/password/change**","/api/v1/auth/create/passcode").permitAll()
 				.antMatchers("/api/v1/auth/create", "/api/v1/auth/create-corporate","/api/v1/auth/login/passcode").permitAll()
 				.antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
-				.antMatchers("/api/v1/auth/resend-otp**/**", "/api/v1/auth/verify-otp").permitAll()
+				.antMatchers("/api/v1/auth/resend-otp**/**", "/api/v1/auth/verify-otp", "/api/v1/auth/generate-otp/**").permitAll()
 				.antMatchers("/api/v1/business/type/find/all", "/api/v1/password/forgot-password").permitAll()
 				.antMatchers("/api/v1/auth/verify**", "/api/v1/password/forgot-password**/**").permitAll()
 				.antMatchers("/api/v1/password/change-password**/**", "/api/v1/user/users", "/api/v1/auth/wallet/**").permitAll()
