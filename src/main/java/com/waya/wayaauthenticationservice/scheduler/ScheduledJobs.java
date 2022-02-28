@@ -67,7 +67,7 @@ public class ScheduledJobs {
 
 	@Autowired
 	IdentityManagerProxy identManagerProxy;
-	
+
 	@Autowired
 	SettlementProxy settleProxy;
 
@@ -87,76 +87,35 @@ public class ScheduledJobs {
 		log.info("{} OTP Token(s) deleted", count);
 	}
 
-	//@Scheduled(cron = "${job.cron.kyc}")
+	// @Scheduled(cron = "${job.cron.kyc}")
 	@Scheduled(cron = "${job.cron.pass}")
 	public void updateKyc() {
-		//log.info("Update KYC");
+		// log.info("Update KYC");
 		String key = "WAYA219766005KYC";
-		ApiResponseBody<List<KycStatus>> listUser = kycProxy.GetUserKyc(key);
-		//log.info("KYC SUCCESS: " +listUser.getStatus());
-		//log.info("DATA KYC: " + listUser.getData());
-		List<KycStatus> listKyc = listUser.getData();
-		if (listKyc != null && !listKyc.isEmpty()) {
-			log.info("KYC SINKING");
-			for (KycStatus mkyc : listKyc) {
-				UserSetup user = userSetupRepository.GetByUserId(mkyc.getUserId());
-				Users mUser = userRepository.findById(mkyc.getUserId()).orElse(null);
-				if (mUser != null) {
-					if (user == null && !mUser.isDeleted()) {
-						log.info("USER SETUP LIMIT");
-						UserSetupPojo pojo = new UserSetupPojo();
-						pojo.setId(0L);
-						pojo.setUserId(mkyc.getUserId());
-						pojo.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
-						userService.maintainUserSetup(pojo);
-						user = userSetupRepository.GetByUserId(mkyc.getUserId());
-					}
-					if (user != null && !user.isUpdated()) {
-						log.info("KYC UPDATE");
-						user.setUpdated(true);
-						userSetupRepository.save(user);
-						KycAuthUpdate uKyc = new KycAuthUpdate();
-						uKyc.setUserId(mkyc.getUserId());
-						uKyc.setKcyupdate(true);
-						kycProxy.PostKycUpdate(key, uKyc);
-					}
-
-					if (user != null && user.isUpdated() && !mkyc.isProcessFlg()) {
-						user.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
-						userSetupRepository.save(user);
-					}
-					
-					if (user != null && user.isUpdated() && mkyc.isProcessFlg()) {
-						log.info("KYC LIMIT INCREASE");
-						int res = user.getTransactionLimit().compareTo(mkyc.getTiers().getMaximumLimit());
-						if( res != 0 ) {
-							user.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
-							userSetupRepository.save(user);
-						}
-					}
-
-				}
+		ApiResponseBody<List<KycStatus>> listUser = new ApiResponseBody<List<KycStatus>>();
+		try {
+			listUser = kycProxy.GetUserKyc(key);
+		} catch (Exception ex) {
+			if (ex instanceof FeignException) {
+				String httpStatus = Integer.toString(((FeignException) ex).status());
+				log.error("Feign Exception Status {}", httpStatus);
 			}
+			log.error("Higher Wahala {}", ex.getMessage());
+			log.error("KYC UPDATE PROXY: " + ex.getLocalizedMessage());
 		}
-	}
-	
-	//@Scheduled(cron = "${job.cron.kyc}")
-		@Scheduled(cron = "${job.cron.pass}")
-		public void postKycUpdate() {
-			//log.info("Update KYC");
-			String key = "WAYA219766005KYC";
-			ApiResponseBody<List<KycStatus>> listUser = kycProxy.GetChangeKyc(key);
-			//log.info("KYC SUCCESS: " +listUser.getStatus());
-			//log.info("DATA KYC: " + listUser.getData());
+		// log.info("KYC SUCCESS: " +listUser.getStatus());
+		// log.info("DATA KYC: " + listUser.getData());
+		if (listUser.getStatus()) {
 			List<KycStatus> listKyc = listUser.getData();
+
 			if (listKyc != null && !listKyc.isEmpty()) {
-				//log.info("KYC SINKING");
+				log.info("KYC SINKING");
 				for (KycStatus mkyc : listKyc) {
 					UserSetup user = userSetupRepository.GetByUserId(mkyc.getUserId());
 					Users mUser = userRepository.findById(mkyc.getUserId()).orElse(null);
 					if (mUser != null) {
 						if (user == null && !mUser.isDeleted()) {
-							//log.info("USER SETUP LIMIT");
+							log.info("USER SETUP LIMIT");
 							UserSetupPojo pojo = new UserSetupPojo();
 							pojo.setId(0L);
 							pojo.setUserId(mkyc.getUserId());
@@ -166,23 +125,32 @@ public class ScheduledJobs {
 						}
 						if (user != null && !user.isUpdated()) {
 							log.info("KYC UPDATE");
-							user.setUpdated(true);
-							userSetupRepository.save(user);
-							KycAuthUpdate uKyc = new KycAuthUpdate();
-							uKyc.setUserId(mkyc.getUserId());
-							uKyc.setKcyupdate(true);
-							kycProxy.PostKycUpdate(key, uKyc);
+							try {
+								user.setUpdated(true);
+								userSetupRepository.save(user);
+								KycAuthUpdate uKyc = new KycAuthUpdate();
+								uKyc.setUserId(mkyc.getUserId());
+								uKyc.setKcyupdate(true);
+								kycProxy.PostKycUpdate(key, uKyc);
+							} catch (Exception ex) {
+								if (ex instanceof FeignException) {
+									String httpStatus = Integer.toString(((FeignException) ex).status());
+									log.error("Feign Exception Status {}", httpStatus);
+								}
+								log.error("Higher Wahala {}", ex.getMessage());
+								log.error("KYC POST UPDATE PROXY: " + ex.getLocalizedMessage());
+							}
 						}
 
 						if (user != null && user.isUpdated() && !mkyc.isProcessFlg()) {
 							user.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
 							userSetupRepository.save(user);
 						}
-						
+
 						if (user != null && user.isUpdated() && mkyc.isProcessFlg()) {
 							log.info("KYC LIMIT INCREASE");
 							int res = user.getTransactionLimit().compareTo(mkyc.getTiers().getMaximumLimit());
-							if( res != 0 ) {
+							if (res != 0) {
 								user.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
 								userSetupRepository.save(user);
 							}
@@ -192,6 +160,81 @@ public class ScheduledJobs {
 				}
 			}
 		}
+	}
+
+	// @Scheduled(cron = "${job.cron.kyc}")
+	@Scheduled(cron = "${job.cron.pass}")
+	public void postKycUpdate() {
+		// log.info("Update KYC");
+		String key = "WAYA219766005KYC";
+		ApiResponseBody<List<KycStatus>> listUser = new ApiResponseBody<List<KycStatus>>();
+		try {
+			listUser = kycProxy.GetChangeKyc(key);
+		} catch (Exception ex) {
+			if (ex instanceof FeignException) {
+				String httpStatus = Integer.toString(((FeignException) ex).status());
+				log.error("Feign Exception Status {}", httpStatus);
+			}
+			log.error("Higher Wahala {}", ex.getMessage());
+			log.error("KYC UPDATE PROXY: " + ex.getLocalizedMessage());
+		}
+		// log.info("KYC SUCCESS: " +listUser.getStatus());
+		// log.info("DATA KYC: " + listUser.getData());
+		if (listUser.getStatus()) {
+			List<KycStatus> listKyc = listUser.getData();
+			if (listKyc != null && !listKyc.isEmpty()) {
+				// log.info("KYC SINKING");
+				for (KycStatus mkyc : listKyc) {
+					UserSetup user = userSetupRepository.GetByUserId(mkyc.getUserId());
+					Users mUser = userRepository.findById(mkyc.getUserId()).orElse(null);
+					if (mUser != null) {
+						if (user == null && !mUser.isDeleted()) {
+							// log.info("USER SETUP LIMIT");
+							UserSetupPojo pojo = new UserSetupPojo();
+							pojo.setId(0L);
+							pojo.setUserId(mkyc.getUserId());
+							pojo.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
+							userService.maintainUserSetup(pojo);
+							user = userSetupRepository.GetByUserId(mkyc.getUserId());
+						}
+						if (user != null && !user.isUpdated()) {
+							log.info("KYC UPDATE");
+							try {
+								user.setUpdated(true);
+								userSetupRepository.save(user);
+								KycAuthUpdate uKyc = new KycAuthUpdate();
+								uKyc.setUserId(mkyc.getUserId());
+								uKyc.setKcyupdate(true);
+								kycProxy.PostKycUpdate(key, uKyc);
+							} catch (Exception ex) {
+								if (ex instanceof FeignException) {
+									String httpStatus = Integer.toString(((FeignException) ex).status());
+									log.error("Feign Exception Status {}", httpStatus);
+								}
+								log.error("Higher Wahala {}", ex.getMessage());
+								log.error("KYC UPDATE PROXY: " + ex.getLocalizedMessage());
+							}
+						}
+
+						if (user != null && user.isUpdated() && !mkyc.isProcessFlg()) {
+							user.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
+							userSetupRepository.save(user);
+						}
+
+						if (user != null && user.isUpdated() && mkyc.isProcessFlg()) {
+							log.info("KYC LIMIT INCREASE");
+							int res = user.getTransactionLimit().compareTo(mkyc.getTiers().getMaximumLimit());
+							if (res != 0) {
+								user.setTransactionLimit(mkyc.getTiers().getMaximumLimit());
+								userSetupRepository.save(user);
+							}
+						}
+
+					}
+				}
+			}
+		}
+	}
 
 	// @Scheduled(cron = "0 0/30 20-23 * * *")
 	// @Scheduled(cron = "0/5 * * * * *")
@@ -253,9 +296,19 @@ public class ScheduledJobs {
 		for (Users user : mUser) {
 			if (user.isEmailVerified() && user.isPhoneVerified() && !user.isDeleted()) {
 				String key = "WAYA219766005KYC";
-				//log.info("KYC POST");
-				ApiResponseBody<KycStatus> userKyc = kycProxy.GetByUserKyc(key, user.getId());
-				KycStatus kyc = userKyc.getData();
+				// log.info("KYC POST");
+				KycStatus kyc = new KycStatus();
+				try {
+					ApiResponseBody<KycStatus> userKyc = kycProxy.GetByUserKyc(key, user.getId());
+					kyc = userKyc.getData();
+				} catch (Exception ex) {
+					if (ex instanceof FeignException) {
+						String httpStatus = Integer.toString(((FeignException) ex).status());
+						log.error("Feign Exception Status {}", httpStatus);
+					}
+					log.error("Higher Wahala {}", ex.getMessage());
+					log.error("KYC UPDATE PROXY: " + ex.getLocalizedMessage());
+				}
 				if (kyc == null) {
 					log.info("KYC-AUTH-POST");
 					KycAuthUpdate mKyc = new KycAuthUpdate(user.getId(), false);
@@ -273,12 +326,22 @@ public class ScheduledJobs {
 			String merchantId = user.getMerchantId();
 			if (user.isActive() && user.isCorporate() && !user.isDeleted()) {
 				if (merchantId == null) {
-					IdentityResponse userIdent = identManagerProxy.PostCreateMerchant(user.getId());
-					IdentityData ident = userIdent.getData();
+					IdentityData ident = new IdentityData();
+					try {
+						IdentityResponse userIdent = identManagerProxy.PostCreateMerchant(user.getId());
+						ident = userIdent.getData();
+					} catch (Exception ex) {
+						if (ex instanceof FeignException) {
+							String httpStatus = Integer.toString(((FeignException) ex).status());
+							log.error("Feign Exception Status {}", httpStatus);
+						}
+						log.error("Higher Wahala {}", ex.getMessage());
+						log.error("KYC UPDATE PROXY: " + ex.getLocalizedMessage());
+					}
 					if (ident != null) {
-						log.info("IDENTITY-AUTH-POST: "+ ident.getMerchantId() + " WITH USER ID: "+ user.getId());
+						log.info("IDENTITY-AUTH-POST: " + ident.getMerchantId() + " WITH USER ID: " + user.getId());
 						Users kUser = userRepository.findById(user.getId()).orElse(null);
-						if(kUser != null) {
+						if (kUser != null) {
 							kUser.setMerchantId(ident.getMerchantId());
 							userRepository.save(kUser);
 						}
@@ -288,44 +351,65 @@ public class ScheduledJobs {
 			}
 		}
 	}
-	
+
 	@Scheduled(cron = "${job.cron.pass}")
 	public void SettlementAuthSink() {
-		try {
 		List<Users> mUser = userRepository.findAll();
 		for (Users user : mUser) {
-			if (user.isActive() && !user.isDeleted()) {
-				SettleUserResponse response = settleProxy.GetSettleUser(user.getId(), "WAYA0984SETTLE2022");
+			if (!user.isDeleted() && !user.isSimulated()) {
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+				String createAt = sdf.format(new Date());
+				SettleUserResponse response = new SettleUserResponse();
+				response.setStatus(false);
+				response.setMessage("INVALID RESPONSE");
+				response.setData(null);
+				response.setTimeStamp(createAt);
+				try {
+					response = settleProxy.GetSettleUser(user.getId(), "WAYA0984SETTLE2022");
+				} catch (Exception ex) {
+					if (ex instanceof FeignException) {
+						String httpStatus = Integer.toString(((FeignException) ex).status());
+						log.error("Feign Exception Status {}", httpStatus);
+					}
+					log.error("Higher Wahala {}", ex.getMessage());
+					log.error("SETTLE PROXY: " + ex.getLocalizedMessage());
+				}
 				if (!response.isStatus()) {
-					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-			        String createAt = sdf.format(new Date());
-			        String status = null;
-			        String usertype = null;
-			        if(user.isCorporate()) {
-			        	status = "ACTIVE";
-			        	usertype = "C";
-			        }else {
-			        	status = "ACTIVE";
-			        	usertype = "I";
-			        }
-					SettleUserRequest request = new SettleUserRequest(createAt, user.getEmail(), 
-							user.getName(), user.getPhoneNumber(), status, user.getId(), usertype);
-					
-					SettleUserResponse userResp = settleProxy.PostSettleUser(request, "WAYA0984SETTLE2022");
+					String status = null;
+					String usertype = null;
+					if (user.isCorporate()) {
+						usertype = "C";
+					} else {
+						usertype = "I";
+					}
+					if (user.isActive()) {
+						status = "ACTIVE";
+					} else {
+						status = "INACTIVE";
+					}
+					SettleUserRequest request = new SettleUserRequest(createAt, user.getEmail(), user.getName(),
+							user.getPhoneNumber(), status, user.getId(), usertype);
+					SettleUserResponse userResp = new SettleUserResponse();
+					userResp.setStatus(false);
+					userResp.setMessage("INVALID RESPONSE");
+					userResp.setData(null);
+					userResp.setTimeStamp(createAt);
+					try {
+						userResp = settleProxy.PostSettleUser(request, "WAYA0984SETTLE2022");
+					} catch (Exception ex) {
+						if (ex instanceof FeignException) {
+							String httpStatus = Integer.toString(((FeignException) ex).status());
+							log.error("Feign Exception Status {}", httpStatus);
+						}
+						log.error("Higher Wahala {}", ex.getMessage());
+						log.error("SETTLE CREATION PROXY: " + ex.getLocalizedMessage());
+					}
 					if (userResp.isStatus()) {
-						log.info("SETTLEMENT-POST WITH USER ID: "+ userResp.getData().getUserId());
+						log.info("SETTLEMENT-POST WITH USER ID: " + userResp.getData().getUserId());
 					}
 				}
 
 			}
-		}
-		} catch (Exception ex) {
-			if (ex instanceof FeignException) {
-				String httpStatus = Integer.toString(((FeignException) ex).status());
-				log.error("Feign Exception Status {}", httpStatus);
-			}
-			log.error("Higher Wahala {}", ex.getMessage());
-			log.error("SETTLE PROXY: " + ex.getLocalizedMessage());
 		}
 	}
 
