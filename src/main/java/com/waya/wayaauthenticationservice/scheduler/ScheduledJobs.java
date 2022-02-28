@@ -291,6 +291,7 @@ public class ScheduledJobs {
 	
 	@Scheduled(cron = "${job.cron.pass}")
 	public void SettlementAuthSink() {
+		try {
 		List<Users> mUser = userRepository.findAll();
 		for (Users user : mUser) {
 			if (user.isActive() && !user.isDeleted()) {
@@ -317,6 +318,14 @@ public class ScheduledJobs {
 				}
 
 			}
+		}
+		} catch (Exception ex) {
+			if (ex instanceof FeignException) {
+				String httpStatus = Integer.toString(((FeignException) ex).status());
+				log.error("Feign Exception Status {}", httpStatus);
+			}
+			log.error("Higher Wahala {}", ex.getMessage());
+			log.error("SETTLE PROXY: " + ex.getLocalizedMessage());
 		}
 	}
 
