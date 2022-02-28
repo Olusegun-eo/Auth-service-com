@@ -1,8 +1,10 @@
 package com.waya.wayaauthenticationservice.scheduler;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,12 +18,14 @@ import com.waya.wayaauthenticationservice.entity.UserSetup;
 import com.waya.wayaauthenticationservice.entity.UserWallet;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.MyWallet;
+import com.waya.wayaauthenticationservice.pojo.SettleUserRequest;
 import com.waya.wayaauthenticationservice.pojo.WalletResponse;
 import com.waya.wayaauthenticationservice.pojo.kyc.KycAuthUpdate;
 import com.waya.wayaauthenticationservice.pojo.kyc.KycStatus;
 import com.waya.wayaauthenticationservice.pojo.userDTO.UserSetupPojo;
 import com.waya.wayaauthenticationservice.proxy.IdentityManagerProxy;
 import com.waya.wayaauthenticationservice.proxy.KycProxy;
+import com.waya.wayaauthenticationservice.proxy.SettlementProxy;
 import com.waya.wayaauthenticationservice.proxy.WalletProxy;
 import com.waya.wayaauthenticationservice.repository.OTPRepository;
 import com.waya.wayaauthenticationservice.repository.PasswordPolicyRepository;
@@ -32,6 +36,7 @@ import com.waya.wayaauthenticationservice.repository.UserWalletRepository;
 import com.waya.wayaauthenticationservice.response.ApiResponseBody;
 import com.waya.wayaauthenticationservice.response.IdentityData;
 import com.waya.wayaauthenticationservice.response.IdentityResponse;
+import com.waya.wayaauthenticationservice.response.SettleUserResponse;
 import com.waya.wayaauthenticationservice.service.UserService;
 
 import feign.FeignException;
@@ -62,6 +67,9 @@ public class ScheduledJobs {
 
 	@Autowired
 	IdentityManagerProxy identManagerProxy;
+	
+	@Autowired
+	SettlementProxy settleProxy;
 
 	@Autowired
 	PasswordPolicyRepository passwordPolicyRepo;
@@ -274,6 +282,37 @@ public class ScheduledJobs {
 							kUser.setMerchantId(ident.getMerchantId());
 							userRepository.save(kUser);
 						}
+					}
+				}
+
+			}
+		}
+	}
+	
+	@Scheduled(cron = "${job.cron.pass}")
+	public void SettlementAuthSink() {
+		List<Users> mUser = userRepository.findAll();
+		for (Users user : mUser) {
+			if (user.isActive() && !user.isDeleted()) {
+				SettleUserResponse response = settleProxy.GetSettleUser(user.getId(), "WAYA0984SETTLE2022");
+				if (!response.isStatus()) {
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+			        String createAt = sdf.format(new Date());
+			        String status = null;
+			        String usertype = null;
+			        if(user.isCorporate()) {
+			        	status = "ACTIVE";
+			        	usertype = "C";
+			        }else {
+			        	status = "ACTIVE";
+			        	usertype = "I";
+			        }
+					SettleUserRequest request = new SettleUserRequest(createAt, user.getEmail(), 
+							user.getName(), user.getPhoneNumber(), status, user.getId(), usertype);
+					
+					SettleUserResponse userResp = settleProxy.PostSettleUser(request, "WAYA0984SETTLE2022");
+					if (userResp.isStatus()) {
+						log.info("SETTLEMENT-POST WITH USER ID: "+ userResp.getData().getUserId());
 					}
 				}
 
