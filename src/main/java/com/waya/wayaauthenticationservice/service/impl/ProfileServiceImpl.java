@@ -1052,6 +1052,9 @@ public class ProfileServiceImpl implements ProfileService {
     public SMSResponse toggleSMSAlert(SMSRequest smsRequest) {
         try{
 
+            if (smsRequest.getPhoneNumber().startsWith("+")){
+                smsRequest.setPhoneNumber(smsRequest.getPhoneNumber().substring(1));
+            }
 
             Users user = userRepository.findByPhoneNumber(smsRequest.getPhoneNumber())
                     .orElse(null);
@@ -1062,25 +1065,25 @@ public class ProfileServiceImpl implements ProfileService {
 
             SMSAlertConfig smsCharges = smsAlertConfigRepository.findByPhone(smsRequest.getPhoneNumber());
 
-            SMSResponse SMSResponse;
             if (smsCharges !=null) {
                 smsCharges.setActive(!smsCharges.isActive());
                 smsCharges.setUserId(user.getId());
                 smsCharges = smsAlertConfigRepository.save(smsCharges);
-                SMSResponse = new SMSResponse(smsCharges.getId(),"",
-                        smsCharges.getPhoneNumber(),
-                        smsCharges.isActive(), smsCharges.getUserId());
+                SMSAlertConfig smsAlertConfig = smsAlertConfigRepository.save(smsCharges);
+                return new SMSResponse(smsAlertConfig.getId(), "",smsAlertConfig.getPhoneNumber(),
+                        smsAlertConfig.isActive(), smsAlertConfig.getUserId());
             } else {
                 SMSAlertConfig smsCharges1 = new SMSAlertConfig();
                 smsCharges1.setActive(smsCharges1.isActive());
                 smsCharges1.setPhoneNumber(smsRequest.getPhoneNumber());
                 smsCharges1.setUserId(user.getId());
-                smsCharges1 = smsAlertConfigRepository.save(smsCharges1);
-                SMSResponse = new SMSResponse(smsCharges1.getId(), "",smsCharges1.getPhoneNumber(),
-                        smsCharges1.isActive(), smsCharges.getUserId());
+                SMSAlertConfig smsAlertConfig = smsAlertConfigRepository.save(smsCharges1);
+                return new SMSResponse(smsAlertConfig.getId(), "",smsAlertConfig.getPhoneNumber(),
+                        smsAlertConfig.isActive(), smsAlertConfig.getUserId());
             }
-            return SMSResponse;
+
         }catch (Exception ex){
+            log.info("there is an error here :: " + ex.getMessage());
             throw new CustomException(ex.getMessage(), HttpStatus.NOT_FOUND);
         }
     }

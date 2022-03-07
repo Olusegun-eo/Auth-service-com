@@ -1,6 +1,7 @@
 package com.waya.wayaauthenticationservice.service;
 
 import com.waya.wayaauthenticationservice.entity.Role;
+import com.waya.wayaauthenticationservice.entity.SMSAlertConfig;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.others.SMSRequest;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
