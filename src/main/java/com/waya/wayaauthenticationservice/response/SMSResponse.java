@@ -9,11 +9,12 @@ import java.util.UUID;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@Data
 public class SMSResponse {
 
     private UUID id;
     private String fullName;
     private String phoneNumber;
-    private boolean active = true;
+    private boolean active;
     private Long userId;
 }
