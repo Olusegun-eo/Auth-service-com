@@ -2,6 +2,8 @@ package com.waya.wayaauthenticationservice.controller;
 
 import java.util.List;
 
+import com.waya.wayaauthenticationservice.pojo.others.BusinessTypePojo;
+import com.waya.wayaauthenticationservice.pojo.others.BusinessTypeUpdatePojo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -32,13 +34,13 @@ public class BusinessTypeController {
 
 	@ApiOperation(value = "Create Business Type", notes = "Create Business Type",tags = { "BUSINESS TYPE" })
 	@PostMapping("/create")
-	public ResponseEntity<ResponsePojo> create(@Valid @RequestBody BusinessType businessType) {
+	public ResponseEntity<ResponsePojo> create(@Valid @RequestBody BusinessTypePojo businessType) {
 		return ResponseEntity.ok(businessTypeService.createBusinessType(businessType));
 	}
 	
 	@ApiOperation(value = "Edit Business Type", notes = "Edit Business Type",tags = { "BUSINESS TYPE" })
 	@PutMapping("/edit")
-	public ResponseEntity<ResponsePojo> edit(@Valid @RequestBody BusinessType businessType) {
+	public ResponseEntity<ResponsePojo> edit(@Valid @RequestBody BusinessTypeUpdatePojo businessType) {
 		return ResponseEntity.ok(businessTypeService.edit(businessType));
 	}
 	
