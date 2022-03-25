@@ -8,10 +8,15 @@ import com.waya.wayaauthenticationservice.response.ResponsePojo;
 import com.waya.wayaauthenticationservice.repository.BusinessTypeRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -37,8 +42,16 @@ public class BusinessTypeService {
         }
     }
 
-    public List<BusinessType> findAll() {
-        return businessTypeRepo.findAll();
+    public Map<String, Object> findAll(int page, int size) {
+        Pageable paging = PageRequest.of(page, size);
+        Page<BusinessType> businessTypePage = businessTypeRepo.findAll(paging);
+        List<BusinessType> businessTypeList = businessTypePage.getContent();
+        Map<String, Object> response = new HashMap<>();
+        response.put("businessTypeList", businessTypeList);
+        response.put("currentPage", businessTypePage.getNumber());
+        response.put("totalItems", businessTypePage.getTotalElements());
+        response.put("totalPages", businessTypePage.getTotalPages());
+        return response;
     }
 
     public ResponsePojo edit(BusinessTypeUpdatePojo businessTypeUpdatePojo) {
