@@ -154,6 +154,10 @@ referral:
 
 app:
   config:
+    identity-service:
+      base-url: ${CONFIG_BASEURL_IDENTITY:https://services.staging.wayapay.ng/identity-manager-service/api/v1}
+    settle-service:
+      base-url: ${CONFIG_BASEURL_SETTLEMENT:https://services.staging.wayabank.ng/settlement-service/api/v1}
     biller-service:
       base-url: ${CONFIG_BASEURL_BILLPAY:https://services.staging.wayabank.ng/billspayment-service}
     access-service:
@@ -197,6 +201,23 @@ api:
       value: Ensure phone number is valid, 13 characters in length and starts with 234
   server:
     deployed: ${AUTH_SERVER_URL:http://localhost:8059/} #Change per Environment
+  dashboard:
+    users-active:
+      description: Count active users
+      notes: |
+        # Get the total number of active users
+    cooperate-active:
+      description: Count active users
+      notes: |
+        # Get the total number of active cooperate users
+    users-in-active:
+      description: Count in-active users
+      notes: |
+        # Get the total number of in-active users
+    cooperate-in-active:
+      description: Count cooperate in-active users
+      notes: |
+        # Get the total number of cooperate in-active users
   pin:
     create-pin-by-email:
       description: Send OTP to email, this is for Create PIN `create-pin` post Request

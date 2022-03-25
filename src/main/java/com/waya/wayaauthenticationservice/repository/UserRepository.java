@@ -70,4 +70,16 @@ public interface UserRepository extends JpaRepository<Users, Long>, JpaSpecifica
 	@Query(value = "SELECT u FROM Users u WHERE u.isDeleted = false AND u.isSimulated = true AND u.phoneNumber not like '234%' AND phone_number Not like '08%' ORDER BY id")
 	Page<Users> findAllSimulated(Specification<Users> spec, Pageable pageable);
 
+	@Query("select count(u.id) from Users u where u.isActive = true and u.isCorporate = false and u.isSimulated = false and u.isDeleted = false and u.isDeleted = false")
+	long findByActiveUsers();
+
+	@Query("select count(u.id) from Users u where u.isActive = false and u.isCorporate = false and u.isSimulated = false")
+	long findByInactiveUsers();
+
+	@Query("select count(u.id) from Users u where u.isActive = false and u.isCorporate = true and u.isSimulated = false and u.isDeleted = false")
+	long findByInactiveCooperateUsers();
+
+	@Query("select count(u.id) from Users u where u.isActive = true and u.isCorporate = true and u.isSimulated = false and u.isDeleted = false ")
+	long findByActiveCooperateUsers();
+
 }
