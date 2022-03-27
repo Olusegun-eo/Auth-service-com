@@ -349,9 +349,8 @@ public class AdminController {
 	}
 
 
-	@ApiOperation(value = "SMS Alert Subscription on behalf of the user", notes = "", tags = { "ADMIN" })
+	@ApiOperation(value = "SMS Alert Subscription on behalf of the user (Admin Endpoint)", notes = "", tags = { "ADMIN" })
 	@PostMapping("/users/subscribe-sms-alert")
-	@PreAuthorize(value = "@userSecurity.useHierarchyForRoles(#roleName, authentication)")
 	public ResponseEntity<ApiResponseBody<SMSResponse>> adminToggleSMSAlert(@RequestBody SMSRequest smsRequest) {
 		SMSResponse SMSResponse = adminService.adminToggleSMSAlert(smsRequest);
 		ApiResponseBody<SMSResponse> response = new ApiResponseBody<>(SMSResponse, "Done successfully",
@@ -359,9 +358,8 @@ public class AdminController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@ApiOperation(value = "SMS Alert Status on behalf of the user", notes = "", tags = { "ADMIN" })
+	@ApiOperation(value = "SMS Alert Status on behalf of the user (Admin Endpoint)", notes = "", tags = { "ADMIN" })
 	@GetMapping("/users/check-sms-alert-status/{phoneNumber}")
-	@PreAuthorize(value = "@userSecurity.useHierarchyForRoles(#roleName, authentication)")
 	public ResponseEntity<ApiResponseBody<SMSResponse>> adminCheckSMSAlert(@Valid @ApiParam(example = "2348054354344") @PathVariable @ValidPhone String phoneNumber) {
 		SMSResponse SMSResponse = adminService.adminCheckSMSAlert(phoneNumber);
 		ApiResponseBody<SMSResponse> response = new ApiResponseBody<>(SMSResponse, "Done successfully",
@@ -371,7 +369,7 @@ public class AdminController {
 
 
 
-	@ApiOperation(value = " Get All users SMS alert status.",notes = "", tags = {"ADMIN"})
+	@ApiOperation(value = " Get All users SMS alert status. (Admin Endpoint)",notes = "", tags = {"ADMIN"})
 	@ApiResponses(value = {
 			@io.swagger.annotations.ApiResponse(code = 200, message = "Successful"),
 			@io.swagger.annotations.ApiResponse(code = 400, message = "Bad Request"),
