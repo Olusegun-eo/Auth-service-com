@@ -21,6 +21,7 @@ public class ValidateUserPojo {
     private String password;
     private boolean phoneVerified = false;
     private boolean emailVerified = false;
+    private boolean admin = false;
     private boolean pinCreated = false;
     private boolean isCorporate = false;
     private Set<String> roles = new HashSet<>();
