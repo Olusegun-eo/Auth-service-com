@@ -1,5 +1,6 @@
 package com.waya.wayaauthenticationservice.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,4 +15,10 @@ public interface SMSAlertConfigRepository extends JpaRepository<SMSAlertConfig, 
 
     @Query("SELECT i FROM SMSAlertConfig i WHERE i.phoneNumber = :phoneNumber")
     Optional<SMSAlertConfig> findByPhoneNumber(String phoneNumber);
+
+    @Query("SELECT i FROM SMSAlertConfig i WHERE i.phoneNumber = :phoneNumber")
+    SMSAlertConfig findByPhone(String phoneNumber);
+
+    @Query("SELECT i FROM SMSAlertConfig i WHERE i.phoneNumber = :phoneNumber")
+    List<SMSAlertConfig> findByAllPhoneNumber(String phoneNumber);
 }

@@ -1,10 +1,12 @@
 package com.waya.wayaauthenticationservice.security;
 
 import com.waya.wayaauthenticationservice.SpringApplicationContext;
+import com.waya.wayaauthenticationservice.entity.Privilege;
 import com.waya.wayaauthenticationservice.entity.Role;
 import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.pojo.access.UserAccessResponse;
 import com.waya.wayaauthenticationservice.service.UserService;
+import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,15 +15,17 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@SuppressWarnings("serial")
+@ToString(exclude = "attributes")
 public class UserPrincipal implements OAuth2User, UserDetails {
 
-	private Users user;
+	private final Users user;
 	private Map<String, Object> attributes;
 	private UserAccessResponse access;
 
 	public UserPrincipal(Users user) {
 		this.user = user;
+		this.access = ((UserService) Objects.requireNonNull(SpringApplicationContext.getBean("userServiceImpl")))
+				.getAccessResponse(this.user.getId()).getData();
 	}
 
 	public static UserPrincipal create(Users user) {
@@ -67,18 +71,15 @@ public class UserPrincipal implements OAuth2User, UserDetails {
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 
-		List<Role> roles = new ArrayList<Role>(this.user.getRoleList());
+		List<Role> roles = new ArrayList<>(this.user.getRoleList());
 
 		Collection<GrantedAuthority> grantedAuthorities = roles.stream()
 				.map(r -> new SimpleGrantedAuthority(r.getName())).collect(Collectors.toSet());
 		grantedAuthorities.addAll(getGrantedAuthorities(getPrivileges(roles)));
-
-		UserAccessResponse access = ((UserService) SpringApplicationContext.getBean("userServiceImpl"))
-				.getAccessResponse(this.user.getId()).getData();
-		this.setAccess(access);
-		if(access != null){
-			grantedAuthorities.add(new SimpleGrantedAuthority(access.getRoleName()));
-			grantedAuthorities.add(new SimpleGrantedAuthority(access.getPermissionName()));
+		
+		if(this.getAccess() != null){
+			grantedAuthorities.add(new SimpleGrantedAuthority(this.getAccess().getRoleName()));
+			grantedAuthorities.add(new SimpleGrantedAuthority(this.getAccess().getPermissionName()));
 		}
 		return grantedAuthorities;
 	}
@@ -110,10 +111,10 @@ public class UserPrincipal implements OAuth2User, UserDetails {
 		return Optional.of(this.user);
 	}
 	
-	private final Set<String> getPrivileges(final Collection<Role> roles) {
-		Set<String> privileges = new HashSet<String>();
+	private Set<String> getPrivileges(final Collection<Role> roles) {
+		Set<String> privileges = new HashSet<>();
 		for (Role role : roles) {
-			privileges.addAll(role.getPrivileges().stream().map(p -> p.getName()).collect(Collectors.toSet()));
+			privileges.addAll(role.getPrivileges().stream().map(Privilege::getName).collect(Collectors.toSet()));
 		}
 		return privileges;
 	}

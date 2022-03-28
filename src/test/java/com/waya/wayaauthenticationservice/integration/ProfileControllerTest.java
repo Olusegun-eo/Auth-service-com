@@ -1,20 +1,33 @@
 package com.waya.wayaauthenticationservice.integration;
 
-import com.waya.wayaauthenticationservice.entity.Profile;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.enums.DeleteType;
-import com.waya.wayaauthenticationservice.pojo.others.*;
-import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
-import com.waya.wayaauthenticationservice.repository.ProfileRepository;
-import com.waya.wayaauthenticationservice.repository.RolesRepository;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.service.OTPTokenService;
-import com.waya.wayaauthenticationservice.util.Constant;
-import com.waya.wayaauthenticationservice.util.TestHelper;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import static com.waya.wayaauthenticationservice.util.JsonString.asJsonString;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.TOKEN_PREFIX;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.getExpiration;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import org.hamcrest.core.Is;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,23 +37,29 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.Optional;
+import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.enums.DeleteType;
+import com.waya.wayaauthenticationservice.pojo.others.CorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.DeleteRequest;
+import com.waya.wayaauthenticationservice.pojo.others.PersonalProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UpdateCorporateProfileRequest;
+import com.waya.wayaauthenticationservice.pojo.others.UpdatePersonalProfileRequest;
+import com.waya.wayaauthenticationservice.proxy.FileResourceServiceFeignClient;
+import com.waya.wayaauthenticationservice.repository.ProfileRepository;
+import com.waya.wayaauthenticationservice.repository.RolesRepository;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.service.OTPTokenService;
+import com.waya.wayaauthenticationservice.util.Constant;
+import com.waya.wayaauthenticationservice.util.JwtUtil;
+import com.waya.wayaauthenticationservice.util.TestHelper;
 
-import static com.waya.wayaauthenticationservice.util.JsonString.asJsonString;
-import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import lombok.extern.slf4j.Slf4j;
 
 @ActiveProfiles("test")
 @SpringBootTest(properties = { "eureka.client.enabled=false" })
@@ -50,7 +69,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EmbeddedKafka(partitions = 1, brokerProperties = { "listeners=PLAINTEXT://localhost:9092", "port=9092" })
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
+@Slf4j
+@TestPropertySource(locations = "/application-test.yml")
 class ProfileControllerTest {
+	
+	JwtUtil jwtUtil = new JwtUtil();
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -67,15 +90,8 @@ class ProfileControllerTest {
 	@MockBean
 	private FileResourceServiceFeignClient fileResourceServiceFeignClient;
 
-	// private final Profile profilePersonal = new Profile();
-	// private Profile profile = new Profile();
-
 	final MockMultipartFile file = new MockMultipartFile("files", "snapshot.png", MediaType.IMAGE_JPEG_VALUE,
 			"content".getBytes(StandardCharsets.UTF_8));
-
-//    final String setUpUserId = "749";
-//    private final String EMAIL = "app@app.com";
-//    private final String EMAIL2 = "cpd@app.com";
 
 	@Autowired
 	private RolesRepository rolesRepository;
@@ -96,7 +112,7 @@ class ProfileControllerTest {
 	void beforeEach() {
 		Optional<Profile> profile = profileRepository.findByUserId(false, user.getId().toString());
 		if (profile.isPresent()) {
-			System.out.println("profile :::::::: " + profile.get());
+			log.info("profile :::::::: " + profile.get());
 			profileRepository.delete(profile.get());
 		}
 		Optional<Profile> profile2 = profileRepository.findByUserId(false, user2.getId().toString());
@@ -117,7 +133,7 @@ class ProfileControllerTest {
 				user.getId().toString(), "2340291838294");
 
 		createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 	}
 
 	@Order(2)
@@ -128,13 +144,13 @@ class ProfileControllerTest {
 				user.getId().toString(), "2340291838294");
 
 		createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		final PersonalProfileRequest newPersonalProfileRequest = setPersonalProfileData("app@app.com",
 				user.getId().toString(), "2340291838294");
 
 		createAndVerifyPersonalProfile(newPersonalProfileRequest, "$.message",
-				"Profile with Provided User ID already Exists", "$.httpStatus", "BAD_REQUEST");
+				"Profile with Provided User ID already Exists");
 	}
 
 	@Order(3)
@@ -146,13 +162,13 @@ class ProfileControllerTest {
 				user.getId().toString(), "2340291838294");
 
 		createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		final PersonalProfileRequest newPersonalProfileRequest = setPersonalProfileData("app@app12.com",
 				user.getId().toString(), "2340291838294");
 
 		createAndVerifyPersonalProfile(newPersonalProfileRequest, "$.message",
-				"Profile with Provided User ID already Exists", "$.httpStatus", "BAD_REQUEST");
+				"Profile with Provided User ID already Exists");
 	}
 
 	@Order(4)
@@ -163,7 +179,7 @@ class ProfileControllerTest {
 				user2.getId().toString(), "2349870928349");
 
 		createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 	}
 
 	@Order(5)
@@ -173,8 +189,7 @@ class ProfileControllerTest {
 		final CorporateProfileRequest corporateProfileRequest = setCorporateProfileData("app@app.com", "5432",
 				"2349870928349");
 
-		createAndVerifyCorporateProfile(corporateProfileRequest, "$.message", "Base User with Provided ID not Found",
-				"$.httpStatus", "BAD_REQUEST");
+		createAndVerifyCorporateProfile(corporateProfileRequest, "$.message", "Base User with Provided ID not Found");
 	}
 
 	@Order(6)
@@ -185,13 +200,13 @@ class ProfileControllerTest {
 				user2.getId().toString(), "2349870928349");
 
 		createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		final CorporateProfileRequest newCorporateProfileRequest = setCorporateProfileData("app@app.com",
 				user2.getId().toString(), "2349870928349");
 
 		createAndVerifyCorporateProfile(newCorporateProfileRequest, "$.message",
-				"Profile with Provided User ID already Exists", "$.httpStatus", "BAD_REQUEST");
+				"Profile with Provided User ID already Exists");
 	}
 
 	@Order(7)
@@ -202,7 +217,7 @@ class ProfileControllerTest {
 				user.getId().toString(), "2349870928349");
 
 		createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		getAndVerifyUserProfile(user.getId().toString(), "$.message", "retrieved successfully", status().isOk());
 	}
@@ -215,20 +230,20 @@ class ProfileControllerTest {
 				user2.getId().toString(), "2349870928349");
 
 		createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		getAndVerifyUserProfile(user2.getId().toString(), "$.message", "retrieved successfully", status().isOk());
 	}
 
-	@Order(8)
-	@Test
-	@DisplayName("get a users profile when profile does not exist")
-	void getUsersProfileWhenProfileNotExist() throws Exception {
-		getAndVerifyUserProfile("2iu24", "$.message", "profile with that user id is not found",
-				status().isBadRequest());
-	}
+//	@Order(8)
+//	@Test
+//	@DisplayName("get a users profile when profile does not exist")
+//	void getUsersProfileWhenProfileNotExist() throws Exception {
+//		getAndVerifyUserProfile("2iu24", "$.message", "profile with that user id is not found",
+//				status().isBadRequest());
+//	}
 
-	@Order(9)
+	@Order(8)
 	@Test
 	@DisplayName("update a personal profile successfully")
 	void updatePersonalProfile() throws Exception {
@@ -237,7 +252,7 @@ class ProfileControllerTest {
 				user.getId().toString(), "2349870928349");
 
 		createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		final UpdatePersonalProfileRequest updatePersonalProfileRequest = setUpdatePersonalProfileRequest(
 				"kola@app.com", "2349870928349");
@@ -246,7 +261,7 @@ class ProfileControllerTest {
 				"profile updated successfully", status().isCreated());
 	}
 
-	@Order(10)
+	@Order(9)
 	@Test
 	@DisplayName("update a personal profile when user id is invalid")
 	void updatePersonalProfileWithInValidUserId() throws Exception {
@@ -258,7 +273,7 @@ class ProfileControllerTest {
 				status().isBadRequest());
 	}
 
-	@Order(11)
+	@Order(10)
 	@Test
 	@DisplayName("update a corporate profile successfully")
 	void updateCorporateProfile() throws Exception {
@@ -266,7 +281,7 @@ class ProfileControllerTest {
 				user2.getId().toString(), "2349870928349");
 
 		createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		final UpdateCorporateProfileRequest updateCorporateProfileRequest = setUpdateCorporateProfileRequest(
 				"kola@app.com", "2349870928349");
@@ -275,7 +290,7 @@ class ProfileControllerTest {
 				"profile updated successfully", status().isCreated());
 	}
 
-	@Order(12)
+	@Order(11)
 	@Test
 	@DisplayName("update a corporate profile when user id is not found")
 	void updateCorporateProfileWithInvalidUserId() throws Exception {
@@ -286,7 +301,7 @@ class ProfileControllerTest {
 				"user with that id not found or is not a Corporate User", status().isUnprocessableEntity());
 	}
 
-	@Order(13)
+	@Order(12)
 	@Test
 	@DisplayName("get all users referrals successfully")
 	void getAllUsersReferral() throws Exception {
@@ -294,12 +309,12 @@ class ProfileControllerTest {
 				user2.getId().toString(), "2349870928349");
 
 		createAndVerifyCorporateProfile(corporateProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		getAndVerifyAllUsersReferrals(user2.getId().toString(), status().isOk());
 	}
 
-	@Order(14)
+	@Order(13)
 	@Test
 	@DisplayName("delete personal profile  💯")
 	void deleteProfile() throws Exception {
@@ -308,31 +323,31 @@ class ProfileControllerTest {
 				user.getId().toString(), "2340291838294");
 
 		createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		DeleteRequest deleteRequest = DeleteRequest.builder().deleteType(DeleteType.DELETE)
-				.userId(user.getId().toString()).build();
+				.userId(user.getId()).build();
 
 		deleteProfile(deleteRequest, "$.message", "Deletion successful", "$.code", "200");
 	}
 
-	@Order(15)
+	@Order(14)
 	@Test
-	@DisplayName("invalid delete personal profile  💯")
+	@DisplayName("invalid delete personal profile 💯")
 	void invalidDeleteProfile() throws Exception {
 
 		final PersonalProfileRequest personalProfileRequest = setPersonalProfileData("youtbue@app.com",
 				user.getId().toString(), "2340291838294");
 
 		createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
-		DeleteRequest deleteRequest = DeleteRequest.builder().deleteType(DeleteType.NONE).userId("455").build();
+		DeleteRequest deleteRequest = DeleteRequest.builder().deleteType(DeleteType.NONE).userId(455l).build();
 
 		deleteProfile(deleteRequest, "$.error", "Invalid delete type, try RESTORE OR DELETE", "$.code", "401");
 	}
 
-	@Order(16)
+	@Order(15)
 	@Test
 	@DisplayName("Restore personal profile  💯")
 	void restoreProfile() throws Exception {
@@ -341,47 +356,51 @@ class ProfileControllerTest {
 				user.getId().toString(), "2340291838294");
 
 		createAndVerifyPersonalProfile(personalProfileRequest, "$.message",
-				"profile created. An OTP has been sent to your phone", "$.httpStatus", "OK");
+				"profile created. An OTP has been sent to your phone");
 
 		DeleteRequest deleteRequest = DeleteRequest.builder().deleteType(DeleteType.DELETE)
-				.userId(user.getId().toString()).build();
+				.userId(user.getId()).build();
 
 		deleteProfile(deleteRequest, "$.message", "Deletion successful", "$.code", "200");
 
 		DeleteRequest restoreRequest = DeleteRequest.builder().deleteType(DeleteType.RESTORE)
-				.userId(user.getId().toString()).build();
+				.userId(user.getId()).build();
 
 		deleteProfile(restoreRequest, "$.message", "Profile has been restored", "$.code", "200");
 	}
 
-	@Order(17)
+	@Order(16)
 	@Test
 	@DisplayName("delete personal profile error 💯")
 	void deleteProfileError() throws Exception {
 
-		DeleteRequest deleteRequest = DeleteRequest.builder().deleteType(DeleteType.DELETE).userId("10").build();
+		DeleteRequest deleteRequest = DeleteRequest.builder()
+				.deleteType(DeleteType.DELETE)
+				.userId(10l).build();
 
 		deleteProfile(deleteRequest, "$.error", "Profile with userId do not exist or already deleted", "$.code", "300");
 	}
 
-	@Order(18)
+	@Order(17)
 	@Test
 	@DisplayName("Restore personal profile error 💯")
 	void restoreProfileError() throws Exception {
 
-		DeleteRequest deleteRequest = DeleteRequest.builder().deleteType(DeleteType.RESTORE).userId("10").build();
+		DeleteRequest deleteRequest = DeleteRequest.builder()
+				.deleteType(DeleteType.RESTORE)
+				.userId(10l).build();
 
-		deleteProfile(deleteRequest, "$.error", "Profile with userId do not exist or already restored", "$.code",
+		deleteProfile(deleteRequest, "$.error",
+				"Profile with userId do not exist or already restored",
+				"$.code",
 				"300");
 	}
 
 	private void createAndVerifyPersonalProfile(final PersonalProfileRequest personalProfileRequest,
-			final String jsonPath0, final String jsonPathMessage0, final String jsonPath1,
-			final String jsonPathMessage1) throws Exception {
+			final String jsonPath0, final String jsonPathMessage0) throws Exception {
 		mockMvc.perform(post("/api/v1/profile/personal-profile").header("Authorization", generateToken(user))
 				.contentType(APPLICATION_JSON).content(asJsonString(personalProfileRequest)))
-				.andExpect(jsonPath(jsonPath0, Is.is(jsonPathMessage0)))
-				.andExpect(jsonPath(jsonPath1, Is.is(jsonPathMessage1)));
+				.andExpect(jsonPath(jsonPath0, Is.is(jsonPathMessage0)));
 	}
 
 	private void deleteProfile(final DeleteRequest deleteRequest, final String jsonPath0, final String jsonPathMessage0,
@@ -396,12 +415,10 @@ class ProfileControllerTest {
 	}
 
 	private void createAndVerifyCorporateProfile(final CorporateProfileRequest corporateProfileRequest,
-			final String jsonPath0, final String jsonPathMessage0, final String jsonPath1,
-			final String jsonPathMessage1) throws Exception {
+			final String jsonPath0, final String jsonPathMessage0) throws Exception {
 		mockMvc.perform(post("/api/v1/profile/corporate-profile").header("Authorization", generateToken(user))
 				.contentType(APPLICATION_JSON).content(asJsonString(corporateProfileRequest)))
-				.andExpect(jsonPath(jsonPath0, Is.is(jsonPathMessage0))).andDo(print())
-				.andExpect(jsonPath(jsonPath1, Is.is(jsonPathMessage1)));
+				.andExpect(jsonPath(jsonPath0, Is.is(jsonPathMessage0))).andDo(print());
 	}
 
 	private void getAndVerifyUserProfile(final String userId, final String jsonPath, final String jsonPathMessage,
@@ -511,9 +528,14 @@ class ProfileControllerTest {
 	public String generateToken(Users user) {
 		try {
 			System.out.println("::::::GENERATE TOKEN:::::");
-			String token = Jwts.builder().setSubject(user.getEmail())
+			/*String token = Jwts.builder().setSubject(user.getEmail())
 					.setExpiration(new Date(System.currentTimeMillis() + getExpiration() * 1000))
-					.signWith(SignatureAlgorithm.HS512, getSecret()).compact();
+					.signWith(SignatureAlgorithm.HS512, getSecret()).compact();*/
+			Map<String, Object> claims = new HashMap<>();
+	        claims.put("id", user.getId());
+	        claims.put("role", user.getRoleList());
+	        Date expirationDate = new Date(System.currentTimeMillis() + getExpiration());
+			String token = jwtUtil.doGenerateToken(claims, user.getEmail(), expirationDate);
 			System.out.println(":::::Token:::::");
 			return TOKEN_PREFIX + token;
 		} catch (Exception e) {

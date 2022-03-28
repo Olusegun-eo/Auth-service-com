@@ -32,8 +32,10 @@ public class NewPinPojo {
         return phoneOrEmail;
     }
 
-    public void setPhoneOrEmail(String phoneOrEmail) {
-        this.phoneOrEmail = phoneOrEmail.replaceAll("\\s+", "").trim();
+    public void setPhoneOrEmail(String value) {
+    	if(value.startsWith("+"))
+    		value = value.substring(1);
+		this.phoneOrEmail = value.replaceAll("\\s+", "").trim();
     }
 
     public String getOtp() {

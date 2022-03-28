@@ -19,11 +19,13 @@ public class UserProfileResponse {
     private String address;
     private String phoneNumber;
     private String userId;
+    private String referral;
     private String referenceCode;
     private boolean smsAlertConfig;
     private String city;
     private boolean corporate;
+    private String deviceToken;
 
-    private OtherdetailsResponse otherDetails;
+    private OtherDetailsResponse otherDetails;
 
 }

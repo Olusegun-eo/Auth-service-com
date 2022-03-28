@@ -1,41 +1,88 @@
 package com.waya.wayaauthenticationservice.entity;
 
-import com.waya.wayaauthenticationservice.enums.WalletAccountType;
-import lombok.*;
+import java.util.Date;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
-@Data
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
 @Entity
-@ToString
-@Table(name = "m_users_wallet")
-@Builder
-@NoArgsConstructor
+@Getter
+@Setter
+@Table(name = "m_user_wallet")
 @AllArgsConstructor
-public class UserWallet {
+@NoArgsConstructor
+@ToString
+public class UserWallet extends AuditModel {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7386692254393983440L;
 
-    private String accountNumber;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "id", unique = true, nullable = false)
+	private Long id;
 
-    private String accountBank;
+	@Column(name = "is_deleted", nullable = false)
+	private boolean isDeleted = false;
 
-    private String accountName;
+	@Column(unique = true, nullable = false)
+	private Long userId;
 
-    @Enumerated(EnumType.STRING)
-    @Basic(optional = false)
-    @Column(columnDefinition = "enum('INTERNAL','VIRTUAL')")
-    private WalletAccountType accountType;
+	private String fullName;
 
-    private String accountId;
+	private String phoneNo;
 
-    @Builder.Default
-    @Column(name = "is_deleted")
-    private boolean isDeleted = false;
+	private String email;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private Users user;
+	private String city;
+
+	private String district;
+
+	private boolean isCardLinked;
+
+	private String status;
+
+	private String usertype;
+
+	private Date createdDate;
+
+	private String wallet;
+
+	private boolean isWebPos;
+
+	private boolean isTerminalPos;
+
+	public UserWallet(boolean isDeleted, Long userId, String fullName, String phoneNo, String email, String city,
+			String district, boolean isCardLinked, String status, String usertype, Date createdDate,
+			String wallet) {
+		super();
+		this.isDeleted = isDeleted;
+		this.userId = userId;
+		this.fullName = fullName;
+		this.phoneNo = phoneNo;
+		this.email = email;
+		this.city = city;
+		this.district = district;
+		this.isCardLinked = isCardLinked;
+		this.status = status;
+		this.usertype = usertype;
+		this.createdDate = createdDate;
+		this.wallet = wallet;
+		this.isWebPos = false;
+		this.isTerminalPos = false;
+	}
+	
+
 }

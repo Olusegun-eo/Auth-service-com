@@ -1,19 +1,23 @@
 package com.waya.wayaauthenticationservice.entity;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import com.waya.wayaauthenticationservice.entity.listener.ProfileListener;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
+import java.io.Serializable;
 import java.util.UUID;
 
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
 @Entity
-@ToString
+@EntityListeners(ProfileListener.class)
 @Table(name = "m_user_profile")
-public class Profile extends AuditModel {
+public class Profile extends AuditModel implements Serializable {
 
 	private static final long serialVersionUID = 1122422343339889166L;
 
@@ -21,7 +25,6 @@ public class Profile extends AuditModel {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(nullable = false)
     @Email(message = "please enter a valid email")
     private String email;
 
@@ -31,10 +34,7 @@ public class Profile extends AuditModel {
     @Column(nullable = false)
     private String surname;
 
-    @Column(nullable = false)
     private String phoneNumber;
-
-    private String organisationName;
 
     private String middleName;
 
@@ -43,9 +43,7 @@ public class Profile extends AuditModel {
     private String dateOfBirth;
 
     private String gender;
-
-    private String age;
-
+    //private String age;
     private String district;
 
     private String address;
@@ -54,7 +52,7 @@ public class Profile extends AuditModel {
 
     private String state;
 
-    private boolean deleted;
+    private boolean deleted = false;
 
     @Column(nullable = false, unique = true)
     private String userId;
@@ -63,7 +61,34 @@ public class Profile extends AuditModel {
 
     private boolean corporate;
 
+    private String deviceToken;
+
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "otherDetails_id", referencedColumnName = "id")
     private OtherDetails otherDetails;
+
+
+    @Override
+    public String toString() {
+        return "Profile{" +
+                "id=" + id +
+                ", email='" + email + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", surname='" + surname + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", middleName='" + middleName + '\'' +
+                ", profileImage='" + profileImage + '\'' +
+                ", dateOfBirth='" + dateOfBirth + '\'' +
+                ", gender='" + gender + '\'' +
+                ", district='" + district + '\'' +
+                ", address='" + address + '\'' +
+                ", city='" + city + '\'' +
+                ", state='" + state + '\'' +
+                ", deleted=" + deleted +
+                ", userId='" + userId + '\'' +
+                ", referral='" + referral + '\'' +
+                ", corporate=" + corporate +
+                ", otherDetails=" + otherDetails +
+                '}';
+    }
 }

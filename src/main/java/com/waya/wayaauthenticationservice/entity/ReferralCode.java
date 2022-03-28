@@ -2,7 +2,6 @@ package com.waya.wayaauthenticationservice.entity;
 
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
@@ -14,7 +13,6 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
-@NoArgsConstructor
 @ToString
 @Table(name = "m_referral_tbl")
 public class ReferralCode {
@@ -30,6 +28,7 @@ public class ReferralCode {
     private String userId;
 
     @OneToOne
+    @JoinColumn(name = "profile_id", referencedColumnName = "id", unique = true, nullable = false)
     private Profile profile;
 
     @CreationTimestamp
@@ -39,5 +38,9 @@ public class ReferralCode {
         this.referralCode = referralCode;
         this.profile = profile;
         this.userId = userId;
+    }
+
+    public ReferralCode() {
+        this.profile = new Profile();
     }
 }

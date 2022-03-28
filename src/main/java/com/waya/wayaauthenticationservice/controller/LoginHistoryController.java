@@ -28,7 +28,7 @@ public class LoginHistoryController {
     LoginHistoryService loginHistoryService;
 
     @ApiOperation(value="Save Login History",tags = { "AUTH HISTORY" })
-    @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
+    @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", dataTypeClass = String.class, value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @PostMapping(path = "/save")
     public ResponseEntity<?> saveHistory(@RequestBody LoginHistoryPojo loginHistoryPojo) {
@@ -36,7 +36,7 @@ public class LoginHistoryController {
     }
 
     @ApiOperation(value="Get My Login History",tags = { "AUTH HISTORY" })
-    @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
+    @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", dataTypeClass = String.class, value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping(path = "/my-history")
     public ResponseEntity<?> getMyHistory() {
@@ -45,7 +45,7 @@ public class LoginHistoryController {
 
 
     @ApiOperation(value="Get My Last Login History",tags = { "AUTH HISTORY" })
-    @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
+    @ApiImplicitParams({ @ApiImplicitParam(name = "authorization", dataTypeClass = String.class, value = "token", paramType = "header", required = true) })
     @ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers")})
     @GetMapping(path = "/my-last-login")
     public ResponseEntity<?> getMyLastHistory() {

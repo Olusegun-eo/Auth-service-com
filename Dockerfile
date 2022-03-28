@@ -1,7 +1,7 @@
-FROM openjdk:11-jre-slim
-EXPOSE 8059
-ADD target/waya-authentication-service-0.0.1-SNAPSHOT.jar waya-authentication-service.jar
+FROM openjdk:11.0.11-jdk-slim as base 
 
-ENTRYPOINT ["java", "-Dspring.profiles.active=dev", "-jar", "/waya-authentication-service.jar"]
+WORKDIR /app
+COPY target/*.jar app.jar
+COPY my_keyset.json my_keyset.json
 
-
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

@@ -1,42 +1,29 @@
 package com.waya.wayaauthenticationservice.entity;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-import javax.validation.constraints.NotNull;
-
-import org.hibernate.annotations.CreationTimestamp;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.waya.wayaauthenticationservice.entity.listener.UserListener;
 import com.waya.wayaauthenticationservice.model.AuthProvider;
-
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.CreationTimestamp;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Objects;
 
 @Getter
 @Setter
 @Entity
-@ToString(exclude = "userAccounts")
+@EntityListeners(UserListener.class)
+@ToString(exclude = {"password", "pinHash", "roleList"})
 @Table(name = "m_users", uniqueConstraints = {
-        @UniqueConstraint(name = "UniqueEmailAndPhoneNumberAndDelFlg", columnNames = {"id", "phone_number", "email", "is_deleted"})})
+        @UniqueConstraint(name = "UniqueEmailAndPhoneNumberAndDelFlg",
+                columnNames = {"id", "phone_number", "email", "is_deleted"})})
 public class Users extends AuditModel implements Serializable {
 
     private static final long serialVersionUID = -2675537776836756234L;
@@ -46,13 +33,9 @@ public class Users extends AuditModel implements Serializable {
     @Column(name = "id", unique = true, nullable = false)
     private Long id;
 
-    //@Column(name = "user_id", unique = true, nullable = false)
-    //private String userId;
-
-    @Column(nullable = false)
     private String email;
 
-    @Column(nullable = false, name = "phone_number")
+    @Column(name = "phone_number")
     private String phoneNumber;
 
     private String referenceCode;
@@ -64,8 +47,10 @@ public class Users extends AuditModel implements Serializable {
     private String surname;
 
     @Column(nullable = false)
+    @JsonIgnore
     private String password;
 
+    @JsonIgnore
     private String pinHash;
 
     @Column(nullable = false)
@@ -128,6 +113,14 @@ public class Users extends AuditModel implements Serializable {
 
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
+    
+    @Column(name = "is_simulated", nullable = false)
+    private boolean isSimulated = false;
+    
+    @Column(name = "is_welcomed", nullable = false)
+    private boolean isWelcomed = false;
+    
+    private String encryptedPIN;
 
     @Column(name = "last_time_password_updated")
     @CreationTimestamp
@@ -137,24 +130,16 @@ public class Users extends AuditModel implements Serializable {
     @Column(name = "password_never_expires", nullable = false)
     private boolean passwordNeverExpires;
 
+    @JsonIgnore
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "m_users_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private Collection<Role> roleList;
 
-    // The 'mappedBy = "user"' attribute specifies that
-    // the 'private Users user;' field in UserWallet owns the
-    // relationship (i.e. contains the foreign key for the query to
-    // find all userWallets for a user.)
-    @OneToMany(mappedBy = "user")
-    private List<UserWallet> userAccounts;
-
-    @CreationTimestamp
-    @ApiModelProperty(hidden = true)
-    private LocalDateTime dateCreated;
-
     private LocalDateTime pinCreatedDate;
 
     private LocalDateTime dateOfActivation;
+    
+    private String merchantId;
 
     public Users() {
         provider = AuthProvider.local;
@@ -172,7 +157,7 @@ public class Users extends AuditModel implements Serializable {
             return false;
         }
         Users other = (Users) obj;
-        return Objects.equals(email, other.email) && id == other.id && Objects.equals(phoneNumber, other.phoneNumber)
+        return Objects.equals(email, other.email) && Objects.equals(id, other.id) && Objects.equals(phoneNumber, other.phoneNumber)
                 && Objects.equals(surname, other.surname);
     }
 

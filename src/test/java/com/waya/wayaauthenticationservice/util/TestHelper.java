@@ -7,7 +7,6 @@ import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 
 //@ActiveProfiles("test")
@@ -40,7 +39,6 @@ public class TestHelper {
         user.setPhoneNumber("2345100302445");
         user.setReferenceCode("CRT");
         user.setSurname("Ang");
-        user.setDateCreated(LocalDateTime.now());
         user.setAccountStatus(1);
         String fullName = String.format("%s %s", user.getFirstName(), user.getSurname());
         user.setName(fullName);

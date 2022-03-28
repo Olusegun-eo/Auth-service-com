@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  labels:
+    app: auth-service
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+  selector:
+    app: auth-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  labels:
+    app: auth-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+      - name: auth-service
+        image: 863852973330.dkr.ecr.eu-west-2.amazonaws.com/auth-service:imgtag
+        env:
+        envFrom:
+        - configMapRef:
+            name: common-services-config
+        ports: 
+        - name: http
+          containerPort: 80
+        volumeMounts:
+        - name: config-file
+          mountPath: "/app/application-cfgprofile.yml"  # "secret-file" file will be created in "/app" directory
+          subPath: application.yml
+      volumes:
+        - name: config-file
+          secret:
+            secretName: auth-service-config-file # name of the Secret

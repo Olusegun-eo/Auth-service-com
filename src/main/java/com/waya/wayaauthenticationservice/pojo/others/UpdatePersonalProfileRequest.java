@@ -51,6 +51,31 @@ public class UpdatePersonalProfileRequest {
 
     private String district;
 
+    private String state;
+
+    private String city;
+
     private String address;
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email.replaceAll("\\s+", "").trim();;
+    }
+
+    public String getPhoneNumber() {
+		return phoneNumber;
+	}
+
+	public void setPhoneNumber(String phoneNumber) {
+		if(phoneNumber != null) {
+			if(phoneNumber.startsWith("+"))
+	        	phoneNumber = phoneNumber.substring(1);
+			phoneNumber = phoneNumber.replaceAll("\\s+", "").trim();
+		}
+		this.phoneNumber = phoneNumber;
+	}
 }
 

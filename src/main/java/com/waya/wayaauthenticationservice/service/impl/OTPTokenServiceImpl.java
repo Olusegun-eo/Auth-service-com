@@ -1,16 +1,16 @@
 package com.waya.wayaauthenticationservice.service.impl;
 
 import com.waya.wayaauthenticationservice.entity.OTPBase;
-import com.waya.wayaauthenticationservice.entity.Profile;
+import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.enums.OTPRequestType;
 import com.waya.wayaauthenticationservice.enums.StreamsEventType;
 import com.waya.wayaauthenticationservice.exception.CustomException;
 import com.waya.wayaauthenticationservice.exception.ErrorMessages;
 import com.waya.wayaauthenticationservice.pojo.mail.AbstractEmailContext;
 import com.waya.wayaauthenticationservice.pojo.mail.context.AccountVerificationEmailContext;
+import com.waya.wayaauthenticationservice.pojo.mail.context.WelcomeEmailContext;
 import com.waya.wayaauthenticationservice.repository.OTPRepository;
 import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
-import com.waya.wayaauthenticationservice.service.MailService;
 import com.waya.wayaauthenticationservice.service.MessageQueueProducer;
 import com.waya.wayaauthenticationservice.service.OTPTokenService;
 import com.waya.wayaauthenticationservice.streams.RecipientsSMS;
@@ -35,7 +35,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
 
     private final OTPRepository otpRepository;
     private final MessageQueueProducer messageQueueProducer;
-    private final MailService mailService;
+    private final MessagingService messagingService;
 
     /**
      * generates a 6 digit OTP code and send code to email topic
@@ -45,24 +45,27 @@ public class OTPTokenServiceImpl implements OTPTokenService {
      * @param profile userProfile
      */
     @Override
-    public boolean sendVerificationEmailToken(String baseUrl, Profile profile, OTPRequestType otpRequestType) {
+    public boolean sendVerificationEmailToken(String baseUrl, Users profile, OTPRequestType otpRequestType) {
         try {
+            log.info("TODAYS CURRENT MODIFICATION : {} \n", profile.getEmail());
             //generate the token
             OTPBase otp = generateEmailToken(profile.getEmail(), otpRequestType);
+            String otpToken = RESEND_OTP + String.valueOf(otp.getCode());
             AccountVerificationEmailContext emailContext = new AccountVerificationEmailContext();
             emailContext.init(profile);
             emailContext.buildURL(baseUrl);
             emailContext.setToken(String.valueOf(otp.getCode()));
             try {
-                mailService.sendMail(emailContext);
+                log.info("CURRENT MODIFICATION : {} \n", profile.getEmail());
+                messagingService.sendEmailNotification(otpToken, profile);
             } catch (Exception e) {
                 log.error("An Error Occurred:: {}", e.getMessage());
             }
-            // mailService.sendMail(user.getEmail(), message);
-            log.info("Activation email sent!! \n");
+           
+            log.info("Activation email sent!!: {} \n", profile.getEmail());
             return true;
         } catch (Exception exception) {
-            log.error("could not process data ", exception);
+            log.error("could not process data {}", exception.getMessage());
         }
         return false;
     }
@@ -76,16 +79,31 @@ public class OTPTokenServiceImpl implements OTPTokenService {
     @Override
     public boolean sendEmailToken(AbstractEmailContext emailContext) {
         try {
+
             try {
-                mailService.sendMail(emailContext);
+                messagingService.sendEmailWithContext(emailContext);
             } catch (Exception e) {
                 log.error("An Error Occurred:: {}", e.getMessage());
             }
-            log.info(" email sent!! \n");
+            log.info(" email sent!!- {} \n", emailContext.getEmail());
             return true;
         } catch (Exception exception) {
-            log.error("could not process data ", exception);
+            log.error("could not process data {}", exception.getMessage());
         }
+        return false;
+    }
+
+    public boolean sendEmailToken2(String message, Users profile) {
+
+            try {
+                messagingService.sendEmailNotification(message, profile);
+                log.info(" email sent!!- {} \n", profile.getEmail());
+                return true;
+            } catch (Exception e) {
+                log.error("An Error Occurred:: {}", e.getMessage());
+            }
+
+
         return false;
     }
 
@@ -108,7 +126,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
             }
             return new OTPVerificationResponse(false, ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
         } catch (Exception exception) {
-            log.error("could not process data ", exception);
+            log.error("could not process data {}", exception.getMessage());
             throw new CustomException("Invalid Token", HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }
@@ -124,6 +142,8 @@ public class OTPTokenServiceImpl implements OTPTokenService {
     @Override
     public OTPVerificationResponse verifyEmailToken(String email, Integer otp, OTPRequestType otpRequestType) {
         try {
+        	if(email == null || email.isBlank()) return new OTPVerificationResponse(false, "Invalid Email");
+        	
             Optional<OTPBase> otpBase = otpRepository.getOtpDetailsViaEmail(email, otp, String.valueOf(otpRequestType));
             if (otpBase.isPresent()) {
                 OTPBase token = otpBase.get();
@@ -138,7 +158,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
             return new OTPVerificationResponse(false, ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
 
         } catch (Exception exception) {
-            log.error("could not process data ", exception);
+            log.error("could not process data: {}", exception.getMessage());
             throw new CustomException("Invalid Token", HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }
@@ -152,6 +172,8 @@ public class OTPTokenServiceImpl implements OTPTokenService {
      */
     @Override
     public OTPBase generateEmailToken(String email, OTPRequestType otpRequestType) {
+    	if(email == null || email.isBlank()) return null;
+    	
         OTPBase otp = new OTPBase();
         otp.setCode(generateCode());
         otp.setEmail(email);
@@ -175,7 +197,9 @@ public class OTPTokenServiceImpl implements OTPTokenService {
      */
     @Override
     public OTPBase generateSMSOTP(String phoneNumber, OTPRequestType otpRequestType) {
-        OTPBase otp = new OTPBase();
+    	phoneNumber = phoneNumber == null ? "" : phoneNumber;
+
+    	OTPBase otp = new OTPBase();
         otp.setCode(generateCode());
         otp.setPhoneNumber(phoneNumber);
         otp.setValid(true);
@@ -199,6 +223,9 @@ public class OTPTokenServiceImpl implements OTPTokenService {
      */
     @Override
     public OTPBase generateOTP(String phoneNumber, String email, OTPRequestType otpRequestType) {
+    	phoneNumber = phoneNumber == null ? "" : phoneNumber;
+    	email = email == null ? "" : email;
+    	
         OTPBase otp = new OTPBase();
         otp.setCode(generateCode());
         otp.setPhoneNumber(phoneNumber);
@@ -212,7 +239,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
 
         otpRepository.invalidatePreviousRecords(phoneNumber, email, newExpiryDate,
                 false, String.valueOf(otpRequestType));
-        otpRepository.save(otp);
+        otp = otpRepository.save(otp);
         return otp;
     }
 
@@ -238,7 +265,7 @@ public class OTPTokenServiceImpl implements OTPTokenService {
             post.setData(data);
 
             messageQueueProducer.send(SMS_TOPIC, post);
-            log.info("otp sent to kafka message queue::: {}", post);
+            //log.info("otp sent to kafka message queue::: {}", post);
             return true;
         } catch (Exception exception) {
             log.error("could not process data {}", exception.getMessage());
@@ -265,13 +292,13 @@ public class OTPTokenServiceImpl implements OTPTokenService {
             post.setKey(TWILIO_PROVIDER);
 
             StreamDataSMS data = new StreamDataSMS();
-            data.setMessage(MESSAGE + otp.getCode() + MESSAGE_2);
+            data.setMessage(RESET_PIN_MESSAGE + otp.getCode() + MESSAGE_2);
             data.setRecipients(Collections.singletonList(new RecipientsSMS(name, "+".concat(otp.getPhoneNumber()))));
 
             post.setData(data);
 
             messageQueueProducer.send(SMS_TOPIC, post);
-            log.info("otp sent to kafka message queue::: {}", post);
+            //log.info("otp sent to kafka message queue::: {}", post);
             return true;
 
         } catch (Exception exception) {
@@ -334,22 +361,30 @@ public class OTPTokenServiceImpl implements OTPTokenService {
     }
 
     @Override
-    public void sendAccountVerificationToken(Profile profile, OTPRequestType otpRequestType, String baseUrl) {
+    public void sendAccountVerificationToken(Users profile, OTPRequestType otpRequestType, String baseUrl) {
         try{
-            OTPBase otp = generateOTP(profile.getPhoneNumber(), profile.getEmail(), otpRequestType);
+        	String phoneNumber = profile.getPhoneNumber() == null ? "" : profile.getPhoneNumber();
+        	String email = profile.getEmail() == null ? "" : profile.getEmail();
+        	
+            OTPBase otp = generateOTP(phoneNumber, email, otpRequestType);
 
             String fullName = String.format("%s %s", profile.getFirstName(),
                     profile.getSurname());
 
             // Send SMS
-            sendSMSOTP(fullName, otp);
+            if(profile.getPhoneNumber() != null)
+                sendSMSOTP(fullName, otp);
 
             // Send Email
-            AccountVerificationEmailContext emailContext = new AccountVerificationEmailContext();
-            emailContext.init(profile);
-            emailContext.setToken(String.valueOf(otp.getCode()));
-            emailContext.buildURL(baseUrl);
-            sendEmailToken(emailContext);
+            if(profile.getEmail() != null){
+                AccountVerificationEmailContext emailContext = new AccountVerificationEmailContext();
+                emailContext.init(profile);
+                emailContext.setToken(String.valueOf(otp.getCode()));
+                emailContext.buildURL(baseUrl);
+
+                sendEmailToken2(String.valueOf(otp.getCode()), profile);
+            }
+
         }catch(Exception ex){
             log.error("An Error Occurred :: {}", ex.getMessage());
         }

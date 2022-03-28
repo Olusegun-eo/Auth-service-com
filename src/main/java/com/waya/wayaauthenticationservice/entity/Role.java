@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;
@@ -17,6 +18,7 @@ import java.util.Collection;
 @Table(name = "m_roles")
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class Role extends AuditModel implements Serializable {
 
     private static final long serialVersionUID = -2675537776836756234L;

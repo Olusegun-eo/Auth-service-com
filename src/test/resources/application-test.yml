@@ -1,3 +1,5 @@
+server:
+  port: ${AUTH_SERVER_PORT}
 spring:
   autoconfigure:
     exclude:
@@ -5,7 +7,7 @@ spring:
       - org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
@@ -18,7 +20,7 @@ spring:
     timeout: 10000
     password: ${REDIS_PASSWORD:wIYretruTPWPmAyLgq6HNQMa0wjRG3q8}
   kafka:
-    bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:http://209.97.178.170:9092}
+    bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:http:147.182.214.42//:9092}
     groupId: ${KAFKA_GROUP_ID:waya}
   security:
     basic:
@@ -29,11 +31,11 @@ spring:
       fail-on-empty-beans: false
 
   datasource:
-#    url: jdbc:postgresql://127.0.0.1:5432/app_dev
+#    url: jdbc:postgresql://127.0.0.1:5432/auth_service
 #    username: app_dev
 #    password: e1bc9e7f864d
 #    driver-class-name: org.postgresql.Driver
-    url: jdbc:h2:mem:db;DB_CLOSE_DELAY=-1
+    url: jdbc:h2:mem:psptrx #jdbc:h2:mem:db;DB_CLOSE_DELAY=-1
     username: sa
     password: sa
     driver-class-name: org.h2.Driver
@@ -42,13 +44,32 @@ h2:
   console:
     enabled: true
 jwt:
-  secret: ${JWT_SECRET:wayas3cr3t}
+  secret: ${JWT_SECRET:BvPHGM8C0ia4uOuxxqPD5DTbWC9F9TWvPStp3pb7ARo0oK2mJ3pd3YG4lxA9i8bj6OTbadwezxgeEByY}
   expiration: ${JWT_EXPIRATION:31557600000}
 
 app:
   auth:
     tokenSecret: ${AUTH_TOKEN_SECRET:926D96C90030DD58429D2751AC1BDBBC}
     tokenExpirationMsec: ${TOKEN_EXPIRATION_TIME:864000000}
+  config:
+    biller-service:
+      base-url: ${BILLER_SERVICE:http://157.230.223.54:8181/billspay}
+    access-service:
+      base-url: ${ROLE_SERVICE:http://46.101.41.187:8061}
+    fraud-service:
+      base-url: ${FRAUD_SERVICE:http://157.230.223.54:8084}
+    logging-service:
+      base-url: ${LOGGIN_SERVICE:http://46.101.41.187:8083/api/v1}
+    wayagram-profile:
+      base-url: ${WAYAGRAM_PROFILE:http://157.245.84.14:1000}
+    file-resource:
+      base-url: ${FILE_RESOURCE:http://46.101.41.187:9098/file-resource/api}
+    virtual-account:
+      base-url: ${VIRTUAL_ACCOUNT:http://46.101.41.187:7090/account-creation-service/api}
+    wallet-service:
+      base-url: ${WALLET_SERVICE:http://157.230.223.54:9009/api/v1/wallet}
+    notification-service:
+      base-url: ${NOTIFICATION_SERVICE:http://68.183.60.114:8085/notification-service}
 
 api:
   server:

@@ -2,6 +2,7 @@ package com.waya.wayaauthenticationservice.config;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import org.springframework.context.annotation.Bean;
@@ -28,6 +29,7 @@ public class SwaggerConfig {
 	@Bean
     public Docket docket() {
         return new Docket(DocumentationType.SWAGGER_2)
+        		    .protocols(new HashSet<>(Arrays.asList("HTTP","HTTPs")))
                     .select()
                     .apis(RequestHandlerSelectors.basePackage("com.waya.wayaauthenticationservice.controller"))
                     .paths(PathSelectors.any())
@@ -60,8 +62,8 @@ public class SwaggerConfig {
     public static final Contact DEFAULT_CONTACT = new Contact("API Support", "https://www.wayapaychat.com",
 			"admin@waya-paychat.com");
 	
-	public static final ApiInfo DEFAULT_API_INFO = new ApiInfo("WAYA AUTH-SERVICE REST API I",
-			"RESTFUL WALLET CORE BANKING API DOCUMENTATION", "1.0", "urn:tos", DEFAULT_CONTACT, "Apache 2.0",
+	public static final ApiInfo DEFAULT_API_INFO = new ApiInfo("AUTH-SERVICE REST API I",
+			"RESTFUL AUTHENTICATION SERVICE API DOCUMENTATION", "1.0", "urn:tos", DEFAULT_CONTACT, "Apache 2.0",
 			"http://www.apache.org/licenses/LICENSE-2.0", Collections.emptyList());
 
 }

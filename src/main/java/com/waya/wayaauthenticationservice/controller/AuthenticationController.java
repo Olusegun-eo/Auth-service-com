@@ -1,39 +1,31 @@
 package com.waya.wayaauthenticationservice.controller;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-import javax.validation.constraints.Email;
-import javax.ws.rs.Produces;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mobile.device.Device;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.waya.wayaauthenticationservice.enums.Type;
 import com.waya.wayaauthenticationservice.pojo.notification.OTPPojo;
 import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
+import com.waya.wayaauthenticationservice.pojo.others.LoginPasscodePojo;
+import com.waya.wayaauthenticationservice.pojo.others.LoginResponsePojo;
+import com.waya.wayaauthenticationservice.pojo.others.PasscodePojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.BaseUserPojo;
 import com.waya.wayaauthenticationservice.pojo.userDTO.CorporateUserPojo;
 import com.waya.wayaauthenticationservice.service.AuthenticationService;
 import com.waya.wayaauthenticationservice.service.UserService;
 import com.waya.wayaauthenticationservice.util.CustomValidator;
 import com.waya.wayaauthenticationservice.util.ValidPhone;
-
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mobile.device.Device;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import javax.validation.constraints.Email;
+import javax.ws.rs.Produces;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -56,6 +48,7 @@ public class AuthenticationController {
 	@PostMapping(path = "/create", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {
 			MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<?> create(@Valid @RequestBody BaseUserPojo user, HttpServletRequest request, Device device) {
+		user.setWayaAdmin(false);
 		return authenticationServiceImpl.createUser(user, request, device, false);
 	}
 
@@ -76,6 +69,24 @@ public class AuthenticationController {
 	@PostMapping("/verify-otp")
 	public ResponseEntity<?> verifyAccount(@Valid @RequestBody OTPPojo otpPojo) {
 		return authenticationServiceImpl.verifyAccountCreation(otpPojo);
+	}
+
+	@ApiOperation(value = "${api.auth.transaction-otp.description}", notes = "${api.auth.verify-otp.notes}", tags = {
+			"AUTH" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@PostMapping("/verify-otp/transaction")
+	public ResponseEntity<?> verifyTransaction(@Valid @RequestBody OTPPojo otpPojo) {
+		return authenticationServiceImpl.verifyTransactionCreation(otpPojo);
+	}
+
+	@ApiOperation(value = "${api.auth.generate-otp.description}", notes = "${api.auth.generate-otp.notes}", tags = {
+			"AUTH" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@PostMapping("/generate-otp/{emailOrPhoneNumber}")
+	public ResponseEntity<?> generateOTP(
+			@PathVariable("emailOrPhoneNumber") @CustomValidator(message = "Has to be either a valid Email or PhoneNumber", type = Type.EMAIL_OR_PHONE) String emailOrPhoneNumber,
+			final HttpServletRequest request) {
+		return authenticationServiceImpl.resendOTPForWalletTransaction(emailOrPhoneNumber, getBaseUrl(request));
 	}
 
 	@ApiOperation(value = "Resend OTP for Account Verification", notes = "See POjo Object for what to pass", tags = {
@@ -113,6 +124,20 @@ public class AuthenticationController {
 		throw new IllegalStateException("This Method should not be called!");
 	}
 
+	@ApiOperation(value = "${api.auth.login.description}", notes = "${api.auth.login.notes}", tags = { "AUTH" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@PostMapping("/login/passcode")
+	public LoginResponsePojo authToken(@Valid @RequestBody LoginPasscodePojo loginRequestModel) {
+		return authenticationServiceImpl.loginPasscode(loginRequestModel);
+	}
+
+	@ApiOperation(value = "${api.auth.login.description}", notes = "${api.auth.login.notes}", tags = { "AUTH" })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Response Headers") })
+	@PostMapping("/create/passcode")
+	public ResponseEntity<?> createPasscode(@Valid @RequestBody PasscodePojo passcode) {
+		return authenticationServiceImpl.PostPasscode(passcode);
+	}
+
 	@GetMapping("/social")
 	@Produces(javax.ws.rs.core.MediaType.TEXT_HTML)
 	@ApiOperation(value = "${api.auth.social.description}", notes = "${api.auth.social.notes}", tags = { "AUTH" })
@@ -148,17 +173,17 @@ public class AuthenticationController {
 	@ApiOperation(value = "User Validation (Service consumption only. Do not Use)", notes = "This endpoint help validate user and is meant for service consumption only", tags = {
 			"AUTH" })
 	@ApiImplicitParams({
-			@ApiImplicitParam(name = "authorization", value = "token", paramType = "header", required = true) })
+			@ApiImplicitParam(name = "authorization", dataTypeClass = String.class, value = "token", paramType = "header", required = true) })
 	@PostMapping("/validate-user")
 	public ResponseEntity<?> validateUser() {
-		return authenticationServiceImpl.validateUser();
+		return userService.validateUser();
 	}
 
 	@ApiOperation(value = "User Validation (Service consumption only. Do not Use)", notes = "This endpoint help validate user and is meant for service consumption only", tags = {
 			"AUTH" })
 	@PostMapping("/wallet/{userId}/{key}")
 	public ResponseEntity<?> validateWalletUserCall(@PathVariable Long userId, @PathVariable String key) {
-		return userService.validateWalletUserCall(userId, key);
+		return userService.validateServiceUserCall(userId, key);
 	}
 
 	private String getBaseUrl(HttpServletRequest request) {

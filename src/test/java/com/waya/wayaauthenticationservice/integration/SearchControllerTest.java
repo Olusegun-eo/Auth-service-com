@@ -6,6 +6,7 @@ import com.waya.wayaauthenticationservice.entity.Users;
 import com.waya.wayaauthenticationservice.repository.ProfileRepository;
 import com.waya.wayaauthenticationservice.repository.RolesRepository;
 import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.util.JwtUtil;
 import com.waya.wayaauthenticationservice.util.TestHelper;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -14,11 +15,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.waya.wayaauthenticationservice.util.SecurityConstants.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -29,6 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@DirtiesContext
+@TestPropertySource(locations = "/application-test.yml")
 class SearchControllerTest {
 
     @Autowired
@@ -75,7 +82,7 @@ class SearchControllerTest {
     @Order(4)
     @Test
     void searchByOrganisationName() throws Exception {
-        searchAndVerifyProfileOrganisationName("name", status().isOk());
+        searchAndVerifyProfileOrganisationName("organisation name", status().isOk());
     }
 
     private void searchAndVerifyProfileByName(
@@ -126,7 +133,7 @@ class SearchControllerTest {
         profile.setSurname("appp");
         profile.setState("state");
         profile.setCorporate(false);
-        profile.setUserId(String.valueOf(user.getId()));
+        profile.setUserId(user.getId().toString());
         profile.setDeleted(false);
 
         if (!profileRepository.existsByEmail(profile.getEmail()))
@@ -139,7 +146,6 @@ class SearchControllerTest {
         otherDetails.setOrganisationName("organisation name");
 
         Profile corporate = new Profile();
-        corporate.setOrganisationName("name");
         corporate.setCity("city");
         corporate.setReferral("");
         corporate.setUserId("42114");
@@ -158,9 +164,15 @@ class SearchControllerTest {
     public String generateToken(Users user) {
         try {
             System.out.println("::::::GENERATE TOKEN:::::");
-            String token = Jwts.builder().setSubject(user.getEmail())
+            /*String token = Jwts.builder().setSubject(user.getEmail())
                     .setExpiration(new Date(System.currentTimeMillis() + getExpiration() * 1000))
-                    .signWith(SignatureAlgorithm.HS512, getSecret()).compact();
+                    .signWith(SignatureAlgorithm.HS512, getSecret()).compact();*/
+            JwtUtil jwtUtil = new JwtUtil();
+            Map<String, Object> claims = new HashMap<>();
+	        claims.put("id", user.getId());
+	        claims.put("role", user.getRoleList());
+	        Date expirationDate = new Date(System.currentTimeMillis() + getExpiration());
+			String token = jwtUtil.doGenerateToken(claims, user.getEmail(), expirationDate);
             System.out.println(":::::Token:::::");
             return TOKEN_PREFIX + token;
         } catch (Exception e) {

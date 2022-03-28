@@ -1,10 +1,9 @@
 package com.waya.wayaauthenticationservice.security;
 
+import com.waya.wayaauthenticationservice.entity.Users;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-
-import com.waya.wayaauthenticationservice.entity.Users;
 
 @Component("authenticatedUserFacade")
 public class AuthenticatedUserFacadeImpl implements AuthenticatedUserFacade {
@@ -21,7 +20,18 @@ public class AuthenticatedUserFacadeImpl implements AuthenticatedUserFacade {
 
     @Override
     public Users getUser() {
-        UserPrincipal userPrincipal = (UserPrincipal) this.getAuthentication().getPrincipal();
-        return userPrincipal.getUser().orElse(null);
+        if (this.getAuthentication() != null && this.getAuthentication().getPrincipal() instanceof UserPrincipal) {
+            UserPrincipal userPrincipal = (UserPrincipal) this.getAuthentication().getPrincipal();
+            return userPrincipal.getUser().orElse(null);
+        }
+        return null;
+    }
+
+    @Override
+    public UserPrincipal getUserPrincipal() {
+        if (this.getAuthentication() != null && this.getAuthentication().getPrincipal() instanceof UserPrincipal) {
+            return (UserPrincipal) this.getAuthentication().getPrincipal();
+        }
+        return null;
     }
 }

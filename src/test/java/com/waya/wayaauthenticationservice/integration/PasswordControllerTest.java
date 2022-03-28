@@ -1,17 +1,18 @@
 package com.waya.wayaauthenticationservice.integration;
 
-import com.waya.wayaauthenticationservice.entity.Profile;
-import com.waya.wayaauthenticationservice.entity.Users;
-import com.waya.wayaauthenticationservice.exception.ErrorMessages;
-import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
-import com.waya.wayaauthenticationservice.pojo.password.PasswordPojo;
-import com.waya.wayaauthenticationservice.pojo.password.ResetPasswordPojo;
-import com.waya.wayaauthenticationservice.repository.UserRepository;
-import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
-import com.waya.wayaauthenticationservice.service.OTPTokenService;
-import com.waya.wayaauthenticationservice.util.SecurityConstants;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import static com.waya.wayaauthenticationservice.util.JsonString.asJsonString;
+import static com.waya.wayaauthenticationservice.util.SecurityConstants.getExpiration;
+import static org.mockito.ArgumentMatchers.any;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -23,29 +24,33 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 
-import java.util.Date;
+import com.waya.wayaauthenticationservice.entity.Users;
+import com.waya.wayaauthenticationservice.exception.ErrorMessages;
+import com.waya.wayaauthenticationservice.pojo.others.LoginDetailsPojo;
+import com.waya.wayaauthenticationservice.pojo.password.PasswordPojo;
+import com.waya.wayaauthenticationservice.pojo.password.ResetPasswordPojo;
+import com.waya.wayaauthenticationservice.repository.UserRepository;
+import com.waya.wayaauthenticationservice.response.OTPVerificationResponse;
+import com.waya.wayaauthenticationservice.service.OTPTokenService;
+import com.waya.wayaauthenticationservice.util.JwtUtil;
+import com.waya.wayaauthenticationservice.util.SecurityConstants;
 
-import static com.waya.wayaauthenticationservice.util.JsonString.asJsonString;
-import static com.waya.wayaauthenticationservice.util.SecurityConstants.getExpiration;
-import static com.waya.wayaauthenticationservice.util.SecurityConstants.getSecret;
-import static org.mockito.ArgumentMatchers.any;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import lombok.extern.slf4j.Slf4j;
 
 @ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@DirtiesContext
+@Slf4j
 public class PasswordControllerTest {
-
-	Profile profile = new Profile();
+	
+	JwtUtil jwtUtil = new JwtUtil();
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -94,7 +99,7 @@ public class PasswordControllerTest {
 
 		ResetPasswordPojo pojo = buildResetPojo(23456, "test@123", "noemail@waya.com");
 		resetPassword(pojo, "$.message",
-				ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User with email/phoneNumber: noemail@waya.com",
+				ErrorMessages.NO_RECORD_FOUND.getErrorMessage() + " For User with identity: noemail@waya.com",
 				status().isBadRequest());
 	}
 
@@ -156,14 +161,13 @@ public class PasswordControllerTest {
 	}
 
 	private Users setUpUser() {
-		user.setEmail("stan@toju.com");
+		user.setEmail("stan@tojue.com");
 		user.setFirstName("Stan");
 		user.setSurname("Toju");
 		user.setActive(true);
-		user.setPhoneNumber("2348166302445");
+		user.setPhoneNumber("2348160302443");
 		user.setPassword(passwordEncoder.encode("test@123"));
 		user.setName(String.format("%s %s", user.getFirstName(), user.getSurname()));
-		user.setId(1l);
 		return userRepository.save(user);
 	}
 
@@ -178,9 +182,15 @@ public class PasswordControllerTest {
 
 	public String generateToken(Users user) {
 		try {
-			String token = Jwts.builder().setSubject(user.getEmail())
+			/*String token = Jwts.builder().setSubject(user.getEmail())
 					.setExpiration(new Date(System.currentTimeMillis() + getExpiration() * 1000))
-					.signWith(SignatureAlgorithm.HS512, getSecret()).compact();
+					.signWith(SignatureAlgorithm.HS512, getSecret()).compact();*/
+			Map<String, Object> claims = new HashMap<>();
+	        claims.put("id", user.getId());
+	        claims.put("role", user.getRoleList());
+	        Date expirationDate = new Date(System.currentTimeMillis() + getExpiration());
+			String token = jwtUtil.doGenerateToken(claims, user.getEmail(), expirationDate);
+			
 			return SecurityConstants.TOKEN_PREFIX + token;
 		} catch (Exception e) {
 			throw new RuntimeException(e.fillInStackTrace());

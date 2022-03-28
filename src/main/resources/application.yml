@@ -1,19 +1,28 @@
 spring:
   application:
     name: auth-service
+  data:
+    redis:
+      repositories:
+        enabled: false
+        type: none
   datasource:
-    url: ${POSTGRES_URL}
-    username: ${POSTGRES_USERNAME}
-    password: ${POSTGRES_PASSWORD}
+    url: ${AUTH_SVC_DB_URL:jdbc:h2:mem:dbAuth}
+    username: ${AUTH_SVC_DB_USERNAME:sa}
+    password: ${AUTH_SVC_DB_PASSWORD:sa}
     initialization-mode: always
-    driver-class-name: org.postgresql.Driver
+    driver-class-name: ${AUTH_SVC_DB_DRIVER:org.h2.Driver}
     continue-on-error: true
   jpa:
     hibernate:
       ddl-auto: update
+   
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: ${AUTH_SVC_DB_DIALECT:org.hibernate.dialect.H2Dialect}
+        show-sql: true
+        hbm2ddl:
+            auto: update
         jdbc:
           time_zone: UTC
     open-in-view: false #this config disables database queries which  may be performed during view rendering
@@ -24,6 +33,8 @@ spring:
       file-size-threshold: 2KB
       max-file-size: 2MB
       max-request-size: 2MB
+      resolve-lazily: true
+      
 
   cache:
     type: redis
@@ -33,10 +44,10 @@ spring:
       use-key-prefix: true
       key-prefix: tokens
   redis:
-    host: ${REDIS_HOST}
-    port: ${REDIS_PORT}
+    host: ${REDIS_HOST:waya-redis-staging-env.tk8m9t.0001.euw1.cache.amazonaws.com}
+    port: ${REDIS_PORT:6379}
     timeout: 10000
-    password: ${REDIS_PASSWORD}
+    password: ${REDIS_PASSWORD:wIYretruTPWPmAyLgq6HNQMa0wjRG3q8}
     ttl: 86400000
     connect-timeout: 10000
 
@@ -46,8 +57,8 @@ spring:
   session:
     store-type: jdbc
   kafka:
-    bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS}
-    groupId: ${KAFKA_GROUP_ID}
+    bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:https://kafka-service:9092}
+    groupId: ${KAFKA_GROUP_ID:waya}
     consumer:
       group-id: waya
       auto-offset-reset: earliest
@@ -57,22 +68,22 @@ spring:
       client:
         registration:
           google:
-            clientId: 120295942246-mf4abvh2gpnvsbcs2u5ffbmrq3a06qu9.apps.googleusercontent.com
-            clientSecret: zyVoMw6DAFW1TUWlstyG4_QM
+            clientId: ${AUTH_SVC_GOOGLE_CLIENTID:120295942246-mf4abvh2gpnvsbcs2u5ffbmrq3a06qu9.apps.googleusercontent.com}
+            clientSecret: ${AUTH_SVC_GOOGLE_SECRET:zyVoMw6DAFW1TUWlstyG4_QM}
             redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
             scope:
               - email
               - profile
           facebook:
-            clientId: 160272946020602
-            clientSecret: d684f1d33157445aa1d15dad401206bd
+            clientId: ${AUTH_SVC_FACEBOOK_CLIENTID:160272946020602}
+            clientSecret: ${AUTH_SVC_FACEBOOK_SECRET:d684f1d33157445aa1d15dad401206bd}
             redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
             scope:
               - email
               - public_profile
           github:
-            clientId: 32f01a4bdb2d9ab43954
-            clientSecret: 04be0187fcf95e4b40e7c9d05a7220c5099084af
+            clientId: ${AUTH_SVC_GITHUB_CLIENTID:32f01a4bdb2d9ab43954}
+            clientSecret: ${AUTH_SVC_GITHUB_SECRET:04be0187fcf95e4b40e7c9d05a7220c5099084af}
             redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
             scope:
               - user:email
@@ -84,18 +95,18 @@ spring:
             userInfoUri: https://graph.facebook.com/v3.0/me?fields=id,first_name,middle_name,last_name,name,email,verified,is_verified,picture.width(250).height(250)
 
 server:
-  port: ${SERVER_PORT:8059}
+  port: ${AUTH_SERVER_PORT:80}
   error:
     include-message: always
   servlet:
     context-path: /
-
+    
 eureka:
   client:
     serviceUrl:
-      defaultZone: ${EUREKA_SERVER_URL}
+      defaultZone: ${EUREKA_SERVER_URL:http://eureka-service/eureka}
     service-url:
-      default-zone: ${EUREKA_SERVER_URL}
+      default-zone: ${EUREKA_SERVER_URL:http://eureka-service/eureka}
   instance:
     preferIpAddress: true
 
@@ -105,36 +116,70 @@ feign:
       default:
         connectTimeout: 60000
         readTimeout: 10000
-
+logging:
+  level:
+    net.sf.jmimemagic.MagicParser: ERROR
+    org:
+#      hibernate:
+#        SQL: DEBUG
+#        type:
+#          descriptor:
+#            sql:
+#              BasicBinder: TRACE
+      apache:
+        kafka:
+          clients:
+            producer:
+              ProducerConfig: ERROR
 
 jwt:
-  secret: ${JWT_SECRET:wayas3cr3t}
-  expiration: ${JWT_EXPIRATION:31557600000}
+  secret: ${AUTH_JWT_SECRET:2YuUlb+t36yVzrTkYLl8xBlBJSC41CE7uNF3somMDxdYDfcACv9JYIU54z17s4Ah313uKu/4Ll+vDNKpxx6v4Q==}
+  expiration: ${AUTH_JWT_EXPIRATION:31557600000}
 
 #Scheduled Jobs
 job:
   cron:
     5amED: 0 0 5 * * ? #5am every day
     5min1318: 0 0-5 13-18 * * ? #Every minute starting at 1pm and 6pm and ending after 5 minutes, and every day
+    kyc: 0/5 * * * * ? #5am every day
+    pass: 0/5 * * * * *
+    
+cipher:
+  utils:
+    value: ${AUTH_CIPHER_KEY:WALMIFOS}
+
+referral:
+  account: ${AUTH_REFERRAL_ACCOUNT:NGN008019345880}
 
 app:
   config:
+    biller-service:
+      base-url: ${CONFIG_BASEURL_BILLPAY:https://services.staging.mywayapay.com/billspayment-service}
     access-service:
-      base-url: http://46.101.41.187:8061
+      base-url: ${CONFIG_BASEURL_ROLEACCESS:https://services.staging.mywayapay.com/role-service}
+    fraud-service:
+      base-url: ${CONFIG_BASEURL_FRAUD:https://services.staging.mywayapay.com/fraud-service}
+    logging-service:
+      base-url: ${CONFIG_BASEURL_LOGAUDIT:https://services.staging.mywayapay.com/logs-service}
     wayagram-profile:
-      base-url: http://157.245.84.14:1000
+      base-url: ${CONFIG_BASEURL_SOCIAL:https://services.staging.mywayapay.com/wayagram-service}
     file-resource:
-      base-url: http://46.101.41.187:9098/file-resource/api
+      base-url: ${CONFIG_BASEURL_FILERESOURCE:https://services.staging.mywayapay.com/file-resource-service}
     virtual-account:
-      base-url: http://46.101.41.187:7090/account-creation-service/api
+      base-url: ${CONFIG_BASEURL_VIRACCOUNT:https://services.staging.mywayapay.com/account-service}
     wallet-service:
-      base-url: http://157.230.223.54:9009/api/v1/wallet
+      base-url: ${CONFIG_BASEURL_TWALLET:https://services.staging.mywayapay.com/temporal-service/api/v1/wallet}
     notification-service:
-      base-url: ${NOTIFICATION_SERVICE_BASE_URL:http://68.183.60.114:8085/notification-service}
-
+      base-url: ${CONFIG_BASEURL_NOTIFICATION:https://services.staging.mywayapay.com/notification-service}
+    referral-service:
+      base-url: ${CONFIG_BASEURL_REFERRAL:https://services.staging.mywayapay.com/referral-service}
+    kyc-service:
+      base-url: ${CONFIG_BASEURL_KYC:https://services.staging.mywayapay.com/kyc-service}
+      
   auth:
-    tokenSecret: ${AUTH_TOKEN_SECRET}
-    tokenExpirationMsec: ${TOKEN_EXPIRATION_TIME}
+    tokenSecret: ${AUTH_TOKEN_SECRET:926D96C90030DD58429D2751AC1BDBBC}
+    tokenExpirationMsec: 864000000
+    #${AUTH_TOKEN_EXPIRATION_TIME:864000000}
   oauth2:
     # After successfully authenticating with the OAuth2 Provider,
     # we'll be generating an auth token for the user and sending the token to the
@@ -150,7 +195,7 @@ api:
       prefix: 234
       value: Ensure phone number is valid, 13 characters in length and starts with 234
   server:
-    deployed: ${SERVER_URL} #Change per Environment
+    deployed: ${AUTH_SERVER_URL:http://localhost:8059/} #Change per Environment
   pin:
     create-pin-by-email:
       description: Send OTP to email, this is for Create PIN `create-pin` post Request
@@ -208,7 +253,6 @@ api:
         This endpoint is used to reset PIN request
         # Error Response
         Returns with a detailed response about the error.
-
     change-pin-by-phone:
       description: Send OTP to phone, this is for Change PIN POST Request
       notes: |
@@ -230,7 +274,6 @@ api:
         This endpoint is used to Change Users PIN, OTP is needed from `/change-pin/byPhone` or `/change-pin/byEmail` GET methods
         # Error Response
         Returns with a detailed response about the error.
-
   auth:
     create:
       description: Create a new Private User/ Can also be used to create In-App Admin and Super Admin Users
@@ -240,7 +283,6 @@ api:
         on both phoneNumber and Email
         # Error Response
         returns with a detailed response about the error.
-
     create-corporate:
       description: Create a new Corporate User. Can also be used to create Corporate Admin Users
       notes: |
@@ -249,7 +291,6 @@ api:
           on both phoneNumber and Email
           # Error Response
           returns with a detailed response about the error.
-
     verify-otp:
       description: Verifies User Creation and Enables the User to Login Successfully
       notes: |
@@ -257,7 +298,6 @@ api:
         if the request passes all validation, it will verify the newly created Users account and Send a welcome Mail
         # Error Response
         returns with a detailed response about the error.
-
     verify-phone:
       description: Verifies User Phone Numer after OTP has been Generated for it
       notes: |
@@ -266,7 +306,6 @@ api:
         If Successful, good response is given
         # Error Response
         returns with a detailed response about the error.
-
     verify-email:
       description: Verifies User Email after OTP has been Generated for it
       notes: |
@@ -275,7 +314,6 @@ api:
         If Successful, good response is given
         # Error Response
         returns with a detailed response about the error.
-
     login:
       description: Endpoint to Login to the system With
       notes: |
@@ -283,7 +321,6 @@ api:
         If User is Enabled and Active, response containing the User's profile is returned, together with the JWT Token to use for Authenticated Requests
         # Error Response
         returns with a detailed response about the error.
-
     social:
       description: Abstraction to allow Login from any of our Social Integrations
       notes: |
@@ -291,7 +328,6 @@ api:
         If Successful, good response is given
         # Error Response
         returns with a detailed response about the error.
-
   corporate-profile:
     create-corporate-profile:
       description: Create a new Corporate Profile (Backend Service to Service use only).
@@ -300,7 +336,6 @@ api:
         if the request passes all validation, it will create the profile successfully, as well as send an OTP to the user
         # Error Response
         returns with a detailed response about the error.
-
     update-corporate-profile:
       description: Update a Corporate Profile
       notes: |
@@ -308,7 +343,6 @@ api:
         if the request passes all validation, it will update the profile successfully.
         # Error Response
         returns with a detailed response about the error.
-
     update-profile-pic:
       description: Update a Corporate Profile Picture
       notes: |
@@ -316,7 +350,6 @@ api:
         if the request passes all validation, it will update the profile successfully.
         # Error Response
         returns with a detailed response about the error.
-
     get-corporate-profile:
       description: Get a Corporate Profile
       notes: |
@@ -324,7 +357,6 @@ api:
         if the request passes all validation, it will update the profile successfully.
         # Error Response
         returns with a detailed response about the error.
-
   profile:
     referals:
       description: get all users referrals
@@ -333,7 +365,6 @@ api:
         if the request passes all validation, it will get the referals successfully, as well as send an OTP to the user
         # Error Response
         returns with a detailed response about the error.
-
     create-personal-profile:
       description: Create a new Personal Profile (Backend Service to Service use only).
       notes: |
@@ -341,7 +372,6 @@ api:
         if the request passes all validation, it will create the profile successfully, as well as send an OTP to the user
         # Error Response
         returns with a detailed response about the error.
-
     get-user-profile:
       description: Get a users profile
       notes: |
@@ -356,7 +386,6 @@ api:
         if the request passes all validation, it will update a users profile successfully,
         # Error Response
         returns with a detailed response about the error.
-
     update-user-profile-image:
       description: updates a users profile image
       notes: |
@@ -364,7 +393,15 @@ api:
         if the request passes all validation, it will update a users profile image successfully,
         # Error Response
         returns with a detailed response about the error.
-
+        
+    update-user-images:
+      description: updates a Corporate users Surrounding image
+      notes: |
+        # Normal Response
+        if the request passes all validation, it will update a users profile image successfully,
+        # Error Response
+        returns with a detailed response about the error.
+        
     search-name:
       description: search for a user by name
       notes: |
@@ -372,7 +409,6 @@ api:
         if the request passes all validation, it will return various search result for a user,
         # Error Response
         returns with a detailed response about the error.
-
     search-phone:
       description: search for a user by phone number
       notes: |
@@ -380,7 +416,6 @@ api:
         if the request passes all validation, it will return various search result for a user,
         # Error Response
         returns with a detailed response about the error.
-
     search-email:
       description: search for a user by email
       notes: |
@@ -388,7 +423,6 @@ api:
         if the request passes all validation, it will return various search result for a user,
         # Error Response
         returns with a detailed response about the error.
-
     search-organization:
       description: search for a user by organisation name
       notes: |
@@ -396,4 +430,3 @@ api:
         if the request passes all validation, it will return various search result for a user,
         # Error Response
         returns with a detailed response about the error.
-

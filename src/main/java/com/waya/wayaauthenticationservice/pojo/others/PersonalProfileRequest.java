@@ -49,4 +49,17 @@ public class PersonalProfileRequest {
     private String userId;
 
     private String referralCode;
+    
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+
+	public void setPhoneNumber(String phoneNumber) {
+		if(phoneNumber != null) {
+			if(phoneNumber.startsWith("+"))
+	        	phoneNumber = phoneNumber.substring(1);
+			phoneNumber = phoneNumber.replaceAll("\\s+", "").trim();
+		}
+		this.phoneNumber = phoneNumber;
+	}
 }
