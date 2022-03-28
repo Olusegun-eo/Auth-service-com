@@ -685,6 +685,7 @@ public class UserServiceImpl implements UserService {
 			validateUserPojo.setCorporate(user.isCorporate());
 			validateUserPojo.setEmail(Objects.toString(user.getEmail(), ""));
 			validateUserPojo.setEmailVerified(user.isEmailVerified());
+			validateUserPojo.setAdmin(user.isAdmin());
 			validateUserPojo.setFirstName(user.getFirstName());
 			validateUserPojo.setSurname(user.getSurname());
 			validateUserPojo.setPhoneVerified(user.isPhoneVerified());
