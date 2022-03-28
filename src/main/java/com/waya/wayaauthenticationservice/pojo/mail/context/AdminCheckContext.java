@@ -12,7 +12,7 @@ public class AdminCheckContext extends AbstractEmailContext {
         Users customer = (Users) context; // we pass the customer information
         put("firstName", customer.getFirstName());
         put("requestType", "Admin Action");
-        setTemplateLocation("emails/admin-check");
+        setTemplateLocation("new-emails/admin-check");
         setSubject("Confirm Admin Action !!!");
         setEmail(customer.getEmail());
         setDisplayName(customer.getFirstName());

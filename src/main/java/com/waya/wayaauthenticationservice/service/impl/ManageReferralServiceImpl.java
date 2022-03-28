@@ -47,10 +47,11 @@ public class ManageReferralServiceImpl implements ManageReferralService {
     private final WalletProxy walletProxy;
     private final ProfileServiceDAO jdbcprofileService;
     private final SMSAlertConfigRepository smsAlertConfigRepository;
+    private final UserRepository userRepository;
 
 
     @Autowired
-    public ManageReferralServiceImpl(ReferralBonusRepository referralBonusRepository, ReferralCodeServiceImpl referralCodeService, ProfileRepository profileRepository, ReferralBonusEarningRepository referralBonusEarningRepository, ReferralCodeRepository referralCodeRepository, WalletProxy walletProxy, ProfileServiceDAO jdbcprofileService, SMSAlertConfigRepository smsAlertConfigRepository) {
+    public ManageReferralServiceImpl(ReferralBonusRepository referralBonusRepository, ReferralCodeServiceImpl referralCodeService, ProfileRepository profileRepository, ReferralBonusEarningRepository referralBonusEarningRepository, ReferralCodeRepository referralCodeRepository, WalletProxy walletProxy, ProfileServiceDAO jdbcprofileService, SMSAlertConfigRepository smsAlertConfigRepository, UserRepository userRepository) {
         this.referralBonusRepository = referralBonusRepository;
         this.referralCodeService = referralCodeService;
         this.profileRepository = profileRepository;
@@ -59,6 +60,7 @@ public class ManageReferralServiceImpl implements ManageReferralService {
         this.walletProxy = walletProxy;
         this.jdbcprofileService = jdbcprofileService;
         this.smsAlertConfigRepository = smsAlertConfigRepository;
+        this.userRepository = userRepository;
     }
 
 
@@ -182,6 +184,13 @@ public class ManageReferralServiceImpl implements ManageReferralService {
 
     public Profile assignReferralCode(AssignReferralCodePojo assignReferralCodePojo){
         try{
+
+            Optional<Users> user =  userRepository.findById(false,Long.parseLong(assignReferralCodePojo.getUserId()));
+            if (!user.isPresent()){
+                user.get().setReferenceCode(assignReferralCodePojo.getReferralCode());
+                userRepository.save(user.get());
+            }
+
             Optional<Profile> profilePage = profileRepository.findByUserId(false,assignReferralCodePojo.getUserId());
             if (!profilePage.isPresent()){
                 throw new CustomException(Constant.ID_IS_INVALID, HttpStatus.NOT_FOUND);

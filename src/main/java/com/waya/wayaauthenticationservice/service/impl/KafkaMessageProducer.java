@@ -57,6 +57,7 @@ public class KafkaMessageProducer implements MessageQueueProducer {
          * (JsonProcessingException e1) { log.error("An error has occurred {}",
          * e1.getMessage()); }
          */
+
         ListenableFuture<SendResult<String, Object>> future = template.send(topic, gson.toJson(data));
         //future.addCallback(new KafkaSendCallback<>() {
         future.addCallback(new ListenableFutureCallback<SendResult<String, Object>>() {
