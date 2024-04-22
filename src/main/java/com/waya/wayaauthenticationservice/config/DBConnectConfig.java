@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
-@ConfigurationProperties()
+@ConfigurationProperties(prefix = "database")
 @Slf4j
 public class DBConnectConfig {
 	

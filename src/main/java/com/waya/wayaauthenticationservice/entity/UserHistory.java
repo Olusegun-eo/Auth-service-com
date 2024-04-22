@@ -24,9 +24,7 @@ import static javax.persistence.TemporalType.TIMESTAMP;
 @Table(name = "m_users_his")
 @Getter
 @Setter
-@TypeDefs({
-        @TypeDef(name = "json", typeClass = JsonType.class)
-})
+@TypeDefs({ @TypeDef(name = "json", typeClass = JsonType.class)})
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserHistory {

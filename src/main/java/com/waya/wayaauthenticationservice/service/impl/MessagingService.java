@@ -16,9 +16,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring5.SpringTemplateEngine;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import static com.waya.wayaauthenticationservice.util.Constant.*;
 
@@ -131,7 +129,5 @@ public class MessagingService {
             log.error("could not process data {}", exception.getMessage());
         }
     }
-
-
 
 }

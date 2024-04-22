@@ -18,7 +18,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
 
-public interface AdminService {
+public interface  AdminService {
 
     Page<Users> getCorporateUsers(boolean isCorporate, int page, int size);
 

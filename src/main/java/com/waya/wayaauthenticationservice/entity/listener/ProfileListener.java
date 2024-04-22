@@ -32,7 +32,7 @@ public class ProfileListener {
     }
 
     @Transactional(MANDATORY)
-    private void perform(Profile target, Action action) {
+    public void perform(Profile target, Action action) {
         EntityManager entityManager = SpringApplicationContext.getBean(EntityManager.class);
         if(entityManager != null)
             entityManager.persist(new ProfileHistory(target, action));

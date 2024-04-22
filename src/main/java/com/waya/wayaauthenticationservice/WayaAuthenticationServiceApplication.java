@@ -112,7 +112,7 @@ public class WayaAuthenticationServiceApplication {
 
 		return resolver;
 	}
-
+	//header(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.getMimeType());
 	@Bean
 	public RequestInterceptor requestInterceptor(){
 		return requestTemplate -> requestTemplate.header(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.getMimeType());

@@ -367,8 +367,6 @@ public class AdminController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-
-
 	@ApiOperation(value = " Get All users SMS alert status. (Admin Endpoint)",notes = "", tags = {"ADMIN"})
 	@ApiResponses(value = {
 			@io.swagger.annotations.ApiResponse(code = 200, message = "Successful"),

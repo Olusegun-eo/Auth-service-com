@@ -32,7 +32,7 @@ public class UserListener {
     }
 
     @Transactional(MANDATORY)
-    private void perform(Users target, Action action) {
+    public void perform(Users target, Action action) {
         EntityManager entityManager = SpringApplicationContext.getBean(EntityManager.class);
         if(entityManager != null)
             entityManager.persist(new UserHistory(target, action));
